@@ -3,27 +3,40 @@ import { spawn } from 'child_process';
 
 export function activate(context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand('spectacular.run', async () => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No active editor');
-            return;
-        }
+        const panel = vscode.window.createWebviewPanel(
+            'spectacularChat',
+            'Spectacular Chat',
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true
+            }
+        );
 
-        const document = editor.document;
-        const fileName = document.fileName;
+        panel.webview.html = getWebviewContent();
 
-        const userInput = await vscode.window.showInputBox({
-            prompt: 'Enter your Aider command',
-            placeHolder: 'e.g., make a script that prints hello'
-        });
+        panel.webview.onDidReceiveMessage(
+            async message => {
+                switch (message.command) {
+                    case 'sendMessage':
+                        const response = await sendMessageToAider(message.text);
+                        panel.webview.postMessage({ command: 'receiveMessage', text: response });
+                        break;
+                }
+            },
+            undefined,
+            context.subscriptions
+        );
+    });
 
-        if (!userInput) { return; }
+    context.subscriptions.push(disposable);
+}
 
+async function sendMessageToAider(userInput: string): Promise<string> {
+    return new Promise((resolve, reject) => {
         const aiderProcess = spawn('aider', [
             '--message', userInput,
             '--yes',
-            '--no-stream',
-            fileName
+            '--no-stream'
         ]);
 
         let output = '';
@@ -37,23 +50,56 @@ export function activate(context: vscode.ExtensionContext) {
 
         aiderProcess.on('close', (code) => {
             if (code === 0) {
-                vscode.window.showInformationMessage('Aider command completed successfully');
-                // Refresh the file content
-                vscode.workspace.openTextDocument(fileName).then(doc => {
-                    editor.edit(editBuilder => {
-                        const lastLine = doc.lineAt(doc.lineCount - 1);
-                        const range = new vscode.Range(new vscode.Position(0, 0), lastLine.range.end);
-                        editBuilder.replace(range, doc.getText());
-                    });
-                });
+                resolve(output);
             } else {
-                vscode.window.showErrorMessage(`Aider command failed with code ${code}`);
+                reject(`Aider command failed with code ${code}`);
             }
-            console.log(output);
         });
     });
+}
 
-    context.subscriptions.push(disposable);
+function getWebviewContent() {
+    return `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Spectacular Chat</title>
+        </head>
+        <body>
+            <div id="chat-container">
+                <div id="messages"></div>
+                <input id="message-input" type="text" placeholder="Type a message..."/>
+                <button id="send-button">Send</button>
+            </div>
+            <script>
+                const vscode = acquireVsCodeApi();
+
+                document.getElementById('send-button').addEventListener('click', () => {
+                    const input = document.getElementById('message-input');
+                    vscode.postMessage({
+                        command: 'sendMessage',
+                        text: input.value
+                    });
+                    input.value = '';
+                });
+
+                window.addEventListener('message', event => {
+                    const message = event.data;
+                    switch (message.command) {
+                        case 'receiveMessage':
+                            const messagesDiv = document.getElementById('messages');
+                            const messageElement = document.createElement('div');
+                            messageElement.textContent = message.text;
+                            messagesDiv.appendChild(messageElement);
+                            break;
+                    }
+                });
+            </script>
+        </body>
+        </html>
+    `;
 }
 
 export function deactivate() {}
