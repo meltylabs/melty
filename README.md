@@ -61,4 +61,4 @@ SpectacularInterface.repo.is_dirty(message)
 2. source venv/bin/activate
 3. source ../.env
 4. python3 -m aider.api
-5. Go to http://0.0.0.0:8000/docs and click "Send Request" or curl -X POST http://0.0.0.0:8000/aider -H "Content-Type: application/json" -d '{"files": ["abc.py"], "message": "say hi", "model": "claude-3-5-sonnet-20240620"}'
+5. Go to http://0.0.0.0:8000/docs for Swagger UI, or run ./test_aider_api.sh
