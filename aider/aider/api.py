@@ -36,10 +36,12 @@ async def run_aider(request: AiderRequest):
         sys.stdout = io.StringIO()
 
         try:
-            aider_main(args, input=[], output=[])
+            result = aider_main(args, input=[], output=[])
             output = sys.stdout.getvalue()
         finally:
             sys.stdout = old_stdout
+
+        return AiderResponse(result=output + "\n" + str(result))
 
         return AiderResponse(result=output)
     except SystemExit as e:

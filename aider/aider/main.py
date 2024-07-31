@@ -527,7 +527,7 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
     else:
         result = coder.run()
 
-    return "\n".join(result)  # Return the result as a string
+    return result  # Return the result as a list
 
     # coder.show_announcements()
 
