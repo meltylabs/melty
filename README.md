@@ -19,23 +19,31 @@ we'll start out by prototyping a system where the user installs and start the Ai
 
 Aider is built to interface with the CLI, the filesystem (via `open`), and git (via the `git` module).
 
-### Phase 1
+### Phase 1: HTTP API Integration
 
 We'll add an HTTP API to Aider that it can use to receive commands as if from the CLI. It will send back messages as if to the CLI.
 We'll have Spectacular use this API to send commands to Aider and receive messages back:
 
 ```typescript
 type AiderInterface = {
-  sendCommand: (message: string) => Promise<string>;
+  sendCommand: (message: string) => Promise<AiderResponse>;
+}
+
+type AiderResponse = {
+  message: string;
+  status: 'success' | 'error';
+  fileChanges?: Array<{filename: string, content: string}>;
 }
 ```
 
-Aider will continue to apply changes to the filesystem, and to interact with git, as usual.
+Aider will continue to apply changes to the filesystem, and to interact with git, as usual. The API will include endpoints for:
+- Sending commands
+- Getting the current status
+- Retrieving file changes
 
-### Phase 2
+### Phase 2: Websocket Integration
 
-We'll use a websocket connection between Spectacular and Aider. On top of that websocket connection, we'll build an API that
-Aider can use to read or write a file in the VSCode workspace, and to interact with the git repo. E.g.:
+We'll use a websocket connection between Spectacular and Aider for real-time communication. On top of that websocket connection, we'll build an API that Aider can use to read or write a file in the VSCode workspace, and to interact with the git repo. E.g.:
 
 ```python
 SpectacularInterface.read_file(filename)
@@ -44,6 +52,27 @@ SpectacularInterface.repo.commit(message)
 SpectacularInterface.repo.is_dirty(message)
 # etc.
 ```
+
+Security considerations:
+- Implement authentication for the websocket connection
+- Validate and sanitize all inputs
+- Limit file access to the current workspace
+
+### Error Handling and Logging
+
+We'll implement robust error handling and logging throughout the integration:
+- Log all API requests and responses
+- Implement try-catch blocks for all critical operations
+- Create custom error types for different scenarios
+- Provide meaningful error messages to the user
+
+### Testing
+
+We'll create a comprehensive test suite for the integration:
+- Unit tests for individual components
+- Integration tests for the API and websocket communication
+- End-to-end tests simulating real user scenarios
+- Implement continuous integration to run tests automatically
 
 ## Running Aider
 
