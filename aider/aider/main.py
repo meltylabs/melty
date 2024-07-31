@@ -14,6 +14,7 @@ from aider.args import get_parser
 from aider.coders import Coder
 from aider.commands import SwitchCoder
 from aider.io import InputOutput
+from aider.capture_output import CaptureOutput
 from aider.llm import litellm  # noqa: F401; properly init litellm on launch
 from aider.repo import GitRepo
 from aider.versioncheck import check_version
@@ -304,7 +305,7 @@ def register_litellm_models(git_root, model_metadata_fname, io):
         return 1
 
 
-def main(argv=None, input=None, output=None, force_git_root=None, return_coder=False, io=None):
+def main(argv=None, input=None, output=None, force_git_root=None, return_coder=False, io=None, capture_output=None):
     if argv is None:
         argv = sys.argv[1:]
 
@@ -356,6 +357,8 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
     editing_mode = EditingMode.VI if args.vim else EditingMode.EMACS
 
     if io is None:
+        if capture_output is None:
+            capture_output = CaptureOutput()
         io = InputOutput(
             args.pretty,
             args.yes,
@@ -370,6 +373,7 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
             encoding=args.encoding,
             llm_history_file=args.llm_history_file,
             editingmode=editing_mode,
+            capture_output=capture_output,
         )
 
     if args.gui and not return_coder:

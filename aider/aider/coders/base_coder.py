@@ -221,6 +221,7 @@ class Coder:
         map_mul_no_files=8,
         verify_ssl=True,
     ):
+        self.capture_output = io.capture_output
         if not fnames:
             fnames = []
 
@@ -850,7 +851,7 @@ class Coder:
         self.multi_response_content = ""
         if self.show_pretty() and self.stream:
             mdargs = dict(style=self.assistant_output_color, code_theme=self.code_theme)
-            self.mdstream = MarkdownStream(mdargs=mdargs)
+            self.mdstream = MarkdownStream(mdargs=mdargs, capture_output=self.capture_output)
         else:
             self.mdstream = None
 

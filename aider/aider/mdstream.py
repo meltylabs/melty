@@ -46,7 +46,8 @@ class MarkdownStream:
     min_delay = 0.050
     live_window = 6
 
-    def __init__(self, mdargs=None):
+    def __init__(self, mdargs=None, capture_output=None):
+        self.capture_output = capture_output
         self.printed = []
 
         if mdargs:
@@ -96,6 +97,8 @@ class MarkdownStream:
             show = "".join(show)
             show = Text.from_ansi(show)
             self.live.console.print(show)
+            if self.capture_output:
+                self.capture_output.capture_output(str(show), "markdown_stream")
 
             self.printed = lines[:num_lines]
 

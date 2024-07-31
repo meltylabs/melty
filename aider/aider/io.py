@@ -143,7 +143,9 @@ class InputOutput:
         llm_history_file=None,
         editingmode=EditingMode.EMACS,
         api_mode=False,
+        capture_output=None,
     ):
+        self.capture_output = capture_output
         self.editingmode = editingmode
         self.api_mode = api_mode
         no_color = os.environ.get("NO_COLOR")
@@ -397,6 +399,9 @@ class InputOutput:
             print(message, file=self.captured_output)
         else:
             self.console.print(message, **style)
+        
+        if self.capture_output:
+            self.capture_output.capture_output(str(message), "tool_error")
 
     def tool_output(self, *messages, log_only=False):
         if messages:
@@ -411,6 +416,9 @@ class InputOutput:
                 print(*messages, file=self.captured_output)
             else:
                 self.console.print(*messages, **style)
+            
+            if self.capture_output:
+                self.capture_output.capture_output(" ".join(str(m) for m in messages), "tool_output")
 
     def get_captured_output(self):
         return self.captured_output.getvalue()
