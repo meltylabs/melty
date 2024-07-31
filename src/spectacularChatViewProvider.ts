@@ -7,7 +7,9 @@ export class SpectacularChatViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'spectacularChat';
     private _view?: vscode.WebviewView;
 
-    constructor(private readonly _extensionUri: vscode.Uri) { }
+    constructor(private readonly _extensionUri: vscode.Uri) {
+        console.log('SpectacularChatViewProvider constructor called');
+    }
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -15,15 +17,19 @@ export class SpectacularChatViewProvider implements vscode.WebviewViewProvider {
         _token: vscode.CancellationToken
     ) {
         console.log('Resolving webview view...');
+        console.log('Setting webview view');
         this._view = webviewView;
 
+        console.log('Configuring webview options');
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [this._extensionUri]
         };
 
+        console.log('Setting webview HTML content');
         webviewView.webview.html = this.getWebviewContent(webviewView.webview);
 
+        console.log('Setting up message listener');
         webviewView.webview.onDidReceiveMessage(
             async message => {
                 console.log('Received message:', message);
@@ -36,11 +42,14 @@ export class SpectacularChatViewProvider implements vscode.WebviewViewProvider {
                         chatMessages.push(`Aider: ${response}`);
                         this._view?.webview.postMessage({ command: 'receiveMessage', text: response });
                         break;
+                    default:
+                        console.log('Unknown command received:', message.command);
                 }
             }
         );
 
         // Restore chat history                                                                                                                                                          
+        console.log('Restoring chat messages');
         webviewView.webview.postMessage({ command: 'restoreMessages', messages: chatMessages });
     }
 
