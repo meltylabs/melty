@@ -41,8 +41,10 @@ async def send_command(request: AiderRequest):
 
         # Parse the output to extract file changes
         file_changes = []
-        for file, content in coder.get_file_changes().items():
-            file_changes.append(FileChange(filename=file, content=content))
+        edits = coder.get_edits()
+        for edit in edits:
+            filename, original, updated = edit
+            file_changes.append(FileChange(filename=filename, content=updated))
 
         return AiderResponse(
             message=output,
