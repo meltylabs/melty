@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { spawn } from 'child_process';
+import axios from 'axios';
 
 export function activate(context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand('spectacular.run', async () => {
@@ -33,28 +33,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 async function sendMessageToAider(userInput: string): Promise<string> {
     return new Promise((resolve, reject) => {
-        const aiderProcess = spawn('aider', [
-            '--message', userInput,
-            '--yes',
-            '--no-stream'
-        ]);
+        try {
+            // Ensure the Aider server is started
+            await axios.post('http://0.0.0.0:8000/startup', {
+                root_dir: vscode.workspace.rootPath
+            });
 
-        let output = '';
-        aiderProcess.stdout.on('data', (data) => {
-            output += data.toString();
-        });
+            // Send the command to Aider
+            const response = await axios.post('http://0.0.0.0:8000/aider/sendCommand', {
+                message: userInput
+            });
 
-        aiderProcess.stderr.on('data', (data) => {
-            console.error(`Aider error: ${data}`);
-        });
-
-        aiderProcess.on('close', (code) => {
-            if (code === 0) {
-                resolve(output);
-            } else {
-                reject(`Aider command failed with code ${code}`);
-            }
-        });
+            resolve(response.data.message);
+        } catch (error) {
+            reject(`Aider command failed: ${error.message}`);
+        }
     });
 }
 

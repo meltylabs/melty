@@ -27,6 +27,9 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
+  "dependencies": {
+    "axios": "^0.21.1"
+  },
   "devDependencies": {
     "@types/vscode": "^1.91.0",
     "@types/mocha": "^10.0.7",
