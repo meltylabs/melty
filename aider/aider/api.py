@@ -9,31 +9,37 @@ from aider.main import main as aider_main
 
 app = FastAPI()
 
+# Global variable to store the Coder instance
+coder = None
 
 class AiderRequest(BaseModel):
     message: str
 
-
 class FileChange(BaseModel):
     filename: str
     content: str
-
 
 class AiderResponse(BaseModel):
     message: str
     status: str
     fileChanges: Optional[List[FileChange]] = None
 
+@app.on_event("startup")
+async def startup_event():
+    global coder
+    # Initialize the Coder instance
+    coder = aider_main([], input=[], output=[], return_coder=True)
 
 @app.post("/aider/sendCommand", response_model=AiderResponse)
 async def send_command(request: AiderRequest):
+    global coder
     try:
         # Capture stdout
         old_stdout = sys.stdout
         sys.stdout = io.StringIO()
 
         try:
-            result = aider_main(["--message", request.message], input=[], output=[])
+            result = coder.run(with_message=request.message)
             output = sys.stdout.getvalue()
         finally:
             sys.stdout = old_stdout
@@ -58,7 +64,6 @@ async def send_command(request: AiderRequest):
             message=f"An error occurred: {str(e)}",
             status="error"
         )
-
 
 if __name__ == "__main__":
     import uvicorn
