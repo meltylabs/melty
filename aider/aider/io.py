@@ -394,7 +394,7 @@ class InputOutput:
         message = Text(message)
         style = dict(style=self.tool_error_color) if self.tool_error_color else dict()
         if self.api_mode:
-        else:
+            pass
             self.console.print(message, **style)
         
         if self.capture_output:
