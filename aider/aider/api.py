@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from aider.capture_output import CaptureOutput
 from aider.io import InputOutput
 from aider.main import main as aider_main
 
@@ -46,7 +47,8 @@ async def startup(request: StartupRequest):
     global coder
     try:
         os.chdir(request.root_dir)
-        io = InputOutput(api_mode=True)
+        capture_output = CaptureOutput()
+        io = InputOutput(capture_output=capture_output)
         coder = aider_main([], input=[], output=[], return_coder=True, io=io)
         return {"status": "success", "message": f"Aider started in {request.root_dir}"}
     except Exception as e:
@@ -63,9 +65,9 @@ async def startup_event():
 async def send_command(request: AiderRequest):
     global coder
     try:
-        coder.io.clear_captured_output()
+        coder.io.capture_output.clear_output()
         result = coder.run(with_message=request.message)
-        full_output = coder.io.get_captured_output()
+        full_output = coder.io.capture_output.read_output()
 
         # Extract token usage information
         usage_info = extract_token_usage(full_output)
@@ -94,21 +96,19 @@ async def send_command(request: AiderRequest):
 
 
 def extract_token_usage(output: str) -> TokenUsage:
-    # Extract token usage information from the output
-    # This is a simple implementation and might need to be adjusted based on the exact format of the output
     import re
 
     tokens_sent = tokens_received = cost_call = cost_session = 0
 
-    match = re.search(
-        r"Tokens: (\d+) sent, (\d+) received\. Cost: \$([0-9.]+) request, \$([0-9.]+) session",
+    matches = re.findall(
+        r"Tokens: ([\d,]+) sent, ([\d,]+) received\. Cost: \$([0-9.]+) request, \$([0-9.]+) session",
         output,
     )
-    if match:
-        tokens_sent = int(match.group(1))
-        tokens_received = int(match.group(2))
-        cost_call = float(match.group(3))
-        cost_session = float(match.group(4))
+    for match in matches:
+        tokens_sent += int(match[0].replace(",", ""))
+        tokens_received += int(match[1].replace(",", ""))
+        cost_call += float(match[2])
+        cost_session += float(match[3])
 
     return TokenUsage(
         tokens_sent=tokens_sent,

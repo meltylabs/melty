@@ -115,7 +115,9 @@ class AutoCompleter(Completer):
                 if rel_fnames:
                     for rel_fname in rel_fnames:
                         yield Completion(
-                            f"`{rel_fname}`", start_position=-len(last_word), display=rel_fname
+                            f"`{rel_fname}`",
+                            start_position=-len(last_word),
+                            display=rel_fname,
                         )
                 else:
                     yield Completion(
@@ -142,12 +144,10 @@ class InputOutput:
         dry_run=False,
         llm_history_file=None,
         editingmode=EditingMode.EMACS,
-        api_mode=False,
         capture_output=None,
     ):
         self.capture_output = capture_output
         self.editingmode = editingmode
-        self.api_mode = api_mode
         no_color = os.environ.get("NO_COLOR")
         if no_color is not None and no_color != "":
             pretty = False
@@ -175,14 +175,13 @@ class InputOutput:
         self.encoding = encoding
         self.dry_run = dry_run
 
-        if pretty and not api_mode:
+        if pretty:
             self.console = Console()
         else:
             self.console = Console(force_terminal=False, no_color=True)
 
-        if not api_mode:
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.append_chat_history(f"\n# aider chat started at {current_time}\n\n")
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.append_chat_history(f"\n# aider chat started at {current_time}\n\n")
 
     def read_image(self, filename):
         try:
@@ -225,7 +224,9 @@ class InputOutput:
 
     def get_input(self, root, rel_fnames, addable_rel_fnames, commands):
         if self.pretty:
-            style = dict(style=self.user_input_color) if self.user_input_color else dict()
+            style = (
+                dict(style=self.user_input_color) if self.user_input_color else dict()
+            )
             self.console.rule(**style)
         else:
             print()
@@ -322,7 +323,9 @@ class InputOutput:
 
     def user_input(self, inp, log_only=True):
         if not log_only:
-            style = dict(style=self.user_input_color) if self.user_input_color else dict()
+            style = (
+                dict(style=self.user_input_color) if self.user_input_color else dict()
+            )
             self.console.print(inp, **style)
 
         prefix = "####"
@@ -383,7 +386,9 @@ class InputOutput:
         if message.strip():
             if "\n" in message:
                 for line in message.splitlines():
-                    self.append_chat_history(line, linebreak=True, blockquote=True, strip=strip)
+                    self.append_chat_history(
+                        line, linebreak=True, blockquote=True, strip=strip
+                    )
             else:
                 if strip:
                     hist = message.strip()
@@ -393,15 +398,10 @@ class InputOutput:
 
         message = Text(message)
         style = dict(style=self.tool_error_color) if self.tool_error_color else dict()
-        if self.api_mode:
-            pass
-            self.console.print(message, **style)
-        
+
         if self.capture_output:
             self.capture_output.capture_output(str(message), "tool_error")
-        
-        if self.capture_output:
-            self.capture_output.capture_output(str(message), "tool_error")
+        self.console.print(message, **style)
 
     def tool_output(self, *messages, log_only=False):
         if messages:
@@ -411,17 +411,14 @@ class InputOutput:
 
         if not log_only:
             messages = list(map(Text, messages))
-            style = dict(style=self.tool_output_color) if self.tool_output_color else dict()
-            if self.api_mode:
-                else:
-                self.console.print(*messages, **style)
-            
+            style = (
+                dict(style=self.tool_output_color) if self.tool_output_color else dict()
+            )
             if self.capture_output:
-                self.capture_output.capture_output(" ".join(str(m) for m in messages), "tool_output")
-            
-            if self.capture_output:
-                self.capture_output.capture_output(" ".join(str(m) for m in messages), "tool_output")
-
+                self.capture_output.capture_output(
+                    " ".join(str(m) for m in messages), "tool_output"
+                )
+            self.console.print(*messages, **style)
 
     def append_chat_history(self, text, linebreak=False, blockquote=False, strip=True):
         if blockquote:

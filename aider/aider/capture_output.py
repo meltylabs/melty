@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+
 class CaptureOutput:
     def __init__(self):
         self.output = defaultdict(list)
@@ -9,5 +10,11 @@ class CaptureOutput:
 
     def read_output(self, source=None):
         if source:
-            return ''.join(self.output[source])
-        return ''.join(text for texts in self.output.values() for text in texts)
+            return "".join(self.output[source])
+        return "".join(text for texts in self.output.values() for text in texts)
+
+    def clear_output(self, source=None):
+        if source:
+            self.output[source] = []
+        else:
+            self.output.clear()
