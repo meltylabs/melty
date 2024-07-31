@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function sendMessageToAider(userInput: string): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
             // Ensure the Aider server is started
             await axios.post('http://0.0.0.0:8000/startup', {
@@ -45,7 +45,7 @@ async function sendMessageToAider(userInput: string): Promise<string> {
             });
 
             resolve(response.data.message);
-        } catch (error) {
+        } catch (error: any) {
             reject(`Aider command failed: ${error.message}`);
         }
     });
