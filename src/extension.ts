@@ -5,12 +5,14 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('Spectacular extension is now active!');
 	// Register the WebviewViewProvider
 	const provider = new SpectacularChatViewProvider(context.extensionUri);
-	context.subscriptions.push(
+    console.log('Registering SpectacularChatViewProvider...');
+    context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
 			SpectacularChatViewProvider.viewType,
 			provider
 		)
 	);
+    console.log('SpectacularChatViewProvider registered successfully.');
 }
 
 export function deactivate() {
