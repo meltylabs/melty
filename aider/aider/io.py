@@ -183,8 +183,6 @@ class InputOutput:
         if not api_mode:
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.append_chat_history(f"\n# aider chat started at {current_time}\n\n")
-        
-        self.captured_output = io.StringIO()
 
     def read_image(self, filename):
         try:
@@ -402,6 +400,9 @@ class InputOutput:
         
         if self.capture_output:
             self.capture_output.capture_output(str(message), "tool_error")
+        
+        if self.capture_output:
+            self.capture_output.capture_output(str(message), "tool_error")
 
     def tool_output(self, *messages, log_only=False):
         if messages:
@@ -419,12 +420,10 @@ class InputOutput:
             
             if self.capture_output:
                 self.capture_output.capture_output(" ".join(str(m) for m in messages), "tool_output")
+            
+            if self.capture_output:
+                self.capture_output.capture_output(" ".join(str(m) for m in messages), "tool_output")
 
-    def get_captured_output(self):
-        return self.captured_output.getvalue()
-
-    def clear_captured_output(self):
-        self.captured_output = io.StringIO()
 
     def append_chat_history(self, text, linebreak=False, blockquote=False, strip=True):
         if blockquote:

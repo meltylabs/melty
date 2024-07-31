@@ -1,24 +1,27 @@
-import sys
 import os
-from typing import List, Optional, Dict
+import sys
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from aider.main import main as aider_main
 from aider.io import InputOutput
+from aider.main import main as aider_main
 
 app = FastAPI()
 
 # Global variable to store the Coder instance
 coder = None
 
+
 class AiderRequest(BaseModel):
     message: str
+
 
 class FileChange(BaseModel):
     filename: str
     content: str
+
 
 class TokenUsage(BaseModel):
     tokens_sent: int
@@ -26,14 +29,17 @@ class TokenUsage(BaseModel):
     cost_call: float
     cost_session: float
 
+
 class AiderResponse(BaseModel):
     message: str
     status: str
     fileChanges: Optional[List[FileChange]] = None
     usage: Optional[TokenUsage] = None
 
+
 class StartupRequest(BaseModel):
     root_dir: str
+
 
 @app.post("/startup")
 async def startup(request: StartupRequest):
@@ -46,10 +52,12 @@ async def startup(request: StartupRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to start Aider: {str(e)}")
 
+
 @app.on_event("startup")
 async def startup_event():
     # This event is now empty as we'll initialize Aider on-demand
     pass
+
 
 @app.post("/aider/sendCommand", response_model=AiderResponse)
 async def send_command(request: AiderRequest):
@@ -76,27 +84,26 @@ async def send_command(request: AiderRequest):
             message=main_message,
             status="success",
             fileChanges=file_changes,
-            usage=usage_info
+            usage=usage_info,
         )
     except SystemExit as e:
         # Catch SystemExit and return an appropriate error message
-        return AiderResponse(
-            message=f"Invalid arguments: {str(e)}",
-            status="error"
-        )
+        return AiderResponse(message=f"Invalid arguments: {str(e)}", status="error")
     except Exception as e:
-        return AiderResponse(
-            message=f"An error occurred: {str(e)}",
-            status="error"
-        )
+        return AiderResponse(message=f"An error occurred: {str(e)}", status="error")
+
 
 def extract_token_usage(output: str) -> TokenUsage:
     # Extract token usage information from the output
     # This is a simple implementation and might need to be adjusted based on the exact format of the output
     import re
+
     tokens_sent = tokens_received = cost_call = cost_session = 0
-    
-    match = re.search(r"Tokens: (\d+) sent, (\d+) received\. Cost: \$([0-9.]+) request, \$([0-9.]+) session", output)
+
+    match = re.search(
+        r"Tokens: (\d+) sent, (\d+) received\. Cost: \$([0-9.]+) request, \$([0-9.]+) session",
+        output,
+    )
     if match:
         tokens_sent = int(match.group(1))
         tokens_received = int(match.group(2))
@@ -107,13 +114,16 @@ def extract_token_usage(output: str) -> TokenUsage:
         tokens_sent=tokens_sent,
         tokens_received=tokens_received,
         cost_call=cost_call,
-        cost_session=cost_session
+        cost_session=cost_session,
     )
+
 
 def remove_token_usage_info(output: str) -> str:
     # Remove the token usage information from the output
     import re
+
     return re.sub(r"\nTokens: .* session\.\n", "", output)
+
 
 if __name__ == "__main__":
     import uvicorn
