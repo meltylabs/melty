@@ -14,6 +14,7 @@ export class SpectacularChatViewProvider implements vscode.WebviewViewProvider {
         context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken
     ) {
+        console.log('Resolving webview view...');
         this._view = webviewView;
 
         webviewView.webview.options = {
@@ -25,9 +26,12 @@ export class SpectacularChatViewProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.onDidReceiveMessage(
             async message => {
+                console.log('Received message:', message);
                 switch (message.command) {
                     case 'sendMessage':
+                        console.log('Sending message to Aider:', message.text);
                         const response = await sendMessageToAider(message.text);
+                        console.log('Received response from Aider:', response);
                         chatMessages.push(`User: ${message.text}`);
                         chatMessages.push(`Aider: ${response}`);
                         this._view?.webview.postMessage({ command: 'receiveMessage', text: response });

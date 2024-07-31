@@ -9,7 +9,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": ["onView:spectacularChat"],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -25,16 +25,10 @@
       "spectacular": [
         {
           "id": "spectacularChat",
-          "name": "Chat"
+          "name": "Spectacular Chat"
         }
       ]
-    },
-    "commands": [
-      {
-        "command": "spectacular.run",
-        "title": "Spectacular: Run Command"
-      }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
