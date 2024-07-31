@@ -1,4 +1,5 @@
 import sys
+import os
 from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException
@@ -24,12 +25,24 @@ class AiderResponse(BaseModel):
     status: str
     fileChanges: Optional[List[FileChange]] = None
 
+class StartupRequest(BaseModel):
+    root_dir: str
+
+@app.post("/startup")
+async def startup(request: StartupRequest):
+    global coder
+    try:
+        os.chdir(request.root_dir)
+        io = InputOutput(api_mode=True)
+        coder = aider_main([], input=[], output=[], return_coder=True, io=io)
+        return {"status": "success", "message": f"Aider started in {request.root_dir}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start Aider: {str(e)}")
+
 @app.on_event("startup")
 async def startup_event():
-    global coder
-    # Initialize the Coder instance with custom InputOutput
-    io = InputOutput(api_mode=True)
-    coder = aider_main([], input=[], output=[], return_coder=True, io=io)
+    # This event is now empty as we'll initialize Aider on-demand
+    pass
 
 @app.post("/aider/sendCommand", response_model=AiderResponse)
 async def send_command(request: AiderRequest):
