@@ -394,7 +394,6 @@ class InputOutput:
         message = Text(message)
         style = dict(style=self.tool_error_color) if self.tool_error_color else dict()
         if self.api_mode:
-            print(message, file=self.captured_output)
         else:
             self.console.print(message, **style)
         
@@ -414,8 +413,7 @@ class InputOutput:
             messages = list(map(Text, messages))
             style = dict(style=self.tool_output_color) if self.tool_output_color else dict()
             if self.api_mode:
-                print(*messages, file=self.captured_output)
-            else:
+                else:
                 self.console.print(*messages, **style)
             
             if self.capture_output:
