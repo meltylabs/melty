@@ -48,7 +48,7 @@ async def startup(request: StartupRequest):
     try:
         os.chdir(request.root_dir)
         capture_output = CaptureOutput()
-        io = InputOutput(capture_output=capture_output)
+        io = InputOutput(capture_output=capture_output, yes=True)
         coder = aider_main([], input=[], output=[], return_coder=True, io=io)
         return {"status": "success", "message": f"Aider started in {request.root_dir}"}
     except Exception as e:
