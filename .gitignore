@@ -1,0 +1,8 @@
+example_project/.git
+.aider*
+node_modules
+.github
+.git_BACKUP
+venv
+.vscode
+**/out/**
