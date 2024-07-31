@@ -12,6 +12,23 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "spectacular",
+          "title": "Spectacular",
+          "icon": "resources/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "spectacular": [
+        {
+          "id": "spectacularChat",
+          "name": "Chat"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "spectacular.run",
