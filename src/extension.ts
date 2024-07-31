@@ -17,7 +17,11 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('spectacular.showChat', () => {
             console.log('Executing command to show SpectacularChatView...');
-            vscode.commands.executeCommand('workbench.view.extension.spectacularChat');
+            vscode.commands.executeCommand('workbench.view.extension.spectacularChat')
+                .then(
+                    () => console.log('Command executed successfully.'),
+                    (err) => console.error('Command execution failed:', err)
+                );
         })
     );
     console.log('Command to show SpectacularChatView registered successfully.');
