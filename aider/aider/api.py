@@ -1,4 +1,3 @@
-import io
 import sys
 from typing import List, Optional
 
@@ -6,6 +5,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from aider.main import main as aider_main
+from aider.io import InputOutput
 
 app = FastAPI()
 
@@ -27,26 +27,22 @@ class AiderResponse(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     global coder
-    # Initialize the Coder instance
-    coder = aider_main([], input=[], output=[], return_coder=True)
+    # Initialize the Coder instance with custom InputOutput
+    io = InputOutput(api_mode=True)
+    coder = aider_main([], input=[], output=[], return_coder=True, io=io)
 
 @app.post("/aider/sendCommand", response_model=AiderResponse)
 async def send_command(request: AiderRequest):
     global coder
     try:
-        # Capture stdout
-        old_stdout = sys.stdout
-        sys.stdout = io.StringIO()
-
-        try:
-            result = coder.run(with_message=request.message)
-            output = sys.stdout.getvalue()
-        finally:
-            sys.stdout = old_stdout
+        coder.io.clear_captured_output()
+        result = coder.run(with_message=request.message)
+        output = coder.io.get_captured_output()
 
         # Parse the output to extract file changes
         file_changes = []
-        # TODO: Implement logic to parse output and extract file changes
+        for file, content in coder.get_file_changes().items():
+            file_changes.append(FileChange(filename=file, content=content))
 
         return AiderResponse(
             message=output,
