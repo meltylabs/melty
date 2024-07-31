@@ -46,6 +46,7 @@ async function sendMessageToAider(userInput: string): Promise<string> {
 
             resolve(response.data.message);
         } catch (error: any) {
+            vscode.window.showErrorMessage('Failed to connect to Aider server. Please ensure the server is running.');
             reject(`Aider command failed: ${error.message}`);
         }
     });
