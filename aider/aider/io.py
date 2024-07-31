@@ -141,8 +141,10 @@ class InputOutput:
         dry_run=False,
         llm_history_file=None,
         editingmode=EditingMode.EMACS,
+        api_mode=False,
     ):
         self.editingmode = editingmode
+        self.api_mode = api_mode
         no_color = os.environ.get("NO_COLOR")
         if no_color is not None and no_color != "":
             pretty = False
@@ -170,13 +172,16 @@ class InputOutput:
         self.encoding = encoding
         self.dry_run = dry_run
 
-        if pretty:
+        if pretty and not api_mode:
             self.console = Console()
         else:
             self.console = Console(force_terminal=False, no_color=True)
 
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.append_chat_history(f"\n# aider chat started at {current_time}\n\n")
+        if not api_mode:
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.append_chat_history(f"\n# aider chat started at {current_time}\n\n")
+        
+        self.captured_output = io.StringIO()
 
     def read_image(self, filename):
         try:
@@ -387,7 +392,10 @@ class InputOutput:
 
         message = Text(message)
         style = dict(style=self.tool_error_color) if self.tool_error_color else dict()
-        self.console.print(message, **style)
+        if self.api_mode:
+            print(message, file=self.captured_output)
+        else:
+            self.console.print(message, **style)
 
     def tool_output(self, *messages, log_only=False):
         if messages:
@@ -398,7 +406,16 @@ class InputOutput:
         if not log_only:
             messages = list(map(Text, messages))
             style = dict(style=self.tool_output_color) if self.tool_output_color else dict()
-            self.console.print(*messages, **style)
+            if self.api_mode:
+                print(*messages, file=self.captured_output)
+            else:
+                self.console.print(*messages, **style)
+
+    def get_captured_output(self):
+        return self.captured_output.getvalue()
+
+    def clear_captured_output(self):
+        self.captured_output = io.StringIO()
 
     def append_chat_history(self, text, linebreak=False, blockquote=False, strip=True):
         if blockquote:
