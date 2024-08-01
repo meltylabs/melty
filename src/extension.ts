@@ -547,6 +547,12 @@ ${PromptFormatter.writeOutputInstructions(false)}`;
   }
 }
 
+import * as vscode from 'vscode';
+import { ChatView } from './chatView';
+import { SpectacleExtension } from './spectacleExtension';
+
+let outputChannel: vscode.OutputChannel;
+
 export function activate(context: vscode.ExtensionContext) {
   try {
     console.log('Activating Spectacle extension');
@@ -558,34 +564,34 @@ export function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine('Spectacle extension activated');
     console.log('Spectacle extension activated');
   
-  // Log the registered commands
-  const commands = vscode.commands.getCommands(true);
-  commands.then((cmds) => {
-    console.log('Registered commands:', cmds);
-    outputChannel.appendLine('Registered commands: ' + cmds.join(', '));
-  }).catch(error => {
-    console.error('Error getting registered commands:', error);
-    outputChannel.appendLine('Error getting registered commands: ' + error.message);
-  });
+    // Log the registered commands
+    const commands = vscode.commands.getCommands(true);
+    commands.then((cmds) => {
+      console.log('Registered commands:', cmds);
+      outputChannel.appendLine('Registered commands: ' + cmds.join(', '));
+    }).catch(error => {
+      console.error('Error getting registered commands:', error);
+      outputChannel.appendLine('Error getting registered commands: ' + (error instanceof Error ? error.message : String(error)));
+    });
 
-  // Add event listener for webview panel creation
-  context.subscriptions.push(
-    vscode.window.registerWebviewPanelSerializer('spectacle.chatView', {
-      async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-        console.log('Deserializing webview panel');
-        outputChannel.appendLine('Deserializing webview panel');
-        try {
-          // Reinitialize the ChatView here
-          const chatView = new ChatView(webviewPanel);
-          // You might want to restore the state here if needed
-          // chatView.restoreState(state);
-        } catch (error) {
-          console.error('Error deserializing webview panel:', error);
-          outputChannel.appendLine('Error deserializing webview panel: ' + error.message);
+    // Add event listener for webview panel creation
+    context.subscriptions.push(
+      vscode.window.registerWebviewPanelSerializer('spectacle.chatView', {
+        async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+          console.log('Deserializing webview panel');
+          outputChannel.appendLine('Deserializing webview panel');
+          try {
+            // Reinitialize the ChatView here
+            const chatView = new ChatView(webviewPanel);
+            // You might want to restore the state here if needed
+            // chatView.restoreState(state);
+          } catch (error) {
+            console.error('Error deserializing webview panel:', error);
+            outputChannel.appendLine('Error deserializing webview panel: ' + (error instanceof Error ? error.message : String(error)));
+          }
         }
-      }
-    })
-  );
+      })
+    );
 
   // Log when commands are executed
   vscode.commands.executeCommand = new Proxy(vscode.commands.executeCommand, {
