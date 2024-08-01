@@ -1,22 +1,22 @@
 import os
-import sys
-from typing import Dict, List, Optional
+import re
+from typing import List, Optional
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from aider.capture_output import CaptureOutput
 from aider.io import InputOutput
 from aider.main import main as aider_main
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 
 app = FastAPI()
 
 # Global variable to store the Coder instance
 coder = None
 
-
+# Pydantic models
 class AskRequest(BaseModel):
     message: str
-
 
 class AddRequest(BaseModel):
     files: List[str]
@@ -28,13 +28,11 @@ class FileChange(BaseModel):
     filename: str
     content: str
 
-
 class TokenUsage(BaseModel):
     tokens_sent: int
     tokens_received: int
     cost_call: float
     cost_session: float
-
 
 class AiderResponse(BaseModel):
     message: str
@@ -42,11 +40,10 @@ class AiderResponse(BaseModel):
     fileChanges: Optional[List[FileChange]] = None
     usage: Optional[TokenUsage] = None
 
-
 class StartupRequest(BaseModel):
     root_dir: str
 
-
+# API routes
 @app.post("/startup")
 async def startup(request: StartupRequest):
     global coder
@@ -59,22 +56,17 @@ async def startup(request: StartupRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to start Aider: {str(e)}")
 
-
 @app.post("/aider/ask", response_model=AiderResponse)
 async def ask_command(request: AskRequest):
-    formatted_command = f"/ask {request.message}"
-    return await send_command(command="ask", formatted_command=formatted_command)
-
+    return await send_command(command="ask", formatted_command=f"/ask {request.message}")
 
 @app.post("/aider/add", response_model=AiderResponse)
 async def add_command(request: AddRequest):
-    formatted_command = f"/add {' '.join(request.files)}"
-    return await send_command(command="add", formatted_command=formatted_command)
+    return await send_command(command="add", formatted_command=f"/add {' '.join(request.files)}")
 
 @app.post("/aider/drop", response_model=AiderResponse)
 async def drop_command(request: DropRequest):
-    formatted_command = f"/drop {' '.join(request.files)}"
-    return await send_command(command="drop", formatted_command=formatted_command)
+    return await send_command(command="drop", formatted_command=f"/drop {' '.join(request.files)}")
 
 @app.post("/aider/diff", response_model=AiderResponse)
 async def diff_command():
@@ -84,6 +76,7 @@ async def diff_command():
 async def code_command(request: AskRequest):
     return await send_command(command="code", formatted_command=request.message)
 
+# Helper functions
 async def send_command(command: str, formatted_command: str):
     global coder
     if not coder:
@@ -93,27 +86,18 @@ async def send_command(command: str, formatted_command: str):
         coder.io.capture_output.clear_output()
 
         if command == "code":
-            # For the "code" command, use coder.run() instead of coder.commands.run()
             coder.run(with_message=formatted_command)
         else:
-            # For other commands, use coder.commands.run() as before
             coder.commands.run(formatted_command)
 
-        # Get the captured output
         full_output = coder.io.capture_output.read_output()
-
-        # Extract token usage information
         usage_info = extract_token_usage(full_output)
-
-        # Remove token usage information from the main message
         main_message = remove_token_usage_info(full_output)
 
-        # Parse the output to extract file changes
-        file_changes = []
-        edits = coder.get_edits()
-        for edit in edits:
-            filename, original, updated = edit
-            file_changes.append(FileChange(filename=filename, content=updated))
+        file_changes = [
+            FileChange(filename=filename, content=updated)
+            for filename, _, updated in coder.get_edits()
+        ]
 
         return AiderResponse(
             message=main_message,
@@ -122,15 +106,11 @@ async def send_command(command: str, formatted_command: str):
             usage=usage_info,
         )
     except SystemExit as e:
-        # Catch SystemExit and return an appropriate error message
         return AiderResponse(message=f"Invalid arguments: {str(e)}", status="error")
     except Exception as e:
         return AiderResponse(message=f"An error occurred: {str(e)}", status="error")
 
-
 def extract_token_usage(output: str) -> TokenUsage:
-    import re
-
     tokens_sent = tokens_received = cost_call = cost_session = 0
 
     matches = re.findall(
@@ -150,15 +130,9 @@ def extract_token_usage(output: str) -> TokenUsage:
         cost_session=cost_session,
     )
 
-
 def remove_token_usage_info(output: str) -> str:
-    # Remove the token usage information from the output
-    import re
-
     return re.sub(r"\nTokens: .* session\.\n", "", output)
-
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
