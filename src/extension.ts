@@ -583,3 +583,27 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
   // The extension instance will be garbage collected, so we don't need to call deactivate explicitly
 }
+import * as vscode from 'vscode';
+import { ChatView } from './chatView';
+
+export function activate(context: vscode.ExtensionContext) {
+    console.log('Congratulations, your extension "spectacle-chat" is now active!');
+
+    let disposable = vscode.commands.registerCommand('spectacle-chat.openChat', () => {
+        const panel = vscode.window.createWebviewPanel(
+            'spectacleChat',
+            'Spectacle Chat',
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true
+            }
+        );
+
+        const chatView = new ChatView(panel.webview as any);
+        panel.webview.html = chatView.getWebviewContent();
+    });
+
+    context.subscriptions.push(disposable);
+}
+
+export function deactivate() {}
