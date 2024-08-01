@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { extractSpecFromCode } from '../src/extractor';
+import { extractSpecFromCode } from '../extractor';
 
 suite('Spec Extractor', () => {
     test('should extract public API and remove private members', () => {

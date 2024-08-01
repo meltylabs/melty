@@ -2,9 +2,9 @@ import * as sinon from 'sinon';
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { TextDocument } from 'vscode';
-import { MessageEvent } from '../src/tasks/task';
-import { askClaude, PromptFormatter, ClaudeResponse } from '../src/tasks/askClaude';
-import * as claudeAPI from '../src/tasks/claudeAPI';
+import { MessageEvent } from '../tasks/task';
+import { askClaude, PromptFormatter, ClaudeResponse } from '../tasks/askClaude';
+import * as claudeAPI from '../tasks/claudeAPI';
 
 function createMockTextDocument(uri: string, content: string): vscode.TextDocument {
     return {

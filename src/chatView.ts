@@ -257,7 +257,7 @@ Please provide your response to assist the user with their task.`;
           chunk.type === "content_block_start" ||
           chunk.type === "content_block_delta"
         ) {
-          if ('delta' in chunk && chunk.delta?.text) {
+          if ('delta' in chunk && 'text' in chunk.delta && chunk.delta.text) {
             fullResponse += chunk.delta.text;
             this.updatePartialResponse(fullResponse);
           }

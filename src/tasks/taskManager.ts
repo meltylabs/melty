@@ -143,7 +143,7 @@ export class TaskManager {
             
             for await (const chunk of stream) {
                 if (chunk.type === 'content_block_start' || chunk.type === 'content_block_delta') {
-                    if (chunk.delta?.text) {
+                    if ('delta' in chunk && 'text' in chunk.delta && chunk.delta.text) {
                         fullResponse += chunk.delta.text;
                         // Update the chat view with the partial response
                         vscode.commands.executeCommand('spectacle.chatView.updatePartialResponse', fullResponse);

@@ -7,10 +7,9 @@ import { TaskManager } from "./tasks/taskManager";
 import { TaskInterface } from "./tasks/taskInterface";
 import { PromptFormatter, askClaudeAndEdit } from "./tasks/askClaude";
 import { ChatView } from "./chatView";
+import { SpectacleExtension } from './spectacleExtension';
 
 let outputChannel: vscode.OutputChannel;
-
-class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private statusBarItem: vscode.StatusBarItem;
   private specsFolder: string;
@@ -559,48 +558,6 @@ export function activate(context: vscode.ExtensionContext) {
     extension.activate();
     outputChannel.appendLine('Spectacle extension activated');
     console.log('Spectacle extension activated');
-  
-    // Log the registered commands
-    const commands = vscode.commands.getCommands(true);
-    commands.then((cmds) => {
-      console.log('Registered commands:', cmds);
-      outputChannel.appendLine('Registered commands: ' + cmds.join(', '));
-    }).catch(error => {
-      console.error('Error getting registered commands:', error);
-      outputChannel.appendLine('Error getting registered commands: ' + (error instanceof Error ? error.message : String(error)));
-    });
-
-    // Add event listener for webview panel creation
-    context.subscriptions.push(
-      vscode.window.registerWebviewPanelSerializer('spectacle.chatView', {
-        async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-          console.log('Deserializing webview panel');
-          outputChannel.appendLine('Deserializing webview panel');
-          try {
-            // Reinitialize the ChatView here
-            const chatView = new ChatView(webviewPanel);
-            // You might want to restore the state here if needed
-            // chatView.restoreState(state);
-          } catch (error) {
-            console.error('Error deserializing webview panel:', error);
-            outputChannel.appendLine('Error deserializing webview panel: ' + (error instanceof Error ? error.message : String(error)));
-          }
-        }
-      })
-    );
-
-    // Log when commands are executed
-    vscode.commands.executeCommand = new Proxy(vscode.commands.executeCommand, {
-      apply: function(target, thisArg, argumentsList) {
-        console.log(`Executing command: ${argumentsList[0]}`);
-        outputChannel.appendLine(`Executing command: ${argumentsList[0]}`);
-        return target.apply(thisArg, argumentsList).catch(error => {
-          console.error(`Error executing command ${argumentsList[0]}:`, error);
-          outputChannel.appendLine(`Error executing command ${argumentsList[0]}: ${error instanceof Error ? error.message : String(error)}`);
-          throw error;
-        });
-      }
-    });
   } catch (error) {
     console.error('Error during Spectacle activation:', error);
     outputChannel.appendLine('Error during Spectacle activation: ' + (error instanceof Error ? error.message : String(error)));

@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { Util } from '../src/util/util';
+import { Util } from '../util/util';
 
 suite('Util Tests', () => {
     const contextRoot = '/Users/jacksondc/Development/spectacle/example_project';
