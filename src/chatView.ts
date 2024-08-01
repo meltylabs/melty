@@ -171,7 +171,7 @@ export class ChatView {
                     function updateUsageInfo(usageInfo) {
                         const usageInfoElement = document.getElementById('usage-info');
                         if (usageInfo) {
-                            usageInfoElement.textContent = `Prompt tokens: ${usageInfo.prompt_tokens}, Completion tokens: ${usageInfo.completion_tokens}, Total tokens: ${usageInfo.total_tokens}`;
+                            usageInfoElement.textContent = \`Prompt tokens: \${usageInfo.prompt_tokens}, Completion tokens: \${usageInfo.completion_tokens}, Total tokens: \${usageInfo.total_tokens}\`;
                         } else {
                             usageInfoElement.textContent = '';
                         }
