@@ -99,3 +99,17 @@
     }
   }
 }
+{
+  "contributes": {
+    "configuration": {
+      "title": "Spectacle",
+      "properties": {
+        "spectacle.aiderServerUrl": {
+          "type": "string",
+          "default": "http://0.0.0.0:8000",
+          "description": "The URL of the Aider server"
+        }
+      }
+    }
+  }
+}
