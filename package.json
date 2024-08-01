@@ -34,6 +34,10 @@
       {
         "command": "spectacular.openAiderPanel",
         "title": "Open Aider Panel"
+      },
+      {
+        "command": "spectacular.sendMessageToAider",
+        "title": "Send Message to Aider"
       }
     ]
   },
