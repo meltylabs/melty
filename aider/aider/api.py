@@ -21,6 +21,8 @@ class AskRequest(BaseModel):
 class AddRequest(BaseModel):
     files: List[str]
 
+class DropRequest(BaseModel):
+    files: List[str]
 
 class FileChange(BaseModel):
     filename: str
@@ -69,6 +71,14 @@ async def add_command(request: AddRequest):
     formatted_command = f"/add {' '.join(request.files)}"
     return await send_command(command="add", formatted_command=formatted_command)
 
+@app.post("/aider/drop", response_model=AiderResponse)
+async def drop_command(request: DropRequest):
+    formatted_command = f"/drop {' '.join(request.files)}"
+    return await send_command(command="drop", formatted_command=formatted_command)
+
+@app.post("/aider/diff", response_model=AiderResponse)
+async def diff_command():
+    return await send_command(command="diff", formatted_command="/diff")
 
 async def send_command(command: str, formatted_command: str):
     global coder
