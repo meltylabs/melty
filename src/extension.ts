@@ -606,10 +606,6 @@ export function activate(context: vscode.ExtensionContext) {
         });
       }
     });
-  } catch (error) {
-    console.error('Error activating Spectacle extension:', error);
-    outputChannel.appendLine('Error activating Spectacle extension: ' + (error instanceof Error ? error.message : String(error)));
-    vscode.window.showErrorMessage('Failed to activate Spectacle extension. Please check the output channel for details.');
   }
 }
 
