@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Claude as ClaudeSDK } from '@anthropic-ai/sdk';
+import { Anthropic } from '@anthropic-ai/sdk';
 import Anthropic from '@anthropic-ai/sdk';
 
 export class Claude {
@@ -16,9 +16,9 @@ export class Claude {
         return Claude.instance;
     }
 
-    public static sendMessageStream(message: string): Promise<Anthropic.StreamingResponse> {
+    public static sendMessageStream(message: string) {
         const client = Claude.getInstance();
-        return client.messages.stream({
+        return client.messages.create({
             max_tokens: 1024,
             messages: [{ role: 'user', content: message }],
             model: 'claude-3-5-sonnet-20240620',

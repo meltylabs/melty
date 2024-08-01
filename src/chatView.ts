@@ -6,6 +6,7 @@ export class ChatView {
   private _messages: Array<{ sender: "user" | "ai"; text: string }> = [];
 
   constructor(view: vscode.WebviewView) {
+    this._view = view;
     try {
       console.log("ChatView constructor called");
       this._view = view;
@@ -44,118 +45,6 @@ export class ChatView {
         `Error initializing ChatView: ${error.message}`
       );
     }
-  }
-
-  private _getHtmlForWebview(): string {
-    console.log("Generating HTML for webview");
-    const html = `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Spectacle Chat</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 10px; }
-                    #chat-messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-                    #message-input { width: 100%; padding: 5px; }
-                    #send-button { margin-top: 10px; }
-                    .message { margin-bottom: 10px; }
-                    .user { color: blue; }
-                    .ai { color: green; }
-                    .ai pre { white-space: pre-wrap; word-wrap: break-word; max-width: 100%; }
-                    .thinking { color: gray; font-style: italic; }
-                    @keyframes ellipsis {
-                        to { width: 20px; }
-                    }
-                    .ellipsis:after {
-                        overflow: hidden;
-                        display: inline-block;
-                        vertical-align: bottom;
-                        animation: ellipsis 2s infinite;
-                        content: "\\2026";
-                        width: 0px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div id="chat-messages"></div>
-                <input type="text" id="message-input" placeholder="Type your message...">
-                <button id="send-button">Send</button>
-                <button id="reset-button">Reset Chat</button>
-                <script>
-                    const vscode = acquireVsCodeApi();
-                    const chatMessages = document.getElementById('chat-messages');
-                    const messageInput = document.getElementById('message-input');
-                    const sendButton = document.getElementById('send-button');
-
-                    sendButton.addEventListener('click', sendMessage);
-                    messageInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            sendMessage();
-                        }
-                    });
-
-                    function sendMessage() {
-                        const message = messageInput.value;
-                        if (message) {
-                            console.log('Sending message:', message);
-                            vscode.postMessage({ type: 'sendMessage', message });
-                            messageInput.value = '';
-                            // Immediately show the user's message
-                            addMessageToChat('user', message);
-                        }
-                    }
-
-                    window.addEventListener('message', event => {
-                        const message = event.data;
-                        console.log('Webview received message:', message);
-                        switch (message.type) {
-                            case 'addMessage':
-                                console.log('Adding message to chat:', message.sender, message.text);
-                                addMessageToChat(message.sender, message.text);
-                                break;
-                            case 'updateMessages':
-                                console.log('Updating all messages:', message.messages);
-                                updateAllMessages(message.messages);
-                                break;
-                            case 'updatePartialResponse':
-                                console.log('Updating partial response:', message.text);
-                                updatePartialResponse(message.text);
-                                break;
-                            case 'finalizeAIResponse':
-                                console.log('Finalizing AI response');
-                                finalizeAIResponse();
-                                break;
-                            default:
-                                console.warn('Unknown message type in webview:', message.type);
-                        }
-                    });
-
-                    function addMessageToChat(sender, text) {
-                        console.log('Adding message to chat:', sender, text);
-                        const messageElement = document.createElement('div');
-                        messageElement.className = 'message ' + (sender === 'user' ? 'user' : 'ai');
-                        messageElement.textContent = \`\${sender}: \${text}\`;
-                        chatMessages.appendChild(messageElement);
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
-
-                    function updateAllMessages(messages) {
-                        console.log('Updating all messages:', messages);
-                        chatMessages.innerHTML = '';
-                        messages.forEach(msg => {
-                            addMessageToChat(msg.author, msg.text);
-                        });
-                    }
-
-                    console.log('Webview script loaded');
-                </script>
-            </body>
-            </html>
-        `;
-    console.log("HTML generated successfully");
-    return html;
   }
 
   private _getHtmlForWebview(): string {
