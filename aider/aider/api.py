@@ -119,6 +119,11 @@ async def send_command(command: str, formatted_command: str):
         usage_info = extract_token_usage(full_output)
         main_message = remove_token_usage_info(full_output)
 
+        print(f"full_output: {full_output}")
+        print(f"main_message: {main_message}")
+        print(f"file_changes: {file_changes}")
+        print(f"usage_info: {usage_info}")
+
         return AiderResponse(
             message=main_message,
             status="success",

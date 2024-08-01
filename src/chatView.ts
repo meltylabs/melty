@@ -42,7 +42,9 @@ export class ChatView {
     } catch (error) {
       console.error("Error in ChatView constructor:", error);
       vscode.window.showErrorMessage(
-        `Error initializing ChatView: ${error instanceof Error ? error.message : String(error)}`
+        `Error initializing ChatView: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }
@@ -223,7 +225,11 @@ export class ChatView {
         this.setAIThinking(false);
       } catch (error) {
         console.error("CHATVIEW: Error in message handling:", error);
-        vscode.window.showErrorMessage(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
+        vscode.window.showErrorMessage(
+          `An error occurred: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
         this.setAIThinking(false);
       }
     } else if (message.type === "webviewReady") {
@@ -246,7 +252,8 @@ export class ChatView {
       const response = await sendMessageToAider(userMessage);
 
       console.log("Received response from Aider");
-      this.updatePartialResponse(response);
+      console.log("response: ", response);
+      this.updatePartialResponse(response.message);
     } catch (error) {
       console.error(`Error creating AI response:`, error);
       throw error;

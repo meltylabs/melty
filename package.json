@@ -14,28 +14,6 @@
     "onStartupFinished"
   ],
   "contributes": {
-    "commands": [
-      {
-        "command": "spectacle.generateSpec",
-        "title": "Spectacle: Generate Spec"
-      },
-      {
-        "command": "spectacle.reconcileCode",
-        "title": "Spectacle: Reconcile Code"
-      },
-      {
-        "command": "spectacle.updateSpec",
-        "title": "Spectacle: Update Spec"
-      },
-      {
-        "command": "spectacle.startTask",
-        "title": "Spectacle: Start Task"
-      },
-      {
-        "command": "spectacle.updateCode",
-        "title": "Spectacle: Update Code"
-      }
-    ],
     "views": {
       "spectacle": [
         {
@@ -98,44 +76,5 @@
       "supported": true,
       "description": "This extension requires access to modify workspace files."
     }
-  }
-}
-{
-  "name": "spectacle-chat",
-  "displayName": "Spectacle Chat",
-  "description": "A chat interface for VS Code",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.60.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onCommand:spectacle-chat.openChat"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "spectacle-chat.openChat",
-        "title": "Open Spectacle Chat"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.60.0",
-    "@types/node": "^14.14.37",
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
-    "eslint": "^7.24.0",
-    "typescript": "^4.2.4"
   }
 }
