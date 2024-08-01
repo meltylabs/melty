@@ -7,22 +7,29 @@ interface AiderResponse {
   usage_info: any;
 }
 
-export async function sendMessageToAider(
-  userInput: string
-): Promise<AiderResponse> {
-  const aiderUrl =
+let aiderUrl: string;
+
+export async function initializeAider() {
+  aiderUrl =
     (vscode.workspace
       .getConfiguration("spectacle")
       .get("aiderServerUrl") as string) || "http://0.0.0.0:8000";
 
   try {
-    // Ensure the Aider server is started
     console.log("rootpath: ", vscode.workspace.rootPath);
     await axios.post(`${aiderUrl}/startup`, {
       root_dir: vscode.workspace.rootPath,
     });
+    console.log("Aider server initialized successfully");
+  } catch (error: unknown) {
+    handleAiderError(error, "Failed to initialize Aider server");
+  }
+}
 
-    // Send the command to Aider
+export async function sendMessageToAider(
+  userInput: string
+): Promise<AiderResponse> {
+  try {
     const response: AxiosResponse<AiderResponse> = await axios.post(
       `${aiderUrl}/aider/code`,
       {
@@ -36,24 +43,28 @@ export async function sendMessageToAider(
       usage_info: response.data.usage_info,
     };
   } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
-      if (axiosError.code === "ECONNREFUSED") {
-        vscode.window.showErrorMessage(
-          "Failed to connect to Aider server. Please ensure the server is running."
-        );
-      } else {
-        vscode.window.showErrorMessage(
-          `Aider server error: ${axiosError.message}`
-        );
-      }
+    handleAiderError(error, "Error sending message to Aider");
+    throw error;
+  }
+}
+
+function handleAiderError(error: unknown, defaultMessage: string) {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError;
+    if (axiosError.code === "ECONNREFUSED") {
+      vscode.window.showErrorMessage(
+        "Failed to connect to Aider server. Please ensure the server is running."
+      );
     } else {
       vscode.window.showErrorMessage(
-        `Unexpected error: ${
-          error instanceof Error ? error.message : String(error)
-        }`
+        `Aider server error: ${axiosError.message}`
       );
     }
-    throw error;
+  } else {
+    vscode.window.showErrorMessage(
+      `${defaultMessage}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
   }
 }
