@@ -600,16 +600,19 @@ export function activate(context: vscode.ExtensionContext) {
       outputChannel.appendLine(`Executing command: ${argumentsList[0]}`);
       return target.apply(thisArg, argumentsList).catch(error => {
         console.error(`Error executing command ${argumentsList[0]}:`, error);
-        outputChannel.appendLine(`Error executing command ${argumentsList[0]}: ${error.message}`);
+        outputChannel.appendLine(`Error executing command ${argumentsList[0]}: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
       });
     }
   });
+  } catch (error) {
+    console.error('Error activating Spectacle extension:', error);
+    outputChannel.appendLine('Error activating Spectacle extension: ' + (error instanceof Error ? error.message : String(error)));
+    vscode.window.showErrorMessage('Failed to activate Spectacle extension. Please check the output channel for details.');
+  }
 }
 
 export function deactivate() {
   // The extension instance will be garbage collected, so we don't need to call deactivate explicitly
 }
-import * as vscode from 'vscode';
-import { ChatView } from './chatView';
 
