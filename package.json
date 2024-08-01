@@ -89,6 +89,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
+    "axios": "^1.7.3",
     "dotenv": "^16.4.5",
     "python-ast": "^0.1.0"
   },
