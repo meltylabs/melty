@@ -540,23 +540,32 @@ ${PromptFormatter.writeOutputInstructions(false)}`;
       vscode.ConfigurationTarget.Workspace
     );
   }
+  } catch (error) {
+    console.error('Error activating Spectacle extension:', error);
+    outputChannel.appendLine('Error activating Spectacle extension: ' + error.message);
+    vscode.window.showErrorMessage('Failed to activate Spectacle extension. Please check the output channel for details.');
+  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Activating Spectacle extension');
-  outputChannel = vscode.window.createOutputChannel("Spectacle");
-  outputChannel.show();
-  outputChannel.appendLine('Activating Spectacle extension');
-  const extension = new SpectacleExtension(context, outputChannel);
-  extension.activate();
-  outputChannel.appendLine('Spectacle extension activated');
-  console.log('Spectacle extension activated');
+  try {
+    console.log('Activating Spectacle extension');
+    outputChannel = vscode.window.createOutputChannel("Spectacle");
+    outputChannel.show();
+    outputChannel.appendLine('Activating Spectacle extension');
+    const extension = new SpectacleExtension(context, outputChannel);
+    extension.activate();
+    outputChannel.appendLine('Spectacle extension activated');
+    console.log('Spectacle extension activated');
   
   // Log the registered commands
   const commands = vscode.commands.getCommands(true);
   commands.then((cmds) => {
     console.log('Registered commands:', cmds);
     outputChannel.appendLine('Registered commands: ' + cmds.join(', '));
+  }).catch(error => {
+    console.error('Error getting registered commands:', error);
+    outputChannel.appendLine('Error getting registered commands: ' + error.message);
   });
 
   // Add event listener for webview panel creation
@@ -565,7 +574,15 @@ export function activate(context: vscode.ExtensionContext) {
       async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
         console.log('Deserializing webview panel');
         outputChannel.appendLine('Deserializing webview panel');
-        // You might need to reinitialize the ChatView here
+        try {
+          // Reinitialize the ChatView here
+          const chatView = new ChatView(webviewPanel);
+          // You might want to restore the state here if needed
+          // chatView.restoreState(state);
+        } catch (error) {
+          console.error('Error deserializing webview panel:', error);
+          outputChannel.appendLine('Error deserializing webview panel: ' + error.message);
+        }
       }
     })
   );
@@ -575,7 +592,11 @@ export function activate(context: vscode.ExtensionContext) {
     apply: function(target, thisArg, argumentsList) {
       console.log(`Executing command: ${argumentsList[0]}`);
       outputChannel.appendLine(`Executing command: ${argumentsList[0]}`);
-      return target.apply(thisArg, argumentsList);
+      return target.apply(thisArg, argumentsList).catch(error => {
+        console.error(`Error executing command ${argumentsList[0]}:`, error);
+        outputChannel.appendLine(`Error executing command ${argumentsList[0]}: ${error.message}`);
+        throw error;
+      });
     }
   });
 }
