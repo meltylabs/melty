@@ -80,6 +80,10 @@ async def drop_command(request: DropRequest):
 async def diff_command():
     return await send_command(command="diff", formatted_command="/diff")
 
+@app.post("/aider/code", response_model=AiderResponse)
+async def code_command(request: AskRequest):
+    return await send_command(command="code", formatted_command=request.message)
+
 async def send_command(command: str, formatted_command: str):
     global coder
     if not coder:
@@ -88,8 +92,12 @@ async def send_command(command: str, formatted_command: str):
     try:
         coder.io.capture_output.clear_output()
 
-        # Run the command and ignore its output
-        coder.commands.run(formatted_command)
+        if command == "code":
+            # For the "code" command, use coder.run() instead of coder.commands.run()
+            coder.run(with_message=formatted_command)
+        else:
+            # For other commands, use coder.commands.run() as before
+            coder.commands.run(formatted_command)
 
         # Get the captured output
         full_output = coder.io.capture_output.read_output()
@@ -102,11 +110,10 @@ async def send_command(command: str, formatted_command: str):
 
         # Parse the output to extract file changes
         file_changes = []
-        if command == "":
-            edits = coder.get_edits()
-            for edit in edits:
-                filename, original, updated = edit
-                file_changes.append(FileChange(filename=filename, content=updated))
+        edits = coder.get_edits()
+        for edit in edits:
+            filename, original, updated = edit
+            file_changes.append(FileChange(filename=filename, content=updated))
 
         return AiderResponse(
             message=main_message,
