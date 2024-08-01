@@ -1,5 +1,5 @@
 bye
-hi
+bye
 # Goodbye
 
 This was a Markdown file.
@@ -8,4 +8,4 @@ This was a Markdown file.
 
 Content has been modified here.
 
-Hi!
+Bye!
