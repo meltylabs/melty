@@ -42,7 +42,7 @@ export class ChatView {
     } catch (error) {
       console.error("Error in ChatView constructor:", error);
       vscode.window.showErrorMessage(
-        `Error initializing ChatView: ${error.message}`
+        `Error initializing ChatView: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -223,7 +223,7 @@ export class ChatView {
         this.setAIThinking(false);
       } catch (error) {
         console.error("CHATVIEW: Error in message handling:", error);
-        vscode.window.showErrorMessage(`An error occurred: ${error.message}`);
+        vscode.window.showErrorMessage(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
         this.setAIThinking(false);
       }
     } else if (message.type === "webviewReady") {
@@ -257,7 +257,7 @@ Please provide your response to assist the user with their task.`;
           chunk.type === "content_block_start" ||
           chunk.type === "content_block_delta"
         ) {
-          if (chunk.delta?.text) {
+          if ('delta' in chunk && chunk.delta?.text) {
             fullResponse += chunk.delta.text;
             this.updatePartialResponse(fullResponse);
           }
@@ -315,5 +315,11 @@ Please provide your response to assist the user with their task.`;
     } else {
       this._messages.push({ sender: "ai", text: partialResponse });
     }
+  }
+
+  public updateWithTask(task: any) {
+    // Implement the logic to update the chat view with the task
+    console.log("Updating chat view with task:", task);
+    // You may want to add the task to the messages or update the UI in some way
   }
 }

@@ -586,20 +586,3 @@ export function deactivate() {
 import * as vscode from 'vscode';
 import { ChatView } from './chatView';
 
-export function activate(context: vscode.ExtensionContext) {
-    console.log('Activating Spectacle extension');
-    outputChannel = vscode.window.createOutputChannel("Spectacle");
-    outputChannel.show();
-    outputChannel.appendLine('Activating Spectacle extension');
-    const extension = new SpectacleExtension(context, outputChannel);
-    extension.activate();
-    outputChannel.appendLine('Spectacle extension activated');
-    console.log('Spectacle extension activated');
-}
-
-export function deactivate() {
-    console.log('Deactivating Spectacle extension');
-    if (outputChannel) {
-        outputChannel.dispose();
-    }
-}

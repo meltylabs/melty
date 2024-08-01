@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AxiosResponse } from "axios";
 import * as vscode from "vscode";
 
 export async function sendMessageToAider(userInput: string): Promise<string> {
