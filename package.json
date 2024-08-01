@@ -29,7 +29,13 @@
           "name": "Spectacular Chat"
         }
       ]
-    }
+    },
+    "commands": [
+      {
+        "command": "spectacular.openAiderPanel",
+        "title": "Open Aider Panel"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
