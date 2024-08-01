@@ -1,13 +1,12 @@
 import os
-import sys
-from typing import Dict, List, Optional
-
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+import re
+from typing import List, Optional
 
 from aider.capture_output import CaptureOutput
 from aider.io import InputOutput
 from aider.main import main as aider_main
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -15,8 +14,17 @@ app = FastAPI()
 coder = None
 
 
-class AiderRequest(BaseModel):
+# Pydantic models
+class AskRequest(BaseModel):
     message: str
+
+
+class AddRequest(BaseModel):
+    files: List[str]
+
+
+class DropRequest(BaseModel):
+    files: List[str]
 
 
 class FileChange(BaseModel):
@@ -42,6 +50,7 @@ class StartupRequest(BaseModel):
     root_dir: str
 
 
+# API routes
 @app.post("/startup")
 async def startup(request: StartupRequest):
     global coder
@@ -55,32 +64,60 @@ async def startup(request: StartupRequest):
         raise HTTPException(status_code=500, detail=f"Failed to start Aider: {str(e)}")
 
 
-@app.on_event("startup")
-async def startup_event():
-    # This event is now empty as we'll initialize Aider on-demand
-    pass
+@app.post("/aider/ask", response_model=AiderResponse)
+async def ask_command(request: AskRequest):
+    return await send_command(
+        command="ask", formatted_command=f"/ask {request.message}"
+    )
 
 
-@app.post("/aider/sendCommand", response_model=AiderResponse)
-async def send_command(request: AiderRequest):
+@app.post("/aider/add", response_model=AiderResponse)
+async def add_command(request: AddRequest):
+    return await send_command(
+        command="add", formatted_command=f"/add {' '.join(request.files)}"
+    )
+
+
+@app.post("/aider/drop", response_model=AiderResponse)
+async def drop_command(request: DropRequest):
+    return await send_command(
+        command="drop", formatted_command=f"/drop {' '.join(request.files)}"
+    )
+
+
+@app.post("/aider/diff", response_model=AiderResponse)
+async def diff_command():
+    # TODO we need to parse the output for this
+    return await send_command(command="diff", formatted_command="/diff")
+
+
+@app.post("/aider/code", response_model=AiderResponse)
+async def code_command(request: AskRequest):
+    return await send_command(command="code", formatted_command=request.message)
+
+
+# Helper functions
+async def send_command(command: str, formatted_command: str):
     global coder
+    if not coder:
+        return AiderResponse(message="Aider is not running", status="error")
+
     try:
         coder.io.capture_output.clear_output()
-        result = coder.run(with_message=request.message)
+
+        if command == "code":
+            coder.run(with_message=formatted_command)
+            file_changes = [
+                FileChange(filename=filename, content=updated)
+                for filename, _, updated in coder.get_edits()
+            ]
+        else:
+            coder.commands.run(formatted_command)
+            file_changes = []
+
         full_output = coder.io.capture_output.read_output()
-
-        # Extract token usage information
         usage_info = extract_token_usage(full_output)
-
-        # Remove token usage information from the main message
         main_message = remove_token_usage_info(full_output)
-
-        # Parse the output to extract file changes
-        file_changes = []
-        edits = coder.get_edits()
-        for edit in edits:
-            filename, original, updated = edit
-            file_changes.append(FileChange(filename=filename, content=updated))
 
         return AiderResponse(
             message=main_message,
@@ -89,15 +126,12 @@ async def send_command(request: AiderRequest):
             usage=usage_info,
         )
     except SystemExit as e:
-        # Catch SystemExit and return an appropriate error message
         return AiderResponse(message=f"Invalid arguments: {str(e)}", status="error")
     except Exception as e:
         return AiderResponse(message=f"An error occurred: {str(e)}", status="error")
 
 
 def extract_token_usage(output: str) -> TokenUsage:
-    import re
-
     tokens_sent = tokens_received = cost_call = cost_session = 0
 
     matches = re.findall(
@@ -119,9 +153,6 @@ def extract_token_usage(output: str) -> TokenUsage:
 
 
 def remove_token_usage_info(output: str) -> str:
-    # Remove the token usage information from the output
-    import re
-
     return re.sub(r"\nTokens: .* session\.\n", "", output)
 
 

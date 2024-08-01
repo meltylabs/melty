@@ -1,7 +1,7 @@
 {
   "name": "spectacle",
-  "displayName": "spectacle",
-  "description": "AI coding",
+  "displayName": "Spectacle",
+  "description": "AI coding assistant",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.89.1"
@@ -9,7 +9,10 @@
   "categories": [
     "Other"
   ],
-  "main": "./out/src/extension.js",
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
       {
@@ -86,6 +89,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
+    "axios": "^1.7.3",
     "dotenv": "^16.4.5",
     "python-ast": "^0.1.0"
   },
