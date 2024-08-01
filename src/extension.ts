@@ -77,11 +77,20 @@ export class SpectacleExtension {
 
 let outputChannel: vscode.OutputChannel;
 
+import { initializeAider } from "./aider";
+
 export function activate(context: vscode.ExtensionContext) {
   console.log("Activating Spectacle extension");
   outputChannel = vscode.window.createOutputChannel("Spectacle");
   outputChannel.show();
   outputChannel.appendLine("Activating Spectacle extension");
+  
+  // Initialize Aider
+  initializeAider().catch(error => {
+    console.error('Failed to initialize Aider:', error);
+    outputChannel.appendLine(`Failed to initialize Aider: ${error}`);
+  });
+
   const extension = new SpectacleExtension(context, outputChannel);
   extension.activate();
   outputChannel.appendLine("Spectacle extension activated");
