@@ -13,16 +13,16 @@
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
-      "activitybar": [
+      "panel": [
         {
-          "id": "spectacular",
+          "id": "spectacularPanel",
           "title": "Spectacular",
           "icon": "resources/icon.png"
         }
       ]
     },
     "views": {
-      "spectacular": [
+      "spectacularPanel": [
         {
           "type": "webview",
           "id": "spectacularChat",
