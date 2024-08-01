@@ -3,9 +3,9 @@ import * as fs from "fs";
 import * as path from "path";
 import { extractSpecFromCode } from "./extractor";
 import * as diff from "diff";
-import { TaskManager } from "./lib/taskManager";
-import { TaskInterface } from "./lib/taskInterface";
-import { PromptFormatter, askClaudeAndEdit } from "./lib/askClaude";
+import { TaskManager } from "./taskManager";
+import { TaskInterface } from "./taskInterface";
+import { PromptFormatter, askClaudeAndEdit } from "./askClaude";
 import { ChatView } from "./chatView";
 
 export class SpectacleExtension {
