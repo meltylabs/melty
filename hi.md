@@ -1,5 +1,4 @@
-hi
-bye
+hello
 # Hello
 
 This is a new Markdown file.
