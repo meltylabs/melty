@@ -2,12 +2,11 @@ import os
 import sys
 from typing import Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-
 from aider.capture_output import CaptureOutput
 from aider.io import InputOutput
 from aider.main import main as aider_main
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -59,30 +58,29 @@ async def startup(request: StartupRequest):
         raise HTTPException(status_code=500, detail=f"Failed to start Aider: {str(e)}")
 
 
-@app.on_event("startup")
-async def startup_event():
-    # This event is now empty as we'll initialize Aider on-demand
-    pass
-
-
 @app.post("/aider/ask", response_model=AiderResponse)
 async def ask_command(request: AskRequest):
     formatted_command = f"/ask {request.message}"
-    return await send_command(formatted_command)
+    return await send_command(command="ask", formatted_command=formatted_command)
+
 
 @app.post("/aider/add", response_model=AiderResponse)
 async def add_command(request: AddRequest):
     formatted_command = f"/add {' '.join(request.files)}"
-    return await send_command(formatted_command)
+    return await send_command(command="add", formatted_command=formatted_command)
 
-async def send_command(formatted_command: str):
+
+async def send_command(command: str, formatted_command: str):
     global coder
+    if not coder:
+        return AiderResponse(message="Aider is not running", status="error")
+
     try:
         coder.io.capture_output.clear_output()
-        
+
         # Run the command and ignore its output
         coder.commands.run(formatted_command)
-        
+
         # Get the captured output
         full_output = coder.io.capture_output.read_output()
 
@@ -94,10 +92,11 @@ async def send_command(formatted_command: str):
 
         # Parse the output to extract file changes
         file_changes = []
-        edits = coder.get_edits()
-        for edit in edits:
-            filename, original, updated = edit
-            file_changes.append(FileChange(filename=filename, content=updated))
+        if command == "":
+            edits = coder.get_edits()
+            for edit in edits:
+                filename, original, updated = edit
+                file_changes.append(FileChange(filename=filename, content=updated))
 
         return AiderResponse(
             message=main_message,
