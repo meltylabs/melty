@@ -540,11 +540,6 @@ ${PromptFormatter.writeOutputInstructions(false)}`;
       vscode.ConfigurationTarget.Workspace
     );
   }
-  } catch (error) {
-    console.error('Error activating Spectacle extension:', error);
-    outputChannel.appendLine('Error activating Spectacle extension: ' + error.message);
-    vscode.window.showErrorMessage('Failed to activate Spectacle extension. Please check the output channel for details.');
-  }
 }
 
 import * as vscode from 'vscode';
