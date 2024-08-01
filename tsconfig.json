@@ -3,7 +3,9 @@
     "module": "Node16",
     "target": "ES2022",
     "outDir": "out",
-    "lib": ["ES2023"],
+    "lib": [
+      "ES2023"
+    ],
     "sourceMap": true,
     "strict": true /* enable all strict type-checking options */
     /* Additional Checks */
@@ -11,6 +13,12 @@
     // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
     // "noUnusedParameters": true,  /* Report errors on unused parameters. */
   },
-  "include": ["src/**/*", "test/**/*"],
-  "exclude": ["node_modules", "out"]
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "out"
+  ]
 }

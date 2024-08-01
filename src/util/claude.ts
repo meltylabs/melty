@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
 import { Claude as ClaudeSDK } from '@anthropic-ai/sdk';
-
-import * as vscode from 'vscode';
 import Anthropic from '@anthropic-ai/sdk';
 
 export class Claude {
