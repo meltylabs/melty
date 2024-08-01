@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Claude } from "./util/claude";
+import { sendMessageToAider } from "./aider";
 
 export class ChatView {
   private readonly _view: vscode.WebviewView;
@@ -239,32 +239,14 @@ export class ChatView {
   private async createAIResponse(userMessage: string): Promise<void> {
     console.log("Creating AI response");
     try {
-      const fullPrompt = `You are an expert programmer. Help this user with their task. Provide your response in a clear and concise manner.
-
-User: ${userMessage}
-
-Please provide your response to assist the user with their task.`;
-
-      console.log("Sending prompt to Claude");
+      console.log("Sending message to Aider");
 
       this._view.webview.postMessage({ type: "startNewAIMessage" });
 
-      let fullResponse = "";
-      const stream = await Claude.sendMessageStream(fullPrompt);
+      const response = await sendMessageToAider(userMessage);
 
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_start" ||
-          chunk.type === "content_block_delta"
-        ) {
-          if ('delta' in chunk && 'text' in chunk.delta && chunk.delta.text) {
-            fullResponse += chunk.delta.text;
-            this.updatePartialResponse(fullResponse);
-          }
-        }
-      }
-
-      console.log("Received full response from Claude");
+      console.log("Received response from Aider");
+      this.updatePartialResponse(response);
     } catch (error) {
       console.error(`Error creating AI response:`, error);
       throw error;
