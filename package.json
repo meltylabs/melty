@@ -1,45 +1,66 @@
 {
-  "name": "spectacular",
-  "displayName": "spectacular",
-  "description": "",
+  "name": "spectacle",
+  "displayName": "spectacle",
+  "description": "AI coding",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.91.0"
+    "vscode": "^1.89.1"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onView:spectacularChat"],
-  "main": "./out/extension.js",
+  "main": "./out/src/extension.js",
   "contributes": {
-    "viewsContainers": {
-      "panel": [
-        {
-          "id": "spectacularPanel",
-          "title": "Spectacular",
-          "icon": "resources/icon.png"
-        }
-      ]
-    },
-    "views": {
-      "spectacularPanel": [
-        {
-          "type": "webview",
-          "id": "spectacularChat",
-          "name": "Spectacular Chat"
-        }
-      ]
-    },
     "commands": [
       {
-        "command": "spectacular.openAiderPanel",
-        "title": "Open Aider Panel"
+        "command": "spectacle.generateSpec",
+        "title": "Spectacle: Generate Spec"
       },
       {
-        "command": "spectacular.sendMessageToAider",
-        "title": "Send Message to Aider"
+        "command": "spectacle.reconcileCode",
+        "title": "Spectacle: Reconcile Code"
+      },
+      {
+        "command": "spectacle.updateSpec",
+        "title": "Spectacle: Update Spec"
+      },
+      {
+        "command": "spectacle.startTask",
+        "title": "Spectacle: Start Task"
+      },
+      {
+        "command": "spectacle.updateCode",
+        "title": "Spectacle: Update Code"
       }
-    ]
+    ],
+    "views": {
+      "spectacle": [
+        {
+          "type": "webview",
+          "id": "spectacle.chatView",
+          "name": "Spectacle Chat"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "spectacle",
+          "title": "Spectacle",
+          "icon": "resources/spectacle-icon.svg"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Spectacle",
+      "properties": {
+        "spectacle.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for Anthropic Claude"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -49,18 +70,29 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
-  "dependencies": {
-    "axios": "^1.7.2"
-  },
   "devDependencies": {
+    "@types/diff": "^5.2.1",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
+    "@types/sinon": "^17.0.3",
     "@types/vscode": "^1.91.0",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
     "eslint": "^8.57.0",
-    "typescript": "^5.4.5"
+    "sinon": "^18.0.0",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.3",
+    "dotenv": "^16.4.5",
+    "python-ast": "^0.1.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true,
+      "description": "This extension requires access to modify workspace files."
+    }
   }
 }
