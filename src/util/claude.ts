@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { Anthropic } from '@anthropic-ai/sdk';
-import Anthropic from '@anthropic-ai/sdk';
 
 export class Claude {
     private static instance: Anthropic;
@@ -16,12 +15,12 @@ export class Claude {
         return Claude.instance;
     }
 
-    public static sendMessageStream(message: string) {
+    public static async sendMessageStream(message: string) {
         const client = Claude.getInstance();
-        return client.messages.create({
+        return await client.messages.stream({
             max_tokens: 1024,
             messages: [{ role: 'user', content: message }],
-            model: 'claude-3-5-sonnet-20240620',
+            model: 'claude-3-sonnet-20240229',
         });
     }
 }
