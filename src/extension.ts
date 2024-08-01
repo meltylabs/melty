@@ -81,7 +81,7 @@ export class SpectacleExtension {
               this.outputChannel.appendLine("ChatView initialized and shown");
             } catch (error) {
               this.outputChannel.appendLine(`Error creating ChatView: ${error}`);
-              vscode.window.showErrorMessage(`Failed to create ChatView: ${error.message}`);
+              vscode.window.showErrorMessage(`Failed to create ChatView: ${error instanceof Error ? error.message : String(error)}`);
             }
           }
         }

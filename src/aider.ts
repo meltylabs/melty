@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosResponse, AxiosError } from "axios";
 import * as vscode from "vscode";
 
 interface AiderResponse {
@@ -20,15 +20,16 @@ export async function sendMessageToAider(userInput: string): Promise<string> {
     });
 
     return response.data.message;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      if (error.code === 'ECONNREFUSED') {
+      const axiosError = error as AxiosError;
+      if (axiosError.code === 'ECONNREFUSED') {
         vscode.window.showErrorMessage(
           "Failed to connect to Aider server. Please ensure the server is running."
         );
       } else {
         vscode.window.showErrorMessage(
-          `Aider server error: ${error.message}`
+          `Aider server error: ${axiosError.message}`
         );
       }
     } else {
