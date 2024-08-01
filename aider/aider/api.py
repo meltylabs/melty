@@ -79,7 +79,11 @@ async def send_command(formatted_command: str):
     global coder
     try:
         coder.io.capture_output.clear_output()
-        result = coder.run(with_message=formatted_command)
+        
+        # Run the command and ignore its output
+        coder.commands.run(formatted_command)
+        
+        # Get the captured output
         full_output = coder.io.capture_output.read_output()
 
         # Extract token usage information
