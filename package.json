@@ -9,7 +9,15 @@
   "categories": [
     "Other"
   ],
-  "main": "./out/src/extension.js",
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onView:spectacle.chatView",
+    "onCommand:spectacle.generateSpec",
+    "onCommand:spectacle.reconcileCode",
+    "onCommand:spectacle.updateSpec",
+    "onCommand:spectacle.startTask",
+    "onCommand:spectacle.updateCode"
+  ],
   "contributes": {
     "commands": [
       {

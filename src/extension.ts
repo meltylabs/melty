@@ -587,23 +587,16 @@ import * as vscode from 'vscode';
 import { ChatView } from './chatView';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Congratulations, your extension "spectacle-chat" is now active!');
-
-    let disposable = vscode.commands.registerCommand('spectacle-chat.openChat', () => {
-        const panel = vscode.window.createWebviewPanel(
-            'spectacleChat',
-            'Spectacle Chat',
-            vscode.ViewColumn.One,
-            {
-                enableScripts: true
-            }
-        );
-
-        const chatView = new ChatView(panel.webview as any);
-        panel.webview.html = chatView.getWebviewContent();
-    });
-
-    context.subscriptions.push(disposable);
+    console.log('Activating Spectacle extension');
+    const outputChannel = vscode.window.createOutputChannel("Spectacle");
+    outputChannel.show();
+    outputChannel.appendLine('Activating Spectacle extension');
+    const extension = new SpectacleExtension(context, outputChannel);
+    extension.activate();
+    outputChannel.appendLine('Spectacle extension activated');
+    console.log('Spectacle extension activated');
 }
 
-export function deactivate() {}
+export function deactivate() {
+    console.log('Deactivating Spectacle extension');
+}
