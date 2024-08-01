@@ -7,9 +7,8 @@ import { TaskManager } from "./tasks/taskManager";
 import { TaskInterface } from "./tasks/taskInterface";
 import { PromptFormatter, askClaudeAndEdit } from "./tasks/askClaude";
 import { ChatView } from "./chatView";
-import { SpectacleExtension } from './spectacleExtension';
 
-let outputChannel: vscode.OutputChannel;
+export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private statusBarItem: vscode.StatusBarItem;
   private specsFolder: string;
@@ -540,10 +539,6 @@ ${PromptFormatter.writeOutputInstructions(false)}`;
     );
   }
 }
-
-import * as vscode from 'vscode';
-import { ChatView } from './chatView';
-import { SpectacleExtension } from './spectacleExtension';
 
 let outputChannel: vscode.OutputChannel;
 
