@@ -3,9 +3,9 @@ import * as fs from "fs";
 import * as path from "path";
 import { extractSpecFromCode } from "./extractor";
 import * as diff from "diff";
-import { TaskManager } from "./tasks/taskManager";
-import { TaskInterface } from "./tasks/taskInterface";
-import { PromptFormatter, askClaudeAndEdit } from "./tasks/askClaude";
+import { TaskManager } from "./lib/taskManager";
+import { TaskInterface } from "./lib/taskInterface";
+import { PromptFormatter, askClaudeAndEdit } from "./lib/askClaude";
 import { ChatView } from "./chatView";
 
 export class SpectacleExtension {
@@ -17,7 +17,10 @@ export class SpectacleExtension {
   private workspaceRoot: string;
   private chatView: ChatView | undefined;
 
-  constructor(private context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
+  constructor(
+    private context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+  ) {
     this.outputChannel = outputChannel;
     this.workspaceRoot = vscode.workspace.workspaceFolders
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
@@ -57,35 +60,40 @@ export class SpectacleExtension {
     // Register ChatView provider
     console.log("Registering ChatView provider");
     this.context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "spectacle.chatView",
-        {
-          resolveWebviewView: (webviewView) => {
-            this.outputChannel.appendLine("Resolving WebviewView for ChatView");
-            if (!webviewView) {
-              this.outputChannel.appendLine("WebviewView is undefined");
-              vscode.window.showErrorMessage("Failed to create ChatView: WebviewView is undefined");
-              return;
-            }
-            try {
-              this.chatView = new ChatView(webviewView);
-              this.taskInterface.setChatView(this.chatView);
-              this.outputChannel.appendLine("ChatView created and set successfully");
-              
-              // Ensure the webview is visible
-              webviewView.show(true);
-              
-              // Set the initial HTML content
-              webviewView.webview.html = this.chatView.getWebviewContent();
-              
-              this.outputChannel.appendLine("ChatView initialized and shown");
-            } catch (error) {
-              this.outputChannel.appendLine(`Error creating ChatView: ${error}`);
-              vscode.window.showErrorMessage(`Failed to create ChatView: ${error instanceof Error ? error.message : String(error)}`);
-            }
+      vscode.window.registerWebviewViewProvider("spectacle.chatView", {
+        resolveWebviewView: (webviewView) => {
+          this.outputChannel.appendLine("Resolving WebviewView for ChatView");
+          if (!webviewView) {
+            this.outputChannel.appendLine("WebviewView is undefined");
+            vscode.window.showErrorMessage(
+              "Failed to create ChatView: WebviewView is undefined"
+            );
+            return;
           }
-        }
-      )
+          try {
+            this.chatView = new ChatView(webviewView);
+            this.taskInterface.setChatView(this.chatView);
+            this.outputChannel.appendLine(
+              "ChatView created and set successfully"
+            );
+
+            // Ensure the webview is visible
+            webviewView.show(true);
+
+            // Set the initial HTML content
+            webviewView.webview.html = this.chatView.getWebviewContent();
+
+            this.outputChannel.appendLine("ChatView initialized and shown");
+          } catch (error) {
+            this.outputChannel.appendLine(`Error creating ChatView: ${error}`);
+            vscode.window.showErrorMessage(
+              `Failed to create ChatView: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            );
+          }
+        },
+      })
     );
     console.log("ChatView provider registered successfully");
 
@@ -543,24 +551,28 @@ ${PromptFormatter.writeOutputInstructions(false)}`;
 let outputChannel: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Activating Spectacle extension');
+  console.log("Activating Spectacle extension");
   outputChannel = vscode.window.createOutputChannel("Spectacle");
   outputChannel.show();
-  outputChannel.appendLine('Activating Spectacle extension');
+  outputChannel.appendLine("Activating Spectacle extension");
 
   try {
     const extension = new SpectacleExtension(context, outputChannel);
     extension.activate();
-    outputChannel.appendLine('Spectacle extension activated');
-    console.log('Spectacle extension activated');
+    outputChannel.appendLine("Spectacle extension activated");
+    console.log("Spectacle extension activated");
   } catch (error) {
-    console.error('Error during Spectacle activation:', error);
-    outputChannel.appendLine('Error during Spectacle activation: ' + (error instanceof Error ? error.message : String(error)));
-    vscode.window.showErrorMessage('Failed to activate Spectacle extension. Please check the output channel for details.');
+    console.error("Error during Spectacle activation:", error);
+    outputChannel.appendLine(
+      "Error during Spectacle activation: " +
+        (error instanceof Error ? error.message : String(error))
+    );
+    vscode.window.showErrorMessage(
+      "Failed to activate Spectacle extension. Please check the output channel for details."
+    );
   }
 }
 
 export function deactivate() {
   // The extension instance will be garbage collected, so we don't need to call deactivate explicitly
 }
-
