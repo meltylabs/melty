@@ -15,8 +15,12 @@ app = FastAPI()
 coder = None
 
 
-class AiderRequest(BaseModel):
+class AskRequest(BaseModel):
     message: str
+
+
+class AddRequest(BaseModel):
+    files: List[str]
 
 
 class FileChange(BaseModel):
@@ -61,12 +65,21 @@ async def startup_event():
     pass
 
 
-@app.post("/aider/sendCommand", response_model=AiderResponse)
-async def send_command(request: AiderRequest):
+@app.post("/aider/ask", response_model=AiderResponse)
+async def ask_command(request: AskRequest):
+    formatted_command = f"/ask {request.message}"
+    return await send_command(formatted_command)
+
+@app.post("/aider/add", response_model=AiderResponse)
+async def add_command(request: AddRequest):
+    formatted_command = f"/add {' '.join(request.files)}"
+    return await send_command(formatted_command)
+
+async def send_command(formatted_command: str):
     global coder
     try:
         coder.io.capture_output.clear_output()
-        result = coder.run(with_message=request.message)
+        result = coder.run(with_message=formatted_command)
         full_output = coder.io.capture_output.read_output()
 
         # Extract token usage information
