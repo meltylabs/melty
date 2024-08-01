@@ -554,11 +554,12 @@ import { SpectacleExtension } from './spectacleExtension';
 let outputChannel: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext) {
+  console.log('Activating Spectacle extension');
+  outputChannel = vscode.window.createOutputChannel("Spectacle");
+  outputChannel.show();
+  outputChannel.appendLine('Activating Spectacle extension');
+
   try {
-    console.log('Activating Spectacle extension');
-    outputChannel = vscode.window.createOutputChannel("Spectacle");
-    outputChannel.show();
-    outputChannel.appendLine('Activating Spectacle extension');
     const extension = new SpectacleExtension(context, outputChannel);
     extension.activate();
     outputChannel.appendLine('Spectacle extension activated');
@@ -593,18 +594,18 @@ export function activate(context: vscode.ExtensionContext) {
       })
     );
 
-  // Log when commands are executed
-  vscode.commands.executeCommand = new Proxy(vscode.commands.executeCommand, {
-    apply: function(target, thisArg, argumentsList) {
-      console.log(`Executing command: ${argumentsList[0]}`);
-      outputChannel.appendLine(`Executing command: ${argumentsList[0]}`);
-      return target.apply(thisArg, argumentsList).catch(error => {
-        console.error(`Error executing command ${argumentsList[0]}:`, error);
-        outputChannel.appendLine(`Error executing command ${argumentsList[0]}: ${error instanceof Error ? error.message : String(error)}`);
-        throw error;
-      });
-    }
-  });
+    // Log when commands are executed
+    vscode.commands.executeCommand = new Proxy(vscode.commands.executeCommand, {
+      apply: function(target, thisArg, argumentsList) {
+        console.log(`Executing command: ${argumentsList[0]}`);
+        outputChannel.appendLine(`Executing command: ${argumentsList[0]}`);
+        return target.apply(thisArg, argumentsList).catch(error => {
+          console.error(`Error executing command ${argumentsList[0]}:`, error);
+          outputChannel.appendLine(`Error executing command ${argumentsList[0]}: ${error instanceof Error ? error.message : String(error)}`);
+          throw error;
+        });
+      }
+    });
   } catch (error) {
     console.error('Error activating Spectacle extension:', error);
     outputChannel.appendLine('Error activating Spectacle extension: ' + (error instanceof Error ? error.message : String(error)));
