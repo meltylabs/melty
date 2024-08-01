@@ -269,7 +269,7 @@ export class ChatView {
       this.updatePartialResponse(response.message);
       this._view.webview.postMessage({
         type: "updateUsageInfo",
-        usageInfo: response.usage_info
+        usageInfo: response.usage_info,
       });
     } catch (error) {
       console.error(`Error creating AI response:`, error);
