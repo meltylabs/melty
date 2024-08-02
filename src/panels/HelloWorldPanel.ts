@@ -6,6 +6,7 @@ import {
   Uri,
   ViewColumn,
 } from "vscode";
+import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
 import { sendMessageToAider } from "../aider";
@@ -174,6 +175,43 @@ export class HelloWorldPanel {
           case "code":
             window.showInformationMessage(`Asking AI...`);
             const response = await sendMessageToAider(text, "/aider/code");
+
+            // Get the Git extension
+            const gitExtension = vscode.extensions.getExtension("vscode.git");
+            if (!gitExtension) {
+              vscode.window.showErrorMessage("Git extension not found");
+              return;
+            }
+
+            const git = gitExtension.exports.getAPI(1);
+
+            // Get the current repository
+            const repositories = git.repositories;
+            if (repositories.length === 0) {
+              vscode.window.showInformationMessage("No Git repository found");
+              return;
+            }
+
+            const repo = repositories[0];
+
+            // Get the latest commit
+            const latestCommit = repo.state.HEAD?.commit;
+
+            if (latestCommit) {
+              // Get the commit message
+              const commitMessage = await repo.getCommit(latestCommit);
+
+              // Get the diff of the latest commit
+              const diff = await repo.diffWithHEAD(latestCommit + "^");
+
+              vscode.window.showInformationMessage(
+                `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}\nDiff:\n${diff}`
+              );
+            } else {
+              vscode.window.showInformationMessage(
+                "No commits found in the repository"
+              );
+            }
 
             // Send the response back to the webview
             this._panel.webview.postMessage({
