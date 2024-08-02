@@ -313,12 +313,17 @@ IThinking(false);
         const input = message.input;
 
         // Add user message to chat
-        const displayMessage = `${message.command}: ${Array.isArray(input) ? input.join(", ") : input}`;
+        const displayMessage = `${message.command}: ${
+          Array.isArray(input) ? input.join(", ") : input
+        }`;
         this.addMessage("user", displayMessage);
 
         // Generate AI response
         this.setAIThinking(true);
-        const response = await sendMessageToAider(input, `/aider/${message.command}`);
+        const response = await sendMessageToAider(
+          input,
+          `/aider/${message.command}`
+        );
         this.handleAiderResponse(response);
       } catch (error) {
         console.error(`${logPrefix} Error in message handling:`, error);
@@ -354,58 +359,6 @@ IThinking(false);
       });
     }
     this.setAIThinking(false);
-  }
-
-  private async createAIResponse(
-    command: string,
-    userInput: string | string[]
-  ): Promise<void> {
-    console.log(`${logPrefix} Creating AI response for command: ${command}`);
-    try {
-      console.log(`${logPrefix} Sending message to Aider`);
-
-      this._view.webview.postMessage({ type: "startNewAIMessage" });
-
-      let response;
-      switch (command) {
-        case "ask":
-        case "code":
-          response = await sendMessageToAider(
-            userInput as string,
-            `/aider/${command}`
-          );
-          break;
-        case "add":
-        case "drop":
-          response = await sendMessageToAider(
-            userInput as string[],
-            `/aider/${command}`
-          );
-          break;
-        case "diff":
-          response = await sendMessageToAider("", "/aider/diff");
-          break;
-        default:
-          throw new Error(`Unknown command: ${command}`);
-      }
-
-      console.log(`${logPrefix} Received response from Aider`);
-      console.log(`${logPrefix} response: `, response);
-      console.log(`${logPrefix} Usage info: `, response.usage);
-      this.updatePartialResponse(response.message);
-      if (response.usage) {
-        console.log(`${logPrefix} Sending usage info to webview`);
-        this._view.webview.postMessage({
-          type: "updateUsageInfo",
-          usageInfo: response.usage,
-        });
-      } else {
-        console.log(`${logPrefix} No usage info available in the response`);
-      }
-    } catch (error) {
-      console.error(`${logPrefix} Error creating AI response:`, error);
-      throw error;
-    }
   }
 
   private _updateChatView() {
@@ -478,8 +431,6 @@ IThinking(false);
   }
 
   public updateWithTask(task: any) {
-    // Implement the logic to update the chat view with the task
     console.log(`${logPrefix} Updating chat view with task:`, task);
-    // You may want to add the task to the messages or update the UI in some way
   }
 }
