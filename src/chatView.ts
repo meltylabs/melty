@@ -342,20 +342,20 @@ export class ChatView {
   }
 
   private _updateChatView() {
-    console.log("CHATVIEW: Updating chat view with messages:", this._messages);
+    console.log(`${logPrefix} Updating chat view with messages:`, this._messages);
     if (this._view && this._view.webview) {
       this._view.webview.postMessage({
         type: "updateMessages",
         messages: this._messages,
       });
-      console.log("CHATVIEW: Posted updateMessages to webview");
+      console.log(`${logPrefix} Posted updateMessages to webview`);
     } else {
-      console.error("CHATVIEW: Error: _view or _view.webview is undefined");
+      console.error(`${logPrefix} Error: _view or _view.webview is undefined`);
     }
   }
 
   public addMessage(sender: "user" | "ai", text: string) {
-    console.log(`CHATVIEW: Adding message - ${sender}: ${text}`);
+    console.log(`${logPrefix} Adding message - ${sender}: ${text}`);
     this._messages.push({ sender, text });
     this._view.webview.postMessage({
       type: "addMessage",
@@ -376,7 +376,7 @@ export class ChatView {
       type: "updatePartialResponse",
       text: partialResponse,
     });
-    console.log(`Sent partial response to webview: ${partialResponse}`);
+    console.log(`${logPrefix} Sent partial response to webview: ${partialResponse}`);
 
     // Update or add the AI message in the _messages array
     const lastMessage = this._messages[this._messages.length - 1];
@@ -389,7 +389,7 @@ export class ChatView {
 
   public updateWithTask(task: any) {
     // Implement the logic to update the chat view with the task
-    console.log("Updating chat view with task:", task);
+    console.log(`${logPrefix} Updating chat view with task:`, task);
     // You may want to add the task to the messages or update the UI in some way
   }
 }
