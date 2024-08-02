@@ -22,12 +22,7 @@ function App() {
 
     // Send message to extension
     vscode.postMessage({
-      command: "sendMessage",
-      text: message,
-    });
-
-    vscode.postMessage({
-      command: "hello",
+      command: "code",
       text: message,
     });
 

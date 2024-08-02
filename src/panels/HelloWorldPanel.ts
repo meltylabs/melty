@@ -8,6 +8,7 @@ import {
 } from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
+import { sendMessageToAider } from "../aider";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -161,7 +162,7 @@ export class HelloWorldPanel {
    */
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
-      (message: any) => {
+      async (message: any) => {
         const command = message.command;
         const text = message.text;
 
@@ -169,6 +170,10 @@ export class HelloWorldPanel {
           case "hello":
             // Code that should run in response to the hello message command
             window.showInformationMessage(text);
+            return;
+          case "code":
+            const response = await sendMessageToAider(text, "/aider/code");
+            window.showInformationMessage(`${response.message}`);
             return;
           // Add more switch case statements here as more webview message commands
           // are created within the webview context (i.e. inside media/main.js)
