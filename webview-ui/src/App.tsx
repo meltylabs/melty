@@ -11,9 +11,11 @@ function App() {
   }
 
   return (
-    <main>
-      <h1>Hello World!</h1>
-      <VSCodeButton onClick={handleHowdyClick}>Howdy!</VSCodeButton>
+    <main className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Hello World!</h1>
+      <VSCodeButton onClick={handleHowdyClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Howdy!
+      </VSCodeButton>
     </main>
   );
 }
