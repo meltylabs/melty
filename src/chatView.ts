@@ -52,7 +52,7 @@ export class ChatView {
   }
 
   private _getHtmlForWebview(): string {
-    const htmlContent = /*html*/ `
+    return `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -105,182 +105,167 @@ export class ChatView {
                     <h3>File Changes:</h3>
                     <ul id="file-changes-list"></ul>
                 </div>
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    const chatMessages = document.getElementById('chat-messages');
+                    const messageInput = document.getElementById('message-input');
+                    const sendButton = document.getElementById('send-button');
+                    const resetButton = document.getElementById('reset-button');
+                    const aiLoading = document.getElementById('ai-loading');
+                    const commandSelect = document.getElementById('command-select');
+
+                    let currentAIMessage = null;
+
+                    sendButton.addEventListener('click', sendMessage);
+                    resetButton.addEventListener('click', resetChat);
+                    messageInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            sendMessage();
+                        }
+                    });
+
+                    function sendMessage() {
+                        const message = messageInput.value;
+                        const command = commandSelect.value;
+                        if (message) {
+                            vscode.postMessage({
+                                type: 'sendMessage',
+                                command,
+                                message: command === 'add' || command === 'drop' ? message.split(',').map(file => file.trim()) : message
+                            });
+                            messageInput.value = '';
+                            setAIThinking(true);
+                        }
+                    }
+
+                    function addMessageToChat(sender, text) {
+                        const messageElement = document.createElement('div');
+                        messageElement.className = 'message ' + sender;
+                        if (typeof text === 'object' && text !== null) {
+                            text = JSON.stringify(text, null, 2);
+                        }
+                        const senderText = document.createElement('strong');
+                        senderText.textContent = \`\${sender === 'user' ? 'You' : 'AI'}: \`;
+                        messageElement.appendChild(senderText);
+                        const contentText = document.createElement('span');
+                        contentText.textContent = text;
+                        messageElement.appendChild(contentText);
+                        chatMessages.appendChild(messageElement);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+
+                    function updatePartialResponse(text) {
+                        if (!currentAIMessage) {
+                            currentAIMessage = document.createElement('div');
+                            currentAIMessage.className = 'message ai';
+                            chatMessages.appendChild(currentAIMessage);
+                        }
+                        let formattedText;
+                        if (typeof text === 'object' && text !== null) {
+                            formattedText = JSON.stringify(text, null, 2);
+                        } else {
+                            formattedText = text.toString();
+                        }
+                        currentAIMessage.innerHTML = '<strong>AI:</strong> <pre style="white-space: pre-wrap; word-wrap: break-word; max-width: 100%;">' + formattedText + '</pre>';
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+
+                    function finalizeAIResponse() {
+                        currentAIMessage = null;
+                        setAIThinking(false);
+                    }
+
+                    function startNewAIMessage() {
+                        currentAIMessage = null;
+                    }
+
+                    function resetChat() {
+                        vscode.postMessage({ type: 'resetChat' });
+                        chatMessages.innerHTML = '';
+                        setAIThinking(false);
+                    }
+
+                    function setAIThinking(isThinking) {
+                        aiLoading.style.display = isThinking ? 'block' : 'none';
+                        if (!isThinking && currentAIMessage) {
+                            currentAIMessage.classList.remove('thinking');
+                        }
+                    }
+
+                    function updateUsageInfo(usageInfo) {
+                        console.log("Received usage info in webview:", usageInfo);
+                        const usageInfoElement = document.getElementById('usage-info');
+                        const tokensSent = document.getElementById('tokens-sent');
+                        const tokensReceived = document.getElementById('tokens-received');
+                        const costCall = document.getElementById('cost-call');
+                        const costSession = document.getElementById('cost-session');
+
+                        if (usageInfo) {
+                            console.log("Updating usage info display");
+                            tokensSent.textContent = usageInfo.tokens_sent;
+                            tokensReceived.textContent = usageInfo.tokens_received;
+                            costCall.textContent = '$' + usageInfo.cost_call.toFixed(2);
+                            costSession.textContent = '$' + usageInfo.cost_session.toFixed(2);
+                            usageInfoElement.style.display = 'block';
+                        } else {
+                            console.log("No usage info available");
+                            usageInfoElement.style.display = 'none';
+                        }
+                    }
+
+                    function renderFileChanges(fileChanges) {
+                        const fileChangesList = document.getElementById('file-changes-list');
+                        fileChangesList.innerHTML = '';
+                        if (fileChanges && fileChanges.length > 0) {
+                            fileChanges.forEach(file => {
+                                const li = document.createElement('li');
+                                li.textContent = file;
+                                fileChangesList.appendChild(li);
+                            });
+                            document.getElementById('file-changes').style.display = 'block';
+                        } else {
+                            document.getElementById('file-changes').style.display = 'none';
+                        }
+                    }
+
+                    window.addEventListener('message', event => {
+                        const message = event.data;
+                        switch (message.type) {
+                            case 'addMessage':
+                                addMessageToChat(message.sender, message.text);
+                                break;
+                            case 'updatePartialResponse':
+                                updatePartialResponse(message.text);
+                                break;
+                            case 'finalizeAIResponse':
+                                finalizeAIResponse();
+                                break;
+                            case 'updateMessages':
+                                chatMessages.innerHTML = '';
+                                message.messages.forEach(msg => {
+                                    addMessageToChat(msg.author, msg.text);
+                                });
+                                break;
+                            case 'setAIThinking':
+                                setAIThinking(message.isThinking);
+                                break;
+                            case 'startNewAIMessage':
+                                startNewAIMessage();
+                                break;
+                            case 'updateUsageInfo':
+                                updateUsageInfo(message.usageInfo);
+                                break;
+                            case 'renderFileChanges':
+                                renderFileChanges(message.fileChanges);
+                                break;
+                        }
+                    });
+
+                    vscode.postMessage({ type: 'webviewReady' });
+                </script>
             </body>
             </html>
         `;
-
-    const scriptContent = /*javascript*/ `
-        const vscode = acquireVsCodeApi();
-        const chatMessages = document.getElementById('chat-messages');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const resetButton = document.getElementById('reset-button');
-        const aiLoading = document.getElementById('ai-loading');
-        const commandSelect = document.getElementById('command-select');
-
-        let currentAIMessage = null;
-
-        sendButton.addEventListener('click', sendMessage);
-        resetButton.addEventListener('click', resetChat);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        function sendMessage() {
-            const message = messageInput.value;
-            const command = commandSelect.value;
-            if (message) {
-                let payload = {
-                    type: 'sendMessage',
-                    command
-                };
-                if (command === 'add' || command === 'drop') {
-                    payload.files = message.split(',').map(file => file.trim());
-                } else {
-                    payload.message = message;
-                }
-                console.log("Sending message to Aider:", payload);
-                console.log('command: ', command);
-                vscode.postMessage(payload);
-                messageInput.value = '';
-                setAIThinking(true);
-            }
-        }
-
-        function addMessageToChat(sender, text) {
-            const messageElement = document.createElement('div');
-            messageElement.className = 'message ' + sender;
-            if (typeof text === 'object' && text !== null) {
-                text = JSON.stringify(text, null, 2);
-            }
-            const senderText = document.createElement('strong');
-            senderText.textContent = \`\${sender === 'user' ? 'You' : 'AI'}: \`;
-            messageElement.appendChild(senderText);
-            const contentText = document.createElement('span');
-            contentText.textContent = text;
-            messageElement.appendChild(contentText);
-            chatMessages.appendChild(messageElement);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function updatePartialResponse(text) {
-            if (!currentAIMessage) {
-                currentAIMessage = document.createElement('div');
-                currentAIMessage.className = 'message ai';
-                chatMessages.appendChild(currentAIMessage);
-            }
-            let formattedText;
-            if (typeof text === 'object' && text !== null) {
-                formattedText = JSON.stringify(text, null, 2);
-            } else {
-                formattedText = text.toString();
-            }
-            currentAIMessage.innerHTML = '<strong>AI:</strong> <pre style="white-space: pre-wrap; word-wrap: break-word; max-width: 100%;">' + formattedText + '</pre>';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function finalizeAIResponse() {
-            currentAIMessage = null;
-            setA
-
-IThinking(false);
-        }
-
-        function startNewAIMessage() {
-            currentAIMessage = null;
-        }
-
-        function resetChat() {
-            vscode.postMessage({ type: 'resetChat' });
-            chatMessages.innerHTML = '';
-            setAIThinking(false);
-        }
-
-        function setAIThinking(isThinking) {
-            aiLoading.style.display = isThinking ? 'block' : 'none';
-            if (!isThinking && currentAIMessage) {
-                currentAIMessage.classList.remove('thinking');
-            }
-        }
-
-        function updateUsageInfo(usageInfo) {
-            console.log("Received usage info in webview:", usageInfo);
-            const usageInfoElement = document.getElementById('usage-info');
-            const tokensSent = document.getElementById('tokens-sent');
-            const tokensReceived = document.getElementById('tokens-received');
-            const costCall = document.getElementById('cost-call');
-            const costSession = document.getElementById('cost-session');
-
-            if (usageInfo) {
-                console.log("Updating usage info display");
-                tokensSent.textContent = usageInfo.tokens_sent;
-                tokensReceived.textContent = usageInfo.tokens_received;
-                costCall.textContent = '$' + usageInfo.cost_call.toFixed(2);
-                costSession.textContent = '$' + usageInfo.cost_session.toFixed(2);
-                usageInfoElement.style.display = 'block';
-            } else {
-                console.log("No usage info available");
-                usageInfoElement.style.display = 'none';
-            }
-        }
-
-        function renderFileChanges(fileChanges) {
-            const fileChangesList = document.getElementById('file-changes-list');
-            fileChangesList.innerHTML = '';
-            if (fileChanges && fileChanges.length > 0) {
-                fileChanges.forEach(file => {
-                    const li = document.createElement('li');
-                    li.textContent = file;
-                    fileChangesList.appendChild(li);
-                });
-                document.getElementById('file-changes').style.display = 'block';
-            } else {
-                document.getElementById('file-changes').style.display = 'none';
-            }
-        }
-
-        window.addEventListener('message', event => {
-            const message = event.data;
-            switch (message.type) {
-                case 'addMessage':
-                    addMessageToChat(message.sender, message.text);
-                    break;
-                case 'updatePartialResponse':
-                    updatePartialResponse(message.text);
-                    break;
-                case 'finalizeAIResponse':
-                    finalizeAIResponse();
-                    break;
-                case 'updateMessages':
-                    chatMessages.innerHTML = '';
-                    message.messages.forEach(msg => {
-                        addMessageToChat(msg.author, msg.text);
-                    });
-                    break;
-                case 'setAIThinking':
-                    setAIThinking(message.isThinking);
-                    break;
-                case 'startNewAIMessage':
-                    startNewAIMessage();
-                    break;
-                case 'updateUsageInfo':
-                    updateUsageInfo(message.usageInfo);
-                    break;
-                case 'renderFileChanges':
-                    renderFileChanges(message.fileChanges);
-                    break;
-            }
-        });
-
-        vscode.postMessage({ type: 'webviewReady' });
-    `;
-
-    return htmlContent.replace(
-      "</body>",
-      `<script>${scriptContent}</script></body>`
-    );
   }
 
   public getWebviewContent(): string {
@@ -296,26 +281,16 @@ IThinking(false);
       this._updateChatView();
     } else if (message.type === "sendMessage") {
       console.log(
-        `${logPrefix} Received sendMessage request:`,
-        message.command === "add" || message.command === "drop"
-          ? message.files
-          : message.message
+        `${logPrefix} Received sendMessage request: ${message.message}`
       );
 
       try {
         // Add user message to chat
-        const displayMessage =
-          message.command === "add" || message.command === "drop"
-            ? `${message.command}: ${message.files.join(", ")}`
-            : `${message.command}: ${message.message}`;
-        this.addMessage("user", displayMessage);
+        this.addMessage("user", `${message.command}: ${message.message}`);
 
         // Generate AI response
         this.setAIThinking(true);
-        await this.createAIResponse(
-          message.command,
-          message.files || message.message
-        );
+        await this.createAIResponse(message.command, message.message);
         this.setAIThinking(false);
       } catch (error) {
         console.error(`${logPrefix} Error in message handling:`, error);
@@ -338,7 +313,7 @@ IThinking(false);
 
   private async createAIResponse(
     command: string,
-    userInput: string | string[]
+    userMessage: string
   ): Promise<void> {
     console.log(`${logPrefix} Creating AI response for command: ${command}`);
     try {
@@ -349,21 +324,19 @@ IThinking(false);
       let response;
       switch (command) {
         case "ask":
-        case "code":
-          response = await sendMessageToAider(
-            userInput as string,
-            `/aider/${command}`
-          );
+          response = await sendMessageToAider(userMessage, "/aider/ask");
           break;
         case "add":
+          response = await sendMessageToAider(userMessage, "/aider/add");
+          break;
         case "drop":
-          response = await sendMessageToAider(
-            userInput as string[],
-            `/aider/${command}`
-          );
+          response = await sendMessageToAider(userMessage, "/aider/drop");
           break;
         case "diff":
           response = await sendMessageToAider("", "/aider/diff");
+          break;
+        case "code":
+          response = await sendMessageToAider(userMessage, "/aider/code");
           break;
         default:
           throw new Error(`Unknown command: ${command}`);
