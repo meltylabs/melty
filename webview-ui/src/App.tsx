@@ -33,6 +33,38 @@ function App() {
     (event.target as HTMLFormElement).reset();
   }
 
+  function addDemoMessage() {
+    const demoDiff = `
+diff --git a/example.js b/example.js
+index 6214953..1d78b34 100644
+--- a/example.js
++++ b/example.js
+@@ -1,5 +1,5 @@
+ function greet(name) {
+-  console.log("Hello, " + name + "!");
++  console.log(\`Hello, \${name}!\`);
+ }
+ 
+-greet("World");
++greet("VSCode");
+`;
+
+    const diffHtml = Diff2Html.html(demoDiff, {
+      drawFileList: true,
+      matching: "lines",
+      outputFormat: "side-by-side",
+    });
+
+    setMessages([
+      ...messages,
+      {
+        text: "Here's a demo diff:",
+        sender: "bot",
+        diffHtml,
+      },
+    ]);
+  }
+
   useEffect(() => {
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {
@@ -81,7 +113,7 @@ function App() {
           </div>
         ))}
       </div>
-      <div className="flex">
+      <div className="flex mb-4">
         <form onSubmit={handleSendMessage}>
           <VSCodeTextField
             id="message"
@@ -97,6 +129,12 @@ function App() {
           </VSCodeButton>
         </form>
       </div>
+      <VSCodeButton
+        onClick={addDemoMessage}
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Add Demo Diff
+      </VSCodeButton>
     </main>
   );
 }
