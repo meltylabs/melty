@@ -26,6 +26,11 @@ function App() {
       text: message,
     });
 
+    vscode.postMessage({
+      command: "hello",
+      text: message,
+    });
+
     // clear the input
     (event.target as HTMLFormElement).reset();
   }
