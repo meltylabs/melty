@@ -132,33 +132,21 @@ export class ChatView {
             const message = messageInput.value;
             const command = commandSelect.value;
             if (message) {
-                let input;
-                if (command === 'add' || command === 'drop') {
-                    input = message.split(',').map(file => file.trim());
-                } else {
-                    input = message;
-                }
-                console.log("Sending message to Aider:", input);
-                console.log('command: ', command);
-                vscode.postMessage({
+                let payload = {
                     type: 'sendMessage',
-                    command: command,
-                    input: input
-                });
+                    command
+                };
+                if (command === 'add' || command === 'drop') {
+                    payload.files = message.split(',').map(file => file.trim());
+                } else {
+                    payload.message = message;
+                }
+                console.log("Sending message to Aider:", payload);
+                console.log('command: ', command);
+                vscode.postMessage(payload);
                 messageInput.value = '';
                 setAIThinking(true);
             }
-        }
-
-        function handleAiderResponse(response) {
-            updatePartialResponse(response.message);
-            if (response.usage) {
-                updateUsageInfo(response.usage);
-            }
-            if (response.fileChanges) {
-                renderFileChanges(response.fileChanges);
-            }
-            setAIThinking(false);
         }
 
         function addMessageToChat(sender, text) {
@@ -168,7 +156,7 @@ export class ChatView {
                 text = JSON.stringify(text, null, 2);
             }
             const senderText = document.createElement('strong');
-            senderText.textContent = \`${sender === "user" ? "You" : "AI"}: \`;
+            senderText.textContent = \`\${sender === 'user' ? 'You' : 'AI'}: \`;
             messageElement.appendChild(senderText);
             const contentText = document.createElement('span');
             contentText.textContent = text;
@@ -307,24 +295,28 @@ IThinking(false);
       this._messages = [];
       this._updateChatView();
     } else if (message.type === "sendMessage") {
-      console.log(`${logPrefix} Received sendMessage request:`, message);
+      console.log(
+        `${logPrefix} Received sendMessage request:`,
+        message.command === "add" || message.command === "drop"
+          ? message.files
+          : message.message
+      );
 
       try {
-        const input = message.input;
-
         // Add user message to chat
-        const displayMessage = `${message.command}: ${
-          Array.isArray(input) ? input.join(", ") : input
-        }`;
+        const displayMessage =
+          message.command === "add" || message.command === "drop"
+            ? `${message.command}: ${message.files.join(", ")}`
+            : `${message.command}: ${message.message}`;
         this.addMessage("user", displayMessage);
 
         // Generate AI response
         this.setAIThinking(true);
-        const response = await sendMessageToAider(
-          input,
-          `/aider/${message.command}`
+        await this.createAIResponse(
+          message.command,
+          message.files || message.message
         );
-        this.handleAiderResponse(response);
+        this.setAIThinking(false);
       } catch (error) {
         console.error(`${logPrefix} Error in message handling:`, error);
         vscode.window.showErrorMessage(
@@ -344,21 +336,56 @@ IThinking(false);
     }
   }
 
-  private handleAiderResponse(response: AiderResponse) {
-    this.updatePartialResponse(response.message);
-    if (response.usage) {
-      this._view.webview.postMessage({
-        type: "updateUsageInfo",
-        usageInfo: response.usage,
-      });
+  private async createAIResponse(
+    command: string,
+    userInput: string | string[]
+  ): Promise<void> {
+    console.log(`${logPrefix} Creating AI response for command: ${command}`);
+    try {
+      console.log(`${logPrefix} Sending message to Aider`);
+
+      this._view.webview.postMessage({ type: "startNewAIMessage" });
+
+      let response;
+      switch (command) {
+        case "ask":
+        case "code":
+          response = await sendMessageToAider(
+            userInput as string,
+            `/aider/${command}`
+          );
+          break;
+        case "add":
+        case "drop":
+          response = await sendMessageToAider(
+            userInput as string[],
+            `/aider/${command}`
+          );
+          break;
+        case "diff":
+          response = await sendMessageToAider("", "/aider/diff");
+          break;
+        default:
+          throw new Error(`Unknown command: ${command}`);
+      }
+
+      console.log(`${logPrefix} Received response from Aider`);
+      console.log(`${logPrefix} response: `, response);
+      console.log(`${logPrefix} Usage info: `, response.usage);
+      this.updatePartialResponse(response.message);
+      if (response.usage) {
+        console.log(`${logPrefix} Sending usage info to webview`);
+        this._view.webview.postMessage({
+          type: "updateUsageInfo",
+          usageInfo: response.usage,
+        });
+      } else {
+        console.log(`${logPrefix} No usage info available in the response`);
+      }
+    } catch (error) {
+      console.error(`${logPrefix} Error creating AI response:`, error);
+      throw error;
     }
-    if (response.fileChanges) {
-      this._view.webview.postMessage({
-        type: "renderFileChanges",
-        fileChanges: response.fileChanges,
-      });
-    }
-    this.setAIThinking(false);
   }
 
   private _updateChatView() {
@@ -431,6 +458,8 @@ IThinking(false);
   }
 
   public updateWithTask(task: any) {
+    // Implement the logic to update the chat view with the task
     console.log(`${logPrefix} Updating chat view with task:`, task);
+    // You may want to add the task to the messages or update the UI in some way
   }
 }
