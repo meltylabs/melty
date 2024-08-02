@@ -52,7 +52,7 @@ export class ChatView {
   }
 
   private _getHtmlForWebview(): string {
-    return `
+    return /* html */ `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -342,10 +342,14 @@ export class ChatView {
           throw new Error(`Unknown command: ${command}`);
       }
 
-      console.log(`${logPrefix} Received response from Aider`);
       console.log(`${logPrefix} response: `, response);
       console.log(`${logPrefix} Usage info: `, response.usage);
-      this.updatePartialResponse(response.message);
+      console.log(`${logPrefix} File changes: `, response.fileChanges);
+      this.updatePartialResponse({
+        message: response.message,
+        fileChanges: response.fileChanges,
+      });
+
       if (response.usage) {
         console.log(`${logPrefix} Sending usage info to webview`);
         this._view.webview.postMessage({
