@@ -172,8 +172,14 @@ export class HelloWorldPanel {
             window.showInformationMessage(text);
             return;
           case "code":
+            window.showInformationMessage(`Asking AI...`);
             const response = await sendMessageToAider(text, "/aider/code");
-            window.showInformationMessage(`${response.message}`);
+
+            // Send the response back to the webview
+            this._panel.webview.postMessage({
+              command: "aiResponse",
+              text: response,
+            });
             return;
           // Add more switch case statements here as more webview message commands
           // are created within the webview context (i.e. inside media/main.js)

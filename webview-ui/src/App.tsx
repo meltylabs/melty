@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
 import {
   VSCodeButton,
@@ -29,6 +29,26 @@ function App() {
     // clear the input
     (event.target as HTMLFormElement).reset();
   }
+
+  useEffect(() => {
+    // Listen for messages from the extension
+    const messageListener = (event: MessageEvent) => {
+      const message = event.data;
+      switch (message.command) {
+        case "aiResponse":
+          console.log("aiResponse", message);
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { text: message.text.message, sender: "bot" },
+          ]);
+          break;
+      }
+    };
+
+    window.addEventListener("message", messageListener);
+
+    return () => window.removeEventListener("message", messageListener);
+  }, []);
 
   return (
     <main className="p-4">
