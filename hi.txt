@@ -1,2 +1,2 @@
-bye
 Hello, world!
+Goodbye!
