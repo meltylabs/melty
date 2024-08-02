@@ -189,6 +189,32 @@ export class HelloWorldPanel {
             const response = await sendMessageToAider(text, "/aider/code");
             const botDiff = await this.getLatestCommitDiff();
 
+            /*
+             If there are fileChanges, there has already been a commit
+             If there are no fileChanges, we need to create a empty commit with no changes
+             */
+            if (response.fileChanges.length > 0) {
+              // Get the Git extension
+              const gitExtension = vscode.extensions.getExtension("vscode.git");
+              if (!gitExtension) {
+                vscode.window.showErrorMessage("Git extension not found");
+                throw new Error("Git extension not found");
+              }
+
+              const git = gitExtension.exports.getAPI(1);
+
+              // Get the current repository
+              const repositories = git.repositories;
+              if (repositories.length === 0) {
+                vscode.window.showInformationMessage("No Git repository found");
+                throw new Error("No Git repository found");
+              }
+
+              const repo = repositories[0];
+              await repo.status();
+              await repo.commit("dummy commit", { empty: true });
+            }
+
             // Send the response back to the webview
             this._panel.webview.postMessage({
               command: "addMessage",
