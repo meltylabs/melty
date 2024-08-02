@@ -178,52 +178,12 @@ export class HelloWorldPanel {
             const response = await sendMessageToAider(text, "/aider/code");
 
             console.log("now we get the diff");
-
-            // Get the Git extension
-            const gitExtension = vscode.extensions.getExtension("vscode.git");
-            if (!gitExtension) {
-              vscode.window.showErrorMessage("Git extension not found");
-              return;
-            }
-
-            const git = gitExtension.exports.getAPI(1);
-
-            // Get the current repository
-            const repositories = git.repositories;
-            if (repositories.length === 0) {
-              vscode.window.showInformationMessage("No Git repository found");
-              return;
-            }
-
-            const repo = repositories[0];
-            await repo.status();
-
-            // Get the latest commit
-            const latestCommit = repo.state.HEAD?.commit;
-
-            if (latestCommit) {
-              // Get the commit message
-              const commitMessage = await repo.getCommit(latestCommit);
-
-              // Get the diff of the latest commit
-              const diff = await repo.diffBetween(
-                latestCommit + "^",
-                latestCommit
-              );
-
-              vscode.window.showInformationMessage(
-                `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}\nDiff:\n${diff}`
-              );
-            } else {
-              vscode.window.showInformationMessage(
-                "No commits found in the repository"
-              );
-            }
+            const diff = await this.getLatestCommitDiff();
 
             // Send the response back to the webview
             this._panel.webview.postMessage({
               command: "aiResponse",
-              text: { message: response.message, diff: diff },
+              text: { message: response.message, diff: diff || "No diff available" },
             });
             return;
           // Add more switch case statements here as more webview message commands
@@ -233,5 +193,50 @@ export class HelloWorldPanel {
       undefined,
       this._disposables
     );
+  }
+
+  /**
+   * Gets the diff of the latest commit in the current Git repository.
+   * @returns A promise that resolves to the diff string or null if there's an error.
+   */
+  private async getLatestCommitDiff(): Promise<string | null> {
+    // Get the Git extension
+    const gitExtension = vscode.extensions.getExtension("vscode.git");
+    if (!gitExtension) {
+      vscode.window.showErrorMessage("Git extension not found");
+      return null;
+    }
+
+    const git = gitExtension.exports.getAPI(1);
+
+    // Get the current repository
+    const repositories = git.repositories;
+    if (repositories.length === 0) {
+      vscode.window.showInformationMessage("No Git repository found");
+      return null;
+    }
+
+    const repo = repositories[0];
+    await repo.status();
+
+    // Get the latest commit
+    const latestCommit = repo.state.HEAD?.commit;
+
+    if (latestCommit) {
+      // Get the commit message
+      const commitMessage = await repo.getCommit(latestCommit);
+
+      // Get the diff of the latest commit
+      const diff = await repo.diffBetween(latestCommit + "^", latestCommit);
+
+      vscode.window.showInformationMessage(
+        `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}`
+      );
+
+      return diff;
+    } else {
+      vscode.window.showInformationMessage("No commits found in the repository");
+      return null;
+    }
   }
 }
