@@ -198,9 +198,9 @@ export class ChatView {
                             usageInfoElement.style.cursor = 'pointer';
                             usageInfoDetails.style.display = 'none';
 
-                            promptTokens.textContent = usageInfo.prompt_tokens;
-                            completionTokens.textContent = usageInfo.completion_tokens;
-                            totalTokens.textContent = usageInfo.total_tokens;
+                            promptTokens.textContent = usageInfo.cost_call;
+                            completionTokens.textContent = usageInfo.cost_session;
+                            totalTokens.textContent = usageInfo.tokens_received;
 
                             usageInfoElement.onclick = function() {
                                 usageInfoDetails.style.display = usageInfoDetails.style.display === 'none' ? 'block' : 'none';
