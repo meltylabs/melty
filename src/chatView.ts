@@ -390,21 +390,39 @@ export class ChatView {
     });
   }
 
-  public updatePartialResponse(partialResponse: string) {
+  public updatePartialResponse(partialResponse: string | { message: string; fileChanges?: string[] }) {
+    let message: string;
+    let fileChanges: string[] | undefined;
+
+    if (typeof partialResponse === 'string') {
+      message = partialResponse;
+    } else {
+      message = partialResponse.message;
+      fileChanges = partialResponse.fileChanges;
+    }
+
     this._view.webview.postMessage({
       type: "updatePartialResponse",
-      text: partialResponse,
+      text: message,
     });
     console.log(
-      `${logPrefix} Sent partial response to webview: ${partialResponse}`
+      `${logPrefix} Sent partial response to webview: ${message}`
     );
+
+    if (fileChanges) {
+      this._view.webview.postMessage({
+        type: "renderFileChanges",
+        fileChanges: fileChanges,
+      });
+      console.log(`${logPrefix} Sent file changes to webview:`, fileChanges);
+    }
 
     // Update or add the AI message in the _messages array
     const lastMessage = this._messages[this._messages.length - 1];
     if (lastMessage && lastMessage.sender === "ai") {
-      lastMessage.text = partialResponse;
+      lastMessage.text = message;
     } else {
-      this._messages.push({ sender: "ai", text: partialResponse });
+      this._messages.push({ sender: "ai", text: message });
     }
   }
 
