@@ -94,6 +94,11 @@ export class ChatView {
                 <button id="reset-button">Reset Chat</button>
                 <div id="ai-loading" class="ellipsis">AI is thinking</div>
                 <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
+                <div id="usage-info-details" style="margin-top: 5px; font-size: 10px; color: #666; display: none;">
+                    <div>Prompt tokens: <span id="prompt-tokens"></span></div>
+                    <div>Completion tokens: <span id="completion-tokens"></span></div>
+                    <div>Total tokens: <span id="total-tokens"></span></div>
+                </div>
                 <script>
                     const vscode = acquireVsCodeApi();
                     const chatMessages = document.getElementById('chat-messages');
