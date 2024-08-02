@@ -255,14 +255,14 @@ export class ChatView {
   }
 
   private async _onDidReceiveMessage(message: any) {
-    console.log(`CHATVIEW: Received message:`, message);
+    console.log(`${logPrefix} Received message:`, message);
 
     if (message.type === "resetChat") {
-      console.log(`CHATVIEW: Resetting chat`);
+      console.log(`${logPrefix} Resetting chat`);
       this._messages = [];
       this._updateChatView();
     } else if (message.type === "sendMessage") {
-      console.log(`CHATVIEW: Received sendMessage request: ${message.message}`);
+      console.log(`${logPrefix} Received sendMessage request: ${message.message}`);
 
       try {
         // Add user message to chat
@@ -273,7 +273,7 @@ export class ChatView {
         await this.createAIResponse(message.command, message.message);
         this.setAIThinking(false);
       } catch (error) {
-        console.error("CHATVIEW: Error in message handling:", error);
+        console.error(`${logPrefix} Error in message handling:`, error);
         vscode.window.showErrorMessage(
           `An error occurred: ${
             error instanceof Error ? error.message : String(error)
@@ -282,12 +282,12 @@ export class ChatView {
         this.setAIThinking(false);
       }
     } else if (message.type === "webviewReady") {
-      console.log(`CHATVIEW: Webview ready`);
+      console.log(`${logPrefix} Webview ready`);
       this._updateChatView();
     } else if (message.type === "log") {
-      console.log(`CHATVIEW: Log from webview: ${message.message}`);
+      console.log(`${logPrefix} Log from webview: ${message.message}`);
     } else {
-      console.warn("CHATVIEW: Unknown message type received:", message.type);
+      console.warn(`${logPrefix} Unknown message type received:`, message.type);
     }
   }
 
@@ -295,9 +295,9 @@ export class ChatView {
     command: string,
     userMessage: string
   ): Promise<void> {
-    console.log(`Creating AI response for command: ${command}`);
+    console.log(`${logPrefix} Creating AI response for command: ${command}`);
     try {
-      console.log("Sending message to Aider");
+      console.log(`${logPrefix} Sending message to Aider`);
 
       this._view.webview.postMessage({ type: "startNewAIMessage" });
 
@@ -322,21 +322,21 @@ export class ChatView {
           throw new Error(`Unknown command: ${command}`);
       }
 
-      console.log("Received response from Aider");
-      console.log("response: ", response);
-      console.log("Usage info: ", response.usage_info);
+      console.log(`${logPrefix} Received response from Aider`);
+      console.log(`${logPrefix} response: `, response);
+      console.log(`${logPrefix} Usage info: `, response.usage_info);
       this.updatePartialResponse(response.message);
       if (response.usage_info) {
-        console.log("Sending usage info to webview");
+        console.log(`${logPrefix} Sending usage info to webview`);
         this._view.webview.postMessage({
           type: "updateUsageInfo",
           usageInfo: response.usage_info,
         });
       } else {
-        console.log("No usage info available in the response");
+        console.log(`${logPrefix} No usage info available in the response`);
       }
     } catch (error) {
-      console.error(`Error creating AI response:`, error);
+      console.error(`${logPrefix} Error creating AI response:`, error);
       throw error;
     }
   }
