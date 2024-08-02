@@ -132,11 +132,16 @@ export class ChatView {
             const message = messageInput.value;
             const command = commandSelect.value;
             if (message) {
-                vscode.postMessage({
+                let payload = {
                     type: 'sendMessage',
-                    command,
-                    message: command === 'add' || command === 'drop' ? message.split(',').map(file => file.trim()) : message
-                });
+                    command
+                };
+                if (command === 'add' || command === 'drop') {
+                    payload.files = message.split(',').map(file => file.trim());
+                } else {
+                    payload.message = message;
+                }
+                vscode.postMessage(payload);
                 messageInput.value = '';
                 setAIThinking(true);
             }
@@ -289,16 +294,20 @@ IThinking(false);
       this._updateChatView();
     } else if (message.type === "sendMessage") {
       console.log(
-        `${logPrefix} Received sendMessage request: ${message.message}`
+        `${logPrefix} Received sendMessage request:`,
+        message.command === 'add' || message.command === 'drop' ? message.files : message.message
       );
 
       try {
         // Add user message to chat
-        this.addMessage("user", `${message.command}: ${message.message}`);
+        const displayMessage = message.command === 'add' || message.command === 'drop'
+          ? `${message.command}: ${message.files.join(', ')}`
+          : `${message.command}: ${message.message}`;
+        this.addMessage("user", displayMessage);
 
         // Generate AI response
         this.setAIThinking(true);
-        await this.createAIResponse(message.command, message.message);
+        await this.createAIResponse(message.command, message.files || message.message);
         this.setAIThinking(false);
       } catch (error) {
         console.error(`${logPrefix} Error in message handling:`, error);
@@ -321,7 +330,7 @@ IThinking(false);
 
   private async createAIResponse(
     command: string,
-    userMessage: string
+    userInput: string | string[]
   ): Promise<void> {
     console.log(`${logPrefix} Creating AI response for command: ${command}`);
     try {
@@ -332,19 +341,15 @@ IThinking(false);
       let response;
       switch (command) {
         case "ask":
-          response = await sendMessageToAider(userMessage, "/aider/ask");
+        case "code":
+          response = await sendMessageToAider(userInput as string, `/aider/${command}`);
           break;
         case "add":
-          response = await sendMessageToAider(userMessage, "/aider/add");
-          break;
         case "drop":
-          response = await sendMessageToAider(userMessage, "/aider/drop");
+          response = await sendMessageToAider(userInput as string[], `/aider/${command}`);
           break;
         case "diff":
           response = await sendMessageToAider("", "/aider/diff");
-          break;
-        case "code":
-          response = await sendMessageToAider(userMessage, "/aider/code");
           break;
         default:
           throw new Error(`Unknown command: ${command}`);

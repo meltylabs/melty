@@ -27,17 +27,16 @@ export async function initializeAider() {
 }
 
 export async function sendMessageToAider(
-  userInput: string,
-  route: string,
-  files?: string[]
+  userInput: string | string[],
+  route: string
 ): Promise<AiderResponse> {
   try {
-    const payload: any = {
-      message: userInput,
-    };
+    const payload: any = {};
 
-    if (files && files.length > 0) {
-      payload.files = files;
+    if (route === '/aider/add' || route === '/aider/drop') {
+      payload.files = userInput as string[];
+    } else {
+      payload.message = userInput as string;
     }
 
     console.log("PAYLOAD: ", payload);
