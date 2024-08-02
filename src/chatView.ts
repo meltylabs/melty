@@ -184,10 +184,27 @@ export class ChatView {
 
                     function updateUsageInfo(usageInfo) {
                         const usageInfoElement = document.getElementById('usage-info');
+                        const usageInfoDetails = document.getElementById('usage-info-details');
+                        const promptTokens = document.getElementById('prompt-tokens');
+                        const completionTokens = document.getElementById('completion-tokens');
+                        const totalTokens = document.getElementById('total-tokens');
+                        
                         if (usageInfo) {
-                            usageInfoElement.textContent = \`Prompt tokens: \${usageInfo.prompt_tokens}, Completion tokens: \${usageInfo.completion_tokens}, Total tokens: \${usageInfo.total_tokens}\`;
+                            usageInfoElement.textContent = 'Usage Info (click to toggle details)';
+                            usageInfoElement.style.cursor = 'pointer';
+                            usageInfoDetails.style.display = 'none';
+                            
+                            promptTokens.textContent = usageInfo.prompt_tokens;
+                            completionTokens.textContent = usageInfo.completion_tokens;
+                            totalTokens.textContent = usageInfo.total_tokens;
+                            
+                            usageInfoElement.onclick = function() {
+                                usageInfoDetails.style.display = usageInfoDetails.style.display === 'none' ? 'block' : 'none';
+                            };
                         } else {
                             usageInfoElement.textContent = '';
+                            usageInfoDetails.style.display = 'none';
+                            usageInfoElement.onclick = null;
                         }
                     }
 
