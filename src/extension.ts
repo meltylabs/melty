@@ -89,7 +89,7 @@ export function activate(context: vscode.ExtensionContext) {
   const helloCommand = vscode.commands.registerCommand(
     "hello-world.showHelloWorld",
     () => {
-      HelloWorldPanel.render();
+      HelloWorldPanel.render(context.extensionUri);
     }
   );
 
