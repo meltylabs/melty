@@ -52,7 +52,7 @@ export class ChatView {
   }
 
   private _getHtmlForWebview(): string {
-    return `
+    return /*html*/ `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -128,10 +128,10 @@ export class ChatView {
                         const message = messageInput.value;
                         const command = commandSelect.value;
                         if (message) {
-                            vscode.postMessage({ 
-                                type: 'sendMessage', 
-                                command, 
-                                message: command === 'add' || command === 'drop' ? message.split(',').map(file => file.trim()) : message 
+                            vscode.postMessage({
+                                type: 'sendMessage',
+                                command,
+                                message: command === 'add' || command === 'drop' ? message.split(',').map(file => file.trim()) : message
                             });
                             messageInput.value = '';
                             setAIThinking(true);
