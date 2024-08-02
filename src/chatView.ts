@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import { sendMessageToAider } from "./aider";
 
+const logPrefix = "[ChatView]";
+
 export class ChatView {
   private readonly _view: vscode.WebviewView;
   private _messages: Array<{ sender: "user" | "ai"; text: string }> = [];
@@ -8,11 +10,11 @@ export class ChatView {
   constructor(view: vscode.WebviewView) {
     this._view = view;
     try {
-      console.log("ChatView constructor called");
+      console.log(`${logPrefix} ChatView constructor called`);
       this._view = view;
 
-      console.log("Setting up webview options");
-      console.log("Webview view:", this._view);
+      console.log(`${logPrefix} Setting up webview options`);
+      console.log(`${logPrefix} Webview view:`, this._view);
       this._view.webview.options = {
         enableScripts: true,
         localResourceRoots: [
@@ -24,23 +26,23 @@ export class ChatView {
           ),
         ],
       };
-      console.log("Webview options set up successfully");
+      console.log(`${logPrefix} Webview options set up successfully`);
 
-      console.log("Setting up webview HTML");
+      console.log(`${logPrefix} Setting up webview HTML`);
       this._view.webview.html = this._getHtmlForWebview();
-      console.log("Webview HTML set up successfully");
+      console.log(`${logPrefix} Webview HTML set up successfully`);
 
-      console.log("Setting up message listener");
+      console.log(`${logPrefix} Setting up message listener`);
       this._view.webview.onDidReceiveMessage(
         this._onDidReceiveMessage.bind(this)
       );
-      console.log("Message listener set up successfully");
+      console.log(`${logPrefix} Message listener set up successfully`);
 
       // Initialize empty chat
       this._updateChatView();
-      console.log("ChatView constructor completed successfully");
+      console.log(`${logPrefix} ChatView constructor completed successfully`);
     } catch (error) {
-      console.error("Error in ChatView constructor:", error);
+      console.error(`${logPrefix} Error in ChatView constructor:`, error);
       vscode.window.showErrorMessage(
         `Error initializing ChatView: ${
           error instanceof Error ? error.message : String(error)
