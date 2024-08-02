@@ -40,6 +40,8 @@ export async function sendMessageToAider(
       payload.files = files;
     }
 
+    console.log("PAYLOAD: ", payload);
+
     const response: AxiosResponse<AiderResponse> = await axios.post(
       `${aiderUrl}${route}`,
       payload
