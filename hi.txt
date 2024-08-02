@@ -1,2 +1,3 @@
 Hello, this is the content of hi.txt!
 Hello, world!
+Hello, world!
