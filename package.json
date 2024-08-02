@@ -64,6 +64,7 @@
     "@types/node": "20.x",
     "@types/sinon": "^17.0.3",
     "@types/vscode": "^1.91.0",
+    "@types/vscode-webview": "^1.57.5",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
