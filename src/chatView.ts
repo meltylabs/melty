@@ -52,7 +52,7 @@ export class ChatView {
   }
 
   private _getHtmlForWebview(): string {
-    const htmlContent = /*html*/`
+    const htmlContent = /*html*/ `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -109,7 +109,7 @@ export class ChatView {
             </html>
         `;
 
-    const scriptContent = /*javascript*/`
+    const scriptContent = /*javascript*/ `
         const vscode = acquireVsCodeApi();
         const chatMessages = document.getElementById('chat-messages');
         const messageInput = document.getElementById('message-input');
@@ -149,7 +149,7 @@ export class ChatView {
                 text = JSON.stringify(text, null, 2);
             }
             const senderText = document.createElement('strong');
-            senderText.textContent = \`\${sender === 'user' ? 'You' : 'AI'}: \`;
+            senderText.textContent = \`${sender === "user" ? "You" : "AI"}: \`;
             messageElement.appendChild(senderText);
             const contentText = document.createElement('span');
             contentText.textContent = text;
@@ -270,7 +270,10 @@ IThinking(false);
         vscode.postMessage({ type: 'webviewReady' });
     `;
 
-    return htmlContent.replace('</body>', `<script>${scriptContent}</script></body>`);
+    return htmlContent.replace(
+      "</body>",
+      `<script>${scriptContent}</script></body>`
+    );
   }
 
   public getWebviewContent(): string {
