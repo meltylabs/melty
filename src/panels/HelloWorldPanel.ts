@@ -174,15 +174,28 @@ export class HelloWorldPanel {
             return;
           case "code":
             window.showInformationMessage(`Asking AI...`);
+
+            // get latest commit diff, and send it back to the webview
+            const humanDiff = await this.getLatestCommitDiff();
+            this._panel.webview.postMessage({
+              command: "addMessage",
+              text: {
+                sender: "user",
+                message: text,
+                diff: humanDiff,
+              },
+            });
+
             const response = await sendMessageToAider(text, "/aider/code");
-            const diff = await this.getLatestCommitDiff();
+            const botDiff = await this.getLatestCommitDiff();
 
             // Send the response back to the webview
             this._panel.webview.postMessage({
-              command: "aiResponse",
+              command: "addMessage",
               text: {
+                sender: "bot",
                 message: response.message,
-                diff: diff,
+                diff: botDiff,
               },
             });
             return;

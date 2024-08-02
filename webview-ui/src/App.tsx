@@ -16,13 +16,10 @@ interface Message {
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [diffHtml, setDiffHtml] = useState<string>("");
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
     const message = (event.target as HTMLFormElement).message.value;
-    const newMessage: Message = { text: message, sender: "user" };
-    setMessages([...messages, newMessage]);
 
     // Send message to extension
     vscode.postMessage({
@@ -34,43 +31,18 @@ function App() {
     (event.target as HTMLFormElement).reset();
   }
 
-  function addDemoMessage() {
-    const demoDiff = `
-diff --git a/example.js b/example.js
-index 6214953..1d78b34 100644
---- a/example.js
-+++ b/example.js
-@@ -1,5 +1,5 @@
- function greet(name) {
--  console.log("Hello, " + name + "!");
-+  console.log(\`Hello, \${name}!\`);
- }
-
--greet("World");
-+greet("VSCode");
-`;
-
-    const diffHtml = Diff2Html.html(demoDiff, {
-      drawFileList: true,
-      matching: "lines",
-      outputFormat: "side-by-side",
-    });
-
-    setDiffHtml(diffHtml);
-  }
-
   useEffect(() => {
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {
       const message = event.data;
       switch (message.command) {
-        case "aiResponse":
-          console.log("aiResponse", message);
+        case "addMessage":
+          console.log("addMessage", message);
           setMessages((prevMessages) => [
             ...prevMessages,
             {
               text: message.text.message,
-              sender: "bot",
+              sender: message.text.sender,
               diff: message.text.diff,
             },
           ]);
@@ -98,19 +70,21 @@ index 6214953..1d78b34 100644
                 : "bg-gray-100"
             }`}
           >
-            {message.diff ? (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: Diff2Html.html(message.diff, {
-                    drawFileList: true,
-                    matching: "lines",
-                    outputFormat: "side-by-side",
-                  }),
-                }}
-              />
-            ) : (
-              message.text
-            )}
+            <span>{message.text}</span>
+
+            <div className="mt-2">
+              {message.diff && (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: Diff2Html.html(message.diff, {
+                      drawFileList: true,
+                      matching: "lines",
+                      outputFormat: "side-by-side",
+                    }),
+                  }}
+                />
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -131,12 +105,6 @@ index 6214953..1d78b34 100644
           </VSCodeButton>
         </form>
       </div>
-      <VSCodeButton
-        onClick={addDemoMessage}
-        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Add Demo Diff
-      </VSCodeButton>
     </main>
   );
 }
