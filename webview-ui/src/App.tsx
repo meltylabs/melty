@@ -99,7 +99,15 @@ index 6214953..1d78b34 100644
             }`}
           >
             {message.diff ? (
-              <div dangerouslySetInnerHTML={{ __html: message.diff }} />
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: Diff2Html.html(message.diff, {
+                    drawFileList: true,
+                    matching: "lines",
+                    outputFormat: "side-by-side",
+                  }),
+                }}
+              />
             ) : (
               message.text
             )}

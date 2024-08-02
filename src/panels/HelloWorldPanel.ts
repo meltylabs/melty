@@ -174,16 +174,16 @@ export class HelloWorldPanel {
             return;
           case "code":
             window.showInformationMessage(`Asking AI...`);
-            console.log("ask aider");
             const response = await sendMessageToAider(text, "/aider/code");
-
-            console.log("now we get the diff");
             const diff = await this.getLatestCommitDiff();
 
             // Send the response back to the webview
             this._panel.webview.postMessage({
               command: "aiResponse",
-              text: { message: response.message, diff: diff || "No diff available" },
+              text: {
+                message: response.message,
+                diff: diff,
+              },
             });
             return;
           // Add more switch case statements here as more webview message commands
@@ -199,12 +199,12 @@ export class HelloWorldPanel {
    * Gets the diff of the latest commit in the current Git repository.
    * @returns A promise that resolves to the diff string or null if there's an error.
    */
-  private async getLatestCommitDiff(): Promise<string | null> {
+  private async getLatestCommitDiff(): Promise<string> {
     // Get the Git extension
     const gitExtension = vscode.extensions.getExtension("vscode.git");
     if (!gitExtension) {
       vscode.window.showErrorMessage("Git extension not found");
-      return null;
+      throw new Error("Git extension not found");
     }
 
     const git = gitExtension.exports.getAPI(1);
@@ -213,7 +213,7 @@ export class HelloWorldPanel {
     const repositories = git.repositories;
     if (repositories.length === 0) {
       vscode.window.showInformationMessage("No Git repository found");
-      return null;
+      throw new Error("No Git repository found");
     }
 
     const repo = repositories[0];
@@ -229,14 +229,46 @@ export class HelloWorldPanel {
       // Get the diff of the latest commit
       const diff = await repo.diffBetween(latestCommit + "^", latestCommit);
 
+      const udiffs = await Promise.all(
+        diff.map((change: any) =>
+          this.generateUdiff(repo, latestCommit, change)
+        )
+      );
+
       vscode.window.showInformationMessage(
         `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}`
       );
 
-      return diff;
+      console.log(udiffs);
+      return udiffs[0];
     } else {
-      vscode.window.showInformationMessage("No commits found in the repository");
-      return null;
+      vscode.window.showInformationMessage(
+        "No commits found in the repository"
+      );
+      throw new Error("No commits found in the repository");
     }
+  }
+
+  private async generateUdiff(
+    repo: any,
+    latestCommit: any,
+    change: any
+  ): Promise<string> {
+    const diff = await repo.diffBetween(
+      latestCommit + "^",
+      latestCommit,
+      change.uri.fsPath
+    );
+    if (!diff) return "";
+
+    const oldPath = change.originalUri?.fsPath || "/dev/null";
+    const newPath = change.uri.fsPath;
+
+    let udiff = `diff --git a/${oldPath} b/${newPath}\n`;
+    udiff += `--- a/${oldPath}\n`;
+    udiff += `+++ b/${newPath}\n`;
+    udiff += diff;
+
+    return udiff;
   }
 }
