@@ -128,7 +128,7 @@ export class ChatView {
             }
         });
 
-        async function sendMessage() {
+        function sendMessage() {
             const message = messageInput.value;
             const command = commandSelect.value;
             if (message) {
@@ -140,13 +140,11 @@ export class ChatView {
                 }
                 console.log("Sending message to Aider:", input);
                 console.log('command: ', command);
-                try {
-                    const response = await sendMessageToAider(input, `/aider/${command}`);
-                    handleAiderResponse(response);
-                } catch (error) {
-                    console.error("Error sending message to Aider:", error);
-                    addMessageToChat('system', `Error: ${error.message}`);
-                }
+                vscode.postMessage({
+                    type: 'sendMessage',
+                    command: command,
+                    input: input
+                });
                 messageInput.value = '';
                 setAIThinking(true);
             }
@@ -312,9 +310,7 @@ IThinking(false);
       console.log(`${logPrefix} Received sendMessage request:`, message);
 
       try {
-        const input = message.command === "add" || message.command === "drop"
-          ? message.files
-          : message.message;
+        const input = message.input;
 
         // Add user message to chat
         const displayMessage = `${message.command}: ${Array.isArray(input) ? input.join(", ") : input}`;
