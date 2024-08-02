@@ -183,6 +183,7 @@ export class ChatView {
                     }
 
                     function updateUsageInfo(usageInfo) {
+                        console.log("Received usage info in webview:", usageInfo);
                         const usageInfoElement = document.getElementById('usage-info');
                         const usageInfoDetails = document.getElementById('usage-info-details');
                         const promptTokens = document.getElementById('prompt-tokens');
@@ -190,6 +191,7 @@ export class ChatView {
                         const totalTokens = document.getElementById('total-tokens');
 
                         if (usageInfo) {
+                            console.log("Updating usage info display");
                             usageInfoElement.textContent = 'Usage Info (click to toggle details)';
                             usageInfoElement.style.cursor = 'pointer';
                             usageInfoDetails.style.display = 'none';
@@ -202,6 +204,7 @@ export class ChatView {
                                 usageInfoDetails.style.display = usageInfoDetails.style.display === 'none' ? 'block' : 'none';
                             };
                         } else {
+                            console.log("No usage info available");
                             usageInfoElement.textContent = '';
                             usageInfoDetails.style.display = 'none';
                             usageInfoElement.onclick = null;
