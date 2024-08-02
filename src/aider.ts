@@ -33,7 +33,7 @@ export async function sendMessageToAider(
   try {
     const payload: any = {};
 
-    if (route === '/aider/add' || route === '/aider/drop') {
+    if (route === "/aider/add" || route === "/aider/drop") {
       payload.files = userInput as string[];
     } else {
       payload.message = userInput as string;
