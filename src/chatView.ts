@@ -390,11 +390,13 @@ export class ChatView {
     });
   }
 
-  public updatePartialResponse(partialResponse: string | { message: string; fileChanges?: string[] }) {
+  public updatePartialResponse(
+    partialResponse: string | { message: string; fileChanges?: string[] }
+  ) {
     let message: string;
     let fileChanges: string[] | undefined;
 
-    if (typeof partialResponse === 'string') {
+    if (typeof partialResponse === "string") {
       message = partialResponse;
     } else {
       message = partialResponse.message;
@@ -405,9 +407,7 @@ export class ChatView {
       type: "updatePartialResponse",
       text: message,
     });
-    console.log(
-      `${logPrefix} Sent partial response to webview: ${message}`
-    );
+    console.log(`${logPrefix} Sent partial response to webview: ${message}`);
 
     if (fileChanges) {
       this._view.webview.postMessage({
