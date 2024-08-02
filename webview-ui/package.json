@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^1.2.2",
+    "diff2html": "^3.4.48",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },

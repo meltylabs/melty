@@ -211,13 +211,6 @@ export class HelloWorldPanel {
                 latestCommit
               );
 
-              console.log(
-                await repo.diffBetween(
-                  "ffd8f61f31e61636acb3d7d86394291ad487bca4",
-                  "43437315fdc7bad7d8e3bac208f160de859e2dc5"
-                )
-              );
-
               vscode.window.showInformationMessage(
                 `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}\nDiff:\n${diff}`
               );
@@ -230,7 +223,7 @@ export class HelloWorldPanel {
             // Send the response back to the webview
             this._panel.webview.postMessage({
               command: "aiResponse",
-              text: response,
+              text: { message: response.message, diff: diff },
             });
             return;
           // Add more switch case statements here as more webview message commands

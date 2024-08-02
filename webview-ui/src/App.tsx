@@ -11,11 +11,12 @@ import "./App.css";
 interface Message {
   text: string;
   sender: "user" | "bot";
-  diffHtml?: string;
+  diff?: string;
 }
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [diffHtml, setDiffHtml] = useState<string>("");
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -44,7 +45,7 @@ index 6214953..1d78b34 100644
 -  console.log("Hello, " + name + "!");
 +  console.log(\`Hello, \${name}!\`);
  }
- 
+
 -greet("World");
 +greet("VSCode");
 `;
@@ -55,14 +56,7 @@ index 6214953..1d78b34 100644
       outputFormat: "side-by-side",
     });
 
-    setMessages([
-      ...messages,
-      {
-        text: "Here's a demo diff:",
-        sender: "bot",
-        diffHtml,
-      },
-    ]);
+    setDiffHtml(diffHtml);
   }
 
   useEffect(() => {
@@ -72,14 +66,13 @@ index 6214953..1d78b34 100644
       switch (message.command) {
         case "aiResponse":
           console.log("aiResponse", message);
-          const diffHtml = Diff2Html.html(message.text.message, {
-            drawFileList: true,
-            matching: "lines",
-            outputFormat: "side-by-side",
-          });
           setMessages((prevMessages) => [
             ...prevMessages,
-            { text: message.text.message, sender: "bot", diffHtml },
+            {
+              text: message.text.message,
+              sender: "bot",
+              diff: message.text.diff,
+            },
           ]);
           break;
       }
@@ -105,14 +98,15 @@ index 6214953..1d78b34 100644
                 : "bg-gray-100"
             }`}
           >
-            {message.diffHtml ? (
-              <div dangerouslySetInnerHTML={{ __html: message.diffHtml }} />
+            {message.diff ? (
+              <div dangerouslySetInnerHTML={{ __html: message.diff }} />
             ) : (
               message.text
             )}
           </div>
         ))}
       </div>
+
       <div className="flex mb-4">
         <form onSubmit={handleSendMessage}>
           <VSCodeTextField
