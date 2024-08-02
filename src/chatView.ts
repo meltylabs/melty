@@ -87,7 +87,6 @@ export class ChatView {
                 <button id="reset-button">Reset Chat</button>
                 <div id="ai-loading" class="ellipsis">AI is thinking</div>
                 <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
-                <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
                 <script>
                     const vscode = acquireVsCodeApi();
                     const chatMessages = document.getElementById('chat-messages');
@@ -178,15 +177,6 @@ export class ChatView {
                         }
                     }
 
-                    function updateUsageInfo(usageInfo) {
-                        const usageInfoElement = document.getElementById('usage-info');
-                        if (usageInfo) {
-                            usageInfoElement.textContent = \`Prompt tokens: \${usageInfo.prompt_tokens}, Completion tokens: \${usageInfo.completion_tokens}, Total tokens: \${usageInfo.total_tokens}\`;
-                        } else {
-                            usageInfoElement.textContent = '';
-                        }
-                    }
-
                     window.addEventListener('message', event => {
                         const message = event.data;
                         switch (message.type) {
@@ -210,9 +200,6 @@ export class ChatView {
                                 break;
                             case 'startNewAIMessage':
                                 startNewAIMessage();
-                                break;
-                            case 'updateUsageInfo':
-                                updateUsageInfo(message.usageInfo);
                                 break;
                             case 'updateUsageInfo':
                                 updateUsageInfo(message.usageInfo);
