@@ -84,10 +84,10 @@ export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("Spectacle");
   outputChannel.show();
   outputChannel.appendLine("Activating Spectacle extension");
-  
+
   // Initialize Aider
-  initializeAider().catch(error => {
-    console.error('Failed to initialize Aider:', error);
+  initializeAider().catch((error) => {
+    console.error("Failed to initialize Aider:", error);
     outputChannel.appendLine(`Failed to initialize Aider: ${error}`);
   });
 
@@ -99,7 +99,6 @@ export function activate(context: vscode.ExtensionContext) {
   // Log the registered commands
   const commands = vscode.commands.getCommands(true);
   commands.then((cmds) => {
-    console.log("Registered commands:", cmds);
     outputChannel.appendLine("Registered commands: " + cmds.join(", "));
   });
 

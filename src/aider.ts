@@ -3,8 +3,8 @@ import * as vscode from "vscode";
 
 interface AiderResponse {
   message: string;
-  file_changes: any;
-  usage_info: any;
+  fileChanges: any;
+  usage: any;
 }
 
 let aiderUrl: string;
@@ -38,10 +38,12 @@ export async function sendMessageToAider(
       }
     );
 
+    console.log("RESPONSE FROM WITHIN AIDER.ts: ", response.data);
+
     return {
       message: response.data.message,
-      file_changes: response.data.file_changes,
-      usage_info: response.data.usage_info,
+      fileChanges: response.data.fileChanges,
+      usage: response.data.usage,
     };
   } catch (error: unknown) {
     handleAiderError(error, "Error sending message to Aider");

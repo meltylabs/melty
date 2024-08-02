@@ -262,7 +262,9 @@ export class ChatView {
       this._messages = [];
       this._updateChatView();
     } else if (message.type === "sendMessage") {
-      console.log(`${logPrefix} Received sendMessage request: ${message.message}`);
+      console.log(
+        `${logPrefix} Received sendMessage request: ${message.message}`
+      );
 
       try {
         // Add user message to chat
@@ -324,13 +326,13 @@ export class ChatView {
 
       console.log(`${logPrefix} Received response from Aider`);
       console.log(`${logPrefix} response: `, response);
-      console.log(`${logPrefix} Usage info: `, response.usage_info);
+      console.log(`${logPrefix} Usage info: `, response.usage);
       this.updatePartialResponse(response.message);
-      if (response.usage_info) {
+      if (response.usage) {
         console.log(`${logPrefix} Sending usage info to webview`);
         this._view.webview.postMessage({
           type: "updateUsageInfo",
-          usageInfo: response.usage_info,
+          usageInfo: response.usage,
         });
       } else {
         console.log(`${logPrefix} No usage info available in the response`);
@@ -342,7 +344,10 @@ export class ChatView {
   }
 
   private _updateChatView() {
-    console.log(`${logPrefix} Updating chat view with messages:`, this._messages);
+    console.log(
+      `${logPrefix} Updating chat view with messages:`,
+      this._messages
+    );
     if (this._view && this._view.webview) {
       this._view.webview.postMessage({
         type: "updateMessages",
@@ -376,7 +381,9 @@ export class ChatView {
       type: "updatePartialResponse",
       text: partialResponse,
     });
-    console.log(`${logPrefix} Sent partial response to webview: ${partialResponse}`);
+    console.log(
+      `${logPrefix} Sent partial response to webview: ${partialResponse}`
+    );
 
     // Update or add the AI message in the _messages array
     const lastMessage = this._messages[this._messages.length - 1];
