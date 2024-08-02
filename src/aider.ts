@@ -27,11 +27,12 @@ export async function initializeAider() {
 }
 
 export async function sendMessageToAider(
-  userInput: string
+  userInput: string,
+  route: string
 ): Promise<AiderResponse> {
   try {
     const response: AxiosResponse<AiderResponse> = await axios.post(
-      `${aiderUrl}/aider/code`,
+      `${aiderUrl}${route}`,
       {
         message: userInput,
       }
