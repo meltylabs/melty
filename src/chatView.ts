@@ -128,25 +128,39 @@ export class ChatView {
             }
         });
 
-        function sendMessage() {
+        async function sendMessage() {
             const message = messageInput.value;
             const command = commandSelect.value;
             if (message) {
-                let payload = {
-                    type: 'sendMessage',
-                    command
-                };
+                let input;
                 if (command === 'add' || command === 'drop') {
-                    payload.files = message.split(',').map(file => file.trim());
+                    input = message.split(',').map(file => file.trim());
                 } else {
-                    payload.message = message;
+                    input = message;
                 }
-                console.log("Sending message to Aider:", payload);
+                console.log("Sending message to Aider:", input);
                 console.log('command: ', command);
-                vscode.postMessage(payload);
+                try {
+                    const response = await sendMessageToAider(input, `/aider/${command}`);
+                    handleAiderResponse(response);
+                } catch (error) {
+                    console.error("Error sending message to Aider:", error);
+                    addMessageToChat('system', `Error: ${error.message}`);
+                }
                 messageInput.value = '';
                 setAIThinking(true);
             }
+        }
+
+        function handleAiderResponse(response) {
+            updatePartialResponse(response.message);
+            if (response.usage) {
+                updateUsageInfo(response.usage);
+            }
+            if (response.fileChanges) {
+                renderFileChanges(response.fileChanges);
+            }
+            setAIThinking(false);
         }
 
         function addMessageToChat(sender, text) {
@@ -295,28 +309,21 @@ IThinking(false);
       this._messages = [];
       this._updateChatView();
     } else if (message.type === "sendMessage") {
-      console.log(
-        `${logPrefix} Received sendMessage request:`,
-        message.command === "add" || message.command === "drop"
-          ? message.files
-          : message.message
-      );
+      console.log(`${logPrefix} Received sendMessage request:`, message);
 
       try {
+        const input = message.command === "add" || message.command === "drop"
+          ? message.files
+          : message.message;
+
         // Add user message to chat
-        const displayMessage =
-          message.command === "add" || message.command === "drop"
-            ? `${message.command}: ${message.files.join(", ")}`
-            : `${message.command}: ${message.message}`;
+        const displayMessage = `${message.command}: ${Array.isArray(input) ? input.join(", ") : input}`;
         this.addMessage("user", displayMessage);
 
         // Generate AI response
         this.setAIThinking(true);
-        await this.createAIResponse(
-          message.command,
-          message.files || message.message
-        );
-        this.setAIThinking(false);
+        const response = await sendMessageToAider(input, `/aider/${message.command}`);
+        this.handleAiderResponse(response);
       } catch (error) {
         console.error(`${logPrefix} Error in message handling:`, error);
         vscode.window.showErrorMessage(
@@ -334,6 +341,23 @@ IThinking(false);
     } else {
       console.warn(`${logPrefix} Unknown message type received:`, message.type);
     }
+  }
+
+  private handleAiderResponse(response: AiderResponse) {
+    this.updatePartialResponse(response.message);
+    if (response.usage) {
+      this._view.webview.postMessage({
+        type: "updateUsageInfo",
+        usageInfo: response.usage,
+      });
+    }
+    if (response.fileChanges) {
+      this._view.webview.postMessage({
+        type: "renderFileChanges",
+        fileChanges: response.fileChanges,
+      });
+    }
+    this.setAIThinking(false);
   }
 
   private async createAIResponse(
