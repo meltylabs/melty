@@ -219,7 +219,7 @@ export class ChatView {
                         if (fileChanges && fileChanges.length > 0) {
                             fileChanges.forEach(file => {
                                 const li = document.createElement('li');
-                                li.textContent = file;
+                                li.textContent = typeof file === 'object' ? JSON.stringify(file, null, 2) : file;
                                 fileChangesList.appendChild(li);
                             });
                             document.getElementById('file-changes').style.display = 'block';
