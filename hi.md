@@ -11,3 +11,10 @@ Hi Aaron!
 Feel free to add more content here!
 
 Bye!
+# Hello
+
+This is a new Markdown file.
+
+## Welcome
+
+Welcome to this new file created by Aider!
