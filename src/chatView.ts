@@ -128,7 +128,11 @@ export class ChatView {
                         const message = messageInput.value;
                         const command = commandSelect.value;
                         if (message) {
-                            vscode.postMessage({ type: 'sendMessage', command, message });
+                            vscode.postMessage({ 
+                                type: 'sendMessage', 
+                                command, 
+                                message: command === 'add' || command === 'drop' ? message.split(',').map(file => file.trim()) : message 
+                            });
                             messageInput.value = '';
                             setAIThinking(true);
                         }
