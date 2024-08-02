@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { vscode } from "./utilities/vscode";
-import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
+import {
+  VSCodeButton,
+  VSCodeTextField,
+} from "@vscode/webview-ui-toolkit/react";
 import "./App.css";
 
 interface Message {
@@ -10,31 +13,34 @@ interface Message {
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
 
-  function handleSendMessage() {
-    if (inputMessage.trim() !== "") {
-      const newMessage: Message = { text: inputMessage, sender: "user" };
-      setMessages([...messages, newMessage]);
-      setInputMessage("");
+  function handleSendMessage(event: React.FormEvent) {
+    event.preventDefault();
+    const message = (event.target as HTMLFormElement).message.value;
+    const newMessage: Message = { text: message, sender: "user" };
+    setMessages([...messages, newMessage]);
 
-      // Send message to extension
-      vscode.postMessage({
-        command: "sendMessage",
-        text: inputMessage,
-      });
-    }
+    // Send message to extension
+    vscode.postMessage({
+      command: "sendMessage",
+      text: message,
+    });
+
+    // clear the input
+    (event.target as HTMLFormElement).reset();
   }
 
   return (
-    <main className="flex flex-col h-screen p-4">
+    <main className="p-4">
       <h1 className="text-2xl font-bold text-green-500 mb-4">Chat Interface</h1>
-      <div className="flex-grow overflow-y-auto mb-4 border border-gray-300 rounded p-2">
+      <div className="overflow-y-auto mb-4 rounded p-2">
         {messages.map((message, index) => (
           <div
             key={index}
             className={`mb-2 p-2 rounded ${
-              message.sender === "user" ? "bg-blue-100 text-right" : "bg-gray-100"
+              message.sender === "user"
+                ? "bg-blue-100 text-right"
+                : "bg-gray-100"
             }`}
           >
             {message.text}
@@ -42,16 +48,20 @@ function App() {
         ))}
       </div>
       <div className="flex">
-        <VSCodeTextField
-          className="flex-grow mr-2"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-          placeholder="Type a message..."
-        />
-        <VSCodeButton onClick={handleSendMessage} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Send
-        </VSCodeButton>
+        <form onSubmit={handleSendMessage}>
+          <VSCodeTextField
+            id="message"
+            className="flex-grow mr-2"
+            placeholder="Type a message..."
+            required
+          />
+          <VSCodeButton
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Send
+          </VSCodeButton>
+        </form>
       </div>
     </main>
   );
