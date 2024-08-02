@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { ChatView } from "./chatView";
+import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
@@ -84,6 +85,15 @@ export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("Spectacle");
   outputChannel.show();
   outputChannel.appendLine("Activating Spectacle extension");
+
+  const helloCommand = vscode.commands.registerCommand(
+    "hello-world.showHelloWorld",
+    () => {
+      HelloWorldPanel.render();
+    }
+  );
+
+  context.subscriptions.push(helloCommand);
 
   // Initialize Aider
   initializeAider().catch((error) => {
