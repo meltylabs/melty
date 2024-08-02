@@ -141,6 +141,8 @@ export class ChatView {
                 } else {
                     payload.message = message;
                 }
+                console.log("Sending message to Aider:", payload);
+                console.log('command: ', command);
                 vscode.postMessage(payload);
                 messageInput.value = '';
                 setAIThinking(true);
@@ -295,19 +297,25 @@ IThinking(false);
     } else if (message.type === "sendMessage") {
       console.log(
         `${logPrefix} Received sendMessage request:`,
-        message.command === 'add' || message.command === 'drop' ? message.files : message.message
+        message.command === "add" || message.command === "drop"
+          ? message.files
+          : message.message
       );
 
       try {
         // Add user message to chat
-        const displayMessage = message.command === 'add' || message.command === 'drop'
-          ? `${message.command}: ${message.files.join(', ')}`
-          : `${message.command}: ${message.message}`;
+        const displayMessage =
+          message.command === "add" || message.command === "drop"
+            ? `${message.command}: ${message.files.join(", ")}`
+            : `${message.command}: ${message.message}`;
         this.addMessage("user", displayMessage);
 
         // Generate AI response
         this.setAIThinking(true);
-        await this.createAIResponse(message.command, message.files || message.message);
+        await this.createAIResponse(
+          message.command,
+          message.files || message.message
+        );
         this.setAIThinking(false);
       } catch (error) {
         console.error(`${logPrefix} Error in message handling:`, error);
@@ -342,11 +350,17 @@ IThinking(false);
       switch (command) {
         case "ask":
         case "code":
-          response = await sendMessageToAider(userInput as string, `/aider/${command}`);
+          response = await sendMessageToAider(
+            userInput as string,
+            `/aider/${command}`
+          );
           break;
         case "add":
         case "drop":
-          response = await sendMessageToAider(userInput as string[], `/aider/${command}`);
+          response = await sendMessageToAider(
+            userInput as string[],
+            `/aider/${command}`
+          );
           break;
         case "diff":
           response = await sendMessageToAider("", "/aider/diff");
