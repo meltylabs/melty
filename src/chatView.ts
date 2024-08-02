@@ -322,11 +322,17 @@ export class ChatView {
 
       console.log("Received response from Aider");
       console.log("response: ", response);
+      console.log("Usage info: ", response.usage_info);
       this.updatePartialResponse(response.message);
-      this._view.webview.postMessage({
-        type: "updateUsageInfo",
-        usageInfo: response.usage_info,
-      });
+      if (response.usage_info) {
+        console.log("Sending usage info to webview");
+        this._view.webview.postMessage({
+          type: "updateUsageInfo",
+          usageInfo: response.usage_info,
+        });
+      } else {
+        console.log("No usage info available in the response");
+      }
     } catch (error) {
       console.error(`Error creating AI response:`, error);
       throw error;
