@@ -6,3 +6,6 @@ Welcome to hi.md!
 # Hello, World!
 
 Welcome to this new Markdown file.
+# Hello
+
+Welcome to the project!
