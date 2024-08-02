@@ -94,7 +94,7 @@ export class ChatView {
                 <button id="reset-button">Reset Chat</button>
                 <div id="ai-loading" class="ellipsis">AI is thinking</div>
                 <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
-                <div id="usage-info-details" style="margin-top: 5px; font-size: 10px; color: #666; display: none;">
+                <div id="usage-info-details" style="margin-top: 5px; font-size: 10px; color: #666;">
                     <div>Prompt tokens: <span id="prompt-tokens"></span></div>
                     <div>Completion tokens: <span id="completion-tokens"></span></div>
                     <div>Total tokens: <span id="total-tokens"></span></div>
@@ -188,16 +188,16 @@ export class ChatView {
                         const promptTokens = document.getElementById('prompt-tokens');
                         const completionTokens = document.getElementById('completion-tokens');
                         const totalTokens = document.getElementById('total-tokens');
-                        
+
                         if (usageInfo) {
                             usageInfoElement.textContent = 'Usage Info (click to toggle details)';
                             usageInfoElement.style.cursor = 'pointer';
                             usageInfoDetails.style.display = 'none';
-                            
+
                             promptTokens.textContent = usageInfo.prompt_tokens;
                             completionTokens.textContent = usageInfo.completion_tokens;
                             totalTokens.textContent = usageInfo.total_tokens;
-                            
+
                             usageInfoElement.onclick = function() {
                                 usageInfoDetails.style.display = usageInfoDetails.style.display === 'none' ? 'block' : 'none';
                             };
