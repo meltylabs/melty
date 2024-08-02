@@ -97,9 +97,10 @@ export class ChatView {
                 <div id="ai-loading" class="ellipsis">AI is thinking</div>
                 <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
                 <div id="usage-info-details" style="margin-top: 5px; font-size: 10px; color: #666;">
-                    <div>Prompt tokens: <span id="prompt-tokens"></span></div>
-                    <div>Completion tokens: <span id="completion-tokens"></span></div>
-                    <div>Total tokens: <span id="total-tokens"></span></div>
+                    <div>Tokens sent: <span id="tokens-sent"></span></div>
+                    <div>Tokens received: <span id="tokens-received"></span></div>
+                    <div>Cost of call: <span id="cost-call"></span></div>
+                    <div>Cost of session: <span id="cost-session"></span></div>
                 </div>
                 <script>
                     const vscode = acquireVsCodeApi();
@@ -188,9 +189,10 @@ export class ChatView {
                         console.log("Received usage info in webview:", usageInfo);
                         const usageInfoElement = document.getElementById('usage-info');
                         const usageInfoDetails = document.getElementById('usage-info-details');
-                        const promptTokens = document.getElementById('prompt-tokens');
-                        const completionTokens = document.getElementById('completion-tokens');
-                        const totalTokens = document.getElementById('total-tokens');
+                        const tokensSent = document.getElementById('tokens-sent');
+                        const tokensReceived = document.getElementById('tokens-received');
+                        const costCall = document.getElementById('cost-call');
+                        const costSession = document.getElementById('cost-session');
 
                         if (usageInfo) {
                             console.log("Updating usage info display");
@@ -198,9 +200,10 @@ export class ChatView {
                             usageInfoElement.style.cursor = 'pointer';
                             usageInfoDetails.style.display = 'none';
 
-                            promptTokens.textContent = usageInfo.cost_call;
-                            completionTokens.textContent = usageInfo.cost_session;
-                            totalTokens.textContent = usageInfo.tokens_received;
+                            tokensSent.textContent = usageInfo.tokens_sent;
+                            tokensReceived.textContent = usageInfo.tokens_received;
+                            costCall.textContent = '$' + usageInfo.cost_call.toFixed(2);
+                            costSession.textContent = '$' + usageInfo.cost_session.toFixed(2);
 
                             usageInfoElement.onclick = function() {
                                 usageInfoDetails.style.display = usageInfoDetails.style.display === 'none' ? 'block' : 'none';
