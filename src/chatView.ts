@@ -82,6 +82,13 @@ export class ChatView {
             </head>
             <body>
                 <div id="chat-messages"></div>
+                <select id="command-select">
+                    <option value="ask">Ask</option>
+                    <option value="add">Add</option>
+                    <option value="drop">Drop</option>
+                    <option value="diff">Diff</option>
+                    <option value="code">Code</option>
+                </select>
                 <input type="text" id="message-input" placeholder="Type your message...">
                 <button id="send-button">Send</button>
                 <button id="reset-button">Reset Chat</button>
@@ -94,6 +101,7 @@ export class ChatView {
                     const sendButton = document.getElementById('send-button');
                     const resetButton = document.getElementById('reset-button');
                     const aiLoading = document.getElementById('ai-loading');
+                    const commandSelect = document.getElementById('command-select');
 
                     let currentAIMessage = null;
 
@@ -107,8 +115,9 @@ export class ChatView {
 
                     function sendMessage() {
                         const message = messageInput.value;
+                        const command = commandSelect.value;
                         if (message) {
-                            vscode.postMessage({ type: 'sendMessage', message });
+                            vscode.postMessage({ type: 'sendMessage', command, message });
                             messageInput.value = '';
                             setAIThinking(true);
                         }
@@ -230,11 +239,11 @@ export class ChatView {
 
       try {
         // Add user message to chat
-        this.addMessage("user", message.message);
+        this.addMessage("user", `${message.command}: ${message.message}`);
 
         // Generate AI response
         this.setAIThinking(true);
-        await this.createAIResponse(message.message);
+        await this.createAIResponse(message.command, message.message);
         this.setAIThinking(false);
       } catch (error) {
         console.error("CHATVIEW: Error in message handling:", error);
@@ -255,14 +264,36 @@ export class ChatView {
     }
   }
 
-  private async createAIResponse(userMessage: string): Promise<void> {
-    console.log("Creating AI response");
+  private async createAIResponse(
+    command: string,
+    userMessage: string
+  ): Promise<void> {
+    console.log(`Creating AI response for command: ${command}`);
     try {
       console.log("Sending message to Aider");
 
       this._view.webview.postMessage({ type: "startNewAIMessage" });
 
-      const response = await sendMessageToAider(userMessage);
+      let response;
+      switch (command) {
+        case "ask":
+          response = await sendMessageToAider(userMessage, "/aider/ask");
+          break;
+        case "add":
+          response = await sendMessageToAider(userMessage, "/aider/add");
+          break;
+        case "drop":
+          response = await sendMessageToAider(userMessage, "/aider/drop");
+          break;
+        case "diff":
+          response = await sendMessageToAider("", "/aider/diff");
+          break;
+        case "code":
+          response = await sendMessageToAider(userMessage, "/aider/code");
+          break;
+        default:
+          throw new Error(`Unknown command: ${command}`);
+      }
 
       console.log("Received response from Aider");
       console.log("response: ", response);
