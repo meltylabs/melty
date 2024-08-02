@@ -50,6 +50,10 @@
     }
   },
   "scripts": {
+    "install:all": "npm install && cd webview-ui && npm install",
+    "start:webview": "cd webview-ui && npm run start",
+    "build:webview": "cd webview-ui && npm run build",
+    "test:webview": "cd webview-ui && npm run test",
     "vscode:prepublish": "npm run compile",
     "compile": "node ./esbuild.js",
     "package": "NODE_ENV=production node ./esbuild.js",

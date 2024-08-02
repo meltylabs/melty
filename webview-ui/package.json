@@ -1,0 +1,46 @@
+{
+  "name": "hello-world",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "EXTEND_ESLINT=true react-scripts start",
+    "build": "node ./scripts/build-react-no-split.js",
+    "test": "EXTEND_ESLINT=true react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@vscode/webview-ui-toolkit": "^1.2.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^12.20.37",
+    "@types/react": "^17.0.37",
+    "@types/react-dom": "^17.0.11",
+    "@types/vscode-webview": "^1.57.0",
+    "react-scripts": "^5.0.1",
+    "rewire": "^5.0.0",
+    "typescript": "^4.4.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
+    "rules": {
+      "no-unused-expressions": "off"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
