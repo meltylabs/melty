@@ -77,42 +77,44 @@ export class SpectacleExtension {
 
 let outputChannel: vscode.OutputChannel;
 
+import { initializeAider } from "./aider";
+
 export function activate(context: vscode.ExtensionContext) {
   console.log("Activating Spectacle extension");
   outputChannel = vscode.window.createOutputChannel("Spectacle");
   outputChannel.show();
-  outputChannel.appendLine('Activating Spectacle extension');
+  outputChannel.appendLine("Activating Spectacle extension");
+
+  // Initialize Aider
+  initializeAider().catch((error) => {
+    console.error("Failed to initialize Aider:", error);
+    outputChannel.appendLine(`Failed to initialize Aider: ${error}`);
+  });
+
   const extension = new SpectacleExtension(context, outputChannel);
   extension.activate();
-  outputChannel.appendLine('Spectacle extension activated');
-  console.log('Spectacle extension activated');
+  outputChannel.appendLine("Spectacle extension activated");
+  console.log("Spectacle extension activated");
 
   // Log the registered commands
   const commands = vscode.commands.getCommands(true);
   commands.then((cmds) => {
-    console.log('Registered commands:', cmds);
-    outputChannel.appendLine('Registered commands: ' + cmds.join(', '));
+    outputChannel.appendLine("Registered commands: " + cmds.join(", "));
   });
 
   // Add event listener for webview panel creation
   context.subscriptions.push(
-    vscode.window.registerWebviewPanelSerializer('spectacle.chatView', {
-      async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-        console.log('Deserializing webview panel');
-        outputChannel.appendLine('Deserializing webview panel');
+    vscode.window.registerWebviewPanelSerializer("spectacle.chatView", {
+      async deserializeWebviewPanel(
+        webviewPanel: vscode.WebviewPanel,
+        state: any
+      ) {
+        console.log("Deserializing webview panel");
+        outputChannel.appendLine("Deserializing webview panel");
         // You might need to reinitialize the ChatView here
-      }
+      },
     })
   );
-
-  // Log when commands are executed
-  vscode.commands.executeCommand = new Proxy(vscode.commands.executeCommand, {
-    apply: function(target, thisArg, argumentsList) {
-      console.log(`Executing command: ${argumentsList[0]}`);
-      outputChannel.appendLine(`Executing command: ${argumentsList[0]}`);
-      return target.apply(thisArg, argumentsList);
-    }
-  });
 }
 
 export function deactivate() {

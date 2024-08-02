@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
-import { Claude } from "./util/claude";
+import { sendMessageToAider } from "./aider";
+
+const logPrefix = "[ChatView]";
 
 export class ChatView {
   private readonly _view: vscode.WebviewView;
@@ -8,11 +10,11 @@ export class ChatView {
   constructor(view: vscode.WebviewView) {
     this._view = view;
     try {
-      console.log("ChatView constructor called");
+      console.log(`${logPrefix} ChatView constructor called`);
       this._view = view;
 
-      console.log("Setting up webview options");
-      console.log("Webview view:", this._view);
+      console.log(`${logPrefix} Setting up webview options`);
+      console.log(`${logPrefix} Webview view:`, this._view);
       this._view.webview.options = {
         enableScripts: true,
         localResourceRoots: [
@@ -24,25 +26,27 @@ export class ChatView {
           ),
         ],
       };
-      console.log("Webview options set up successfully");
+      console.log(`${logPrefix} Webview options set up successfully`);
 
-      console.log("Setting up webview HTML");
+      console.log(`${logPrefix} Setting up webview HTML`);
       this._view.webview.html = this._getHtmlForWebview();
-      console.log("Webview HTML set up successfully");
+      console.log(`${logPrefix} Webview HTML set up successfully`);
 
-      console.log("Setting up message listener");
+      console.log(`${logPrefix} Setting up message listener`);
       this._view.webview.onDidReceiveMessage(
         this._onDidReceiveMessage.bind(this)
       );
-      console.log("Message listener set up successfully");
+      console.log(`${logPrefix} Message listener set up successfully`);
 
       // Initialize empty chat
       this._updateChatView();
-      console.log("ChatView constructor completed successfully");
+      console.log(`${logPrefix} ChatView constructor completed successfully`);
     } catch (error) {
-      console.error("Error in ChatView constructor:", error);
+      console.error(`${logPrefix} Error in ChatView constructor:`, error);
       vscode.window.showErrorMessage(
-        `Error initializing ChatView: ${error instanceof Error ? error.message : String(error)}`
+        `Error initializing ChatView: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }
@@ -80,10 +84,27 @@ export class ChatView {
             </head>
             <body>
                 <div id="chat-messages"></div>
+                <select id="command-select">
+                    <option value="ask">Ask</option>
+                    <option value="add">Add</option>
+                    <option value="drop">Drop</option>
+                    <option value="diff">Diff</option>
+                    <option value="code">Code</option>
+                </select>
                 <input type="text" id="message-input" placeholder="Type your message...">
                 <button id="send-button">Send</button>
                 <button id="reset-button">Reset Chat</button>
                 <div id="ai-loading" class="ellipsis">AI is thinking</div>
+                <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;">
+                    <div>Tokens sent: <span id="tokens-sent"></span></div>
+                    <div>Tokens received: <span id="tokens-received"></span></div>
+                    <div>Cost of call: <span id="cost-call"></span></div>
+                    <div>Cost of session: <span id="cost-session"></span></div>
+                </div>
+                <div id="file-changes" style="margin-top: 10px; font-size: 12px;">
+                    <h3>File Changes:</h3>
+                    <ul id="file-changes-list"></ul>
+                </div>
                 <script>
                     const vscode = acquireVsCodeApi();
                     const chatMessages = document.getElementById('chat-messages');
@@ -91,6 +112,7 @@ export class ChatView {
                     const sendButton = document.getElementById('send-button');
                     const resetButton = document.getElementById('reset-button');
                     const aiLoading = document.getElementById('ai-loading');
+                    const commandSelect = document.getElementById('command-select');
 
                     let currentAIMessage = null;
 
@@ -104,8 +126,9 @@ export class ChatView {
 
                     function sendMessage() {
                         const message = messageInput.value;
+                        const command = commandSelect.value;
                         if (message) {
-                            vscode.postMessage({ type: 'sendMessage', message });
+                            vscode.postMessage({ type: 'sendMessage', command, message });
                             messageInput.value = '';
                             setAIThinking(true);
                         }
@@ -165,6 +188,42 @@ export class ChatView {
                         }
                     }
 
+                    function updateUsageInfo(usageInfo) {
+                        console.log("Received usage info in webview:", usageInfo);
+                        const usageInfoElement = document.getElementById('usage-info');
+                        const tokensSent = document.getElementById('tokens-sent');
+                        const tokensReceived = document.getElementById('tokens-received');
+                        const costCall = document.getElementById('cost-call');
+                        const costSession = document.getElementById('cost-session');
+
+                        if (usageInfo) {
+                            console.log("Updating usage info display");
+                            tokensSent.textContent = usageInfo.tokens_sent;
+                            tokensReceived.textContent = usageInfo.tokens_received;
+                            costCall.textContent = '$' + usageInfo.cost_call.toFixed(2);
+                            costSession.textContent = '$' + usageInfo.cost_session.toFixed(2);
+                            usageInfoElement.style.display = 'block';
+                        } else {
+                            console.log("No usage info available");
+                            usageInfoElement.style.display = 'none';
+                        }
+                    }
+
+                    function renderFileChanges(fileChanges) {
+                        const fileChangesList = document.getElementById('file-changes-list');
+                        fileChangesList.innerHTML = '';
+                        if (fileChanges && fileChanges.length > 0) {
+                            fileChanges.forEach(file => {
+                                const li = document.createElement('li');
+                                li.textContent = file;
+                                fileChangesList.appendChild(li);
+                            });
+                            document.getElementById('file-changes').style.display = 'block';
+                        } else {
+                            document.getElementById('file-changes').style.display = 'none';
+                        }
+                    }
+
                     window.addEventListener('message', event => {
                         const message = event.data;
                         switch (message.type) {
@@ -189,6 +248,12 @@ export class ChatView {
                             case 'startNewAIMessage':
                                 startNewAIMessage();
                                 break;
+                            case 'updateUsageInfo':
+                                updateUsageInfo(message.usageInfo);
+                                break;
+                            case 'renderFileChanges':
+                                renderFileChanges(message.fileChanges);
+                                break;
                         }
                     });
 
@@ -204,88 +269,112 @@ export class ChatView {
   }
 
   private async _onDidReceiveMessage(message: any) {
-    console.log(`CHATVIEW: Received message:`, message);
+    console.log(`${logPrefix} Received message:`, message);
 
     if (message.type === "resetChat") {
-      console.log(`CHATVIEW: Resetting chat`);
+      console.log(`${logPrefix} Resetting chat`);
       this._messages = [];
       this._updateChatView();
     } else if (message.type === "sendMessage") {
-      console.log(`CHATVIEW: Received sendMessage request: ${message.message}`);
+      console.log(
+        `${logPrefix} Received sendMessage request: ${message.message}`
+      );
 
       try {
         // Add user message to chat
-        this.addMessage("user", message.message);
+        this.addMessage("user", `${message.command}: ${message.message}`);
 
         // Generate AI response
         this.setAIThinking(true);
-        await this.createAIResponse(message.message);
+        await this.createAIResponse(message.command, message.message);
         this.setAIThinking(false);
       } catch (error) {
-        console.error("CHATVIEW: Error in message handling:", error);
-        vscode.window.showErrorMessage(`An error occurred: ${error instanceof Error ? error.message : String(error)}`);
+        console.error(`${logPrefix} Error in message handling:`, error);
+        vscode.window.showErrorMessage(
+          `An error occurred: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
         this.setAIThinking(false);
       }
     } else if (message.type === "webviewReady") {
-      console.log(`CHATVIEW: Webview ready`);
+      console.log(`${logPrefix} Webview ready`);
       this._updateChatView();
     } else if (message.type === "log") {
-      console.log(`CHATVIEW: Log from webview: ${message.message}`);
+      console.log(`${logPrefix} Log from webview: ${message.message}`);
     } else {
-      console.warn("CHATVIEW: Unknown message type received:", message.type);
+      console.warn(`${logPrefix} Unknown message type received:`, message.type);
     }
   }
 
-  private async createAIResponse(userMessage: string): Promise<void> {
-    console.log("Creating AI response");
+  private async createAIResponse(
+    command: string,
+    userMessage: string
+  ): Promise<void> {
+    console.log(`${logPrefix} Creating AI response for command: ${command}`);
     try {
-      const fullPrompt = `You are an expert programmer. Help this user with their task. Provide your response in a clear and concise manner.
-
-User: ${userMessage}
-
-Please provide your response to assist the user with their task.`;
-
-      console.log("Sending prompt to Claude");
+      console.log(`${logPrefix} Sending message to Aider`);
 
       this._view.webview.postMessage({ type: "startNewAIMessage" });
 
-      let fullResponse = "";
-      const stream = await Claude.sendMessageStream(fullPrompt);
-
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_start" ||
-          chunk.type === "content_block_delta"
-        ) {
-          if ('delta' in chunk && 'text' in chunk.delta && chunk.delta.text) {
-            fullResponse += chunk.delta.text;
-            this.updatePartialResponse(fullResponse);
-          }
-        }
+      let response;
+      switch (command) {
+        case "ask":
+          response = await sendMessageToAider(userMessage, "/aider/ask");
+          break;
+        case "add":
+          response = await sendMessageToAider(userMessage, "/aider/add");
+          break;
+        case "drop":
+          response = await sendMessageToAider(userMessage, "/aider/drop");
+          break;
+        case "diff":
+          response = await sendMessageToAider("", "/aider/diff");
+          break;
+        case "code":
+          response = await sendMessageToAider(userMessage, "/aider/code");
+          break;
+        default:
+          throw new Error(`Unknown command: ${command}`);
       }
 
-      console.log("Received full response from Claude");
+      console.log(`${logPrefix} Received response from Aider`);
+      console.log(`${logPrefix} response: `, response);
+      console.log(`${logPrefix} Usage info: `, response.usage);
+      this.updatePartialResponse(response.message);
+      if (response.usage) {
+        console.log(`${logPrefix} Sending usage info to webview`);
+        this._view.webview.postMessage({
+          type: "updateUsageInfo",
+          usageInfo: response.usage,
+        });
+      } else {
+        console.log(`${logPrefix} No usage info available in the response`);
+      }
     } catch (error) {
-      console.error(`Error creating AI response:`, error);
+      console.error(`${logPrefix} Error creating AI response:`, error);
       throw error;
     }
   }
 
   private _updateChatView() {
-    console.log("CHATVIEW: Updating chat view with messages:", this._messages);
+    console.log(
+      `${logPrefix} Updating chat view with messages:`,
+      this._messages
+    );
     if (this._view && this._view.webview) {
       this._view.webview.postMessage({
         type: "updateMessages",
         messages: this._messages,
       });
-      console.log("CHATVIEW: Posted updateMessages to webview");
+      console.log(`${logPrefix} Posted updateMessages to webview`);
     } else {
-      console.error("CHATVIEW: Error: _view or _view.webview is undefined");
+      console.error(`${logPrefix} Error: _view or _view.webview is undefined`);
     }
   }
 
   public addMessage(sender: "user" | "ai", text: string) {
-    console.log(`CHATVIEW: Adding message - ${sender}: ${text}`);
+    console.log(`${logPrefix} Adding message - ${sender}: ${text}`);
     this._messages.push({ sender, text });
     this._view.webview.postMessage({
       type: "addMessage",
@@ -301,25 +390,45 @@ Please provide your response to assist the user with their task.`;
     });
   }
 
-  public updatePartialResponse(partialResponse: string) {
+  public updatePartialResponse(
+    partialResponse: string | { message: string; fileChanges?: string[] }
+  ) {
+    let message: string;
+    let fileChanges: string[] | undefined;
+
+    if (typeof partialResponse === "string") {
+      message = partialResponse;
+    } else {
+      message = partialResponse.message;
+      fileChanges = partialResponse.fileChanges;
+    }
+
     this._view.webview.postMessage({
       type: "updatePartialResponse",
-      text: partialResponse,
+      text: message,
     });
-    console.log(`Sent partial response to webview: ${partialResponse}`);
+    console.log(`${logPrefix} Sent partial response to webview: ${message}`);
+
+    if (fileChanges) {
+      this._view.webview.postMessage({
+        type: "renderFileChanges",
+        fileChanges: fileChanges,
+      });
+      console.log(`${logPrefix} Sent file changes to webview:`, fileChanges);
+    }
 
     // Update or add the AI message in the _messages array
     const lastMessage = this._messages[this._messages.length - 1];
     if (lastMessage && lastMessage.sender === "ai") {
-      lastMessage.text = partialResponse;
+      lastMessage.text = message;
     } else {
-      this._messages.push({ sender: "ai", text: partialResponse });
+      this._messages.push({ sender: "ai", text: message });
     }
   }
 
   public updateWithTask(task: any) {
     // Implement the logic to update the chat view with the task
-    console.log("Updating chat view with task:", task);
+    console.log(`${logPrefix} Updating chat view with task:`, task);
     // You may want to add the task to the messages or update the UI in some way
   }
 }
