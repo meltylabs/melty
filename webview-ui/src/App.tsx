@@ -52,7 +52,9 @@ function App() {
 
   return (
     <main className="p-4">
-      <h1 className="text-2xl font-bold text-green-500 mb-4">Chat Interface</h1>
+      <h1 className="text-2xl font-bold text-green-500 mb-4">
+        General Editor 🫡
+      </h1>
       <div className="overflow-y-auto mb-4 rounded p-2">
         {messages.map((message, index) => (
           <div

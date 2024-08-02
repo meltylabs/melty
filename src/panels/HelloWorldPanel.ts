@@ -174,7 +174,10 @@ export class HelloWorldPanel {
             return;
           case "code":
             window.showInformationMessage(`Asking AI...`);
+            console.log("ask aider");
             const response = await sendMessageToAider(text, "/aider/code");
+
+            console.log("now we get the diff");
 
             // Get the Git extension
             const gitExtension = vscode.extensions.getExtension("vscode.git");
@@ -193,6 +196,7 @@ export class HelloWorldPanel {
             }
 
             const repo = repositories[0];
+            await repo.status();
 
             // Get the latest commit
             const latestCommit = repo.state.HEAD?.commit;
@@ -202,7 +206,17 @@ export class HelloWorldPanel {
               const commitMessage = await repo.getCommit(latestCommit);
 
               // Get the diff of the latest commit
-              const diff = await repo.diffWithHEAD(latestCommit + "^");
+              const diff = await repo.diffBetween(
+                latestCommit + "^",
+                latestCommit
+              );
+
+              console.log(
+                await repo.diffBetween(
+                  "ffd8f61f31e61636acb3d7d86394291ad487bca4",
+                  "43437315fdc7bad7d8e3bac208f160de859e2dc5"
+                )
+              );
 
               vscode.window.showInformationMessage(
                 `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}\nDiff:\n${diff}`
