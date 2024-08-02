@@ -4,11 +4,14 @@ import {
   VSCodeButton,
   VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react";
+import * as Diff2Html from "diff2html";
+import "diff2html/bundles/css/diff2html.min.css";
 import "./App.css";
 
 interface Message {
   text: string;
   sender: "user" | "bot";
+  diffHtml?: string;
 }
 
 function App() {
@@ -37,9 +40,14 @@ function App() {
       switch (message.command) {
         case "aiResponse":
           console.log("aiResponse", message);
+          const diffHtml = Diff2Html.html(message.text.message, {
+            drawFileList: true,
+            matching: "lines",
+            outputFormat: "side-by-side",
+          });
           setMessages((prevMessages) => [
             ...prevMessages,
-            { text: message.text.message, sender: "bot" },
+            { text: message.text.message, sender: "bot", diffHtml },
           ]);
           break;
       }
@@ -65,7 +73,11 @@ function App() {
                 : "bg-gray-100"
             }`}
           >
-            {message.text}
+            {message.diffHtml ? (
+              <div dangerouslySetInnerHTML={{ __html: message.diffHtml }} />
+            ) : (
+              message.text
+            )}
           </div>
         ))}
       </div>
