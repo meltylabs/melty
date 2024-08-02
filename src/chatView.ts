@@ -101,6 +101,10 @@ export class ChatView {
                     <div>Cost of call: <span id="cost-call"></span></div>
                     <div>Cost of session: <span id="cost-session"></span></div>
                 </div>
+                <div id="file-changes" style="margin-top: 10px; font-size: 12px;">
+                    <h3>File Changes:</h3>
+                    <ul id="file-changes-list"></ul>
+                </div>
                 <script>
                     const vscode = acquireVsCodeApi();
                     const chatMessages = document.getElementById('chat-messages');
@@ -205,6 +209,21 @@ export class ChatView {
                         }
                     }
 
+                    function renderFileChanges(fileChanges) {
+                        const fileChangesList = document.getElementById('file-changes-list');
+                        fileChangesList.innerHTML = '';
+                        if (fileChanges && fileChanges.length > 0) {
+                            fileChanges.forEach(file => {
+                                const li = document.createElement('li');
+                                li.textContent = file;
+                                fileChangesList.appendChild(li);
+                            });
+                            document.getElementById('file-changes').style.display = 'block';
+                        } else {
+                            document.getElementById('file-changes').style.display = 'none';
+                        }
+                    }
+
                     window.addEventListener('message', event => {
                         const message = event.data;
                         switch (message.type) {
@@ -231,6 +250,9 @@ export class ChatView {
                                 break;
                             case 'updateUsageInfo':
                                 updateUsageInfo(message.usageInfo);
+                                break;
+                            case 'renderFileChanges':
+                                renderFileChanges(message.fileChanges);
                                 break;
                         }
                     });
