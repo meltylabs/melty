@@ -95,8 +95,7 @@ export class ChatView {
                 <button id="send-button">Send</button>
                 <button id="reset-button">Reset Chat</button>
                 <div id="ai-loading" class="ellipsis">AI is thinking</div>
-                <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;"></div>
-                <div id="usage-info-details" style="margin-top: 5px; font-size: 10px; color: #666;">
+                <div id="usage-info" style="margin-top: 10px; font-size: 10px; color: #666;">
                     <div>Tokens sent: <span id="tokens-sent"></span></div>
                     <div>Tokens received: <span id="tokens-received"></span></div>
                     <div>Cost of call: <span id="cost-call"></span></div>
@@ -188,7 +187,6 @@ export class ChatView {
                     function updateUsageInfo(usageInfo) {
                         console.log("Received usage info in webview:", usageInfo);
                         const usageInfoElement = document.getElementById('usage-info');
-                        const usageInfoDetails = document.getElementById('usage-info-details');
                         const tokensSent = document.getElementById('tokens-sent');
                         const tokensReceived = document.getElementById('tokens-received');
                         const costCall = document.getElementById('cost-call');
@@ -196,23 +194,14 @@ export class ChatView {
 
                         if (usageInfo) {
                             console.log("Updating usage info display");
-                            usageInfoElement.textContent = 'Usage Info (click to toggle details)';
-                            usageInfoElement.style.cursor = 'pointer';
-                            usageInfoDetails.style.display = 'none';
-
                             tokensSent.textContent = usageInfo.tokens_sent;
                             tokensReceived.textContent = usageInfo.tokens_received;
                             costCall.textContent = '$' + usageInfo.cost_call.toFixed(2);
                             costSession.textContent = '$' + usageInfo.cost_session.toFixed(2);
-
-                            usageInfoElement.onclick = function() {
-                                usageInfoDetails.style.display = usageInfoDetails.style.display === 'none' ? 'block' : 'none';
-                            };
+                            usageInfoElement.style.display = 'block';
                         } else {
                             console.log("No usage info available");
-                            usageInfoElement.textContent = '';
-                            usageInfoDetails.style.display = 'none';
-                            usageInfoElement.onclick = null;
+                            usageInfoElement.style.display = 'none';
                         }
                     }
 
