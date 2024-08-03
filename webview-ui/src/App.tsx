@@ -14,6 +14,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./components/ui/tooltip";
 import "./App.css";
 
 interface Message {
@@ -24,13 +30,13 @@ interface Message {
 
 // dummy message
 
-const dummy1: Message = {
+const dummy2: Message = {
   diff: "",
   text: "hi",
   sender: "user",
 };
 
-const dummy2: Message = {
+const dummy1: Message = {
   diff: "",
   text: "Hello! I'm here to assist you. Since you haven't made any specific request for changes yet, there\nare no files that I can identify as needing changes at this moment. When you have a specific task\nor modification in mind, please let me know, and I'll be happy to suggest which files might need \nto be edited to accomplish that task. Once I've identified potential files for editing, I'll stop\nand wait for your approval before proceeding with any changes.                                   Tokens: 12,556 sent, 94 received. Cost: $0.04 request, $0.04 session.",
   sender: "bot",
@@ -43,7 +49,7 @@ const dummy3: Message = {
 };
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([dummy1, dummy2, dummy3]);
+  const [messages, setMessages] = useState<Message[]>([dummy2, dummy3]);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -111,11 +117,11 @@ function App() {
             <div>
               {message.diff && (
                 <Collapsible>
-                  <div className="flex items-center justify-between space-x-4 px-4">
+                  <div className="flex items-center justify-end space-x-4 px-4">
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm">
                         <h4 className="text-sm font-semibold mr-2">
-                          Code changes
+                          1 file changed
                         </h4>
                         <ChevronsUpDown className="h-4 w-4" />
                         <span className="sr-only">Toggle</span>
@@ -143,8 +149,19 @@ function App() {
       <div className="">
         <Separator />
         <div className="mt-6 flex items-center space-x-2">
-          <Switch id="airplane-mode" />
-          <Label htmlFor="airplane-mode">Code</Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-2">
+                  <Switch id="airplane-mode" />
+                  <Label htmlFor="airplane-mode">Code</Label>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>If code is off, Melty will only offer suggestions.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <form onSubmit={handleSendMessage}>
           <div className="mt-4">
