@@ -82,3 +82,8 @@ We'll create a comprehensive test suite for the integration:
 4. source ../.env
 5. python3 -m aider.api
 6. curl -X POST http://0.0.0.0:8000/aider -H "Content-Type: application/json" -d '{"files": ["abc.py"], "message": "say hi", "model": "claude-3-5-sonnet-20240620"}'
+
+## Running everything
+
+(work in progress)
+bash start.sh
