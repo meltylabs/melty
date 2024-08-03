@@ -51,14 +51,14 @@
   },
   "scripts": {
     "install:all": "npm install && cd webview-ui && npm install",
-    "start:webview": "cd webview-ui && npm run start",
-    "build:webview": "cd webview-ui && npm run build",
-    "test:webview": "cd webview-ui && npm run test",
+    "start:webview": "cd webview-ui && craco start",
+    "build:webview": "cd webview-ui && craco build",
+    "test:webview": "cd webview-ui && craco test",
     "vscode:prepublish": "npm run compile",
     "compile": "node ./esbuild.js",
     "package": "NODE_ENV=production node ./esbuild.js",
     "watch": "node ./esbuild.js --watch",
-    "watch:webview": "cd webview-ui && npm run watch",
+    "watch:webview": "cd webview-ui && craco start",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
@@ -85,7 +85,8 @@
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.7.3",
     "dotenv": "^16.4.5",
-    "python-ast": "^0.1.0"
+    "python-ast": "^0.1.0",
+    "@craco/craco": "^7.0.0-alpha.9"
   },
   "capabilities": {
     "untrustedWorkspaces": {
