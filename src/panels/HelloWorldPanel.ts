@@ -198,7 +198,6 @@ export class HelloWorldPanel {
             });
 
             const response = await sendMessageToAider(text, "/aider/code");
-            const botDiff = await this.getLatestCommitDiff();
 
             /*
              If there are fileChanges, there has already been a commit
@@ -208,6 +207,8 @@ export class HelloWorldPanel {
               await repo.status();
               await repo.commit("bot changes", { empty: true });
             }
+            await repo.status();
+            const botDiff = await this.getLatestCommitDiff();
 
             // Send the response back to the webview
             this._panel.webview.postMessage({
