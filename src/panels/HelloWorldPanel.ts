@@ -175,6 +175,17 @@ export class HelloWorldPanel {
           case "code":
             window.showInformationMessage(`Asking AI...`);
 
+            // make a commit with whatever changes the human made
+            const repo = await this.getRepository();
+
+            const files = await vscode.workspace.findFiles(
+              "**/*",
+              "{.git,node_modules}/**"
+            );
+            const relativePaths = files.map((file) => file.fsPath);
+            await repo.add(relativePaths);
+            await repo.commit("human changes", { empty: true });
+
             // get latest commit diff, and send it back to the webview
             const humanDiff = await this.getLatestCommitDiff();
             this._panel.webview.postMessage({
@@ -194,25 +205,8 @@ export class HelloWorldPanel {
              If there are no fileChanges, we need to create a empty commit with no changes
              */
             if (response.fileChanges.length > 0) {
-              // Get the Git extension
-              const gitExtension = vscode.extensions.getExtension("vscode.git");
-              if (!gitExtension) {
-                vscode.window.showErrorMessage("Git extension not found");
-                throw new Error("Git extension not found");
-              }
-
-              const git = gitExtension.exports.getAPI(1);
-
-              // Get the current repository
-              const repositories = git.repositories;
-              if (repositories.length === 0) {
-                vscode.window.showInformationMessage("No Git repository found");
-                throw new Error("No Git repository found");
-              }
-
-              const repo = repositories[0];
               await repo.status();
-              await repo.commit("dummy commit", { empty: true });
+              await repo.commit("bot changes", { empty: true });
             }
 
             // Send the response back to the webview
@@ -232,6 +226,27 @@ export class HelloWorldPanel {
       undefined,
       this._disposables
     );
+  }
+
+  /**
+   * Gets current repository
+   */
+  private async getRepository() {
+    const gitExtension = vscode.extensions.getExtension("vscode.git");
+    if (!gitExtension) {
+      vscode.window.showErrorMessage("Git extension not found");
+      throw new Error("Git extension not found");
+    }
+
+    const git = gitExtension.exports.getAPI(1);
+    const repositories = git.repositories;
+    if (repositories.length === 0) {
+      vscode.window.showInformationMessage("No Git repository found");
+      throw new Error("No Git repository found");
+    }
+    const repo = repositories[0];
+    await repo.status();
+    return repo;
   }
 
   /**
@@ -298,18 +313,6 @@ export class HelloWorldPanel {
       latestCommit,
       change.uri.fsPath
     );
-    if (!diff) return "";
-
-    const oldPath = change.originalUri?.fsPath || "/dev/null";
-    const newPath = change.uri.fsPath;
-
-    //
-
-    let udiff = `diff --git a/${oldPath} b/${newPath}\n`;
-    udiff += `--- a/${oldPath}\n`;
-    udiff += `+++ b/${newPath}\n`;
-    udiff += diff;
-
-    return udiff;
+    return diff;
   }
 }
