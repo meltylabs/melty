@@ -7,7 +7,6 @@ import {
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import "./App.css";
-import { Input } from "./components/ui/input";
 
 interface Message {
   text: string;
@@ -57,21 +56,21 @@ function App() {
   }, []);
 
   return (
-    <main className="p-4 bg-gray-900 h-screen">
+    <main className="p-4">
       <h1 className="text-2xl font-bold text-green-500 mb-4">
         General Editor 3 🫡
       </h1>
-      <div className="overflow-y-auto mb-4 rounded p-2 max-w-2xl mx-auto">
+      <div className="mb-4 rounded p-2 mx-auto">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`mb-2 p-2 rounded ${
+            className={`grid grid-cols-2 mb-2 p-2 rounded ${
               message.sender === "user" ? "bg-blue-100" : "bg-gray-100"
             }`}
           >
-            <span>{message.text}</span>
+            <div>{message.text}</div>
 
-            <div className="mt-2">
+            <div>
               {message.diff && (
                 <div
                   dangerouslySetInnerHTML={{
@@ -95,6 +94,16 @@ function App() {
             placeholder="Type a message..."
             required
           />
+          <div className="mt-2">
+            <textarea
+              id="comment"
+              name="comment"
+              rows={4}
+              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              defaultValue={""}
+            />
+          </div>
+
           <VSCodeButton type="submit" className="">
             Send
           </VSCodeButton>

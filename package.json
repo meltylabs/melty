@@ -57,7 +57,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "node ./esbuild.js",
     "package": "NODE_ENV=production node ./esbuild.js",
-    "watch": "concurrently \"node ./esbuild.js --watch\" \"npm run watch:webview\"",
+    "watch": "node ./esbuild.js --watch",
     "watch:webview": "cd webview-ui && npm run watch",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
