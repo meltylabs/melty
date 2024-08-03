@@ -18,3 +18,6 @@ sleep 5
 
 # Run npm watch in the current terminal.
 npm run watch
+
+## compile react stuff in a new terminal
+osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && npm run build:webview"'
