@@ -85,5 +85,10 @@ We'll create a comprehensive test suite for the integration:
 
 ## Running everything
 
-(work in progress)
+- start Aider (instructions above)
+- compile extension with `npm run watch`
+- compile react app with `npm run build:webview`
+- go to debug view and click the green play button
+
+(work in progress to do everything)
 bash start.sh
