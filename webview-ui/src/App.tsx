@@ -7,6 +7,7 @@ import {
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import "./App.css";
+import { Input } from "./components/ui/input";
 
 interface Message {
   text: string;
@@ -56,9 +57,9 @@ function App() {
   }, []);
 
   return (
-    <main className="p-4">
+    <main className="p-4 bg-gray-900 h-screen">
       <h1 className="text-2xl font-bold text-green-500 mb-4">
-        General Editor 🫡
+        General Editor 3 🫡
       </h1>
       <div className="overflow-y-auto mb-4 rounded p-2 max-w-2xl mx-auto">
         {messages.map((message, index) => (
@@ -86,19 +87,15 @@ function App() {
           </div>
         ))}
       </div>
-
-      <div className="flex mb-4">
+      <div className="">
         <form onSubmit={handleSendMessage}>
           <VSCodeTextField
             id="message"
-            className="flex-grow mr-2"
+            className="mr-2"
             placeholder="Type a message..."
             required
           />
-          <VSCodeButton
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
+          <VSCodeButton type="submit" className="">
             Send
           </VSCodeButton>
         </form>
