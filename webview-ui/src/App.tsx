@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
+import { ChevronsUpDown } from "lucide-react";
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
-
+import { Switch } from "./components/ui/switch";
+import { Input } from "./components/ui/input";
+import { Label } from "./components/ui/label";
+import { Button } from "./components/ui/button";
+import { Separator } from "./components/ui/separator";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./components/ui/collapsible";
 import "./App.css";
 
 interface Message {
@@ -82,50 +92,68 @@ function App() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`grid grid-cols-2 mb-2 p-2 rounded ${
-              message.sender === "user" ? "bg-blue-100" : "bg-gray-100"
+            className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
+              message.sender === "user" ? "bg-gray-50 " : "bg-white"
             }`}
           >
-            <div>{message.text}</div>
+            <div className="text-xs flex">
+              <Avatar className="mr-3">
+                {message.sender === "user" ? (
+                  <AvatarImage src="https://github.com/cbh123.png" />
+                ) : (
+                  <AvatarImage src="https://github.com/shlinked.png" />
+                )}
+                <AvatarFallback>AI</AvatarFallback>
+              </Avatar>
+              {message.text}
+            </div>
 
             <div>
               {message.diff && (
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: Diff2Html.html(message.diff, {
-                      drawFileList: true,
-                      matching: "lines",
-                      outputFormat: "side-by-side",
-                    }),
-                  }}
-                />
+                <Collapsible>
+                  <div className="flex items-center justify-between space-x-4 px-4">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <h4 className="text-sm font-semibold mr-2">
+                          Code changes
+                        </h4>
+                        <ChevronsUpDown className="h-4 w-4" />
+                        <span className="sr-only">Toggle</span>
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                  <CollapsibleContent>
+                    <div
+                      className="text-xs mt-4 font-mono"
+                      dangerouslySetInnerHTML={{
+                        __html: Diff2Html.html(message.diff, {
+                          drawFileList: true,
+                          matching: "lines",
+                          outputFormat: "line-by-line",
+                        }),
+                      }}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
               )}
             </div>
           </div>
         ))}
       </div>
-      <Avatar>
-        <AvatarImage src="https://github.com/shadcn.png" />
-        <AvatarFallback>CN</AvatarFallback>
-      </Avatar>
       <div className="">
+        <Separator />
+        <div className="mt-6 flex items-center space-x-2">
+          <Switch id="airplane-mode" />
+          <Label htmlFor="airplane-mode">Code</Label>
+        </div>
         <form onSubmit={handleSendMessage}>
-          <div className="mt-2">
-            <input
-              id="message"
-              name="message"
-              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              defaultValue={""}
-              required
-            />
+          <div className="mt-4">
+            <Input placeholder="What should I do?" id="message" required />
           </div>
 
-          <button
-            type="submit"
-            className="mt-4 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-          >
-            Send
-          </button>
+          <div className="mt-4">
+            <Button type="submit">Send</Button>
+          </div>
         </form>
       </div>
     </main>

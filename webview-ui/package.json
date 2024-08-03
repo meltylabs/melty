@@ -12,6 +12,11 @@
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-collapsible": "^1.1.0",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.2",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -25,7 +30,7 @@
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.7",
     "@types/node": "^12.20.37",
-    "@types/react": "^17.0.37",
+    "@types/react": "^17.0.80",
     "@types/react-dom": "^17.0.11",
     "@types/vscode-webview": "^1.57.0",
     "autoprefixer": "^10.4.19",
