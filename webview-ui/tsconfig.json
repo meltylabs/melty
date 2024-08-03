@@ -17,5 +17,5 @@
     "jsx": "react-jsx",
     "strictPropertyInitialization": false
   },
-  "include": ["src"]
+  "include": ["src", "utilities"]
 }
