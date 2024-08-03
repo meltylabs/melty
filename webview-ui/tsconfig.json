@@ -23,5 +23,5 @@
       "@/components/*": ["components/*"]
     }
   },
-  "include": ["src", "utilities"]
+  "include": ["src", "src/utilities"]
 }
