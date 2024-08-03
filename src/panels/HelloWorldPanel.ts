@@ -204,7 +204,7 @@ export class HelloWorldPanel {
              If there are fileChanges, there has already been a commit
              If there are no fileChanges, we need to create a empty commit with no changes
              */
-            if (response.fileChanges.length > 0) {
+            if (response.fileChanges.length == 0) {
               await repo.status();
               await repo.commit("bot changes", { empty: true });
             }
