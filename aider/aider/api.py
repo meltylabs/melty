@@ -73,8 +73,11 @@ async def ask_command(request: AskRequest):
 
 @app.post("/aider/add", response_model=AiderResponse)
 async def add_command(request: AddRequest):
+    if not request.files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    files_str = " ".join(f'"{file}"' for file in request.files)
     return await send_command(
-        command="add", formatted_command=f"/add {' '.join(request.files)}"
+        command="add", formatted_command=f"/add {files_str}"
     )
 
 

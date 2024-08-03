@@ -27,15 +27,23 @@ export async function initializeAider() {
 }
 
 export async function sendMessageToAider(
-  userInput: string,
+  userInput: string | string[],
   route: string
 ): Promise<AiderResponse> {
   try {
+    const payload: any = {};
+
+    if (route === "/aider/add" || route === "/aider/drop") {
+      payload.files = userInput as string[];
+    } else {
+      payload.message = userInput as string;
+    }
+
+    console.log("PAYLOAD: ", payload);
+
     const response: AxiosResponse<AiderResponse> = await axios.post(
       `${aiderUrl}${route}`,
-      {
-        message: userInput,
-      }
+      payload
     );
 
     console.log("RESPONSE FROM WITHIN AIDER.ts: ", response.data);

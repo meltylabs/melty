@@ -91,6 +91,22 @@ class GUI:
     last_undo_empty = None
     recent_msgs_empty = None
     web_content_empty = None
+    text_color_changed = False
+
+    def turn_text_red(self):
+        if not self.text_color_changed:
+            st.markdown(
+                """
+                <style>
+                body {
+                    color: red !important;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+            self.text_color_changed = True
+            self.info("All text has been turned red!")
 
     def announce(self):
         lines = self.coder.get_announcements()
@@ -153,6 +169,10 @@ class GUI:
             self.do_clear_chat_history()
             # st.container(height=150, border=False)
             # st.write("### Experimental")
+
+            do_not_push_button = st.button("DO NOT PUSH", type="primary")
+            if do_not_push_button:
+                self.turn_text_red()
 
             st.warning(
                 "This browser version of aider is experimental. Please share feedback in [GitHub"

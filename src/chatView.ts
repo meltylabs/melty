@@ -52,7 +52,7 @@ export class ChatView {
   }
 
   private _getHtmlForWebview(): string {
-    return `
+    return /* html */ `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -128,7 +128,11 @@ export class ChatView {
                         const message = messageInput.value;
                         const command = commandSelect.value;
                         if (message) {
-                            vscode.postMessage({ type: 'sendMessage', command, message });
+                            vscode.postMessage({
+                                type: 'sendMessage',
+                                command,
+                                message: command === 'add' || command === 'drop' ? message.split(',').map(file => file.trim()) : message
+                            });
                             messageInput.value = '';
                             setAIThinking(true);
                         }
@@ -215,7 +219,7 @@ export class ChatView {
                         if (fileChanges && fileChanges.length > 0) {
                             fileChanges.forEach(file => {
                                 const li = document.createElement('li');
-                                li.textContent = file;
+                                li.textContent = typeof file === 'object' ? JSON.stringify(file, null, 2) : file;
                                 fileChangesList.appendChild(li);
                             });
                             document.getElementById('file-changes').style.display = 'block';
@@ -338,10 +342,14 @@ export class ChatView {
           throw new Error(`Unknown command: ${command}`);
       }
 
-      console.log(`${logPrefix} Received response from Aider`);
       console.log(`${logPrefix} response: `, response);
       console.log(`${logPrefix} Usage info: `, response.usage);
-      this.updatePartialResponse(response.message);
+      console.log(`${logPrefix} File changes: `, response.fileChanges);
+      this.updatePartialResponse({
+        message: response.message,
+        fileChanges: response.fileChanges,
+      });
+
       if (response.usage) {
         console.log(`${logPrefix} Sending usage info to webview`);
         this._view.webview.postMessage({
