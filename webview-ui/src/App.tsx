@@ -60,14 +60,12 @@ function App() {
       <h1 className="text-2xl font-bold text-green-500 mb-4">
         General Editor 🫡
       </h1>
-      <div className="overflow-y-auto mb-4 rounded p-2">
+      <div className="overflow-y-auto mb-4 rounded p-2 max-w-2xl mx-auto">
         {messages.map((message, index) => (
           <div
             key={index}
             className={`mb-2 p-2 rounded ${
-              message.sender === "user"
-                ? "bg-blue-100 text-right"
-                : "bg-gray-100"
+              message.sender === "user" ? "bg-blue-100" : "bg-gray-100"
             }`}
           >
             <span>{message.text}</span>

@@ -279,7 +279,7 @@ export class HelloWorldPanel {
       );
 
       console.log(udiffs);
-      return udiffs[0];
+      return udiffs.join("\n");
     } else {
       vscode.window.showInformationMessage(
         "No commits found in the repository"
@@ -302,6 +302,8 @@ export class HelloWorldPanel {
 
     const oldPath = change.originalUri?.fsPath || "/dev/null";
     const newPath = change.uri.fsPath;
+
+    //
 
     let udiff = `diff --git a/${oldPath} b/${newPath}\n`;
     udiff += `--- a/${oldPath}\n`;

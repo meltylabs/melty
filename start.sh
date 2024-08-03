@@ -9,5 +9,5 @@ osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && source venv/bin
 # Wait for the API to start (adjust the sleep time if needed)
 sleep 5
 
-# Run npm watch in the current terminal
+# Run npm watch in the current terminal.
 npm run watch
