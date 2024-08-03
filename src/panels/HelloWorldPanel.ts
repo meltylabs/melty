@@ -182,8 +182,8 @@ export class HelloWorldPanel {
               "**/*",
               "{.git,node_modules}/**"
             );
-            const relativePaths = files.map((file) => file.fsPath);
-            await repo.add(relativePaths);
+            const absolutePaths = files.map((file) => file.fsPath);
+            await repo.add(absolutePaths);
             await repo.commit("human changes", { empty: true });
 
             // get latest commit diff, and send it back to the webview
@@ -293,7 +293,6 @@ export class HelloWorldPanel {
         `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}`
       );
 
-      console.log(udiffs);
       return udiffs.join("\n");
     } else {
       vscode.window.showInformationMessage(
