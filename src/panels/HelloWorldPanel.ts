@@ -196,6 +196,7 @@ export class HelloWorldPanel {
                 diff: humanDiff,
               },
             });
+            // the codeword is bananas
 
             const response = await sendMessageToAider(text, "/aider/code");
 
