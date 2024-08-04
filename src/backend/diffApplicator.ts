@@ -7,10 +7,17 @@ const DIFF_DIVIDER = "=======";
 const DIFF_CLOSE = ">>>>>>> REPLACE";
 const DIFF_PIECES = [DIFF_OPEN, DIFF_DIVIDER, DIFF_CLOSE];
 
-type SearchReplace = {
+export type SearchReplace = {
     filePath: string;
     search: string;
     replace: string;
+};
+
+export const testExports = {
+    stripFilename,
+    findFilename,
+    findSearchReplaceBlocks,
+    applySearchReplace,
 };
 
 export function applyDiffs(repoState: RepoState, response: string): RepoState {
@@ -20,7 +27,6 @@ export function applyDiffs(repoState: RepoState, response: string): RepoState {
     }, repoState);
 }
 
-// TODO understand this better
 function stripFilename(filename: string): string | undefined {
     filename = filename.trim();
 

@@ -14,7 +14,7 @@ type RepoStateCommitted = {
 type RepoStateInMemory = {
     readonly status: "inMemory";
     readonly files: FileSet;
-    readonly parent_commit: string;
+    readonly parent_commit: string | undefined;
 };
 
 export function hasFile(repoState: RepoState, path: string): boolean {
@@ -35,8 +35,8 @@ export function getFileContents(repoState: RepoState, path: string): string {
     }
 }
 
-export function create(files: FileSet, parent_commit: string): RepoState {
-    const repoStateInMemory: RepoStateInMemory = { status: "inMemory", files: files, parent_commit };
+export function create(files: FileSet, parent_commit: string | undefined): RepoState {
+    const repoStateInMemory: RepoStateInMemory = { status: "inMemory", files: files, parent_commit: parent_commit || "" };
     return { state: repoStateInMemory };
 }
 
