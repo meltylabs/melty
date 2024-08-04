@@ -174,12 +174,21 @@ export class HelloWorldPanel {
             return;
           case "undo":
             await this.undoLatestCommit();
+            let updatedRepo = await this.getRepository();
+
+            const latestCommit = updatedRepo.state.HEAD?.commit;
+            const latestCommitMessage = await updatedRepo.getCommit(
+              latestCommit
+            );
+            vscode.window.showInformationMessage(
+              `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`
+            );
             return;
           case "code":
             window.showInformationMessage(`Asking AI...`);
 
             // make a commit with whatever changes the human made
-            const repo = await this.getRepository();
+            let repo = await this.getRepository();
 
             const files = await vscode.workspace.findFiles(
               "**/*",
@@ -256,11 +265,11 @@ export class HelloWorldPanel {
   /**
    * Undo the latest commit.
    *
-   * TODO: ask dice if this makes sense
+   * TODO: confirm with dice we want to do this
    */
   private async undoLatestCommit(): Promise<void> {
     const repo = await this.getRepository();
-    await repo.reset("HEAD~1", false);
+    await repo.repository.reset("HEAD~1", false);
   }
 
   /**
