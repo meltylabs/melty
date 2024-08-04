@@ -1,11 +1,9 @@
 import * as vscode from "vscode";
-import { ChatView } from "./chatView";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private workspaceRoot: string;
-  private chatView: ChatView | undefined;
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -26,47 +24,6 @@ export class SpectacleExtension {
         this.handleConfigChange.bind(this)
       )
     );
-
-    // Register ChatView provider
-    console.log("Registering ChatView provider");
-    this.context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider("spectacle.chatView", {
-        resolveWebviewView: (webviewView) => {
-          this.outputChannel.appendLine("Resolving WebviewView for ChatView");
-          if (!webviewView) {
-            this.outputChannel.appendLine("WebviewView is undefined");
-            vscode.window.showErrorMessage(
-              "Failed to create ChatView: WebviewView is undefined"
-            );
-            return;
-          }
-          try {
-            this.chatView = new ChatView(webviewView);
-            this.outputChannel.appendLine(
-              "ChatView created and set successfully"
-            );
-
-            // Ensure the webview is visible
-            webviewView.show(true);
-
-            // Set the initial HTML content
-            webviewView.webview.html = this.chatView.getWebviewContent();
-
-            this.outputChannel.appendLine("ChatView initialized and shown");
-          } catch (error) {
-            this.outputChannel.appendLine(`Error creating ChatView: ${error}`);
-            vscode.window.showErrorMessage(
-              `Failed to create ChatView: ${
-                error instanceof Error ? error.message : String(error)
-              }`
-            );
-          }
-        },
-      })
-    );
-    console.log("ChatView provider registered successfully");
-
-    console.log("Spectacle activation completed");
   }
 
   private handleConfigChange(e: vscode.ConfigurationChangeEvent) {
@@ -77,8 +34,6 @@ export class SpectacleExtension {
 }
 
 let outputChannel: vscode.OutputChannel;
-
-import { initializeAider } from "./aider";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Activating Spectacle extension");
@@ -95,12 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(helloCommand);
 
-  // Initialize Aider
-  initializeAider().catch((error) => {
-    console.error("Failed to initialize Aider:", error);
-    outputChannel.appendLine(`Failed to initialize Aider: ${error}`);
-  });
-
   const extension = new SpectacleExtension(context, outputChannel);
   extension.activate();
   outputChannel.appendLine("Spectacle extension activated");
@@ -111,20 +60,6 @@ export function activate(context: vscode.ExtensionContext) {
   commands.then((cmds) => {
     outputChannel.appendLine("Registered commands: " + cmds.join(", "));
   });
-
-  // Add event listener for webview panel creation
-  context.subscriptions.push(
-    vscode.window.registerWebviewPanelSerializer("spectacle.chatView", {
-      async deserializeWebviewPanel(
-        webviewPanel: vscode.WebviewPanel,
-        state: any
-      ) {
-        console.log("Deserializing webview panel");
-        outputChannel.appendLine("Deserializing webview panel");
-        // You might need to reinitialize the ChatView here
-      },
-    })
-  );
 }
 
 export function deactivate() {
