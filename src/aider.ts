@@ -26,6 +26,8 @@ export async function initializeAider() {
   }
 }
 
+// test
+
 export async function sendMessageToAider(
   userInput: string | string[],
   route: string
