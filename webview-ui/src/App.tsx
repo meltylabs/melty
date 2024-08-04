@@ -119,7 +119,6 @@ function App() {
 
   return (
     <main className="p-4">
-      <h1>Partial response: {partialResponse}</h1>
       <div className="mb-4 rounded p-2 mx-auto">
         {messages.map((message, index) => (
           <div
