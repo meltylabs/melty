@@ -8,20 +8,16 @@
 2. Remove the existing factorial() function.
 3. Update get_factorial() to call math.factorial instead.
 
-Here are the *SEARCH/REPLACE* blocks:
+Here are the CodeChange commands: 
 
-mathweb/flask/app.py
-```python
+<CodeChange file="mathweb/flask/app.py">
 <<<<<<< SEARCH
 from flask import Flask
 =======
 import math
 from flask import Flask
 >>>>>>> REPLACE
-```
 
-mathweb/flask/app.py
-```python
 <<<<<<< SEARCH
 def factorial(n):
 "compute factorial"
@@ -33,16 +29,13 @@ return n * factorial(n-1)
 
 =======
 >>>>>>> REPLACE
-```
 
-mathweb/flask/app.py
-```python
 <<<<<<< SEARCH
 return str(factorial(n))
 =======
 return str(math.factorial(n))
 >>>>>>> REPLACE
-```
+</CodeChange>
 
 
 ## USER: Refactor hello() into its own file.
@@ -52,10 +45,9 @@ return str(math.factorial(n))
 1. Make a new hello.py file with hello() in it.
 2. Remove hello() from main.py and replace it with an import.
 
-Here are the *SEARCH/REPLACE* blocks:
+Here are the CodeChange commands:
 
-hello.py
-```python
+<CodeChange file="hello.py"
 <<<<<<< SEARCH
 =======
 def hello():
@@ -63,10 +55,9 @@ def hello():
 
 print("hello")
 >>>>>>> REPLACE
-```
+</CodeChange>
 
-main.py
-```python
+<CodeChange file="hello.py>
 <<<<<<< SEARCH
 def hello():
 "print a greeting"
@@ -75,21 +66,23 @@ print("hello")
 =======
 from hello import hello
 >>>>>>> REPLACE
-```
-# *SEARCH/REPLACE block* Rules:
+</CodeChange>
 
-Every *SEARCH/REPLACE block* must use this format:
-1. The file path alone on a line, verbatim. No bold asterisks, no quotes around it, no escaping of characters, etc.
-2. The opening fence and code language, eg: ```python
-3. The start of search block: <<<<<<< SEARCH
-4. A contiguous chunk of lines to search for in the existing source code
-5. The dividing line: =======
-6. The lines to replace into the source code
-7. The end of the replace block: >>>>>>> REPLACE
-8. The closing fence: ```
+# CodeChange command rule:
+
+Every CodeChange command must use this format:
+1. A CodeChange tag containing a `file` attribute, with the name of the file to modify. Example: <CodeChange file="foo/bar/baz.py">
+2. Any number of SEARCH/REPLACE blocks
+3. A CodeChange close tag. Example: </CodeChange>
+
+Every *SEARCH/REPLACE* block must use this format:
+1. The start of the search block: <<<<<<< SEARCH
+2. A contiguous chunk of lines to search for in the existing source code
+3. The dividing line: =======
+4. The lines to replace into the source code
+5. The end of the replace block: >>>>>>> REPLACE
 
 Every *SEARCH* section must *EXACTLY MATCH* the existing source code, character for character, including all comments, docstrings, etc.
-
 
 *SEARCH/REPLACE* blocks will replace *all* matching occurrences.
 Include enough lines to make the SEARCH blocks uniquely match the lines to change.
@@ -99,14 +92,13 @@ Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each ch
 Include just the changing lines, and a few surrounding lines if needed for uniqueness.
 Do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks.
 
-Only create *SEARCH/REPLACE* blocks for files that the user has added to the chat!
+Only create *SEARCH/REPLACE* blocks for files in the context!
 
-To move code within a file, use 2 *SEARCH/REPLACE* blocks: 1 to delete it from its current location, 1 to insert it in the new location.
+To move code within a file, use two *SEARCH/REPLACE* blocks: one to delete it from its current location and one to insert it in the new location.
 
-If you want to put code in a new file, use a *SEARCH/REPLACE block* with:
+If you want to put code in a new file, use a CodeChange command with:
 - A new file path, including dir name if needed
 - An empty `SEARCH` section
 - The new file's contents in the `REPLACE` section
 
-
-ONLY EVER RETURN CODE IN A *SEARCH/REPLACE BLOCK*!
+ONLY EVER RETURN CODE INSIDE A CODECHANGE COMMAND AND *SEARCH/REPLACE BLOCK*!

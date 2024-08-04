@@ -101,13 +101,15 @@ function App() {
           ]);
           break;
         case "setPartialResponse":
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              text: message.joule.message,
-              sender: "bot",
-            },
-          ]);
+          // commenting out for now
+
+          // setMessages((prevMessages) => [
+          //   ...prevMessages,
+          //   {
+          //     text: message.joule.message,
+          //     sender: "bot",
+          //   },
+          // ]);
           break;
       }
     };
