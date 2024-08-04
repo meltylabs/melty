@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown, XIcon, Undo } from "lucide-react";
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
@@ -9,6 +9,18 @@ import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import { Button } from "./components/ui/button";
 import { Separator } from "./components/ui/separator";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "./components/ui/command";
+import { FilePicker } from "./components/filePicker";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -142,19 +154,40 @@ function App() {
                   </CollapsibleContent>
                 </Collapsible>
               )}
+              {index === messages.length - 1 && (
+                <div className="mt-6 flex justify-end">
+                  <Button variant="outline">
+                    <Undo className="h-3 w-3 mr-2" />
+                    Undo
+                    <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                      <span className="text-xs">⌘</span>U
+                    </kbd>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         ))}
       </div>
       <div className="">
         <Separator />
+
+        <form onSubmit={handleSendMessage}>
+          <div className="mt-4 flex">
+            <Input placeholder="What should I do?" id="message" required />
+            <Button className="ml-2" type="submit">
+              Ask Melty
+            </Button>
+          </div>
+        </form>
+
         <div className="mt-6 flex items-center space-x-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center space-x-2">
                   <Switch id="airplane-mode" />
-                  <Label htmlFor="airplane-mode">Code</Label>
+                  <Label htmlFor="airplane-mode">Code Mode</Label>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -163,15 +196,28 @@ function App() {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <form onSubmit={handleSendMessage}>
-          <div className="mt-4">
-            <Input placeholder="What should I do?" id="message" required />
-          </div>
 
-          <div className="mt-4">
-            <Button type="submit">Send</Button>
+        <div className="mt-6">
+          <FilePicker />
+
+          <div className="mt-2">
+            <p className="text-xs text-muted-foreground mb-2">
+              Context{"  "}
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>J
+              </kbd>{" "}
+            </p>
+            {[...Array(3)].map((_, i) => (
+              <span
+                className="text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 rounded-md inline-flex items-center"
+                key={i}
+              >
+                <XIcon className="h-3 w-3 mr-2" />
+                file{i}.txt
+              </span>
+            ))}
           </div>
-        </form>
+        </div>
       </div>
     </main>
   );
