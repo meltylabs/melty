@@ -172,6 +172,9 @@ export class HelloWorldPanel {
             // Code that should run in response to the hello message command
             window.showInformationMessage(text);
             return;
+          case "undo":
+            await this.undoLatestCommit();
+            return;
           case "code":
             window.showInformationMessage(`Asking AI...`);
 
@@ -251,18 +254,13 @@ export class HelloWorldPanel {
   }
 
   /**
-   * Undo the latest commit
+   * Undo the latest commit.
+   *
+   * TODO: ask dice if this makes sense
    */
-  private async undoLatestCommit() {
+  private async undoLatestCommit(): Promise<void> {
     const repo = await this.getRepository();
-    const latestCommit = repo.state.HEAD?.commit;
-    if (!latestCommit) {
-      vscode.window.showInformationMessage(
-        "No commits found in the repository"
-      );
-      throw new Error("No commits found in the repository");
-    }
-    await repo.revert(latestCommit);
+    await repo.reset("HEAD~1", false);
   }
 
   /**

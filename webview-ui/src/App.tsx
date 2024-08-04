@@ -8,17 +8,6 @@ import { Switch } from "./components/ui/switch";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import { Button } from "./components/ui/button";
-import { Separator } from "./components/ui/separator";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "./components/ui/command";
 import { FilePicker } from "./components/filePicker";
 
 import {
@@ -75,6 +64,12 @@ function App() {
 
     // clear the input
     (event.target as HTMLFormElement).reset();
+  }
+
+  function handleUndo() {
+    vscode.postMessage({
+      command: "undo",
+    });
   }
 
   useEffect(() => {
@@ -153,7 +148,7 @@ function App() {
               )}
               {index === messages.length - 1 && (
                 <div className="mt-6 flex justify-end">
-                  <Button size="sm" variant="ghost">
+                  <Button size="sm" variant="ghost" onClick={handleUndo}>
                     <Undo className="h-3 w-3 mr-2" />
                     <span className="text-xs">Undo</span>
                     <kbd className="ml-1.5 pointer-events-none inline-flex h-4.5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
