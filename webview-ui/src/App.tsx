@@ -7,8 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { Switch } from "./components/ui/switch";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Button } from "./components/ui/button";
+import { Button as VSCodeButton } from "@vscode/webview-ui-toolkit";
 import { FilePicker } from "./components/filePicker";
+import { Button } from "./components/ui/button";
 
 import {
   Collapsible,
@@ -50,7 +51,7 @@ const dummy3: Message = {
 };
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([dummy2, dummy3]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -85,6 +86,16 @@ function App() {
               text: message.text.message,
               sender: message.text.sender,
               diff: message.text.diff,
+            },
+          ]);
+          break;
+        case "confirmedUndo":
+          console.log("confirmedUndo", message);
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              text: "Undone commit",
+              sender: "user",
             },
           ]);
           break;
@@ -146,7 +157,7 @@ function App() {
                   </CollapsibleContent>
                 </Collapsible>
               )}
-              {index === messages.length - 1 && (
+              {index === messages.length - 1 && message.diff && (
                 <div className="mt-6 flex justify-end">
                   <Button size="sm" variant="ghost" onClick={handleUndo}>
                     <Undo className="h-3 w-3 mr-2" />
@@ -166,10 +177,13 @@ function App() {
 
         <form onSubmit={handleSendMessage}>
           <div className="mt-4 flex">
-            <Input placeholder="What should I do?" id="message" required />
-            <Button className="ml-2" type="submit">
-              Ask Melty
-            </Button>
+            <Input
+              placeholder="What should I do?"
+              id="message"
+              autoFocus
+              required
+            />
+            <Button>Ask Melty</Button>
           </div>
         </form>
 
