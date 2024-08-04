@@ -251,28 +251,26 @@ export class HelloWorldPanel {
   }
 
   /**
+   * Undo the latest commit
+   */
+  private async undoLatestCommit() {
+    const repo = await this.getRepository();
+    const latestCommit = repo.state.HEAD?.commit;
+    if (!latestCommit) {
+      vscode.window.showInformationMessage(
+        "No commits found in the repository"
+      );
+      throw new Error("No commits found in the repository");
+    }
+    await repo.revert(latestCommit);
+  }
+
+  /**
    * Gets the diff of the latest commit in the current Git repository.
    * @returns A promise that resolves to the diff string or null if there's an error.
    */
   private async getLatestCommitDiff(): Promise<string> {
-    // Get the Git extension
-    const gitExtension = vscode.extensions.getExtension("vscode.git");
-    if (!gitExtension) {
-      vscode.window.showErrorMessage("Git extension not found");
-      throw new Error("Git extension not found");
-    }
-
-    const git = gitExtension.exports.getAPI(1);
-
-    // Get the current repository
-    const repositories = git.repositories;
-    if (repositories.length === 0) {
-      vscode.window.showInformationMessage("No Git repository found");
-      throw new Error("No Git repository found");
-    }
-
-    const repo = repositories[0];
-    await repo.status();
+    const repo = await this.getRepository();
 
     // Get the latest commit
     const latestCommit = repo.state.HEAD?.commit;
