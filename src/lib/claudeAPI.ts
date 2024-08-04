@@ -1,7 +1,26 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
 
+export type ClaudeMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+export async function claude(messages: ClaudeMessage[]): Promise<string> {
+  return doClaude(messages);
+}
+
+/**
+ * DEPRECATED prefer `claude`
+ * @param prompt 
+ * @returns 
+ */
 export async function sendToClaudeAPI(prompt: string): Promise<string> {
+  const messages: ClaudeMessage[] = [{ role: "user", content: prompt }];
+  return doClaude(messages);
+}
+
+async function doClaude(messages: ClaudeMessage[]): Promise<string> {
   const config = vscode.workspace.getConfiguration("spectacle");
   const apiKey = config.get<string>("anthropicApiKey");
 
@@ -16,8 +35,6 @@ export async function sendToClaudeAPI(prompt: string): Promise<string> {
   });
 
   try {
-    const messages = [{ role: "user", content: prompt }];
-
     const message = await anthropic.messages.create(
       {
         model: "claude-3-haiku-20240307",

@@ -59,9 +59,12 @@
     "package": "NODE_ENV=production node ./esbuild.js",
     "watch": "node ./esbuild.js --watch",
     "watch:webview": "cd webview-ui && npm run watch",
-    "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test --",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "clean": "rm -rf out"
   },
   "devDependencies": {
     "@types/diff": "^5.2.1",
@@ -73,7 +76,7 @@
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
-    "@vscode/test-electron": "^2.4.0",
+    "@vscode/test-electron": "^2.4.1",
     "concurrently": "^8.2.2",
     "esbuild": "^0.16.17",
     "eslint": "^8.57.0",

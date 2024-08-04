@@ -92,3 +92,15 @@ We'll create a comprehensive test suite for the integration:
 
 (work in progress to do everything)
 bash start.sh
+
+### The build scripts
+
+- I wrote npm clean
+- `pretest` automatically runs before `test` (it's an npm thing)
+- `compile-tests` and `watch-tests` I copied from the yo code generator's default vscode extension.
+  they are copying ALL our source files into out, which is not good, so they need adjustments.
+- test/suite/testIndex.ts and test/runTest.ts are for building your own test runner. We don't want that.
+  (ref: https://code.visualstudio.com/api/get-started/your-first-extension)
+- esbuild builds extension.js. Should it also be copying the test files over? I would think so...
+- .vscode-test.mjs configures where to look for test files (out/test/**/*.test.js)
+  ... so TESTS MUST BE NAMED .test.js !!!
