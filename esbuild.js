@@ -35,14 +35,6 @@ const watchConfig = {
   },
 };
 
-const webviewConfig = {
-  ...baseConfig,
-  target: "es2020",
-  format: "esm",
-  entryPoints: ["./src/webview/main.ts"],
-  outfile: "./out/webview.js",
-};
-
 (async () => {
   const args = process.argv.slice(2);
   try {
@@ -53,15 +45,10 @@ const webviewConfig = {
         ...extensionConfig,
         ...watchConfig,
       });
-      await build({
-        ...webviewConfig,
-        ...watchConfig,
-      });
       console.log("[watch] build finished");
     } else {
       // Build extension and webview code
       await build(extensionConfig);
-      await build(webviewConfig);
       console.log("build complete");
     }
   } catch (err) {

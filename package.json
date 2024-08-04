@@ -71,6 +71,7 @@
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
     "@types/sinon": "^17.0.3",
+    "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.91.0",
     "@types/vscode-webview": "^1.57.5",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
