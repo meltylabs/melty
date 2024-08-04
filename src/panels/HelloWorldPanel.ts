@@ -317,9 +317,13 @@ export class HelloWorldPanel {
       const diff = await repo.diffBetween(latestCommit + "^", latestCommit);
 
       const udiffs = await Promise.all(
-        diff.map((change: any) =>
-          this.generateUdiff(repo, latestCommit, change)
-        )
+        diff.map(async (change: any) => {
+          return await repo.diffBetween(
+            latestCommit + "^",
+            latestCommit,
+            change.uri.fsPath
+          );
+        })
       );
 
       vscode.window.showInformationMessage(
@@ -333,18 +337,5 @@ export class HelloWorldPanel {
       );
       throw new Error("No commits found in the repository");
     }
-  }
-
-  private async generateUdiff(
-    repo: any,
-    latestCommit: any,
-    change: any
-  ): Promise<string> {
-    const diff = await repo.diffBetween(
-      latestCommit + "^",
-      latestCommit,
-      change.uri.fsPath
-    );
-    return diff;
   }
 }
