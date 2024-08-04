@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
 import { ChevronsUpDown, XIcon, Undo } from "lucide-react";
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
@@ -8,20 +10,14 @@ import { Switch } from "./components/ui/switch";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import { Button as VSCodeButton } from "@vscode/webview-ui-toolkit";
-import { FilePicker } from "./components/filePicker";
+import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
-
+import { Tasks } from "./components/Tasks";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./components/ui/tooltip";
 import "./App.css";
 
 interface Message {
@@ -120,7 +116,44 @@ function App() {
   }, []);
 
   return (
-    <main className="p-4">
+    <Router>
+      <main className="p-4">
+        <nav className="mb-4">
+          <Link to="/" className="mr-4">
+            Chat
+          </Link>
+          <Link to="/tasks">Tasks</Link>
+        </nav>
+
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <MessagesView
+                messages={messages}
+                handleSendMessage={handleSendMessage}
+                handleUndo={handleUndo}
+              />
+            }
+          />
+          <Route path="/tasks" element={<Tasks />} />
+        </Routes>
+      </main>
+    </Router>
+  );
+}
+
+function MessagesView({
+  messages,
+  handleSendMessage,
+  handleUndo,
+}: {
+  messages: Message[];
+  handleSendMessage: (event: React.FormEvent) => void;
+  handleUndo: () => void;
+}) {
+  return (
+    <div className="p-4">
       <div className="mb-4 rounded p-2 mx-auto">
         {messages.map((message, index) => (
           <div
@@ -235,7 +268,7 @@ function App() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
