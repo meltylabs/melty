@@ -1,2 +1,5 @@
 This is a new file called potato.txt.
 This is a potato file.
+This is a potato file.
+It contains information about potatoes.
+Potatoes are starchy tubers that are delicious and versatile.
