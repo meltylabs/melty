@@ -183,25 +183,23 @@ function App() {
               autoFocus
               required
             />
-            <Button>Ask Melty</Button>
+          </div>
+          <div className="flex justify-end space-x-2 mt-2">
+            <Button variant="outline">
+              Ask{" "}
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
+                <span className="text-xs">↵</span>
+              </kbd>
+            </Button>
+            <Button>
+              Code{" "}
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
+                <span className="text-xs">⌘</span>
+                <span className="text-xs">↵</span>
+              </kbd>
+            </Button>
           </div>
         </form>
-
-        <div className="mt-6 flex items-center space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center space-x-2">
-                  <Switch id="airplane-mode" />
-                  <Label htmlFor="airplane-mode">Code Mode</Label>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>If code is off, Melty will only offer suggestions.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
 
         <div className="mt-6">
           <FilePicker />
