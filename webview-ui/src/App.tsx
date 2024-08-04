@@ -61,7 +61,7 @@ const dummy3: Message = {
 };
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([dummy2, dummy3]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -103,9 +103,6 @@ function App() {
 
   return (
     <main className="p-4">
-      <h1 className="text-xl font-bold leading-7 text-gray-900 sm:truncate sm:tracking-tight">
-        Melty
-      </h1>
       <div className="mb-4 rounded p-2 mx-auto">
         {messages.map((message, index) => (
           <div
@@ -170,7 +167,7 @@ function App() {
         ))}
       </div>
       <div className="">
-        <Separator />
+        {/* <Separator /> */}
 
         <form onSubmit={handleSendMessage}>
           <div className="mt-4 flex">
@@ -209,7 +206,7 @@ function App() {
             </p>
             {[...Array(3)].map((_, i) => (
               <span
-                className="text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 rounded-md inline-flex items-center"
+                className="text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
                 key={i}
               >
                 <XIcon className="h-3 w-3 mr-2" />
