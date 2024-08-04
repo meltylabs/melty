@@ -1,4 +1,4 @@
-import { Joule } from './joules';
+import { Joule, JouleBot } from './joules';
 import { RepoState } from './repoStates';
 import * as repoStates from './repoStates';
 import * as joules from './joules';
@@ -43,11 +43,10 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
   };
   
   // TODOV2 write a claudePlus
-  let partialResponse = "";
+  let partialJoule = joules.createJouleBot("", currentRepoState, contextPaths);
   const finalResponse = await claudeAPI.streamClaude(claudeConversation, (responseFragment) => {
-    partialResponse += responseFragment;
-    const newJoule = joules.createJouleBot(partialResponse, currentRepoState, contextPaths);
-    processPartial(newJoule);
+    partialJoule = joules.updateMessage(partialJoule, partialJoule.message + responseFragment) as JouleBot;
+    processPartial(partialJoule);
   });
 
   const message = decodeMessage(finalResponse);
