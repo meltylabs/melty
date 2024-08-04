@@ -278,12 +278,14 @@ export class HelloWorldPanel {
     await repo.repository.reset("HEAD~1", false);
   }
 
-  private readFromTerminal() {
+  /**
+   * Run a terminal command
+   * @param command The command to run
+   */
+  private runTerminalCommand(command: string) {
     const terminal = vscode.window.activeTerminal;
     if (terminal) {
-      // Unfortunately, there's no direct way to read from the terminal
-      // We can only send text to it and listen for changes
-      terminal.sendText('echo "Hello from terminal"');
+      terminal.sendText(command);
 
       // You might want to set up an event listener for terminal data
       vscode.window.onDidChangeActiveTerminal((terminal) => {
