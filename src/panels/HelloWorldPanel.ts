@@ -278,6 +278,25 @@ export class HelloWorldPanel {
     await repo.repository.reset("HEAD~1", false);
   }
 
+  private readFromTerminal() {
+    const terminal = vscode.window.activeTerminal;
+    if (terminal) {
+      // Unfortunately, there's no direct way to read from the terminal
+      // We can only send text to it and listen for changes
+      terminal.sendText('echo "Hello from terminal"');
+
+      // You might want to set up an event listener for terminal data
+      vscode.window.onDidChangeActiveTerminal((terminal) => {
+        if (terminal) {
+          // Handle terminal change
+          console.log("Terminal changed");
+        }
+      });
+    } else {
+      vscode.window.showInformationMessage("No active terminal");
+    }
+  }
+
   /**
    * Gets the diff of the latest commit in the current Git repository.
    * @returns A promise that resolves to the diff string or null if there's an error.
