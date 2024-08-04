@@ -61,7 +61,7 @@ const dummy3: Message = {
 };
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([dummy2, dummy3]);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -153,10 +153,10 @@ function App() {
               )}
               {index === messages.length - 1 && (
                 <div className="mt-6 flex justify-end">
-                  <Button variant="outline">
+                  <Button size="sm" variant="ghost">
                     <Undo className="h-3 w-3 mr-2" />
-                    Undo
-                    <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                    <span className="text-xs">Undo</span>
+                    <kbd className="ml-1.5 pointer-events-none inline-flex h-4.5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                       <span className="text-xs">⌘</span>U
                     </kbd>
                   </Button>
