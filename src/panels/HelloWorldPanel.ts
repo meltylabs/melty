@@ -180,9 +180,15 @@ export class HelloWorldPanel {
             const latestCommitMessage = await updatedRepo.getCommit(
               latestCommit
             );
-            vscode.window.showInformationMessage(
-              `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`
-            );
+            const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
+            vscode.window.showInformationMessage(message);
+            this._panel.webview.postMessage({
+              command: "confirmedUndo",
+              text: {
+                sender: "user",
+                message: message,
+              },
+            });
             return;
           case "code":
             window.showInformationMessage(`Asking AI...`);
