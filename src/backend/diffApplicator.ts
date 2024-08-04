@@ -8,9 +8,9 @@ const DIFF_CLOSE = ">>>>>>> REPLACE";
 const DIFF_PIECES = [DIFF_OPEN, DIFF_DIVIDER, DIFF_CLOSE];
 
 export type SearchReplace = {
-    filePath: string;
-    search: string;
-    replace: string;
+    readonly filePath: string;
+    readonly search: string;
+    readonly replace: string;
 };
 
 export const testExports = {
@@ -208,7 +208,7 @@ function applySearchReplace(repoState: RepoState, searchReplace: SearchReplace):
         ""
     );
     if (!originalContents.includes(searchReplace.search)) {
-        throw new Error(`Search text not found in ${searchReplace.filePath}`);
+        throw new Error(`Search text ${searchReplace.search} not found in ${searchReplace.filePath}`);
     }
     const updatedContent = originalContents.replace(searchReplace.search, searchReplace.replace);
     return repoStates.upsertFileContents(repoState, searchReplace.filePath, updatedContent);

@@ -9,7 +9,14 @@ import {
 import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
-import { sendMessageToAider } from "../aider";
+import * as conversations from "../backend/conversations";
+import { Conversation} from "../backend/conversations";
+import * as repoStates from "../backend/repoStates";
+import * as fs from "fs";
+import * as path from "path";
+import { MeltyFile } from "../backend/files";
+import * as files from "../backend/files";
+import { Joule } from "../backend/joules";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -25,6 +32,8 @@ export class HelloWorldPanel {
   public static currentPanel: HelloWorldPanel | undefined;
   private readonly _panel: WebviewPanel;
   private _disposables: Disposable[] = [];
+
+  private conversation: Conversation;
 
   /**
    * The HelloWorldPanel class private constructor (called only from the render method).
@@ -44,6 +53,8 @@ export class HelloWorldPanel {
       this._panel.webview,
       extensionUri
     );
+
+    this.conversation = conversations.create();
 
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
@@ -196,11 +207,11 @@ export class HelloWorldPanel {
             // make a commit with whatever changes the human made
             let repo = await this.getRepository();
 
-            const files = await vscode.workspace.findFiles(
+            const workspaceFileUris = await vscode.workspace.findFiles(
               "**/*",
               "{.git,node_modules}/**"
             );
-            const absolutePaths = files.map((file) => file.fsPath);
+            const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
             await repo.add(absolutePaths);
             await repo.commit("human changes", { empty: true });
 
@@ -214,17 +225,54 @@ export class HelloWorldPanel {
                 diff: humanDiff,
               },
             });
-            // the codeword is bananas
 
-            const response = await sendMessageToAider(text, "/aider/code");
+            const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
+
+            // read all files in the workspace
+            // TODO: get rid of this and use repoState = repoStates.createFromCommit(commitHash)
+            const meltyFiles: { [relativePath: string]: MeltyFile } = Object.fromEntries(
+              await Promise.all(workspaceFileUris.map(async file => {
+                const relativePath = path.relative(vscode.workspace.workspaceFolders![0].uri.fsPath, file.fsPath);
+                const contents = await fs.promises.readFile(file.fsPath, 'utf8');
+                return [relativePath, files.create(
+                  relativePath,
+                  contents,
+                  workspaceRoot
+                )];
+              })));
+            const repoState = repoStates.create(
+              meltyFiles,
+              undefined, workspaceRoot
+            );
+
+            const meltyFilePaths = Object.keys(meltyFiles);
+
+            // human response
+            this.conversation = conversations.respondHuman(this.conversation, text, repoState);
+
+            // bot response
+            const processPartial = (partialJoule: Joule) => {
+              this._panel.webview.postMessage({
+                command: "setPartialResponse",
+                joule: partialJoule
+              });
+            };
+            this.conversation = await conversations.respondBot(this.conversation, meltyFilePaths, processPartial); // TODO: don't send all files as context, pick some
+
+            const botJoule = conversations.lastJoule(this.conversation);
+
+            // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
+            repoStates.forEachFile(botJoule.repoState, (file) => {
+              fs.mkdirSync(path.dirname(files.absolutePath(file)), { recursive: true });
+              fs.writeFileSync(files.absolutePath(file), files.contents(file));
+            });
+
             /*
              If there are fileChanges, there has already been a commit
              If there are no fileChanges, we need to create a empty commit with no changes
              */
-            if (response.fileChanges.length == 0) {
-              await repo.status();
-              await repo.commit("bot changes", { empty: true });
-            }
+            await repo.status();
+            await repo.commit("bot changes", { empty: true });
             await repo.status();
             const botDiff = await this.getLatestCommitDiff();
 
@@ -233,7 +281,7 @@ export class HelloWorldPanel {
               command: "addMessage",
               text: {
                 sender: "bot",
-                message: response.message,
+                message: botJoule.message,
                 diff: botDiff,
               },
             });

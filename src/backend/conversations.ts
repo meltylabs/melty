@@ -6,6 +6,7 @@ import * as prompts from './prompts';
 import * as claudeAPI from '../lib/claudeAPI';
 import { Uri } from 'vscode';
 import { applyDiffs } from './diffApplicator';
+import { Readable } from 'stream';
 
 export type Conversation = {
   readonly joules: ReadonlyArray<Joule>;
@@ -24,29 +25,36 @@ export function respondHuman(conversation: Conversation, message: string, repoSt
   return addJoule(conversation, newJoule);
 }
 
-export async function respondBot(conversation: Conversation, contextUris: Uri[]): Promise<Conversation> {
+export async function respondBot(conversation: Conversation, contextPaths: string[], processPartial: (partialJoule: Joule) => void): Promise<Conversation> {
   const currentRepoState = lastJoule(conversation).repoState;
 
-  const claudeConversation: claudeAPI.ClaudeMessage[] = [
-    {"role": "system", "content": (
+  const claudeConversation: claudeAPI.ClaudeConversation = {
+    system: (
       prompts.systemPrompt()
       + prompts.diffDecoderPrompt()
       + prompts.exampleConversationsPrompt()
-    )},
-    // TODOV2 user system info
-    // TODOV2 repo map
-    ...encodeMessages(conversation),
-    ...encodeContext(currentRepoState, contextUris)
-  ];
+    ),
+    messages: [
+      // TODOV2 user system info
+      // TODOV2 repo map
+      ...encodeContext(currentRepoState, contextPaths),
+      ...encodeMessages(conversation)
+    ]
+  };
   
   // TODOV2 write a claudePlus
-  const response = await claudeAPI.claude(claudeConversation);
+  let partialResponse = "";
+  const finalResponse = await claudeAPI.streamClaude(claudeConversation, (responseFragment) => {
+    partialResponse += responseFragment;
+    const newJoule = joules.createJouleBot(partialResponse, currentRepoState, contextPaths);
+    processPartial(newJoule);
+  });
 
-  const message = decodeMessage(response);
-  const nextRepoState = applyDiffs(currentRepoState, response);
-
-  const newJoule = joules.createJouleBot(message, nextRepoState, contextUris);
-  return addJoule(conversation, newJoule);
+  const message = decodeMessage(finalResponse);
+  const newRepoState = applyDiffs(currentRepoState, message);
+  const newJoule = joules.createJouleBot(message, newRepoState, contextPaths);
+  const newConversation = addJoule(conversation, newJoule);
+  return newConversation;
 }
 
 function encodeFile(repoState: RepoState, path: string) {
@@ -56,33 +64,31 @@ ${repoStates.getFileContents(repoState, path)}
 \`\`\``;
 }
 
-function encodeContext(repoState: RepoState, contextUris: Uri[]): claudeAPI.ClaudeMessage[] {
+function encodeContext(repoState: RepoState, contextPaths: string[]): claudeAPI.ClaudeMessage[] {
   // in the future, this could handle other types of context, like web urls
-  const fileEncodings = contextUris.map((uri) => encodeFile(repoState, uri.toString())).join("\n");
+  const fileEncodings = contextPaths.map((path) => encodeFile(repoState, path)).join("\n");
 
-  return [
+  return fileEncodings.length ? [
     { role: "user", content: `${prompts.filesUserIntro()}
 
 ${fileEncodings}` },
    { role: "assistant", content: prompts.filesAsstAck()}
-  ];
+  ] : [];
 }
 
-function lastJoule(conversation: Conversation): Joule {
+export function lastJoule(conversation: Conversation): Joule {
   return conversation.joules[conversation.joules.length - 1];
 }
 
 function encodeMessages(conversation: Conversation): claudeAPI.ClaudeMessage[] {
-  // return conversation.joules.map((joule) => {
-  //   return {
-  //     role: joule.author === "human" ? "user" : "assistant",
-  //     content: joule.message
-  //   };
-  // });
-  return [{ role: "user", content: "Hello, world!" }];
+  return conversation.joules.map((joule) => {
+    return {
+      role: joule.author === "human" ? "user" : "assistant",
+      content: joule.message
+    };
+  });
 }
 
 function decodeMessage(response: string): string {
-  // TODO: Implement message decoding
-  return '';
+  return response;
 }

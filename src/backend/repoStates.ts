@@ -1,6 +1,6 @@
 import { Uri } from "vscode";
-
-export type FileSet = { [path: string]: string };
+import { MeltyFile } from "./files";
+import * as files from "./files";
 
 export type RepoState = {
     state: RepoStateInMemory | RepoStateCommitted;
@@ -13,9 +13,20 @@ type RepoStateCommitted = {
 
 type RepoStateInMemory = {
     readonly status: "inMemory";
-    readonly files: FileSet;
+    readonly workspaceRoot: string;
+    readonly files: { [relativePath: string]: MeltyFile };
     readonly parent_commit: string | undefined;
 };
+
+export function forEachFile(repoState: RepoState, fn: (file: MeltyFile) => void): void {
+    // TODO think more about return type here
+    if (repoState.state.status === "inMemory") {
+        Object.entries(repoState.state.files).forEach(([_path, file]) => fn(file));
+    } else {
+        // TODO
+        throw new Error("not implemented: getFileContents from committed repostate");
+    }
+}
 
 export function hasFile(repoState: RepoState, path: string): boolean {
     if (repoState.state.status === "inMemory") {
@@ -28,21 +39,27 @@ export function hasFile(repoState: RepoState, path: string): boolean {
 
 export function getFileContents(repoState: RepoState, path: string): string {
     if(repoState.state.status === "inMemory") {
-        return repoState.state.files[path];
+        return files.contents(repoState.state.files[path]);
     } else {
         // TODO
         throw new Error("not implemented: getFileContents from committed repostate");
     }
 }
 
-export function create(files: FileSet, parent_commit: string | undefined): RepoState {
-    const repoStateInMemory: RepoStateInMemory = { status: "inMemory", files: files, parent_commit: parent_commit || "" };
+export function create(files: { [relativePath: string]: MeltyFile }, parent_commit: string | undefined, workspaceRoot: string): RepoState {
+    const repoStateInMemory: RepoStateInMemory = { status: "inMemory", files: files, parent_commit: parent_commit || "", workspaceRoot: workspaceRoot };
     return { state: repoStateInMemory };
+}
+
+export function createFromCommit(commit: string): RepoState {
+    // TODO
+    throw new Error("not implemented: createFromCommit");
 }
 
 export function upsertFileContents(repoState: RepoState, path: string, contents: string): RepoState {
     if(repoState.state.status === "inMemory") {
-        return { state: { ...repoState.state, files: { ...repoState.state.files, [path]: contents } } };
+        const file = files.create(path, contents, repoState.state.workspaceRoot);
+        return { state: { ...repoState.state, files: { ...repoState.state.files, [path]: file } } };
     } else {
         throw new Error("not implemented: upsertFileContents from committed repostate");
     }

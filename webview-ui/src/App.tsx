@@ -52,6 +52,7 @@ const dummy3: Message = {
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [partialResponse, setPartialResponse] = useState("");
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -99,6 +100,15 @@ function App() {
             },
           ]);
           break;
+        case "setPartialResponse":
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              text: message.joule.message,
+              sender: "bot",
+            },
+          ]);
+          break;
       }
     };
 
@@ -109,6 +119,7 @@ function App() {
 
   return (
     <main className="p-4">
+      <h1>Partial response: {partialResponse}</h1>
       <div className="mb-4 rounded p-2 mx-auto">
         {messages.map((message, index) => (
           <div
