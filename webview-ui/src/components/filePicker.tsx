@@ -33,11 +33,11 @@ export function FilePicker({
 
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      // Check for Cmd+Shift+C on Mac or Ctrl+Shift+C on Windows/Linux
+      // Check for Cmd+Shift+m on Mac or Ctrl+Shift+m on Windows/Linux
       if (
         (event.metaKey || event.ctrlKey) &&
         event.shiftKey &&
-        event.key === "c"
+        event.key === "m"
       ) {
         event.preventDefault(); // Prevent default browser behavior
         setOpen(true);

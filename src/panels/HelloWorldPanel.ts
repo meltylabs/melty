@@ -231,6 +231,9 @@ export class HelloWorldPanel {
               command: "listMeltyFiles",
               meltyFilePaths: this.spectacleExtension.getMeltyFilePaths(),
             });
+            vscode.window.showInformationMessage(
+              `Added ${filePath} to Melty's Mind`
+            );
             return;
           case "dropMeltyFile":
             console.log(`dropFile: ${filePath}`);
@@ -238,6 +241,9 @@ export class HelloWorldPanel {
             console.log(
               "sending back meltyFilePaths: ",
               this.spectacleExtension.getMeltyFilePaths()
+            );
+            vscode.window.showInformationMessage(
+              `Removed ${filePath} from Melty's Mind`
             );
             this._panel.webview.postMessage({
               command: "listMeltyFiles",
