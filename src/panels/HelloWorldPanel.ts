@@ -273,8 +273,6 @@ export class HelloWorldPanel {
             });
             return;
           case "code":
-            window.showInformationMessage(`Asking AI...`);
-
             // make a commit with whatever changes the human made
             let repo = await this.getRepository();
 
@@ -283,8 +281,8 @@ export class HelloWorldPanel {
               "{.git,node_modules}/**"
             );
             const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
-            await repo.add(absolutePaths);
-            await repo.commit("human changes", { empty: true });
+            // await repo.add(absolutePaths);
+            // await repo.commit("human changes", { empty: true });
 
             // get latest commit diff, and send it back to the webview
             const humanDiff = await this.getLatestCommitDiff();
