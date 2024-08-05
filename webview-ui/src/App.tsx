@@ -9,8 +9,6 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import * as Diff2Html from "diff2html";
-import "diff2html/bundles/css/diff2html.min.css";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { Switch } from "./components/ui/switch";
 import { Input } from "./components/ui/input";
@@ -26,6 +24,7 @@ import {
 } from "./components/ui/collapsible";
 import "./App.css";
 import { Message } from "../../src/extension";
+import { SearchReplaceBlock } from "./components/SearchReplaceBlock";
 
 function MessageComponent({
   message,
@@ -34,6 +33,26 @@ function MessageComponent({
   message: Message;
   isPartial?: boolean;
 }) {
+  const renderSearchReplaceBlock = (diff: string) => {
+    const lines = diff.split('\n');
+    const filePathLine = lines.find(line => !line.startsWith('<<<<<<< SEARCH'));
+    const filePath = filePathLine || 'Unknown file';
+    const searchStartIndex = lines.indexOf('<<<<<<< SEARCH') + 1;
+    const separatorIndex = lines.indexOf('=======');
+    const replaceEndIndex = lines.indexOf('>>>>>>> REPLACE');
+
+    const searchContent = lines.slice(searchStartIndex, separatorIndex).join('\n');
+    const replaceContent = lines.slice(separatorIndex + 1, replaceEndIndex).join('\n');
+
+    return (
+      <SearchReplaceBlock
+        filePath={filePath}
+        searchContent={searchContent}
+        replaceContent={replaceContent}
+      />
+    );
+  };
+
   return (
     <div
       className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
@@ -58,16 +77,7 @@ function MessageComponent({
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent>
-              <div
-                className="text-xs mt-4 font-mono"
-                dangerouslySetInnerHTML={{
-                  __html: Diff2Html.html(message.diff, {
-                    drawFileList: true,
-                    matching: "lines",
-                    outputFormat: "line-by-line",
-                  }),
-                }}
-              />
+              {renderSearchReplaceBlock(message.diff)}
             </CollapsibleContent>
           </Collapsible>
         )}
