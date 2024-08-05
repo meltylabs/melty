@@ -181,6 +181,8 @@ function App() {
     "hi.pdf",
     "hello.txt",
   ]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
     const message = (event.target as HTMLFormElement).message.value;
@@ -206,10 +208,12 @@ function App() {
 
   function handleAddFile(file: string) {
     vscode.postMessage({ command: "addMeltyFile", filePath: file });
+    setPickerOpen(false);
   }
 
   function handleDropFile(file: string) {
     vscode.postMessage({ command: "dropMeltyFile", filePath: file });
+    setPickerOpen(false);
   }
 
   function loadMessages() {
@@ -301,6 +305,8 @@ function App() {
                 />
                 <div className="mt-6">
                   <FilePicker
+                    open={pickerOpen}
+                    setOpen={setPickerOpen}
                     meltyFilePaths={meltyFiles}
                     workspaceFilePaths={workspaceFiles}
                     handleAddFile={handleAddFile}
@@ -314,6 +320,11 @@ function App() {
                         <span className="text-xs">\</span>
                       </kbd>{" "}
                     </p>
+                    {meltyFiles.length === 0 && (
+                      <p className="text-xs text-muted-foreground mb-2 italic">
+                        Melty can't see any files yet
+                      </p>
+                    )}
                     {meltyFiles.map((file, i) => (
                       <button
                         onClick={() => handleDropFile(file)}

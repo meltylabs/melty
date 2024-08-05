@@ -209,18 +209,20 @@ const getFileIcon = (filePath: string) => {
 };
 
 export function FilePicker({
+  open,
+  setOpen,
   workspaceFilePaths,
   meltyFilePaths,
   handleAddFile,
   handleDropFile,
 }: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
   meltyFilePaths: string[];
   workspaceFilePaths: string[];
   handleAddFile: (filePath: string) => void;
   handleDropFile: (filePath: string) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
-
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       // Check for Cmd+Shift+m on Mac or Ctrl+Shift+m on Windows/Linux

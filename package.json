@@ -14,10 +14,17 @@
     "onStartupFinished"
   ],
   "contributes": {
+    "keybindings": [
+      {
+        "command": "melty.showMelty",
+        "key": "ctrl+k",
+        "mac": "cmd+k"
+      }
+    ],
     "commands": [
       {
-        "command": "hello-world.showHelloWorld",
-        "title": "Hello World: Show"
+        "command": "melty.showMelty",
+        "title": "Melty"
       }
     ],
     "views": {
