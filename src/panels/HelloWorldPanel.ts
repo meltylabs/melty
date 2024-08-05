@@ -227,6 +227,9 @@ export class HelloWorldPanel {
               messages: this.spectacleExtension.getMessages(),
             });
             return;
+          case "openFileInEditor":
+            this.spectacleExtension.openFileInEditor(filePath);
+            return;
 
           case "addMeltyFile":
             console.log(`addFile: ${filePath}`);
