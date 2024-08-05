@@ -198,6 +198,7 @@ export class HelloWorldPanel {
         const command = message.command;
         const text = message.text;
         const filePath = message.filePath; // optional param for addFile and dropFile
+        let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
 
         switch (command) {
           case "hello":
@@ -205,7 +206,6 @@ export class HelloWorldPanel {
             window.showInformationMessage(text);
             return;
           case "listFiles":
-            let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
             console.log(`listFiles: ${meltyFilePaths.length} melty file paths`);
             this._panel.webview.postMessage({
               command: "listFiles",
@@ -292,8 +292,6 @@ export class HelloWorldPanel {
               undefined,
               workspaceRoot
             );
-
-            meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
 
             // human response
             this.conversation = conversations.respondHuman(
