@@ -55,7 +55,7 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
   });
 
   const { message, searchReplaceBlocks } = parseMessageAndSearchReplaceBlocks(finalResponse);
-  const newRepoState = diffApplicatorXml.applyDiffs(currentRepoState, searchReplaceBlocks);
+  const newRepoState = diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceBlocks);
   const newJoule = joules.createJouleBot(message, newRepoState, contextPaths);
   const newConversation = addJoule(conversation, newJoule);
   return newConversation;

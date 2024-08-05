@@ -15,7 +15,7 @@ export const testExports = {
     applySearchReplace
 };
 
-export function applyDiffs(repoState: RepoState, searchReplaceBlocks: SearchReplace[]): RepoState {
+export function applySearchReplaceBlocks(repoState: RepoState, searchReplaceBlocks: SearchReplace[]): RepoState {
     return searchReplaceBlocks.reduce((repoState, searchReplace) => {
         return applySearchReplace(repoState, searchReplace);
     }, repoState);
@@ -120,7 +120,10 @@ export function findSearchReplaceBlocks(content: string): SearchReplace[] {
                 currentSection = nextSection(currentSection, "replace");
                 break;
             case "srClose":
-                searchReplaceList.push(searchReplaces.create(currentFile!, currentSearch.join("\n"), currentReplace.join("\n")));
+                searchReplaceList.push(searchReplaces.create(currentFile!,
+                    currentSearch.join("\n") + "\n", // match whole lines only
+                    currentReplace.join("\n") + "\n"
+                ));
                 currentSearch = [];
                 currentReplace = [];
                 currentSection = nextSection(currentSection, "codeChange");
@@ -144,10 +147,12 @@ export function findSearchReplaceBlocks(content: string): SearchReplace[] {
 }
 
 function extractFileName(line: string): string | undefined {
+    console.log("extracting filename from line: ", line);
     const match = line.match(/file="([^"]*)"/);
     if (!match || match.length !== 2) {
         throw new Error(`Unable to get filename from: ${line}`); // TODO: relax this to undefined
     }
+    console.log("extracted filename: ", stripFilename(match[1]));
     return stripFilename(match[1]);
 }
 

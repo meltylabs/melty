@@ -1,6 +1,6 @@
 import { Uri } from "vscode";
-import { MeltyFile } from "./files";
-import * as files from "./files";
+import { MeltyFile } from "./meltyFiles";
+import * as files from "./meltyFiles";
 
 export type RepoState = {
     state: RepoStateInMemory | RepoStateCommitted;

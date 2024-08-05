@@ -14,8 +14,8 @@ import { Conversation} from "../backend/conversations";
 import * as repoStates from "../backend/repoStates";
 import * as fs from "fs";
 import * as path from "path";
-import { MeltyFile } from "../backend/files";
-import * as files from "../backend/files";
+import { MeltyFile } from "../backend/meltyFiles";
+import * as files from "../backend/meltyFiles";
 import { Joule } from "../backend/joules";
 
 /**
