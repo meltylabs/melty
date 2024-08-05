@@ -26,6 +26,7 @@ import {
 } from "./components/ui/collapsible";
 import "./App.css";
 import { Message } from "../../src/extension";
+import { Skeleton } from "./components/ui/skeleton";
 
 function MessageComponent({ message, isPartial = false }: { message: Message; isPartial?: boolean }) {
   return (
@@ -78,12 +79,14 @@ function MessagesView({
   handleSendMessage,
   handleUndo,
   handleReset,
+  isSending,
 }: {
   messages: Message[];
   partialResponse: Message | null;
   handleSendMessage: (event: React.FormEvent) => void;
   handleUndo: () => void;
   handleReset: () => void;
+  isSending: boolean;
 }) {
   return (
     <div className="p-4">
@@ -93,6 +96,12 @@ function MessagesView({
         ))}
         {partialResponse && (
           <MessageComponent message={partialResponse} isPartial={true} />
+        )}
+        {isSending && (
+          <div className="bg-white p-3 rounded">
+            <Skeleton className="h-4 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
         )}
       </div>
       <div className="">
@@ -135,10 +144,14 @@ function App() {
   const [partialResponse, setPartialResponse] = useState<Message | null>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
+  const [isSending, setIsSending] = useState(false);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
     const message = (event.target as HTMLFormElement).message.value;
+
+    // Set isSending to true
+    setIsSending(true);
 
     // Send message to extension
     vscode.postMessage({
@@ -195,6 +208,7 @@ function App() {
             },
           ]);
           setPartialResponse(null); // Clear the partial response
+          setIsSending(false); // Set isSending back to false
           break;
         case "listMeltyFiles":
           console.log("listMeltyFiles", message);
@@ -253,6 +267,7 @@ function App() {
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}
                   handleReset={handleReset}
+                  isSending={isSending}
                 />
                 <div className="mt-6">
                   <FilePicker
