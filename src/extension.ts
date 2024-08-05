@@ -3,6 +3,8 @@ import * as path from "path";
 import * as fs from "fs";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { MeltyFile } from "./backend/meltyFiles";
+import * as conversations from "./backend/conversations";
+import { Conversation } from "./backend/conversations";
 
 export interface Message {
   text: string;
@@ -34,6 +36,7 @@ export class SpectacleExtension {
   private meltyFilePaths: string[] = [];
   private workspaceFilePaths: string[] = [];
   private messages: Message[] = [dummy1, dummy2, dummy3];
+  private conversation: Conversation;
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -43,6 +46,9 @@ export class SpectacleExtension {
     this.workspaceRoot = vscode.workspace.workspaceFolders
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : "/";
+
+    this.conversation = conversations.create();
+
     this.initializeMeltyFilePaths();
     this.initializeWorkspaceFilePaths();
   }
@@ -152,6 +158,22 @@ export class SpectacleExtension {
 
   public getMessages(): Message[] {
     return this.messages;
+  }
+
+  public resetMessages() {
+    this.messages = [];
+  }
+
+  public getConversation(): Conversation {
+    return this.conversation;
+  }
+
+  public resetConversation() {
+    this.conversation = conversations.create();
+  }
+
+  public setConversation(conversation: Conversation) {
+    this.conversation = conversation;
   }
 }
 

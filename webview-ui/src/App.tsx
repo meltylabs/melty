@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
-import { ChevronsUpDown, XIcon, Undo } from "lucide-react";
+import { ChevronsUpDown, XIcon, Undo, Trash2Icon } from "lucide-react";
 import {
   BrowserRouter as Router,
   Route,
@@ -56,17 +56,6 @@ function App() {
     vscode.postMessage({ command: "listWorkspaceFiles" });
   }
 
-  function handleAddFileByForm(event: React.FormEvent) {
-    event.preventDefault();
-    const filePath = (event.target as HTMLFormElement).file.value;
-    console.log("addFile in App.tsx: ", filePath);
-
-    handleAddFile(filePath);
-
-    // clear the input
-    (event.target as HTMLFormElement).reset();
-  }
-
   function handleAddFile(file: string) {
     vscode.postMessage({ command: "addMeltyFile", filePath: file });
   }
@@ -77,6 +66,10 @@ function App() {
 
   function loadMessages() {
     vscode.postMessage({ command: "loadMessages" });
+  }
+
+  function handleReset() {
+    vscode.postMessage({ command: "resetConversation" });
   }
 
   useEffect(() => {
@@ -159,6 +152,7 @@ function App() {
                   messages={messages}
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}
+                  handleReset={handleReset}
                 />
                 <div className="mt-6">
                   <FilePicker
@@ -201,10 +195,12 @@ function MessagesView({
   messages,
   handleSendMessage,
   handleUndo,
+  handleReset,
 }: {
   messages: Message[];
   handleSendMessage: (event: React.FormEvent) => void;
   handleUndo: () => void;
+  handleReset: () => void;
 }) {
   return (
     <div className="p-4">
@@ -285,6 +281,10 @@ function MessagesView({
             />
           </div>
           <div className="flex justify-end space-x-2 mt-2">
+            <Button variant="ghost" type="button" onClick={handleReset}>
+              <Trash2Icon className="h-3 w-3 mr-2" />
+              Reset
+            </Button>
             <Button variant="outline">
               Ask{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
