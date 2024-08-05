@@ -77,6 +77,8 @@ export async function respondBot(
     mode === "code"
       ? diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceList)
       : currentRepoState // repoStates.createCopyParent(currentRepoState)
+      // TODO: we might need to do a copy here. something bad happens if we don't but I can't remember what.
+      // see if this works and if not, add back createCopyParent.
   );
 
   const newJoule = joules.createJouleBot(messageChunksList.join("\n"), mode, newRepoState, contextPaths);

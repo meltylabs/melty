@@ -102,7 +102,7 @@ export class Task {
         await this.commitChanges();
 
         const latestCommit = this.repository.state.HEAD?.commit;
-        const newRepoState = repoStates.createFromCommit(latestCommit);
+        const newRepoState = repoStates.createFromCommit(this.repository, this.workspaceRoot, latestCommit);
 
         this.conversation = conversations.respondHuman(
             this.conversation,

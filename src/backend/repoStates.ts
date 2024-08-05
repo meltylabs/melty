@@ -23,15 +23,6 @@ type RepoStateInMemory = {
     readonly filesChanged: { [relativePath: string]: MeltyFile };
 };
 
-// should a repostate have an id in it?
-// if it doesn't have an id, we risk using the same repostate for multiple commits in a row,
-// and we don't want that
-// but maybe it all gets resolved by Task?
-// why do we need this? why do we need createCopyParent again?
-// because otherwise we can't do some operation on the repostate. but what is that operation?
-
-// for now, let's assume we don't need createCopyParent, and see what happens!
-
 export function createFromCommit(repo: any, workspaceRoot: string, commit: string): RepoState {
     return { repo, workspaceRoot, impl: { status: "committed", commit } };
 }
