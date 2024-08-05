@@ -100,11 +100,10 @@ function nextSection(currentSection: Section, nextSection: Section): Section {
 
 export function splitResponse(content: string): { searchReplaceList: SearchReplace[], messageChunksList: string[] } {
     const searchReplaceList: SearchReplace[] = [];
-    const messageChunksList: string[] = [];
+    const messageChunksList: string[] = [""];
     let currentFile: string | undefined;
     let currentSearch: string[] = [];
     let currentReplace: string[] = [];
-    let currentMessageChunk: string[] = [];
     let currentSection: Section = "topLevel";
 
     const lines = content.split('\n');
@@ -112,8 +111,7 @@ export function splitResponse(content: string): { searchReplaceList: SearchRepla
     for (const line of lines) {
         switch (categorizeLine(line)) {
             case "ccOpen":
-                messageChunksList.push(currentMessageChunk.join("\n"));
-                currentMessageChunk = [];
+                messageChunksList.push("");
 
                 currentFile = extractFileName(line);
                 currentSection = nextSection(currentSection, "codeChange");
@@ -125,7 +123,8 @@ export function splitResponse(content: string): { searchReplaceList: SearchRepla
                 currentSection = nextSection(currentSection, "replace");
                 break;
             case "srClose":
-                messageChunksList.push(`[Writing code for ${currentFile}...]`);
+                messageChunksList.push(`[Writing code for ${currentFile}...]\n`);
+                messageChunksList.push("");
                 searchReplaceList.push(searchReplaces.create(currentFile!,
                     currentSearch.join("\n") + "\n", // match whole lines only
                     currentReplace.join("\n") + "\n"
@@ -144,7 +143,7 @@ export function splitResponse(content: string): { searchReplaceList: SearchRepla
                 } else if (currentSection === "replace") {
                     currentReplace.push(line);
                 } else if(currentSection === "topLevel") {
-                    currentMessageChunk.push(line);
+                    messageChunksList[messageChunksList.length - 1] += line + "\n";
                 } else {
                     // otherwise, it's in CodeChange but not in search/replace
                     console.log("ignoring stray line in CodeChange: ", line);

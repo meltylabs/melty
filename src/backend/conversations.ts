@@ -41,7 +41,7 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
     ),
     messages: [
       // TODOV2 user system info
-      ...encodeRepoMap(currentRepoState),
+      // ...encodeRepoMap(currentRepoState),
       ...encodeContext(currentRepoState, contextPaths),
       ...encodeMessages(conversation)
     ]
@@ -104,7 +104,7 @@ function encodeMessages(conversation: Conversation): claudeAPI.ClaudeMessage[] {
   return conversation.joules.map((joule) => {
     return {
       role: joule.author === "human" ? "user" : "assistant",
-      content: joule.message
+      content: joule.message.length ? joule.message : "..." // appease Claude, who demands all messages be non-empty
     };
   });
 }

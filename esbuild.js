@@ -7,6 +7,10 @@ const baseConfig = {
   bundle: true,
   minify: process.env.NODE_ENV === "production",
   sourcemap: process.env.NODE_ENV !== "production",
+  loader: {
+    '.wasm': 'file'
+  },
+  outbase: 'src'
 };
 
 const extensionConfig = {
