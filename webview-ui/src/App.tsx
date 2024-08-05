@@ -27,9 +27,112 @@ import {
 import "./App.css";
 import { Message } from "../../src/extension";
 
+function MessageComponent({ message, isPartial = false }: { message: Message; isPartial?: boolean }) {
+  return (
+    <div
+      className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
+        message.sender === "user" ? "bg-gray-50 " : "bg-white"
+      }`}
+    >
+      <div className="text-xs flex">
+        {message.text}
+        {isPartial && <span className="animate-pulse">▋</span>}
+      </div>
+
+      <div>
+        {message.diff && (
+          <Collapsible>
+            <div className="flex items-center justify-end space-x-4 px-4">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <h4 className="text-sm font-semibold mr-2">
+                    1 file changed
+                  </h4>
+                  <ChevronsUpDown className="h-4 w-4" />
+                  <span className="sr-only">Toggle</span>
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <div
+                className="text-xs mt-4 font-mono"
+                dangerouslySetInnerHTML={{
+                  __html: Diff2Html.html(message.diff, {
+                    drawFileList: true,
+                    matching: "lines",
+                    outputFormat: "line-by-line",
+                  }),
+                }}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MessagesView({
+  messages,
+  partialResponse,
+  handleSendMessage,
+  handleUndo,
+  handleReset,
+}: {
+  messages: Message[];
+  partialResponse: Message | null;
+  handleSendMessage: (event: React.FormEvent) => void;
+  handleUndo: () => void;
+  handleReset: () => void;
+}) {
+  return (
+    <div className="p-4">
+      <div className="mb-4 rounded p-2 mx-auto">
+        {messages.map((message, index) => (
+          <MessageComponent key={index} message={message} />
+        ))}
+        {partialResponse && (
+          <MessageComponent message={partialResponse} isPartial={true} />
+        )}
+      </div>
+      <div className="">
+        <form onSubmit={handleSendMessage}>
+          <div className="mt-4 flex">
+            <Input
+              placeholder="What should I do?"
+              id="message"
+              autoFocus
+              required
+            />
+          </div>
+          <div className="flex justify-end space-x-2 mt-2">
+            <Button variant="ghost" type="button" onClick={handleReset}>
+              <Trash2Icon className="h-3 w-3 mr-2" />
+              Reset
+            </Button>
+            <Button variant="outline">
+              Ask{" "}
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
+                <span className="text-xs">↵</span>
+              </kbd>
+            </Button>
+            <Button>
+              Code{" "}
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
+                <span className="text-xs">⌘</span>
+                <span className="text-xs">↵</span>
+              </kbd>
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [partialResponse, setPartialResponse] = useState("");
+  const [partialResponse, setPartialResponse] = useState<Message | null>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
 
@@ -91,6 +194,7 @@ function App() {
               diff: message.text.diff,
             },
           ]);
+          setPartialResponse(null); // Clear the partial response
           break;
         case "listMeltyFiles":
           console.log("listMeltyFiles", message);
@@ -115,15 +219,10 @@ function App() {
           ]);
           break;
         case "setPartialResponse":
-          // commenting out for now
-
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              text: message.joule.message,
-              sender: "bot",
-            },
-          ]);
+          setPartialResponse({
+            text: message.joule.message,
+            sender: "bot",
+          });
           break;
       }
     };
@@ -150,6 +249,7 @@ function App() {
               <>
                 <MessagesView
                   messages={messages}
+                  partialResponse={partialResponse}
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}
                   handleReset={handleReset}
@@ -188,120 +288,6 @@ function App() {
         </Routes>
       </main>
     </Router>
-  );
-}
-
-function MessagesView({
-  messages,
-  handleSendMessage,
-  handleUndo,
-  handleReset,
-}: {
-  messages: Message[];
-  handleSendMessage: (event: React.FormEvent) => void;
-  handleUndo: () => void;
-  handleReset: () => void;
-}) {
-  return (
-    <div className="p-4">
-      <div className="mb-4 rounded p-2 mx-auto">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
-              message.sender === "user" ? "bg-gray-50 " : "bg-white"
-            }`}
-          >
-            <div className="text-xs flex">
-              {/* <Avatar className="mr-3">
-                {message.sender === "user" ? (
-                  <AvatarImage src="https://github.com/cbh123.png" />
-                ) : (
-                  <AvatarImage src="https://github.com/shlinked.png" />
-                )}
-                <AvatarFallback>AI</AvatarFallback>
-              </Avatar> */}
-
-              {message.text}
-            </div>
-
-            <div>
-              {message.diff && (
-                <Collapsible>
-                  <div className="flex items-center justify-end space-x-4 px-4">
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <h4 className="text-sm font-semibold mr-2">
-                          1 file changed
-                        </h4>
-                        <ChevronsUpDown className="h-4 w-4" />
-                        <span className="sr-only">Toggle</span>
-                      </Button>
-                    </CollapsibleTrigger>
-                  </div>
-                  <CollapsibleContent>
-                    <div
-                      className="text-xs mt-4 font-mono"
-                      dangerouslySetInnerHTML={{
-                        __html: Diff2Html.html(message.diff, {
-                          drawFileList: true,
-                          matching: "lines",
-                          outputFormat: "line-by-line",
-                        }),
-                      }}
-                    />
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-              {index === messages.length - 1 && message.diff && (
-                <div className="mt-6 flex justify-end">
-                  <Button size="sm" variant="ghost" onClick={handleUndo}>
-                    <Undo className="h-3 w-3 mr-2" />
-                    <span className="text-xs">Undo</span>
-                    <kbd className="ml-1.5 pointer-events-none inline-flex h-4.5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                      <span className="text-xs">⌘</span>U
-                    </kbd>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="">
-        {/* <Separator /> */}
-
-        <form onSubmit={handleSendMessage}>
-          <div className="mt-4 flex">
-            <Input
-              placeholder="What should I do?"
-              id="message"
-              autoFocus
-              required
-            />
-          </div>
-          <div className="flex justify-end space-x-2 mt-2">
-            <Button variant="ghost" type="button" onClick={handleReset}>
-              <Trash2Icon className="h-3 w-3 mr-2" />
-              Reset
-            </Button>
-            <Button variant="outline">
-              Ask{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
-                <span className="text-xs">↵</span>
-              </kbd>
-            </Button>
-            <Button>
-              Code{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
-                <span className="text-xs">⌘</span>
-                <span className="text-xs">↵</span>
-              </kbd>
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
   );
 }
 
