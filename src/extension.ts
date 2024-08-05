@@ -201,7 +201,7 @@ export function activate(context: vscode.ExtensionContext) {
   extension.activate();
 
   const helloCommand = vscode.commands.registerCommand(
-    "hello-world.showHelloWorld",
+    "melty.showMelty",
     () => {
       HelloWorldPanel.render(context.extensionUri, extension);
     }
