@@ -36,18 +36,27 @@ export class SpectacleExtension {
   }
 
   async getMeltyFiles(): Promise<{ [relativePath: string]: MeltyFile }> {
-    const workspaceFileUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
-    const meltyFiles: { [relativePath: string]: MeltyFile } = Object.fromEntries(
-      await Promise.all(workspaceFileUris.map(async file => {
-        const relativePath = path.relative(this.workspaceRoot, file.fsPath);
-        const contents = await fs.promises.readFile(file.fsPath, 'utf8');
-        return [relativePath, {
-          path: relativePath,
-          contents: contents,
-          workspaceRoot: this.workspaceRoot
-        }];
-      }))
+    const workspaceFileUris = await vscode.workspace.findFiles(
+      "**/*",
+      "**/node_modules/**"
     );
+    const meltyFiles: { [relativePath: string]: MeltyFile } =
+      Object.fromEntries(
+        await Promise.all(
+          workspaceFileUris.map(async (file) => {
+            const relativePath = path.relative(this.workspaceRoot, file.fsPath);
+            const contents = await fs.promises.readFile(file.fsPath, "utf8");
+            return [
+              relativePath,
+              {
+                path: relativePath,
+                contents: contents,
+                workspaceRoot: this.workspaceRoot,
+              },
+            ];
+          })
+        )
+      );
     return meltyFiles;
   }
 }
