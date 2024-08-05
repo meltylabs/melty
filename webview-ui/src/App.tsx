@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
-import { ChevronsUpDown, XIcon, Undo, Trash2Icon, FileIcon } from "lucide-react";
+import {
+  ChevronsUpDown,
+  XIcon,
+  Undo,
+  Trash2Icon,
+  FileIcon,
+} from "lucide-react";
 import {
   BrowserRouter as Router,
   Route,
@@ -35,9 +41,9 @@ function MessageComponent({
   isPartial?: boolean;
 }) {
   const renderDiff = (diff: string) => {
-    const lines = diff.split('\n');
-    const fileNameLine = lines.find(line => line.startsWith('diff --git'));
-    let fileName = '';
+    const lines = diff.split("\n");
+    const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
+    let fileName = "";
     if (fileNameLine) {
       const match = fileNameLine.match(/diff --git a\/(.*) b\/(.*)/);
       if (match) {
@@ -50,7 +56,12 @@ function MessageComponent({
         <FileIcon className="h-4 w-4" />
         <button
           className="text-blue-600 hover:underline"
-          onClick={() => vscode.postMessage({ command: 'openFile', filePath: fileName })}
+          onClick={() =>
+            vscode.postMessage({
+              command: "openFileInEditor",
+              filePath: fileName,
+            })
+          }
         >
           {fileName}
         </button>
@@ -97,9 +108,7 @@ function MessageComponent({
                 </Button>
               </CollapsibleTrigger>
             </div>
-            <CollapsibleContent>
-              {renderDiff(message.diff)}
-            </CollapsibleContent>
+            <CollapsibleContent>{renderDiff(message.diff)}</CollapsibleContent>
           </Collapsible>
         )}
       </div>
