@@ -37,7 +37,7 @@ export function FilePicker({
       if (
         (event.metaKey || event.ctrlKey) &&
         event.shiftKey &&
-        event.key === "C"
+        event.key === "c"
       ) {
         event.preventDefault(); // Prevent default browser behavior
         setOpen(true);
