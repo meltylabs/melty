@@ -152,6 +152,7 @@ function App() {
                   messages={messages}
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}
+                  handleReset={handleReset}
                 />
                 <div className="mt-6">
                   <FilePicker
@@ -194,10 +195,12 @@ function MessagesView({
   messages,
   handleSendMessage,
   handleUndo,
+  handleReset,
 }: {
   messages: Message[];
   handleSendMessage: (event: React.FormEvent) => void;
   handleUndo: () => void;
+  handleReset: () => void;
 }) {
   return (
     <div className="p-4">

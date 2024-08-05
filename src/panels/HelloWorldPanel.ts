@@ -221,6 +221,7 @@ export class HelloWorldPanel {
             return;
           case "resetConversation":
             this.spectacleExtension.resetConversation();
+            this.spectacleExtension.resetMessages();
             this._panel.webview.postMessage({
               command: "loadMessages",
               messages: this.spectacleExtension.getMessages(),
