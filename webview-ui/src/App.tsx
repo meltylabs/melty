@@ -27,7 +27,13 @@ import {
 import "./App.css";
 import { Message } from "../../src/extension";
 
-function MessageComponent({ message, isPartial = false }: { message: Message; isPartial?: boolean }) {
+function MessageComponent({
+  message,
+  isPartial = false,
+}: {
+  message: Message;
+  isPartial?: boolean;
+}) {
   return (
     <div
       className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
@@ -45,9 +51,7 @@ function MessageComponent({ message, isPartial = false }: { message: Message; is
             <div className="flex items-center justify-end space-x-4 px-4">
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <h4 className="text-sm font-semibold mr-2">
-                    1 file changed
-                  </h4>
+                  <h4 className="text-sm font-semibold mr-2">1 file changed</h4>
                   <ChevronsUpDown className="h-4 w-4" />
                   <span className="sr-only">Toggle</span>
                 </Button>
@@ -78,7 +82,6 @@ function MessagesView({
   handleSendMessage,
   handleUndo,
   handleReset,
-  isWaitingForAI,
 }: {
   messages: Message[];
   partialResponse: Message | null;
