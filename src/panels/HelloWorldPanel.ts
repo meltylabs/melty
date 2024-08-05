@@ -142,7 +142,6 @@ export class HelloWorldPanel {
       "build",
       "static",
       "css",
-      "main.css",
     ]);
     // The JS file from the React build output
     const scriptUri = getUri(webview, extensionUri, [
