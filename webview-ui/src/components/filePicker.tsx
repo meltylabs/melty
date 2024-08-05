@@ -7,6 +7,7 @@ import {
   Smile,
   User,
   File,
+  Plus,
 } from "lucide-react";
 
 import {
@@ -34,11 +35,7 @@ export function FilePicker({
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       // Check for Cmd+Shift+m on Mac or Ctrl+Shift+m on Windows/Linux
-      if (
-        (event.metaKey || event.ctrlKey) &&
-        event.shiftKey &&
-        event.key === "m"
-      ) {
+      if (event.key === "\\") {
         event.preventDefault(); // Prevent default browser behavior
         setOpen(true);
       }
@@ -50,13 +47,12 @@ export function FilePicker({
 
   return (
     <>
-      <p className="text-xs text-muted-foreground"></p>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput id="file" placeholder="Type a file name" />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>All files in workspace are in context.</CommandEmpty>
           {/* todo - would be nice to show recent or suggested here */}
-          <CommandGroup heading="All">
+          <CommandGroup heading="Files">
             {workspaceFilePaths
               .filter((filePath) => !meltyFilePaths.includes(filePath))
               .map((filePath: string) => (
@@ -64,7 +60,7 @@ export function FilePicker({
                   onSelect={() => handleAddFile(filePath)}
                   key={filePath}
                 >
-                  <File className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 h-4 w-4" />
                   <span>{filePath}</span>
                 </CommandItem>
               ))}

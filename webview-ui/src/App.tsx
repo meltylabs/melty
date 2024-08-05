@@ -176,8 +176,8 @@ function MessagesView({
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [partialResponse, setPartialResponse] = useState<Message | null>(null);
-  const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
-  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
+  const [meltyFiles, setMeltyFiles] = useState<string[]>(["test.pdf"]);
+  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>(["hi.pdf"]);
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
     const message = (event.target as HTMLFormElement).message.value;
@@ -307,7 +307,7 @@ function App() {
                     <p className="text-xs text-muted-foreground mb-2">
                       Melty's Mind{"  "}
                       <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                        <span className="text-xs">⌘⇧m</span>
+                        <span className="text-xs">\</span>
                       </kbd>{" "}
                     </p>
                     {meltyFiles.map((file, i) => (
