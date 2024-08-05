@@ -41,22 +41,16 @@ function MessageComponent({
   message: Message;
   isPartial?: boolean;
 }) {
-  const renderSearchReplaceBlock = (diff: string) => {
-    const lines = diff.split("\n");
-    const filePathLine = lines.find(
-      (line) => !line.startsWith("<<<<<<< SEARCH")
-    );
+  const renderSearchReplaceBlock = (text: string) => {
+    const lines = text.split("\n");
+    const filePathLine = lines.find(line => !line.startsWith("<<<<<<< SEARCH"));
     const filePath = filePathLine || "Unknown file";
     const searchStartIndex = lines.indexOf("<<<<<<<  SEARCH") + 1;
     const separatorIndex = lines.indexOf("=======");
     const replaceEndIndex = lines.indexOf(">>>>>>> REPLACE");
 
-    const searchContent = lines
-      .slice(searchStartIndex, separatorIndex)
-      .join("\n");
-    const replaceContent = lines
-      .slice(separatorIndex + 1, replaceEndIndex)
-      .join("\n");
+    const searchContent = lines.slice(searchStartIndex, separatorIndex).join("\n");
+    const replaceContent = lines.slice(separatorIndex + 1, replaceEndIndex).join("\n");
 
     return (
       <SearchReplaceBlock
@@ -67,50 +61,9 @@ function MessageComponent({
     );
   };
 
-  const renderDiff = (diff: string) => {
-    const lines = diff.split("\n");
-    const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
-    let fileName = "";
-    if (fileNameLine) {
-      const match = fileNameLine.match(/diff --git a\/(.*) b\/(.*)/);
-      if (match) {
-        fileName = match[2]; // Use the 'b' file name (new file)
-      }
-    }
+  // Keep the existing renderDiff function
 
-    const customHeader = fileName ? (
-      <div className="diff-header flex items-center space-x-2 p-2 bg-gray-100 rounded-t">
-        <FileIcon className="h-4 w-4" />
-        <button
-          className="text-blue-600 hover:underline"
-          onClick={() =>
-            vscode.postMessage({
-              command: "openFileInEditor",
-              filePath: fileName,
-            })
-          }
-        >
-          {fileName}
-        </button>
-      </div>
-    ) : null;
-
-    return (
-      <>
-        {customHeader}
-        <div
-          className="text-xs mt-4 font-mono"
-          dangerouslySetInnerHTML={{
-            __html: Diff2Html.html(diff, {
-              drawFileList: false,
-              matching: "lines",
-              outputFormat: "line-by-line",
-            }),
-          }}
-        />
-      </>
-    );
-  };
+  const hasSearchReplace = message.text.includes("<<<<<<<  SEARCH");
 
   return (
     <div
@@ -118,9 +71,15 @@ function MessageComponent({
         message.sender === "user" ? "bg-gray-50 " : "bg-white"
       }`}
     >
-      <div className="text-xs flex">
-        {message.text}
-        {isPartial && <span className="animate-pulse">▋</span>}
+      <div className="text-xs flex flex-col">
+        {hasSearchReplace ? (
+          renderSearchReplaceBlock(message.text)
+        ) : (
+          <>
+            {message.text}
+            {isPartial && <span className="animate-pulse">▋</span>}
+          </>
+        )}
       </div>
 
       <div>
