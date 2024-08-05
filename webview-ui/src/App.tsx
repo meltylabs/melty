@@ -6,6 +6,7 @@ import {
   Undo,
   Trash2Icon,
   FileIcon,
+  RotateCcwIcon,
 } from "lucide-react";
 import {
   BrowserRouter as Router,
@@ -150,17 +151,21 @@ function MessagesView({
             />
           </div>
           <div className="flex justify-end space-x-2 mt-2">
-            <Button variant="ghost" type="button" onClick={handleReset}>
-              <Trash2Icon className="h-3 w-3 mr-2" />
-              Reset
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              onClick={handleReset}
+            >
+              <RotateCcwIcon className="h-3 w-3" />
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" size="sm">
               Ask{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
                 <span className="text-xs">↵</span>
               </kbd>
             </Button>
-            <Button>
+            <Button size="sm">
               Code{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
                 <span className="text-xs">⌘</span>

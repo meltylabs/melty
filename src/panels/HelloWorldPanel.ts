@@ -468,10 +468,6 @@ export class HelloWorldPanel {
         })
       );
 
-      vscode.window.showInformationMessage(
-        `Latest commit: ${latestCommit}\nMessage: ${commitMessage.message}`
-      );
-
       return udiffs.join("\n");
     } else {
       vscode.window.showInformationMessage(
