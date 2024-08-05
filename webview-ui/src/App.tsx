@@ -42,25 +42,19 @@ function MessageComponent({
   isPartial?: boolean;
 }) {
   const renderSearchReplaceBlock = (text: string) => {
-    const lines = text.split("\n");
-    const filePathLine = lines.find(
-      (line) => !line.startsWith("<<<<<<< SEARCH")
-    );
-    const filePath = filePathLine || "Unknown file";
-    const searchStartIndex = lines.indexOf("<<<<<<<  SEARCH") + 1;
-    const separatorIndex = lines.indexOf("=======");
-    const replaceEndIndex = lines.indexOf(">>>>>>> REPLACE");
+    const searchStart = text.indexOf("<<<<<<< SEARCH");
+    const separatorIndex = text.indexOf("=======", searchStart);
+    const replaceEnd = text.indexOf(">>>>>>> REPLACE", separatorIndex);
 
-    const searchContent = lines
-      .slice(searchStartIndex, separatorIndex)
-      .join("\n");
-    const replaceContent = lines
-      .slice(separatorIndex + 1, replaceEndIndex)
-      .join("\n");
+    if (searchStart === -1 || separatorIndex === -1 || replaceEnd === -1) {
+      return <div>{text}</div>; // If the format is incorrect, just return the text as is
+    }
+
+    const searchContent = text.slice(searchStart + 15, separatorIndex).trim();
+    const replaceContent = text.slice(separatorIndex + 7, replaceEnd).trim();
 
     return (
       <SearchReplaceBlock
-        filePath={filePath}
         searchContent={searchContent}
         replaceContent={replaceContent}
       />
@@ -121,14 +115,14 @@ function MessageComponent({
       }`}
     >
       <div className="text-xs flex flex-col">
-        {/* {hasSearchReplace ? (
+        {hasSearchReplace ? (
           renderSearchReplaceBlock(message.text)
-        ) : ( */}
-        <>
-          {message.text}
-          {isPartial && <span className="animate-pulse">▋</span>}
-        </>
-        {/* )} */}
+        ) : (
+          <>
+            {message.text}
+            {isPartial && <span className="animate-pulse">▋</span>}
+          </>
+        )}
       </div>
 
       <div>
