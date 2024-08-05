@@ -207,6 +207,7 @@ function App() {
             },
           ]);
           setPartialResponse(null); // Clear the partial response
+          setIsWaitingForAI(false); // Reset waiting state
           break;
         case "listMeltyFiles":
           console.log("listMeltyFiles", message);
@@ -217,6 +218,16 @@ function App() {
           setWorkspaceFiles(message.workspaceFilePaths);
           break;
         case "loadMessages":
+          console.log("loadMessages", message);
+          setMessages(message.messages);
+          break;
+        case "setPartialResponse":
+          setPartialResponse({
+            text: message.joule.message,
+            sender: "bot",
+          });
+          setIsWaitingForAI(false); // Reset waiting state when partial response starts
+          break;
           console.log("loadMessages", message);
           setMessages(message.messages);
           break;
