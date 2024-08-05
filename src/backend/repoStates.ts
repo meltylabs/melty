@@ -7,7 +7,9 @@ import * as vscode from "vscode";
 import * as utils from "./utils/utils";
 
 export type RepoState = {
-    state: RepoStateInMemory | RepoStateCommitted;
+    readonly repo: any
+    readonly workspaceRoot: string
+    impl: RepoStateInMemory | RepoStateCommitted;
 };
 
 type RepoStateCommitted = {
@@ -17,16 +19,55 @@ type RepoStateCommitted = {
 
 type RepoStateInMemory = {
     readonly status: "inMemory";
-    readonly workspaceRoot: string;
-    readonly filesChanged: { [relativePath: string]: MeltyFile };
     readonly parentCommit: string;
+    readonly filesChanged: { [relativePath: string]: MeltyFile };
 };
 
+// should a repostate have an id in it?
+// if it doesn't have an id, we risk using the same repostate for multiple commits in a row,
+// and we don't want that
+// but maybe it all gets resolved by Task?
+// why do we need this? why do we need createCopyParent again?
+// because otherwise we can't do some operation on the repostate. but what is that operation?
+
+// for now, let's assume we don't need createCopyParent, and see what happens!
+
+export function createFromCommit(repo: any, workspaceRoot: string, commit: string): RepoState {
+    return { repo, workspaceRoot, impl: { status: "committed", commit } };
+}
+
+export function createFromCommitAndDiff(
+    repo: any,
+    workspaceRoot: string,
+    parentCommit: string,
+    filesChanged: { [relativePath: string]: MeltyFile },
+): RepoState {
+    const repoStateInMemory: RepoStateInMemory = {
+        status: "inMemory",
+        filesChanged: filesChanged,
+        parentCommit: parentCommit,
+    };
+    return { repo, workspaceRoot, impl: repoStateInMemory };
+}
+
+// export function createCopyParent(parentRepoState: RepoState): RepoState {
+//     if (parentRepoState.impl.status !== "committed") {
+//         throw new Error("not implemented: createCopyParent from uncommitted repostate");
+//     }
+
+//     const repoStateInMemory: RepoStateInMemory = {
+//         status: "inMemory",
+//         filesChanged: {},
+//         parentCommit: parentRepoState.impl.commit,
+//     };
+//     return { workspaceRoot: parentRepoState.workspaceRoot, repo: parentRepoState.repo, impl: repoStateInMemory };
+// }
+
 export async function diff(repoState: RepoState, repository: any): Promise<string> {
-    if (repoState.state.status === "inMemory") {
+    if (repoState.impl.status === "inMemory") {
         throw new Error("not implemented: getDiff from committed repostate");
     } else {
-        const repoStateCommitted = repoState.state;
+        const repoStateCommitted = repoState.impl;
         const commit = repoStateCommitted.commit;
         const diff = await repository.diffBetween(commit + "^", commit);
         const udiffs = await Promise.all(
@@ -43,16 +84,16 @@ export async function diff(repoState: RepoState, repository: any): Promise<strin
 }
 
 export function parentCommit(repoState: RepoState): string | undefined {
-    if (repoState.state.status === "inMemory") {
-        return repoState.state.parentCommit;
+    if (repoState.impl.status === "inMemory") {
+        return repoState.impl.parentCommit;
     } else {
         return undefined;
     }
 }
 
 export function commit(repoState: RepoState): string | undefined {
-    if (repoState.state.status === "committed") {
-        return repoState.state.commit;
+    if (repoState.impl.status === "committed") {
+        return repoState.impl.commit;
     } else {
         return undefined;
     }
@@ -71,12 +112,12 @@ export async function actualize(repoState: RepoState, repository: any): Promise<
         throw new Error("Please commit or stash changes before actualizing");
     }
 
-    if (repoState.state.status === "committed") {
-        const repoStateCommitted = repoState.state;
+    if (repoState.impl.status === "committed") {
+        const repoStateCommitted = repoState.impl;
         await repository.checkout(repoStateCommitted.commit);
         // no update to repoState needed
     } else {
-        const repoStateInMemory = repoState.state;
+        const repoStateInMemory = repoState.impl;
 
         const latestCommit = repository.state.HEAD?.commit;
         if (latestCommit !== repoStateInMemory.parentCommit) {
@@ -99,70 +140,54 @@ export async function actualize(repoState: RepoState, repository: any): Promise<
         const repoStateCommitted: RepoStateCommitted = { status: "committed", commit: newCommit };
 
         // update repoState in place
-        repoState.state = repoStateCommitted;
+        repoState.impl = repoStateCommitted;
     }
 }
 
 export function hasFile(repoState: RepoState, filePath: string): boolean {
-    if (repoState.state.status === "inMemory") {
-        return filePath in repoState.state.filesChanged;
+    if (repoState.impl.status === "inMemory") {
+        return filePath in repoState.impl.filesChanged;
     } else {
-        // TODO NO GOOD VERY BAD
-        const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
-        return fs.existsSync(path.join(workspaceRoot, filePath));
+        utils.ensureRepoIsOnCommit(repoState.repo, repoState.impl.commit);
+        return fs.existsSync(path.join(repoState.workspaceRoot, filePath));
     }
 }
 
 export function getFileContents(repoState: RepoState, filePath: string): string {
-    if (repoState.state.status === "inMemory") {
-        return files.contents(repoState.state.filesChanged[filePath]);
+    if (repoState.impl.status === "inMemory") {
+        return files.contents(repoState.impl.filesChanged[filePath]);
     } else {
-        // for now, assume that if it's actualized, we're on that commit. BIG ASSUMPTION! TODO!
-        // read the file from disk
-        // TODO NO GOOD VERY BAD
-        const repoStateCommitted = repoState.state;
-        const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
-        return fs.readFileSync(path.join(workspaceRoot, filePath), "utf8");
+        utils.ensureRepoIsOnCommit(repoState.repo, repoState.impl.commit); 
+        return fs.readFileSync(path.join(repoState.workspaceRoot, filePath), "utf8");
     }
-}
-
-export function createCopyParent(parentRepoState: RepoState): RepoState {
-    if (parentRepoState.state.status !== "committed") {
-        throw new Error("not implemented: createCopyParent from uncommitted repostate");
-    }
-
-    const repoStateInMemory: RepoStateInMemory = {
-        status: "inMemory",
-        filesChanged: {},
-        parentCommit: parentRepoState.state.commit,
-        workspaceRoot: vscode.workspace.workspaceFolders![0].uri.fsPath
-    };
-    return { state: repoStateInMemory };
-}
-
-export function createFromCommitAndDiff(
-    filesChanged: { [relativePath: string]: MeltyFile },
-    parentCommit: string,
-    workspaceRoot: string
-): RepoState {
-    const repoStateInMemory: RepoStateInMemory = {
-        status: "inMemory",
-        filesChanged: filesChanged,
-        parentCommit: parentCommit,
-        workspaceRoot: workspaceRoot
-    };
-    return { state: repoStateInMemory };
-}
-
-export function createFromCommit(commit: string): RepoState {
-    return { state: { status: "committed", commit } };
 }
 
 export function upsertFileContents(repoState: RepoState, path: string, contents: string): RepoState {
-    if (repoState.state.status === "inMemory") {
-        const file = files.create(path, contents, repoState.state.workspaceRoot);
-        return { state: { ...repoState.state, filesChanged: { ...repoState.state.filesChanged, [path]: file } } };
-    } else {
-        throw new Error("not implemented: upsertFileContents from committed repostate");
-    }
+    const file = files.create(path, contents, repoState.workspaceRoot);
+
+    let { filesChanged, parentCommit } = (() => {
+        if (repoState.impl.status === "inMemory") {
+            // another off same parent, updating the list of files changed
+            return {
+                filesChanged: { ...repoState.impl.filesChanged, [path]: file },
+                parentCommit: repoState.impl.parentCommit
+            };
+        } else {
+            // RepoStateCommitted: use repoState as the parent, start a new list of files changed
+            return {
+                filesChanged: { [path]: file },
+                parentCommit: repoState.impl.commit
+            };
+        }
+    })();
+
+    return {
+        repo: repoState.repo,
+        workspaceRoot: repoState.workspaceRoot,
+        impl: {
+            status: "inMemory",
+            parentCommit: parentCommit,
+            filesChanged: filesChanged,
+        }
+    };
 }

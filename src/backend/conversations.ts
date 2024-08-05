@@ -76,7 +76,7 @@ export async function respondBot(
   const newRepoState = (
     mode === "code"
       ? diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceList)
-      : repoStates.createCopyParent(currentRepoState)
+      : currentRepoState // repoStates.createCopyParent(currentRepoState)
   );
 
   const newJoule = joules.createJouleBot(messageChunksList.join("\n"), mode, newRepoState, contextPaths);

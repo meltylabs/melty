@@ -49,7 +49,10 @@ export class Task {
 
     private ensureWorkingDirectoryClean(): void {
         if (!utils.repoIsClean(this.repository)) {
-            throw new Error("Working directory is not clean");
+            throw new Error(`Working directory is not clean:
+                ${this.repository.state.workingTreeChanges.length}
+                ${this.repository.state.indexChanges.length}
+                ${this.repository.state.mergeChanges.length}`);
         }
     }
 

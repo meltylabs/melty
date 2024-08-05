@@ -1,5 +1,11 @@
 export function repoIsClean(repository: any) {
-    return (repository.state.workingTreeChanges.length > 0 ||
-        repository.state.indexChanges.length > 0 ||
-        repository.state.mergeChanges.length > 0);
+    return (!repository.state.workingTreeChanges.length &&
+        !repository.state.indexChanges.length &&
+        !repository.state.mergeChanges.length);
+}
+
+export function ensureRepoIsOnCommit(repo: any, commit: string) {
+    if (repo.state.HEAD.commit.hash !== commit) {
+        throw new Error(`Expected repo to be on commit ${commit} but found ${repo.state.HEAD.commit.hash}`);
+    }
 }
