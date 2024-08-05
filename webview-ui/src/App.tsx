@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
-import { ChevronsUpDown, XIcon, Undo, Trash2Icon } from "lucide-react";
+import {
+  ChevronsUpDown,
+  XIcon,
+  Undo,
+  Trash2Icon,
+  FileIcon,
+} from "lucide-react";
 import {
   BrowserRouter as Router,
   Route,
@@ -10,6 +16,8 @@ import {
 } from "react-router-dom";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
+import * as Diff2Html from "diff2html";
+import "diff2html/bundles/css/diff2html.min.css";
 import { Switch } from "./components/ui/switch";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
@@ -34,15 +42,21 @@ function MessageComponent({
   isPartial?: boolean;
 }) {
   const renderSearchReplaceBlock = (diff: string) => {
-    const lines = diff.split('\n');
-    const filePathLine = lines.find(line => !line.startsWith('<<<<<<< SEARCH'));
-    const filePath = filePathLine || 'Unknown file';
-    const searchStartIndex = lines.indexOf('<<<<<<< SEARCH') + 1;
-    const separatorIndex = lines.indexOf('=======');
-    const replaceEndIndex = lines.indexOf('>>>>>>> REPLACE');
+    const lines = diff.split("\n");
+    const filePathLine = lines.find(
+      (line) => !line.startsWith("<<<<<<< SEARCH")
+    );
+    const filePath = filePathLine || "Unknown file";
+    const searchStartIndex = lines.indexOf("<<<<<<<  SEARCH") + 1;
+    const separatorIndex = lines.indexOf("=======");
+    const replaceEndIndex = lines.indexOf(">>>>>>> REPLACE");
 
-    const searchContent = lines.slice(searchStartIndex, separatorIndex).join('\n');
-    const replaceContent = lines.slice(separatorIndex + 1, replaceEndIndex).join('\n');
+    const searchContent = lines
+      .slice(searchStartIndex, separatorIndex)
+      .join("\n");
+    const replaceContent = lines
+      .slice(separatorIndex + 1, replaceEndIndex)
+      .join("\n");
 
     return (
       <SearchReplaceBlock
@@ -50,6 +64,51 @@ function MessageComponent({
         searchContent={searchContent}
         replaceContent={replaceContent}
       />
+    );
+  };
+
+  const renderDiff = (diff: string) => {
+    const lines = diff.split("\n");
+    const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
+    let fileName = "";
+    if (fileNameLine) {
+      const match = fileNameLine.match(/diff --git a\/(.*) b\/(.*)/);
+      if (match) {
+        fileName = match[2]; // Use the 'b' file name (new file)
+      }
+    }
+
+    const customHeader = fileName ? (
+      <div className="diff-header flex items-center space-x-2 p-2 bg-gray-100 rounded-t">
+        <FileIcon className="h-4 w-4" />
+        <button
+          className="text-blue-600 hover:underline"
+          onClick={() =>
+            vscode.postMessage({
+              command: "openFileInEditor",
+              filePath: fileName,
+            })
+          }
+        >
+          {fileName}
+        </button>
+      </div>
+    ) : null;
+
+    return (
+      <>
+        {customHeader}
+        <div
+          className="text-xs mt-4 font-mono"
+          dangerouslySetInnerHTML={{
+            __html: Diff2Html.html(diff, {
+              drawFileList: false,
+              matching: "lines",
+              outputFormat: "line-by-line",
+            }),
+          }}
+        />
+      </>
     );
   };
 
@@ -76,9 +135,7 @@ function MessageComponent({
                 </Button>
               </CollapsibleTrigger>
             </div>
-            <CollapsibleContent>
-              {renderSearchReplaceBlock(message.diff)}
-            </CollapsibleContent>
+            <CollapsibleContent>{renderDiff(message.diff)}</CollapsibleContent>
           </Collapsible>
         )}
       </div>
