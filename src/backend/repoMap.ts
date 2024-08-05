@@ -2,8 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Parser from 'node-tree-sitter';
 import treeSitterTypeScript from 'tree-sitter-wasms/out/tree-sitter-typescript.wasm';
-// // @ts-ignore
-// import TypeScript from 'tree-sitter-typescript';
 
 interface Tag {
     relFname: string;

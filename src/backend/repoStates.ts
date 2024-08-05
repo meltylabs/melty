@@ -4,6 +4,7 @@ import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import * as utils from "./utils/utils";
 
 export type RepoState = {
     state: RepoStateInMemory | RepoStateCommitted;
@@ -20,15 +21,6 @@ type RepoStateInMemory = {
     readonly filesChanged: { [relativePath: string]: MeltyFile };
     readonly parentCommit: string;
 };
-
-// we want to be able to track RepoStates that we're not on
-// but then also to actualize the RepoState
-// a RepoState is always fully realizable: either it has a parent commit and a diff (inMemory)
-// or else it just has a commit (committed)
-
-// unfortunately, "actualize" isn't really a background operation
-// maybe there's a separate GitConversation that keeps git and conversation in sync?
-// I like that
 
 export async function diff(repoState: RepoState, repository: any): Promise<string> {
     if (repoState.state.status === "inMemory") {
@@ -75,9 +67,7 @@ export function commit(repoState: RepoState): string | undefined {
 export async function actualize(repoState: RepoState, repository: any): Promise<void> {
     await repository.status();
     // check for uncommitted changes
-    if (repository.state.workingTreeChanges.length > 0 ||
-        repository.state.indexChanges.length > 0 ||
-        repository.state.mergeChanges.length > 0) {
+    if (!utils.repoIsClean(repository)) {
         throw new Error("Please commit or stash changes before actualizing");
     }
 
@@ -112,24 +102,6 @@ export async function actualize(repoState: RepoState, repository: any): Promise<
         repoState.state = repoStateCommitted;
     }
 }
-
-// function actualize(repoState: RepoState): void {
-//     if (repoState.state.status === "inMemory") {
-//         // if the project's git repo is not on the repostate's parent commit, throw an unimplemented error
-//         for (const [path, file] of Object.entries(repoState.state.files)) {
-//             fs.writeFileSync(files.absolutePath(file), files.contents(file));
-//         }
-//     }
-// }
-
-// export function forEachFile(repoState: RepoState, fn: (file: MeltyFile) => void): void {
-//     if (repoState.state.status === "inMemory") {
-//         Object.entries(repoState.state.files).forEach(([_path, file]) => fn(file));
-//     } else {
-//         // TODO
-//         throw new Error("not implemented: getFileContents from committed repostate");
-//     }
-// }
 
 export function hasFile(repoState: RepoState, filePath: string): boolean {
     if (repoState.state.status === "inMemory") {

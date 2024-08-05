@@ -55,7 +55,7 @@ export async function respondBot(
     system: systemPrompt,
     messages: [
       // TODOV2 user system info
-      // ...encodeRepoMap(currentRepoState),
+      ...encodeRepoMap(currentRepoState),
       ...encodeContext(currentRepoState, contextPaths),
       ...encodeMessages(conversation)
     ]

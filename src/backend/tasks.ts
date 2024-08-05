@@ -4,7 +4,11 @@ import * as vscode from "vscode";
 import { RepoState } from "./repoStates";
 import * as repoStates from "./repoStates";
 import { Joule, Mode } from "./joules";
+import * as utils from "./utils/utils";
 
+/**
+ * A Task manages the interaction between a conversation and a git repository
+ */
 export class Task {
     conversation: Conversation;
     repository: any;
@@ -44,7 +48,9 @@ export class Task {
     }
 
     private ensureWorkingDirectoryClean(): void {
-        // TODO implement
+        if (!utils.repoIsClean(this.repository)) {
+            throw new Error("Working directory is not clean");
+        }
     }
 
     /**
@@ -103,30 +109,6 @@ export class Task {
 
         return conversations.lastJoule(this.conversation)!;
     }
-
-    // /**
-    //  * Gets the diff of the latest commit in the current Git repository.
-    //  * @returns A promise that resolves to the diff string or null if there's an error.
-    //  */
-    // private async getLatestCommitDiff(): Promise<string> {
-    //     const latestCommit = this.repository.state.HEAD?.commit;
-
-    //     if (latestCommit) {
-    //         const diff = await this.repository.diffBetween(latestCommit + "^", latestCommit);
-    //         const udiffs = await Promise.all(
-    //             diff.map(async (change: any) => {
-    //                 return await this.repository.diffBetween(
-    //                     latestCommit + "^",
-    //                     latestCommit,
-    //                     change.uri.fsPath
-    //                 );
-    //             })
-    //         );
-    //         return udiffs.join("\n");
-    //     } else {
-    //         throw new Error("No commits found in the repository");
-    //     }
-    // }
 
     /**
     * Gets current repository
