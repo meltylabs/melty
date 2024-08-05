@@ -1,4 +1,4 @@
-import { Joule, JouleBot } from './joules';
+import { Joule, JouleBot, Mode } from './joules';
 import { RepoState } from './repoStates';
 import * as repoStates from './repoStates';
 import * as joules from './joules';
@@ -25,20 +25,34 @@ export function respondHuman(conversation: Conversation, message: string, repoSt
   return addJoule(conversation, newJoule);
 }
 
-export async function respondBot(conversation: Conversation, contextPaths: string[], processPartial: (partialJoule: Joule) => void): Promise<Conversation> {
+export async function respondBot(
+  conversation: Conversation,
+  contextPaths: string[],
+  mode: Mode,
+  processPartial: (partialJoule: Joule) => void
+): Promise<Conversation> {
   const currentRepoState = lastJoule(conversation).repoState;
   // TODO 100: Add a loop here to try to correct the response if it's not good yet
 
   // TODO 300 (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
   // We can try each step multiple times. All attempts should be represented by a tree. We pick one leaf to respond with.
 
+  const systemPrompt = (() => {
+    switch (mode) {
+      case "code":
+        return (
+          prompts.codeModeSystemPrompt()
+            + prompts.diffDecoderPrompt()
+            + prompts.exampleConversationsPrompt()
+            + prompts.codeChangeCommandRulesPrompt()
+        );
+      case "ask":
+        return prompts.askModeSystemPrompt();
+    }
+  })();
+
   const claudeConversation: claudeAPI.ClaudeConversation = {
-    system: (
-      prompts.systemPrompt()
-      + prompts.diffDecoderPrompt()
-      + prompts.exampleConversationsPrompt()
-      + prompts.codeChangeCommandRulesPrompt()
-    ),
+    system: systemPrompt,
     messages: [
       // TODOV2 user system info
       // ...encodeRepoMap(currentRepoState),
@@ -50,7 +64,8 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
   // TODO 200: get five responses, pick the best one with pickResponse
 
   // TODOV2 write a claudePlus
-  let partialJoule = joules.createJouleBot("", currentRepoState, contextPaths);
+  console.log(systemPrompt);
+  let partialJoule = joules.createJouleBot("", mode, currentRepoState, contextPaths);
   const finalResponse = await claudeAPI.streamClaude(claudeConversation, (responseFragment) => {
     partialJoule = joules.updateMessage(partialJoule, partialJoule.message + responseFragment) as JouleBot;
     processPartial(partialJoule);
@@ -58,8 +73,12 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
 
   const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(finalResponse);
 
-  const newRepoState = diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceList);
-  const newJoule = joules.createJouleBot(messageChunksList.join("\n"), newRepoState, contextPaths);
+  const newRepoState = (
+    mode === "code"
+      ? diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceList)
+      : currentRepoState
+);
+  const newJoule = joules.createJouleBot(messageChunksList.join("\n"), mode, newRepoState, contextPaths);
   const newConversation = addJoule(conversation, newJoule);
   return newConversation;
 }

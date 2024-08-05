@@ -346,6 +346,7 @@ export class HelloWorldPanel {
               updatedConversation = await conversations.respondBot(
                 updatedConversation,
                 meltyFilePaths,
+                "ask",
                 processPartial
               ); // TODO: don't send all files as context, pick some
             } catch (e) {

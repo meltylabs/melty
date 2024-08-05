@@ -2,7 +2,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ClaudeMessage } from '../lib/claudeAPI';
 
-export function systemPrompt(): string {
+export function askModeSystemPrompt(): string {
+  return `Act as an expert code analyst.
+Answer questions about the supplied code.
+Right now, you can't make any changes to the user's code directly. Do NOT offer to make changes to the user's code.
+You can, however, suggest changes to the user.
+
+Always reply to the user in the same language they are using.`;
+}
+
+export function codeModeSystemPrompt(): string {
   return `Act as an expert software developer.
 Always use best practices when coding.
 Respect and use existing conventions, libraries, etc that are already present in the code base.
@@ -38,7 +47,7 @@ export function diffDecoderPrompt(): string {
 }
 
 export function filesUserIntro(): string {
-  return `These are the files I want you to work with. They may have changed since you last saw them -- if so, trust this message as the true contents of the files!`;
+  return `These are the files I want you to work with. Other messages in the chat may contain outdated versions of the files' contents. Trust this message as the true contents of the files!`;
 }
 
 export function filesAsstAck(): string {
