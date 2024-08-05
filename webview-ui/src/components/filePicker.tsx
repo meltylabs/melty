@@ -7,7 +7,6 @@ import {
   Smile,
   User,
   File,
-  Plus,
 } from "lucide-react";
 
 import {
@@ -20,6 +19,15 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "./ui/command";
+
+// Add this helper function
+const getFileIcon = (filePath: string) => {
+  const extension = filePath.split('.').pop()?.toLowerCase();
+  if (extension === 'ts' || extension === 'tsx') {
+    return <img src="/typescript-logo.svg" alt="TypeScript" className="mr-2 h-4 w-4" />;
+  }
+  return <File className="mr-2 h-4 w-4" />;
+};
 
 export function FilePicker({
   workspaceFilePaths,
@@ -60,7 +68,7 @@ export function FilePicker({
                   onSelect={() => handleAddFile(filePath)}
                   key={filePath}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  {getFileIcon(filePath)}
                   <span>{filePath}</span>
                 </CommandItem>
               ))}
