@@ -1,22 +1,40 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Parser from 'node-tree-sitter';
-import treeSitterTypeScript from 'tree-sitter-wasms/out/tree-sitter-typescript.wasm';
+import Parser from 'web-tree-sitter';
+// import treeSitterTypeScript from 'tree-sitter-wasms/out/tree-sitter-typescript.wasm';
+// import treeSitterRust from "tree-sitter-wasms/out/tree-sitter-rust.wasm"
 
-import { Tag } from '../types';
+import { Tag, GitRepo } from '../types';
 
 export class RepoMap {
     private parsers: Map<string, Parser>;
+    private gitRepo: GitRepo;
 
-    constructor(private options: { root: string }) {
+    constructor(gitRepo: GitRepo) {
         this.parsers = new Map();
-        this.initParsers();
+        this.gitRepo = gitRepo;
     }
 
-    private initParsers() {
-        const tsParser = new Parser();
-        tsParser.setLanguage(treeSitterTypeScript);
-        this.parsers.set('.ts', tsParser);
+    public async initParsers() {
+        await Parser.init({
+            locateFile(scriptName: string) {
+                return path.join(__dirname, '..', 'node_modules', 'web-tree-sitter', scriptName);
+            }
+        });
+
+        const parser = new Parser;
+        const treeSitterTypescript = await Parser.Language.load(
+            path.join(__dirname, 'lib/tree-sitter-typescript.wasm')
+        );
+        parser.setLanguage(treeSitterTypescript);
+        this.parsers.set('.ts', parser);
+
+        const pyParser = new Parser;
+        const treeSitterPython = await Parser.Language.load(
+            path.join(__dirname, 'lib/tree-sitter-python.wasm')
+        );
+        pyParser.setLanguage(treeSitterPython);
+        this.parsers.set('.py', pyParser);
     }
 
     private getParser(fileName: string): Parser | undefined {
@@ -24,9 +42,8 @@ export class RepoMap {
         return this.parsers.get(ext);
     }
 
-    public getRepoMap(chatFiles: string[], otherFiles: string[]): string {
-        const allFiles = [...new Set([...chatFiles, ...otherFiles])];
-        const tags = this.getAllTags(allFiles);
+    public getRepoMap(workspaceFilenames: string[]): string {
+        const tags = this.getAllTags(workspaceFilenames);
         const rankedTags = this.rankTags(tags);
         return this.generateMapString(rankedTags);
     }
@@ -86,7 +103,7 @@ export class RepoMap {
 
     private createTag(fileName: string, node: Parser.SyntaxNode, kind: 'def' | 'ref'): Tag {
         return {
-            relFname: path.relative(this.options.root, fileName),
+            relFname: path.relative(this.gitRepo.rootPath, fileName),
             fname: fileName,
             name: node.text,
             kind: kind,
