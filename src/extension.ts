@@ -83,9 +83,13 @@ export class SpectacleExtension {
   }
 
   public dropMeltyFilePath(filePath: string) {
-    this.meltyFilePaths = this.meltyFilePaths.filter(
-      (path) => path !== filePath
-    );
+    const index = this.meltyFilePaths.indexOf(filePath);
+    if (index !== -1) {
+      this.meltyFilePaths.splice(index, 1);
+      this.outputChannel.appendLine(`Dropped file: ${filePath}`);
+    } else {
+      this.outputChannel.appendLine(`File not found in list: ${filePath}`);
+    }
   }
 }
 
