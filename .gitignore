@@ -7,3 +7,4 @@ venv
 **/out/**
 .vscode-test
 __pycache__
+spectacle-0.0.1.vsix

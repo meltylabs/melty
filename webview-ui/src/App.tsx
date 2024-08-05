@@ -15,9 +15,9 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
-import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { Switch } from "./components/ui/switch";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
@@ -32,6 +32,7 @@ import {
 } from "./components/ui/collapsible";
 import "./App.css";
 import { Message } from "../../src/extension";
+import { SearchReplaceBlock } from "./components/SearchReplaceBlock";
 
 function MessageComponent({
   message,
@@ -40,6 +41,24 @@ function MessageComponent({
   message: Message;
   isPartial?: boolean;
 }) {
+
+  const renderMessageContent = (text: string) => {
+    const parts = text.split(/(<<<<<<< SEARCH.*?>>>>>>> REPLACE)/s);
+    return parts.map((part, index) => {
+      if (part.startsWith('<<<<<<< SEARCH')) {
+        const [, searchContent, replaceContent] = part.split(/<<<<<<< SEARCH|=======|>>>>>>> REPLACE/).map(s => s.trim());
+        return (
+          <SearchReplaceBlock
+            key={index}
+            searchContent={searchContent}
+            replaceContent={replaceContent}
+          />
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   const renderDiff = (diff: string) => {
     const lines = diff.split("\n");
     const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
@@ -91,8 +110,8 @@ function MessageComponent({
         message.sender === "user" ? "bg-gray-50 " : "bg-white"
       }`}
     >
-      <div className="text-xs flex">
-        {message.text}
+      <div className="text-xs flex flex-col">
+        {renderMessageContent(message.text)}
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
