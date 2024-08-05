@@ -157,7 +157,6 @@ export class SpectacleExtension {
   }
 
   public getMessages(): Message[] {
-    console.log("getMessages", this.messages);
     return this.messages;
   }
 
