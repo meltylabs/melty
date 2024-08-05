@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
+import * as path from "path";
+import * as fs from "fs";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
+import { MeltyFile } from "./backend/meltyFiles";
 
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
@@ -30,6 +33,22 @@ export class SpectacleExtension {
     if (e.affectsConfiguration("spectacle.anthropicApiKey")) {
       // Optionally handle configuration changes
     }
+  }
+
+  async getMeltyFiles(): Promise<{ [relativePath: string]: MeltyFile }> {
+    const workspaceFileUris = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
+    const meltyFiles: { [relativePath: string]: MeltyFile } = Object.fromEntries(
+      await Promise.all(workspaceFileUris.map(async file => {
+        const relativePath = path.relative(this.workspaceRoot, file.fsPath);
+        const contents = await fs.promises.readFile(file.fsPath, 'utf8');
+        return [relativePath, {
+          path: relativePath,
+          contents: contents,
+          workspaceRoot: this.workspaceRoot
+        }];
+      }))
+    );
+    return meltyFiles;
   }
 }
 
