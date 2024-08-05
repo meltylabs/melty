@@ -160,6 +160,10 @@ export class SpectacleExtension {
     return this.messages;
   }
 
+  public getConversation(): Conversation {
+    return this.conversation;
+  }
+
   public resetConversation() {
     this.conversation = conversations.create();
   }
