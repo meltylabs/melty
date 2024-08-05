@@ -275,110 +275,12 @@ export class HelloWorldPanel {
               },
             });
             return;
+          case "ask":
+            await this.handleAskCommand(text);
+            return;
+
           case "code":
-            // make a commit with whatever changes the human made
-            let repo = await this.getRepository();
-
-            const workspaceFileUris = await vscode.workspace.findFiles(
-              "**/*",
-              "{.git,node_modules}/**"
-            );
-            const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
-            await repo.add(absolutePaths);
-            await repo.commit("human changes", { empty: true });
-
-            // get latest commit diff, and send it back to the webview
-            const humanDiff = await this.getLatestCommitDiff();
-            this._panel.webview.postMessage({
-              command: "addMessage",
-              text: {
-                sender: "user",
-                message: text,
-                diff: humanDiff,
-              },
-            });
-
-            const workspaceRoot =
-              vscode.workspace.workspaceFolders![0].uri.fsPath;
-
-            // read all files in the workspace
-            // TODO: get rid of this and use repoState = repoStates.createFromCommit(commitHash)
-            const meltyFiles: { [relativePath: string]: MeltyFile } =
-              Object.fromEntries(
-                await Promise.all(
-                  workspaceFileUris.map(async (file) => {
-                    const relativePath = path.relative(
-                      vscode.workspace.workspaceFolders![0].uri.fsPath,
-                      file.fsPath
-                    );
-                    const contents = await fs.promises.readFile(
-                      file.fsPath,
-                      "utf8"
-                    );
-                    return [
-                      relativePath,
-                      files.create(relativePath, contents, workspaceRoot),
-                    ];
-                  })
-                )
-              );
-            const repoState = repoStates.create(
-              meltyFiles,
-              undefined,
-              workspaceRoot
-            );
-
-            // human response
-            let updatedConversation = conversations.respondHuman(
-              this.spectacleExtension.getConversation(),
-              text,
-              repoState
-            );
-
-            // bot response
-            const processPartial = (partialJoule: Joule) => {
-              this._panel.webview.postMessage({
-                command: "setPartialResponse",
-                joule: partialJoule,
-              });
-            };
-            try {
-              updatedConversation = await conversations.respondBot(
-                updatedConversation,
-                meltyFilePaths,
-                "ask",
-                processPartial
-              ); // TODO: don't send all files as context, pick some
-            } catch (e) {
-              vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
-              return;
-            }
-
-            const botJoule = conversations.lastJoule(updatedConversation);
-
-            // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
-            repoStates.forEachFile(botJoule.repoState, (file) => {
-              fs.mkdirSync(path.dirname(files.absolutePath(file)), {
-                recursive: true,
-              });
-              fs.writeFileSync(files.absolutePath(file), files.contents(file));
-            });
-
-            await repo.status();
-            await repo.add(absolutePaths);
-            await repo.commit("bot changes", { empty: true });
-            await repo.status();
-            const botDiff = await this.getLatestCommitDiff();
-
-            // Send the response back to the webview
-            this._panel.webview.postMessage({
-              command: "addMessage",
-              text: {
-                sender: "bot",
-                message: botJoule.message,
-                diff: botDiff,
-              },
-            });
+            await this.handleCodeCommand(text);
             return;
           // Add more switch case statements here as more webview message commands
           // are created within the webview context (i.e. inside media/main.js)
@@ -387,6 +289,212 @@ export class HelloWorldPanel {
       undefined,
       this._disposables
     );
+  }
+
+  /**
+   * Handle the ask command
+   */
+  private async handleAskCommand(text: string) {
+    let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
+    // make a commit with whatever changes the human made
+    let repo = await this.getRepository();
+
+    const workspaceFileUris = await vscode.workspace.findFiles(
+      "**/*",
+      "{.git,node_modules}/**"
+    );
+    const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
+    await repo.add(absolutePaths);
+    await repo.commit("human changes", { empty: true });
+
+    // get latest commit diff, and send it back to the webview
+    const humanDiff = await this.getLatestCommitDiff();
+    this._panel.webview.postMessage({
+      command: "addMessage",
+      text: {
+        sender: "user",
+        message: text,
+        diff: humanDiff,
+      },
+    });
+
+    const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
+
+    // read all files in the workspace
+    // TODO: get rid of this and use repoState = repoStates.createFromCommit(commitHash)
+    const meltyFiles: { [relativePath: string]: MeltyFile } =
+      Object.fromEntries(
+        await Promise.all(
+          workspaceFileUris.map(async (file) => {
+            const relativePath = path.relative(
+              vscode.workspace.workspaceFolders![0].uri.fsPath,
+              file.fsPath
+            );
+            const contents = await fs.promises.readFile(file.fsPath, "utf8");
+            return [
+              relativePath,
+              files.create(relativePath, contents, workspaceRoot),
+            ];
+          })
+        )
+      );
+    const repoState = repoStates.create(meltyFiles, undefined, workspaceRoot);
+
+    // human response
+    let updatedConversation = conversations.respondHuman(
+      this.spectacleExtension.getConversation(),
+      text,
+      repoState
+    );
+
+    // bot response
+    const processPartial = (partialJoule: Joule) => {
+      this._panel.webview.postMessage({
+        command: "setPartialResponse",
+        joule: partialJoule,
+      });
+    };
+    try {
+      updatedConversation = await conversations.respondBot(
+        updatedConversation,
+        meltyFilePaths,
+        "ask",
+        processPartial
+      ); // TODO: don't send all files as context, pick some
+    } catch (e) {
+      vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
+      return;
+    }
+
+    const botJoule = conversations.lastJoule(updatedConversation);
+
+    // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
+    repoStates.forEachFile(botJoule.repoState, (file) => {
+      fs.mkdirSync(path.dirname(files.absolutePath(file)), {
+        recursive: true,
+      });
+      fs.writeFileSync(files.absolutePath(file), files.contents(file));
+    });
+
+    await repo.status();
+    await repo.add(absolutePaths);
+    await repo.commit("bot changes", { empty: true });
+    await repo.status();
+    const botDiff = await this.getLatestCommitDiff();
+
+    // Send the response back to the webview
+    this._panel.webview.postMessage({
+      command: "addMessage",
+      text: {
+        sender: "bot",
+        message: botJoule.message,
+        diff: botDiff,
+      },
+    });
+  }
+
+  /**
+   * Handle the code command.
+   *
+   * Right now, exactly the same as ask command except with respondBot mode set to "code"
+   */
+  private async handleCodeCommand(text: string) {
+    let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
+    // make a commit with whatever changes the human made
+    let repo = await this.getRepository();
+
+    const workspaceFileUris = await vscode.workspace.findFiles(
+      "**/*",
+      "{.git,node_modules}/**"
+    );
+    const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
+    await repo.add(absolutePaths);
+    await repo.commit("human changes", { empty: true });
+
+    // get latest commit diff, and send it back to the webview
+    const humanDiff = await this.getLatestCommitDiff();
+    this._panel.webview.postMessage({
+      command: "addMessage",
+      text: {
+        sender: "user",
+        message: text,
+        diff: humanDiff,
+      },
+    });
+
+    const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
+
+    // read all files in the workspace
+    // TODO: get rid of this and use repoState = repoStates.createFromCommit(commitHash)
+    const meltyFiles: { [relativePath: string]: MeltyFile } =
+      Object.fromEntries(
+        await Promise.all(
+          workspaceFileUris.map(async (file) => {
+            const relativePath = path.relative(
+              vscode.workspace.workspaceFolders![0].uri.fsPath,
+              file.fsPath
+            );
+            const contents = await fs.promises.readFile(file.fsPath, "utf8");
+            return [
+              relativePath,
+              files.create(relativePath, contents, workspaceRoot),
+            ];
+          })
+        )
+      );
+    const repoState = repoStates.create(meltyFiles, undefined, workspaceRoot);
+
+    // human response
+    let updatedConversation = conversations.respondHuman(
+      this.spectacleExtension.getConversation(),
+      text,
+      repoState
+    );
+
+    // bot response
+    const processPartial = (partialJoule: Joule) => {
+      this._panel.webview.postMessage({
+        command: "setPartialResponse",
+        joule: partialJoule,
+      });
+    };
+    try {
+      updatedConversation = await conversations.respondBot(
+        updatedConversation,
+        meltyFilePaths,
+        "code",
+        processPartial
+      ); // TODO: don't send all files as context, pick some
+    } catch (e) {
+      vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
+      return;
+    }
+
+    const botJoule = conversations.lastJoule(updatedConversation);
+
+    // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
+    repoStates.forEachFile(botJoule.repoState, (file) => {
+      fs.mkdirSync(path.dirname(files.absolutePath(file)), {
+        recursive: true,
+      });
+      fs.writeFileSync(files.absolutePath(file), files.contents(file));
+    });
+
+    await repo.status();
+    await repo.add(absolutePaths);
+    await repo.commit("bot changes", { empty: true });
+    await repo.status();
+    const botDiff = await this.getLatestCommitDiff();
+
+    // Send the response back to the webview
+    this._panel.webview.postMessage({
+      command: "addMessage",
+      text: {
+        sender: "bot",
+        message: botJoule.message,
+        diff: botDiff,
+      },
+    });
   }
 
   /**

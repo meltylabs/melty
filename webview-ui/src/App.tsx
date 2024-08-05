@@ -177,13 +177,13 @@ function MessagesView({
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button>
-            <Button variant="outline" size="sm">
+            <Button name="ask" variant="outline" size="sm">
               Ask{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
                 <span className="text-xs">↵</span>
               </kbd>
             </Button>
-            <Button size="sm">
+            <Button name="code" size="sm">
               Code{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
                 <span className="text-xs">⌘</span>
@@ -209,11 +209,15 @@ function App() {
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
+    const submitButton = (event.nativeEvent as SubmitEvent)
+      .submitter as HTMLButtonElement;
+    console.log("submitButton", submitButton.name);
+
     const message = (event.target as HTMLFormElement).message.value;
 
     // Send message to extension
     vscode.postMessage({
-      command: "code",
+      command: submitButton.name,
       text: message,
     });
 
