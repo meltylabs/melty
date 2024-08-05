@@ -177,7 +177,10 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [partialResponse, setPartialResponse] = useState<Message | null>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>(["test.pdf"]);
-  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>(["hi.pdf"]);
+  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([
+    "hi.pdf",
+    "hello.txt",
+  ]);
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
     const message = (event.target as HTMLFormElement).message.value;
