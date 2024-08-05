@@ -158,7 +158,10 @@ function MessagesView({
         )}
       </div>
       <div className="">
-        <form onSubmit={handleSendMessage}>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleSendMessage(e, 'ask');
+        }}>
           <div className="mt-4 flex">
             <Input
               placeholder="What should I do? (⌘K)"
@@ -177,13 +180,13 @@ function MessagesView({
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button>
-            <Button name="ask" variant="outline" size="sm">
+            <Button name="ask" variant="outline" size="sm" onClick={(e) => handleSendMessage(e, 'ask')}>
               Ask{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
                 <span className="text-xs">↵</span>
               </kbd>
             </Button>
-            <Button name="code" size="sm">
+            <Button name="code" size="sm" onClick={(e) => handleSendMessage(e, 'code')}>
               Code{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
                 <span className="text-xs">⌘</span>
@@ -207,17 +210,13 @@ function App() {
   ]);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  function handleSendMessage(event: React.FormEvent) {
+  function handleSendMessage(event: React.FormEvent, mode: 'ask' | 'code') {
     event.preventDefault();
-    const submitButton = (event.nativeEvent as SubmitEvent)
-      .submitter as HTMLButtonElement;
-    console.log("submitButton", submitButton.name);
-
     const message = (event.target as HTMLFormElement).message.value;
 
     // Send message to extension
     vscode.postMessage({
-      command: submitButton.name,
+      command: mode,
       text: message,
     });
 
@@ -251,6 +250,28 @@ function App() {
   function handleReset() {
     vscode.postMessage({ command: "resetConversation" });
   }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        const inputElement = document.getElementById('message') as HTMLInputElement;
+        if (inputElement && inputElement === document.activeElement) {
+          event.preventDefault();
+          if (event.metaKey || event.ctrlKey) {
+            handleSendMessage(new Event('submit') as React.FormEvent, 'code');
+          } else {
+            handleSendMessage(new Event('submit') as React.FormEvent, 'ask');
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     loadFiles();
