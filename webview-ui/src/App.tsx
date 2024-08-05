@@ -304,6 +304,7 @@ function App() {
                     meltyFilePaths={meltyFiles}
                     workspaceFilePaths={workspaceFiles}
                     handleAddFile={handleAddFile}
+                    handleDropFile={handleDropFile}
                   />
 
                   <div className="mt-2">

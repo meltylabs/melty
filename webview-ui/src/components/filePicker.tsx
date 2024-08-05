@@ -212,10 +212,12 @@ export function FilePicker({
   workspaceFilePaths,
   meltyFilePaths,
   handleAddFile,
+  handleDropFile,
 }: {
   meltyFilePaths: string[];
   workspaceFilePaths: string[];
   handleAddFile: (filePath: string) => void;
+  handleDropFile: (filePath: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -234,21 +236,35 @@ export function FilePicker({
 
   return (
     <>
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput id="file" placeholder="Type a filename to add it" />
+      <CommandDialog open={open} onOpenChange={setOpen} key="file-picker">
+        <CommandInput id="file" placeholder="Type a filename" />
         <CommandList>
           <CommandEmpty>All files in workspace are in context.</CommandEmpty>
           {/* todo - would be nice to show recent or suggested here */}
-          <CommandGroup heading="Files">
+          <CommandGroup heading="Current">
+            {meltyFilePaths.map((filePath) => (
+              <CommandItem
+                onSelect={() => handleDropFile(filePath)}
+                key={filePath}
+              >
+                <span className="mr-2">{getFileIcon(filePath)}</span>
+                <span>{filePath}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+
+          <CommandGroup heading="Add to context">
             {workspaceFilePaths
               .filter((filePath) => !meltyFilePaths.includes(filePath))
               .map((filePath: string) => (
                 <CommandItem
                   onSelect={() => handleAddFile(filePath)}
+                  className="data-[disabled]:text-gray-500"
                   key={filePath}
                 >
                   <span className="mr-2">{getFileIcon(filePath)}</span>
                   <span>{filePath}</span>
+                  <CommandShortcut>+</CommandShortcut>
                 </CommandItem>
               ))}
           </CommandGroup>
@@ -256,7 +272,7 @@ export function FilePicker({
         </CommandList>
         <div className="flex justify-end my-3">
           <p className="flex items-center text-xs pr-4">
-            Add file
+            Add/Drop
             <span className="ml-1">⏎</span>
           </p>
         </div>
