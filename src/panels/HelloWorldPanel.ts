@@ -208,21 +208,41 @@ export class HelloWorldPanel {
               messages: messages,
             });
             return;
-          case "listFiles":
+          case "listMeltyFiles":
             console.log(`listFiles: ${meltyFilePaths.length} melty file paths`);
             this._panel.webview.postMessage({
-              command: "listFiles",
+              command: "listMeltyFiles",
               meltyFilePaths: meltyFilePaths,
             });
             return;
-          case "addFile":
+          case "listWorkspaceFiles":
+            const workspaceFilePaths =
+              this.spectacleExtension.getWorkspaceFilePaths();
+            this._panel.webview.postMessage({
+              command: "listWorkspaceFiles",
+              workspaceFilePaths: workspaceFilePaths,
+            });
+            return;
+
+          case "addMeltyFile":
             console.log(`addFile: ${filePath}`);
             this.spectacleExtension.addMeltyFilePath(filePath);
+            this._panel.webview.postMessage({
+              command: "listMeltyFiles",
+              meltyFilePaths: this.spectacleExtension.getMeltyFilePaths(),
+            });
             return;
-          case "dropFile":
+          case "dropMeltyFile":
             console.log(`dropFile: ${filePath}`);
             this.spectacleExtension.dropMeltyFilePath(filePath);
-            console.log("panels/HelloWorldPanel.ts", meltyFilePaths);
+            console.log(
+              "sending back meltyFilePaths: ",
+              this.spectacleExtension.getMeltyFilePaths()
+            );
+            this._panel.webview.postMessage({
+              command: "listMeltyFiles",
+              meltyFilePaths: this.spectacleExtension.getMeltyFilePaths(),
+            });
             return;
           case "undo":
             await this.undoLatestCommit();

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
 import { ChevronsUpDown, XIcon, Undo } from "lucide-react";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  Navigate,
+} from "react-router-dom";
 
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
@@ -24,7 +30,8 @@ import { Message } from "../../src/extension";
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [partialResponse, setPartialResponse] = useState("");
-  const [files, setFiles] = useState<string[]>([]);
+  const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
+  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -41,44 +48,35 @@ function App() {
   }
 
   function handleUndo() {
-    vscode.postMessage({
-      command: "undo",
-    });
+    vscode.postMessage({ command: "undo" });
   }
 
-  function handleAddFile(event: React.FormEvent) {
+  function loadFiles() {
+    vscode.postMessage({ command: "listMeltyFiles" });
+    vscode.postMessage({ command: "listWorkspaceFiles" });
+  }
+
+  function handleAddFileByForm(event: React.FormEvent) {
     event.preventDefault();
     const filePath = (event.target as HTMLFormElement).file.value;
     console.log("addFile in App.tsx: ", filePath);
 
-    vscode.postMessage({
-      command: "addFile",
-      filePath: filePath,
-    });
+    handleAddFile(filePath);
 
     // clear the input
     (event.target as HTMLFormElement).reset();
-
-    loadFiles();
   }
 
-  function loadFiles() {
-    vscode.postMessage({
-      command: "listFiles",
-    });
+  function handleAddFile(file: string) {
+    vscode.postMessage({ command: "addMeltyFile", filePath: file });
   }
 
   function handleDropFile(file: string) {
-    vscode.postMessage({
-      command: "dropFile",
-      filePath: file,
-    });
+    vscode.postMessage({ command: "dropMeltyFile", filePath: file });
   }
 
   function loadMessages() {
-    vscode.postMessage({
-      command: "loadMessages",
-    });
+    vscode.postMessage({ command: "loadMessages" });
   }
 
   useEffect(() => {
@@ -88,6 +86,7 @@ function App() {
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {
       const message = event.data;
+      console.log("NEW MESSAGE IN APP.TSX: ", message);
       switch (message.command) {
         case "addMessage":
           console.log("addMessage", message);
@@ -100,9 +99,13 @@ function App() {
             },
           ]);
           break;
-        case "listFiles":
-          console.log("listFiles", message);
-          setFiles(message.meltyFilePaths);
+        case "listMeltyFiles":
+          console.log("listMeltyFiles", message);
+          setMeltyFiles(message.meltyFilePaths);
+          break;
+        case "listWorkspaceFiles":
+          console.log("listWorkspaceFiles", message);
+          setWorkspaceFiles(message.workspaceFilePaths);
           break;
         case "loadMessages":
           console.log("loadMessages", message);
@@ -147,28 +150,47 @@ function App() {
           <Link to="/tasks">Tasks</Link>
         </nav>
 
-        <form onSubmit={handleAddFile}>
-          {files.map((file) => (
-            <button key={file} onClick={() => handleDropFile(file)}>
-              {file}
-            </button>
-          ))}
-          <input type="text" id="file" />
-          <button type="submit">Add File</button>
-        </form>
-
         <Routes>
           <Route
             path="/"
             element={
-              <MessagesView
-                messages={messages}
-                handleSendMessage={handleSendMessage}
-                handleUndo={handleUndo}
-              />
+              <>
+                <MessagesView
+                  messages={messages}
+                  handleSendMessage={handleSendMessage}
+                  handleUndo={handleUndo}
+                />
+                <div className="mt-6">
+                  <FilePicker
+                    meltyFilePaths={meltyFiles}
+                    workspaceFilePaths={workspaceFiles}
+                    handleAddFile={handleAddFile}
+                  />
+
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Context{"  "}
+                      <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                        <span className="text-xs">⌘⇧c</span>
+                      </kbd>{" "}
+                    </p>
+                    {meltyFiles.map((file, i) => (
+                      <button
+                        onClick={() => handleDropFile(file)}
+                        className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
+                        key={`file-${i}`}
+                      >
+                        <XIcon className="h-3 w-3 mr-2" />
+                        {file}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
             }
           />
           <Route path="/tasks" element={<Tasks />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </Router>
@@ -195,14 +217,15 @@ function MessagesView({
             }`}
           >
             <div className="text-xs flex">
-              <Avatar className="mr-3">
+              {/* <Avatar className="mr-3">
                 {message.sender === "user" ? (
                   <AvatarImage src="https://github.com/cbh123.png" />
                 ) : (
                   <AvatarImage src="https://github.com/shlinked.png" />
                 )}
                 <AvatarFallback>AI</AvatarFallback>
-              </Avatar>
+              </Avatar> */}
+
               {message.text}
             </div>
 
@@ -277,28 +300,6 @@ function MessagesView({
             </Button>
           </div>
         </form>
-
-        <div className="mt-6">
-          <FilePicker />
-
-          <div className="mt-2">
-            <p className="text-xs text-muted-foreground mb-2">
-              Context{"  "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                <span className="text-xs">⌘</span>J
-              </kbd>{" "}
-            </p>
-            {[...Array(3)].map((_, i) => (
-              <span
-                className="text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
-                key={i}
-              >
-                <XIcon className="h-3 w-3 mr-2" />
-                file{i}.txt
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

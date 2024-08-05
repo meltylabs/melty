@@ -32,6 +32,7 @@ export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private workspaceRoot: string;
   private meltyFilePaths: string[] = [];
+  private workspaceFilePaths: string[] = [];
   private messages: Message[] = [dummy1, dummy2, dummy3];
 
   constructor(
@@ -43,6 +44,7 @@ export class SpectacleExtension {
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : "/";
     this.initializeMeltyFilePaths();
+    this.initializeWorkspaceFilePaths();
   }
 
   async activate() {
@@ -90,18 +92,47 @@ export class SpectacleExtension {
     return meltyFiles;
   }
 
-  // New method to initialize meltyFilePaths
+  async getWorkspaceFiles(): Promise<{ [relativePath: string]: MeltyFile }> {
+    const workspaceFileUris = await vscode.workspace.findFiles(
+      "**/*",
+      "**/node_modules/**"
+    );
+    const meltyFiles: { [relativePath: string]: MeltyFile } =
+      Object.fromEntries(
+        await Promise.all(
+          workspaceFileUris.map(async (file) => {
+            const relativePath = path.relative(this.workspaceRoot, file.fsPath);
+            const contents = await fs.promises.readFile(file.fsPath, "utf8");
+            return [
+              relativePath,
+              {
+                path: relativePath,
+                contents: contents,
+                workspaceRoot: this.workspaceRoot,
+              },
+            ];
+          })
+        )
+      );
+    return meltyFiles;
+  }
+
   private async initializeMeltyFilePaths() {
     const meltyFiles = await this.getMeltyFiles();
     this.meltyFilePaths = Object.keys(meltyFiles);
-    console.log("exctension.ts", this.meltyFilePaths);
-    this.outputChannel
-      .appendLine(`Initialized ${this.meltyFilePaths.length} melty file
-    paths`);
+  }
+
+  private async initializeWorkspaceFilePaths() {
+    const workspaceFiles = await this.getWorkspaceFiles();
+    this.workspaceFilePaths = Object.keys(workspaceFiles);
   }
 
   public getMeltyFilePaths(): string[] {
     return this.meltyFilePaths.filter((path) => path !== ""); // todo: figure out why there are empty strings in the array
+  }
+
+  public getWorkspaceFilePaths(): string[] {
+    return this.workspaceFilePaths;
   }
 
   public addMeltyFilePath(filePath: string) {
