@@ -36,7 +36,6 @@ export class HelloWorldPanel {
 
   private conversation: Conversation;
   private spectacleExtension: SpectacleExtension;
-  public meltyFilePaths: string[];
 
   /**
    * The HelloWorldPanel class private constructor (called only from the render method).
@@ -66,7 +65,6 @@ export class HelloWorldPanel {
     this.spectacleExtension = spectacleExtension;
 
     const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
-    this.meltyFilePaths = meltyFilePaths;
     console.log(
       `HelloWorldPanel initialized with ${meltyFilePaths.length} melty file paths`
     );
@@ -295,7 +293,7 @@ export class HelloWorldPanel {
               workspaceRoot
             );
 
-            meltyFilePaths = this.spectacleExtension.meltyFilePaths;
+            meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
 
             // human response
             this.conversation = conversations.respondHuman(
