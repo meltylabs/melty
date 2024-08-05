@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { vscode } from "./utilities/vscode";
-import { ChevronsUpDown, XIcon, Undo, Trash2Icon } from "lucide-react";
+import { ChevronsUpDown, XIcon, Undo, Trash2Icon, FileIcon } from "lucide-react";
 import {
   BrowserRouter as Router,
   Route,
@@ -34,6 +34,46 @@ function MessageComponent({
   message: Message;
   isPartial?: boolean;
 }) {
+  const renderDiff = (diff: string) => {
+    const lines = diff.split('\n');
+    const fileNameLine = lines.find(line => line.startsWith('diff --git'));
+    let fileName = '';
+    if (fileNameLine) {
+      const match = fileNameLine.match(/diff --git a\/(.*) b\/(.*)/);
+      if (match) {
+        fileName = match[2]; // Use the 'b' file name (new file)
+      }
+    }
+
+    const customHeader = fileName ? (
+      <div className="diff-header flex items-center space-x-2 p-2 bg-gray-100 rounded-t">
+        <FileIcon className="h-4 w-4" />
+        <button
+          className="text-blue-600 hover:underline"
+          onClick={() => vscode.postMessage({ command: 'openFile', filePath: fileName })}
+        >
+          {fileName}
+        </button>
+      </div>
+    ) : null;
+
+    return (
+      <>
+        {customHeader}
+        <div
+          className="text-xs mt-4 font-mono"
+          dangerouslySetInnerHTML={{
+            __html: Diff2Html.html(diff, {
+              drawFileList: false,
+              matching: "lines",
+              outputFormat: "line-by-line",
+            }),
+          }}
+        />
+      </>
+    );
+  };
+
   return (
     <div
       className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
@@ -58,16 +98,7 @@ function MessageComponent({
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent>
-              <div
-                className="text-xs mt-4 font-mono"
-                dangerouslySetInnerHTML={{
-                  __html: Diff2Html.html(message.diff, {
-                    drawFileList: true,
-                    matching: "lines",
-                    outputFormat: "line-by-line",
-                  }),
-                }}
-              />
+              {renderDiff(message.diff)}
             </CollapsibleContent>
           </Collapsible>
         )}
