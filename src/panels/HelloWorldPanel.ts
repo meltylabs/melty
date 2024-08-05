@@ -294,7 +294,8 @@ export class HelloWorldPanel {
     const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
 
     const task = this.spectacleExtension.getTask();
-    const humanDiff = await task.respondHuman(text);
+    const humanJoule = await task.respondHuman(text);
+    const humanDiff = await joules.diff(humanJoule, this.spectacleExtension.getRepository());
     this._panel.webview.postMessage({
       command: "addMessage",
       text: {
@@ -314,17 +315,17 @@ export class HelloWorldPanel {
     try {
       const botJoule = await task.respondBot(
         meltyFilePaths, // TODO are we sending the right files here? @soybean
-        mode,
+        "ask",
         processPartial
       );
-      const diff = await joules.diff(botJoule, this.spectacleExtension.getRepository());
+      const botDiff = await joules.diff(botJoule, this.spectacleExtension.getRepository());
       // Send the response back to the webview
       this._panel.webview.postMessage({
         command: "addMessage",
         text: {
           sender: "bot",
           message: botJoule.message,
-          diff: diff,
+          diff: botDiff,
         },
       });
     } catch (e) {
