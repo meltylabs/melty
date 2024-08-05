@@ -78,12 +78,14 @@ function MessagesView({
   handleSendMessage,
   handleUndo,
   handleReset,
+  isWaitingForAI,
 }: {
   messages: Message[];
   partialResponse: Message | null;
   handleSendMessage: (event: React.FormEvent) => void;
   handleUndo: () => void;
   handleReset: () => void;
+  isWaitingForAI: boolean;
 }) {
   return (
     <div className="p-4">
@@ -91,6 +93,12 @@ function MessagesView({
         {messages.map((message, index) => (
           <MessageComponent key={index} message={message} />
         ))}
+        {isWaitingForAI && !partialResponse && (
+          <div className="bg-white p-3 rounded">
+            <div className="h-4 w-3/4 mb-2 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-4 w-1/2 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+        )}
         {partialResponse && (
           <MessageComponent message={partialResponse} isPartial={true} />
         )}
@@ -135,10 +143,14 @@ function App() {
   const [partialResponse, setPartialResponse] = useState<Message | null>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
+  const [isWaitingForAI, setIsWaitingForAI] = useState(false);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
     const message = (event.target as HTMLFormElement).message.value;
+
+    // Set waiting state to true
+    setIsWaitingForAI(true);
 
     // Send message to extension
     vscode.postMessage({
@@ -253,6 +265,7 @@ function App() {
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}
                   handleReset={handleReset}
+                  isWaitingForAI={isWaitingForAI}
                 />
                 <div className="mt-6">
                   <FilePicker
