@@ -6,6 +6,7 @@ import * as prompts from './prompts';
 import * as claudeAPI from '../lib/claudeAPI';
 import { SearchReplace } from './searchReplace';
 import * as diffApplicatorXml from './diffApplicatorXml';
+// import { RepoMap } from './repoMap';
 
 export type Conversation = {
   readonly joules: ReadonlyArray<Joule>;
@@ -40,7 +41,7 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
     ),
     messages: [
       // TODOV2 user system info
-      // TODOV2 repo map
+      ...encodeRepoMap(currentRepoState),
       ...encodeContext(currentRepoState, contextPaths),
       ...encodeMessages(conversation)
     ]
@@ -80,6 +81,19 @@ function encodeContext(repoState: RepoState, contextPaths: string[]): claudeAPI.
 ${fileEncodings}` },
    { role: "assistant", content: prompts.filesAsstAck()}
   ] : [];
+}
+
+function encodeRepoMap(repoState: RepoState): claudeAPI.ClaudeMessage[] {
+  // return [
+  //   { role: "user", content: `Here's a map of the repository I'm working in:
+      
+  //     ${new RepoMap({ root: "ROOT_DIR_TODO" }).getRepoMap(
+  //       ["abc.py", "def.py"],
+  //       ["ghi.py"]
+  //     )}` },
+  //   { role: "assistant", content: "Thanks. I'll pay close attention to this."}
+  // ];
+  return [];
 }
 
 export function lastJoule(conversation: Conversation): Joule {

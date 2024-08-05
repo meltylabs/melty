@@ -160,12 +160,10 @@ export function splitResponse(content: string): { searchReplaceList: SearchRepla
 }
 
 function extractFileName(line: string): string | undefined {
-    console.log("extracting filename from line: ", line);
     const match = line.match(/file="([^"]*)"/);
     if (!match || match.length !== 2) {
         throw new Error(`Unable to get filename from: ${line}`); // TODO: relax this to undefined
     }
-    console.log("extracted filename: ", stripFilename(match[1]));
     return stripFilename(match[1]);
 }
 

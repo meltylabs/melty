@@ -61,9 +61,7 @@
     "watch:webview": "cd webview-ui && npm run watch",
     "lint": "eslint src --ext ts",
     "test": "vscode-test --",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "pretest": "npm run compile && npm run lint",
     "clean": "rm -rf out"
   },
   "devDependencies": {
@@ -90,7 +88,8 @@
     "axios": "^1.7.3",
     "dotenv": "^16.4.5",
     "python-ast": "^0.1.0",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "tree-sitter-wasms": "^0.1.11"
   },
   "capabilities": {
     "untrustedWorkspaces": {

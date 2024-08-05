@@ -1,6 +1,7 @@
 // file: esbuild.js
 
 const { build } = require("esbuild");
+const glob = require("glob");
 
 const baseConfig = {
   bundle: true,
@@ -15,6 +16,15 @@ const extensionConfig = {
   format: "cjs",
   entryPoints: ["./src/extension.ts"],
   outfile: "./out/extension.js",
+  external: ["vscode"],
+};
+
+const testConfig = {
+  ...baseConfig,
+  platform: "node",
+  format: "cjs",
+  entryPoints: glob.sync("./src/test/**/*.test.ts"),
+  outdir: "./out/test",
   external: ["vscode"],
 };
 
@@ -39,16 +49,18 @@ const watchConfig = {
   const args = process.argv.slice(2);
   try {
     if (args.includes("--watch")) {
-      // Build and watch extension and webview code
+      // Build and watch extension and test code
       console.log("[watch] build started");
       await build({
         ...extensionConfig,
+        ...testConfig,
         ...watchConfig,
       });
       console.log("[watch] build finished");
     } else {
-      // Build extension and webview code
+      // Build extension and test code
       await build(extensionConfig);
+      await build(testConfig);
       console.log("build complete");
     }
   } catch (err) {

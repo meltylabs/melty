@@ -8,6 +8,7 @@
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": "src",
     "paths": {
       "@/*": ["src/*"],
@@ -16,5 +17,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", ".vscode-test", "src/webview/"]
+  "exclude": ["node_modules", ".vscode-test", "src/webview/", "node_modules/tree-sitter-typescript/**/*.d.ts"]
 }
