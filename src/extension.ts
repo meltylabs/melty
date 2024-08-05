@@ -17,6 +17,8 @@ export class SpectacleExtension {
     this.workspaceRoot = vscode.workspace.workspaceFolders
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : "/";
+    this.meltyFilePaths = [];
+    this.initializeMeltyFilePaths();
   }
 
   async activate() {
