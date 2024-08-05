@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { vscode } from "./utilities/vscode";
 import {
   ChevronsUpDown,
@@ -130,6 +130,23 @@ function MessagesView({
   handleUndo: () => void;
   handleReset: () => void;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   return (
     <div className="p-4">
       <div className="mb-4 rounded p-2 mx-auto">
@@ -144,10 +161,11 @@ function MessagesView({
         <form onSubmit={handleSendMessage}>
           <div className="mt-4 flex">
             <Input
-              placeholder="What should I do?"
+              placeholder="What should I do? (⌘K)"
               id="message"
               autoFocus
               required
+              ref={inputRef}
             />
           </div>
           <div className="flex justify-end space-x-2 mt-2">
