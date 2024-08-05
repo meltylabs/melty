@@ -142,6 +142,7 @@ export class HelloWorldPanel {
       "build",
       "static",
       "css",
+      "main.css",
     ]);
     // The JS file from the React build output
     const scriptUri = getUri(webview, extensionUri, [
@@ -164,7 +165,7 @@ export class HelloWorldPanel {
           <meta name="theme-color" content="#000000">
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
-          <title>Hello World</title>
+          <title>Melty</title>
         </head>
         <body>
           <noscript>You need to enable JavaScript to run this app.</noscript>
