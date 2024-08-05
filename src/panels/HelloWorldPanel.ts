@@ -64,11 +64,6 @@ export class HelloWorldPanel {
 
     this.spectacleExtension = spectacleExtension;
 
-    const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
-    console.log(
-      `HelloWorldPanel initialized with ${meltyFilePaths.length} melty file paths`
-    );
-
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
   }
@@ -204,6 +199,14 @@ export class HelloWorldPanel {
           case "hello":
             // Code that should run in response to the hello message command
             window.showInformationMessage(text);
+            return;
+          case "loadMessages":
+            console.log(`loadMessages`);
+            const messages = this.spectacleExtension.getMessages();
+            this._panel.webview.postMessage({
+              command: "loadMessages",
+              messages: messages,
+            });
             return;
           case "listFiles":
             console.log(`listFiles: ${meltyFilePaths.length} melty file paths`);

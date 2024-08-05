@@ -4,10 +4,35 @@ import * as fs from "fs";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { MeltyFile } from "./backend/meltyFiles";
 
+export interface Message {
+  text: string;
+  sender: "user" | "bot";
+  diff?: string;
+}
+
+const dummy2: Message = {
+  diff: "",
+  text: "hi",
+  sender: "user",
+};
+
+const dummy1: Message = {
+  diff: "",
+  text: "Hello! I'm here to assist you. Since you haven't made any specific request for changes yet, there\nare no files that I can identify as needing changes at this moment. When you have a specific task\nor modification in mind, please let me know, and I'll be happy to suggest which files might need \nto be edited to accomplish that task. Once I've identified potential files for editing, I'll stop\nand wait for your approval before proceeding with any changes.                                   Tokens: 12,556 sent, 94 received. Cost: $0.04 request, $0.04 session.",
+  sender: "bot",
+};
+
+const dummy3: Message = {
+  diff: "diff --git a/hi.txt b/hi.txt\nnew file mode 100644\nindex 0000000..a7299ca\n--- /dev/null\n+++ b/hi.txt\n@@ -0,0 +1 @@\n+Hello! This is the content of hi.txt file.",
+  text: 'Certainly! I can create a new file named "hi.txt" for you. Since this is a new file, we don\'t    \nneed to search for existing content. Here\'s the SEARCH/REPLACE block to create the file:         \n\nhi.txt                                                                                           \n                                                                                                 \n <<<<<<< SEARCH                                                                                   =======                                                                                          Hello! This is the content of hi.txt file.                                                       >>>>>>> REPLACE                                                                                 \n                                                                                                 \n\nThis will create a new file named "hi.txt" in the current directory with a simple greeting       \nmessage. Let me know if you want to make any changes to the content or if you\'d like to proceed  \nwith creating this file.                                                                         Tokens: 12,680 sent, 119 received. Cost: $0.04 request, $0.08 session.Applied edit to hi.txtCommit 0afed18 Create new hi.txt fileYou can use /undo to revert and discard commit 0afed18.',
+  sender: "bot",
+};
+
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private workspaceRoot: string;
   private meltyFilePaths: string[] = [];
+  private messages: Message[] = [dummy1, dummy2, dummy3];
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -88,6 +113,14 @@ export class SpectacleExtension {
       (path) => path !== filePath
     );
     this.outputChannel.appendLine(`Dropped file: ${filePath}`);
+  }
+
+  public addMessage(message: Message) {
+    this.messages.push(message);
+  }
+
+  public getMessages(): Message[] {
+    return this.messages;
   }
 }
 
