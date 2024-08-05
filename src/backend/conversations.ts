@@ -55,9 +55,10 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
     processPartial(partialJoule);
   });
 
-  const { message, searchReplaceBlocks } = parseMessageAndSearchReplaceBlocks(finalResponse);
-  const newRepoState = diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceBlocks);
-  const newJoule = joules.createJouleBot(message, newRepoState, contextPaths);
+  const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(finalResponse);
+
+  const newRepoState = diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceList);
+  const newJoule = joules.createJouleBot(messageChunksList.join("\n"), newRepoState, contextPaths);
   const newConversation = addJoule(conversation, newJoule);
   return newConversation;
 }
@@ -92,11 +93,4 @@ function encodeMessages(conversation: Conversation): claudeAPI.ClaudeMessage[] {
       content: joule.message
     };
   });
-}
-
-function parseMessageAndSearchReplaceBlocks(claudeResponse: string): { message: string, searchReplaceBlocks: SearchReplace[] } {
-  return {
-    message: claudeResponse,
-    searchReplaceBlocks: diffApplicatorXml.findSearchReplaceBlocks(claudeResponse)
-  };
 }

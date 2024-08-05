@@ -98,11 +98,13 @@ function nextSection(currentSection: Section, nextSection: Section): Section {
     return nextSection;
 }
 
-export function findSearchReplaceBlocks(content: string): SearchReplace[] {
+export function splitResponse(content: string): { searchReplaceList: SearchReplace[], messageChunksList: string[] } {
     const searchReplaceList: SearchReplace[] = [];
+    const messageChunksList: string[] = [];
     let currentFile: string | undefined;
     let currentSearch: string[] = [];
     let currentReplace: string[] = [];
+    let currentMessageChunk: string[] = [];
     let currentSection: Section = "topLevel";
 
     const lines = content.split('\n');
@@ -110,6 +112,9 @@ export function findSearchReplaceBlocks(content: string): SearchReplace[] {
     for (const line of lines) {
         switch (categorizeLine(line)) {
             case "ccOpen":
+                messageChunksList.push(currentMessageChunk.join("\n"));
+                currentMessageChunk = [];
+
                 currentFile = extractFileName(line);
                 currentSection = nextSection(currentSection, "codeChange");
                 break;
@@ -120,6 +125,7 @@ export function findSearchReplaceBlocks(content: string): SearchReplace[] {
                 currentSection = nextSection(currentSection, "replace");
                 break;
             case "srClose":
+                messageChunksList.push(`[Writing code for ${currentFile}...]`);
                 searchReplaceList.push(searchReplaces.create(currentFile!,
                     currentSearch.join("\n") + "\n", // match whole lines only
                     currentReplace.join("\n") + "\n"
@@ -137,13 +143,20 @@ export function findSearchReplaceBlocks(content: string): SearchReplace[] {
                     currentSearch.push(line);
                 } else if (currentSection === "replace") {
                     currentReplace.push(line);
+                } else if(currentSection === "topLevel") {
+                    currentMessageChunk.push(line);
+                } else {
+                    // otherwise, it's in CodeChange but not in search/replace
+                    console.log("ignoring stray line in CodeChange: ", line);
                 }
-                // otherwise, ignore it
                 break;
         }
     }
 
-    return searchReplaceList;
+    return {
+        messageChunksList,
+        searchReplaceList
+    };
 }
 
 function extractFileName(line: string): string | undefined {

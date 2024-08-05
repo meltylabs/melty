@@ -2,10 +2,10 @@ import * as assert from 'assert';
 import { RepoState } from '../backend/repoStates';
 import * as repoStates from '../backend/repoStates';
 import { SearchReplace } from 'backend/searchReplace';
-import { findSearchReplaceBlocks, applySearchReplaceBlocks } from '../backend/diffApplicatorXml';
+import { splitResponse, applySearchReplaceBlocks } from '../backend/diffApplicatorXml';
 import * as meltyFiles from '../backend/meltyFiles';
 
-suite('findSearchReplaceBlocks', () => {
+suite('find search replace blocks', () => {
     test('should find original update blocks', () => {
         const edit = `
 Here's the change:
@@ -22,8 +22,8 @@ Tooooo
 Hope you like it!
 `;
 
-        const edits = findSearchReplaceBlocks(edit);
-        assert.deepStrictEqual(edits, [{ filePath: "foo.txt", search: "Two\n", replace: "Tooooo\n" }]);
+        const { searchReplaceList } = splitResponse(edit);
+        assert.deepStrictEqual(searchReplaceList, [{ filePath: "foo.txt", search: "Two\n", replace: "Tooooo\n" }]);
     });
 
 
@@ -51,8 +51,8 @@ Threeeeeee
 Hope you like it!
 `;
 
-        const edits = findSearchReplaceBlocks(edit);
-        assert.deepStrictEqual(edits, [
+        const { searchReplaceList } = splitResponse(edit);
+        assert.deepStrictEqual(searchReplaceList, [
             { filePath: "foo.txt", search: "Two\n", replace: "Tooooo\n" },
             { filePath: "foo.txt", search: "Three\n", replace: "Threeeeeee\n" }
         ]);
@@ -74,7 +74,7 @@ oops!
 `;
 
         assert.throws(() => {
-            findSearchReplaceBlocks(edit);
+            splitResponse(edit);
         }, /Unexpected next section/);
     });
 
@@ -94,7 +94,7 @@ oops!
 `;
 
         assert.throws(() => {
-            findSearchReplaceBlocks(edit);
+            splitResponse(edit);
         }, /filename/);
     });
 
@@ -136,7 +136,7 @@ oops!
 
         // Should not throw an error
         assert.doesNotThrow(() => {
-            findSearchReplaceBlocks(edit);
+            splitResponse(edit);
         });
     });
 });
