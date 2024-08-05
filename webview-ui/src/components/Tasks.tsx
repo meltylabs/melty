@@ -7,6 +7,9 @@ import {
   CardContent,
   CardFooter,
 } from "./ui/card";
+
+import { Button } from "./ui/button";
+
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 
 interface Task {
@@ -42,23 +45,26 @@ export function Tasks() {
     },
   ]);
   return (
-    <div className="grid grid-cols-2 gap-6">
-      {tasks.map((task) => (
-        <Link to="/" className="mr-4">
-          <Card key={task.id}>
-            <CardHeader>
-              <CardTitle>{task.title}</CardTitle>
-              <CardDescription>{task.github_link} </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>{task.description}</p>
-            </CardContent>
-            <CardFooter>
-              <p> {task.status}</p>
-            </CardFooter>
-          </Card>
-        </Link>
-      ))}
+    <div>
+      <Button>Start new task</Button>
+      <div className="grid grid-cols-2 gap-6 mt-4">
+        {tasks.map((task) => (
+          <Link to="/" className="mr-4">
+            <Card key={task.id}>
+              <CardHeader>
+                <CardTitle>{task.title}</CardTitle>
+                <CardDescription>{task.github_link} </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>{task.description}</p>
+              </CardContent>
+              <CardFooter>
+                <p> {task.status}</p>
+              </CardFooter>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
