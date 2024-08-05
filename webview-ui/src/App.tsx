@@ -165,9 +165,11 @@ function MessagesView({
           event.currentTarget.value = "";
         }
       } else if (!event.shiftKey) {
-        // Enter without Shift (to allow multiline input)
         event.preventDefault();
-        handleSubmit(event as unknown as React.FormEvent);
+        if (event.currentTarget && event.currentTarget.value !== undefined) {
+          handleSendMessage("ask", event.currentTarget.value);
+          event.currentTarget.value = "";
+        }
       }
     }
   };
