@@ -10,7 +10,6 @@ import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
 import * as conversations from "../backend/conversations";
-import { Conversation } from "../backend/conversations";
 import * as repoStates from "../backend/repoStates";
 import * as fs from "fs";
 import * as path from "path";
@@ -34,7 +33,6 @@ export class HelloWorldPanel {
   private readonly _panel: WebviewPanel;
   private _disposables: Disposable[] = [];
 
-  private conversation: Conversation;
   private spectacleExtension: SpectacleExtension;
 
   /**
@@ -59,8 +57,6 @@ export class HelloWorldPanel {
       this._panel.webview,
       extensionUri
     );
-
-    this.conversation = conversations.create();
 
     this.spectacleExtension = spectacleExtension;
 
@@ -223,6 +219,13 @@ export class HelloWorldPanel {
               workspaceFilePaths: workspaceFilePaths,
             });
             return;
+          case "resetConversation":
+            this.spectacleExtension.resetConversation();
+            this._panel.webview.postMessage({
+              command: "loadMessages",
+              messages: this.spectacleExtension.getMessages(),
+            });
+            return;
 
           case "addMeltyFile":
             console.log(`addFile: ${filePath}`);
@@ -324,8 +327,8 @@ export class HelloWorldPanel {
             );
 
             // human response
-            this.conversation = conversations.respondHuman(
-              this.conversation,
+            let updatedConversation = conversations.respondHuman(
+              this.spectacleExtension.getConversation(),
               text,
               repoState
             );
@@ -338,8 +341,8 @@ export class HelloWorldPanel {
               });
             };
             try {
-              this.conversation = await conversations.respondBot(
-                this.conversation,
+              updatedConversation = await conversations.respondBot(
+                updatedConversation,
                 meltyFilePaths,
                 processPartial
               ); // TODO: don't send all files as context, pick some
@@ -348,7 +351,7 @@ export class HelloWorldPanel {
               return;
             }
 
-            const botJoule = conversations.lastJoule(this.conversation);
+            const botJoule = conversations.lastJoule(updatedConversation);
 
             // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
             repoStates.forEachFile(botJoule.repoState, (file) => {
