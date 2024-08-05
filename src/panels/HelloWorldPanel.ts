@@ -257,7 +257,12 @@ export class HelloWorldPanel {
                 joule: partialJoule
               });
             };
-            this.conversation = await conversations.respondBot(this.conversation, meltyFilePaths, processPartial); // TODO: don't send all files as context, pick some
+            try {
+              this.conversation = await conversations.respondBot(this.conversation, meltyFilePaths, processPartial); // TODO: don't send all files as context, pick some
+            } catch (e) {
+              vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
+              return;
+            }
 
             const botJoule = conversations.lastJoule(this.conversation);
 
@@ -267,11 +272,8 @@ export class HelloWorldPanel {
               fs.writeFileSync(files.absolutePath(file), files.contents(file));
             });
 
-            /*
-             If there are fileChanges, there has already been a commit
-             If there are no fileChanges, we need to create a empty commit with no changes
-             */
             await repo.status();
+            await repo.add(absolutePaths);
             await repo.commit("bot changes", { empty: true });
             await repo.status();
             const botDiff = await this.getLatestCommitDiff();
