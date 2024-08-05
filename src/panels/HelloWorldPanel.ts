@@ -9,13 +9,8 @@ import {
 import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
-import * as conversations from "../backend/conversations";
-import * as repoStates from "../backend/repoStates";
-import * as fs from "fs";
-import * as path from "path";
-import { MeltyFile } from "../backend/meltyFiles";
-import * as files from "../backend/meltyFiles";
 import { Joule } from "../backend/joules";
+import * as joules from "../backend/joules";
 import { SpectacleExtension } from "../extension";
 
 /**
@@ -186,6 +181,9 @@ export class HelloWorldPanel {
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
       async (message: any) => {
+        // init repository
+        await this.spectacleExtension.initRepository();
+
         const command = message.command;
         const text = message.text;
         const filePath = message.filePath; // optional param for addFile and dropFile
@@ -219,8 +217,8 @@ export class HelloWorldPanel {
               workspaceFilePaths: workspaceFilePaths,
             });
             return;
-          case "resetConversation":
-            this.spectacleExtension.resetConversation();
+          case "resetTask":
+            this.spectacleExtension.resetTask();
             this.spectacleExtension.resetMessages();
             this._panel.webview.postMessage({
               command: "loadMessages",
@@ -259,10 +257,11 @@ export class HelloWorldPanel {
             return;
           case "undo":
             await this.undoLatestCommit();
-            let updatedRepo = await this.getRepository();
+            const repo = this.spectacleExtension.getRepository();
+            await repo.status();
 
-            const latestCommit = updatedRepo.state.HEAD?.commit;
-            const latestCommitMessage = await updatedRepo.getCommit(
+            const latestCommit = repo.state.HEAD?.commit;
+            const latestCommitMessage = await repo.getCommit(
               latestCommit
             );
             const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
@@ -276,11 +275,11 @@ export class HelloWorldPanel {
             });
             return;
           case "ask":
-            await this.handleAskCommand(text);
+            await this.handleAskCode(text, "ask");
             return;
 
           case "code":
-            await this.handleCodeCommand(text);
+            await this.handleAskCode(text, "code");
             return;
           // Add more switch case statements here as more webview message commands
           // are created within the webview context (i.e. inside media/main.js)
@@ -291,24 +290,11 @@ export class HelloWorldPanel {
     );
   }
 
-  /**
-   * Handle the ask command
-   */
-  private async handleAskCommand(text: string) {
-    let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
-    // make a commit with whatever changes the human made
-    let repo = await this.getRepository();
+  private async handleAskCode(text: string, mode: "ask" | "code") {
+    const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
 
-    const workspaceFileUris = await vscode.workspace.findFiles(
-      "**/*",
-      "{.git,node_modules}/**"
-    );
-    const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
-    await repo.add(absolutePaths);
-    await repo.commit("human changes", { empty: true });
-
-    // get latest commit diff, and send it back to the webview
-    const humanDiff = await this.getLatestCommitDiff();
+    const task = this.spectacleExtension.getTask();
+    const humanDiff = await task.respondHuman(text);
     this._panel.webview.postMessage({
       command: "addMessage",
       text: {
@@ -318,35 +304,6 @@ export class HelloWorldPanel {
       },
     });
 
-    const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
-
-    // read all files in the workspace
-    // TODO: get rid of this and use repoState = repoStates.createFromCommit(commitHash)
-    const meltyFiles: { [relativePath: string]: MeltyFile } =
-      Object.fromEntries(
-        await Promise.all(
-          workspaceFileUris.map(async (file) => {
-            const relativePath = path.relative(
-              vscode.workspace.workspaceFolders![0].uri.fsPath,
-              file.fsPath
-            );
-            const contents = await fs.promises.readFile(file.fsPath, "utf8");
-            return [
-              relativePath,
-              files.create(relativePath, contents, workspaceRoot),
-            ];
-          })
-        )
-      );
-    const repoState = repoStates.create(meltyFiles, undefined, workspaceRoot);
-
-    // human response
-    let updatedConversation = conversations.respondHuman(
-      this.spectacleExtension.getConversation(),
-      text,
-      repoState
-    );
-
     // bot response
     const processPartial = (partialJoule: Joule) => {
       this._panel.webview.postMessage({
@@ -355,177 +312,36 @@ export class HelloWorldPanel {
       });
     };
     try {
-      updatedConversation = await conversations.respondBot(
-        updatedConversation,
-        meltyFilePaths,
-        "ask",
+      const botJoule = await task.respondBot(
+        meltyFilePaths, // TODO are we sending the right files here? @soybean
+        mode,
         processPartial
-      ); // TODO: don't send all files as context, pick some
-    } catch (e) {
-      vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
-      return;
-    }
-
-    const botJoule = conversations.lastJoule(updatedConversation);
-
-    // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
-    repoStates.forEachFile(botJoule.repoState, (file) => {
-      fs.mkdirSync(path.dirname(files.absolutePath(file)), {
-        recursive: true,
-      });
-      fs.writeFileSync(files.absolutePath(file), files.contents(file));
-    });
-
-    await repo.status();
-    await repo.add(absolutePaths);
-    await repo.commit("bot changes", { empty: true });
-    await repo.status();
-    const botDiff = await this.getLatestCommitDiff();
-
-    // Send the response back to the webview
-    this._panel.webview.postMessage({
-      command: "addMessage",
-      text: {
-        sender: "bot",
-        message: botJoule.message,
-        diff: botDiff,
-      },
-    });
-  }
-
-  /**
-   * Handle the code command.
-   *
-   * Right now, exactly the same as ask command except with respondBot mode set to "code"
-   */
-  private async handleCodeCommand(text: string) {
-    let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
-    // make a commit with whatever changes the human made
-    let repo = await this.getRepository();
-
-    const workspaceFileUris = await vscode.workspace.findFiles(
-      "**/*",
-      "{.git,node_modules}/**"
-    );
-    const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
-    await repo.add(absolutePaths);
-    await repo.commit("human changes", { empty: true });
-
-    // get latest commit diff, and send it back to the webview
-    const humanDiff = await this.getLatestCommitDiff();
-    this._panel.webview.postMessage({
-      command: "addMessage",
-      text: {
-        sender: "user",
-        message: text,
-        diff: humanDiff,
-      },
-    });
-
-    const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
-
-    // read all files in the workspace
-    // TODO: get rid of this and use repoState = repoStates.createFromCommit(commitHash)
-    const meltyFiles: { [relativePath: string]: MeltyFile } =
-      Object.fromEntries(
-        await Promise.all(
-          workspaceFileUris.map(async (file) => {
-            const relativePath = path.relative(
-              vscode.workspace.workspaceFolders![0].uri.fsPath,
-              file.fsPath
-            );
-            const contents = await fs.promises.readFile(file.fsPath, "utf8");
-            return [
-              relativePath,
-              files.create(relativePath, contents, workspaceRoot),
-            ];
-          })
-        )
       );
-    const repoState = repoStates.create(meltyFiles, undefined, workspaceRoot);
-
-    // human response
-    let updatedConversation = conversations.respondHuman(
-      this.spectacleExtension.getConversation(),
-      text,
-      repoState
-    );
-
-    // bot response
-    const processPartial = (partialJoule: Joule) => {
+      const diff = await joules.diff(botJoule, this.spectacleExtension.getRepository());
+      // Send the response back to the webview
       this._panel.webview.postMessage({
-        command: "setPartialResponse",
-        joule: partialJoule,
+        command: "addMessage",
+        text: {
+          sender: "bot",
+          message: botJoule.message,
+          diff: diff,
+        },
       });
-    };
-    try {
-      updatedConversation = await conversations.respondBot(
-        updatedConversation,
-        meltyFilePaths,
-        "code",
-        processPartial
-      ); // TODO: don't send all files as context, pick some
     } catch (e) {
       vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
       return;
     }
-
-    const botJoule = conversations.lastJoule(updatedConversation);
-
-    // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
-    repoStates.forEachFile(botJoule.repoState, (file) => {
-      fs.mkdirSync(path.dirname(files.absolutePath(file)), {
-        recursive: true,
-      });
-      fs.writeFileSync(files.absolutePath(file), files.contents(file));
-    });
-
-    await repo.status();
-    await repo.add(absolutePaths);
-    await repo.commit("bot changes", { empty: true });
-    await repo.status();
-    const botDiff = await this.getLatestCommitDiff();
-
-    // Send the response back to the webview
-    this._panel.webview.postMessage({
-      command: "addMessage",
-      text: {
-        sender: "bot",
-        message: botJoule.message,
-        diff: botDiff,
-      },
-    });
   }
 
-  /**
-   * Gets current repository
-   */
-  private async getRepository() {
-    const gitExtension = vscode.extensions.getExtension("vscode.git");
-    if (!gitExtension) {
-      vscode.window.showErrorMessage("Git extension not found");
-      throw new Error("Git extension not found");
-    }
-
-    const git = gitExtension.exports.getAPI(1);
-    const repositories = git.repositories;
-    if (repositories.length === 0) {
-      vscode.window.showInformationMessage("No Git repository found");
-      throw new Error("No Git repository found");
-    }
-    const repo = repositories[0];
-    await repo.status();
-    return repo;
-  }
-
-  /**
+   /**
    * Undo the latest commit.
    *
    * TODO: confirm with dice we want to do this
    */
   private async undoLatestCommit(): Promise<void> {
-    const repo = await this.getRepository();
-    await repo.repository.reset("HEAD~1", false);
+    const repo = this.spectacleExtension.getRepository();
+    await repo.status();
+    await repo.reset("HEAD~1", false);
   }
 
   /**
@@ -546,42 +362,6 @@ export class HelloWorldPanel {
       });
     } else {
       vscode.window.showInformationMessage("No active terminal");
-    }
-  }
-
-  /**
-   * Gets the diff of the latest commit in the current Git repository.
-   * @returns A promise that resolves to the diff string or null if there's an error.
-   */
-  private async getLatestCommitDiff(): Promise<string> {
-    const repo = await this.getRepository();
-
-    // Get the latest commit
-    const latestCommit = repo.state.HEAD?.commit;
-
-    if (latestCommit) {
-      // Get the commit message
-      const commitMessage = await repo.getCommit(latestCommit);
-
-      // Get the diff of the latest commit
-      const diff = await repo.diffBetween(latestCommit + "^", latestCommit);
-
-      const udiffs = await Promise.all(
-        diff.map(async (change: any) => {
-          return await repo.diffBetween(
-            latestCommit + "^",
-            latestCommit,
-            change.uri.fsPath
-          );
-        })
-      );
-
-      return udiffs.join("\n");
-    } else {
-      vscode.window.showInformationMessage(
-        "No commits found in the repository"
-      );
-      throw new Error("No commits found in the repository");
     }
   }
 }

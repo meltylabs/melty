@@ -31,7 +31,7 @@ export async function respondBot(
   mode: Mode,
   processPartial: (partialJoule: Joule) => void
 ): Promise<Conversation> {
-  const currentRepoState = lastJoule(conversation).repoState;
+  const currentRepoState = lastJoule(conversation)!.repoState;
   // TODO 100: Add a loop here to try to correct the response if it's not good yet
 
   // TODO 300 (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
@@ -76,8 +76,9 @@ export async function respondBot(
   const newRepoState = (
     mode === "code"
       ? diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceList)
-      : currentRepoState
-);
+      : repoStates.createCopyParent(currentRepoState)
+  );
+
   const newJoule = joules.createJouleBot(messageChunksList.join("\n"), mode, newRepoState, contextPaths);
   const newConversation = addJoule(conversation, newJoule);
   return newConversation;
@@ -115,8 +116,8 @@ function encodeRepoMap(repoState: RepoState): claudeAPI.ClaudeMessage[] {
   return [];
 }
 
-export function lastJoule(conversation: Conversation): Joule {
-  return conversation.joules[conversation.joules.length - 1];
+export function lastJoule(conversation: Conversation): Joule | undefined {
+  return conversation.joules.length ? conversation.joules[conversation.joules.length - 1] : undefined;
 }
 
 function encodeMessages(conversation: Conversation): claudeAPI.ClaudeMessage[] {

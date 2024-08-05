@@ -249,7 +249,7 @@ function App() {
   }
 
   function handleReset() {
-    vscode.postMessage({ command: "resetConversation" });
+    vscode.postMessage({ command: "resetTask" });
   }
 
   useEffect(() => {

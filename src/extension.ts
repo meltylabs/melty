@@ -3,8 +3,8 @@ import * as path from "path";
 import * as fs from "fs";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { MeltyFile } from "./backend/meltyFiles";
-import * as conversations from "./backend/conversations";
-import { Conversation } from "./backend/conversations";
+import { Task } from "./backend/tasks";
+import * as tasks from "./backend/tasks";
 
 export interface Message {
   text: string;
@@ -42,7 +42,8 @@ export class SpectacleExtension {
   private meltyFilePaths: string[] = [];
   private workspaceFilePaths: string[] = [];
   private messages: Message[] = [];
-  private conversation: Conversation;
+  private task: Task | undefined;
+  private repository: any;
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -53,14 +54,14 @@ export class SpectacleExtension {
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : "/";
 
-    this.conversation = conversations.create();
-
     this.initializeMeltyFilePaths();
     this.initializeWorkspaceFilePaths();
   }
 
   async activate() {
     outputChannel.appendLine("Spectacle activation started");
+
+    this.task = new Task(this.workspaceRoot);
 
     // Initialize meltyFilePaths
     await this.initializeMeltyFilePaths();
@@ -170,24 +171,28 @@ export class SpectacleExtension {
   public resetMessages() {
     this.messages = [];
   }
-
-  public getConversation(): Conversation {
-    return this.conversation;
+  
+  public getTask(): Task {
+    return this.task!;
   }
 
-  public resetConversation() {
-    this.conversation = conversations.create();
-  }
-
-  public setConversation(conversation: Conversation) {
-    this.conversation = conversation;
+  public resetTask() {
+    this.task = new Task(this.workspaceRoot);
   }
 
   public openFileInEditor(filePath: string) {
     const fileUri = vscode.Uri.file(path.join(this.workspaceRoot, filePath));
     vscode.window.showTextDocument(fileUri);
   }
-}
+
+  public getRepository() {
+    return this.task!.repository;
+  }
+
+  public async initRepository() {
+    await this.task!.init();
+  }
+ }
 
 let outputChannel: vscode.OutputChannel;
 

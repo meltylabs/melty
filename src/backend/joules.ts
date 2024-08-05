@@ -1,6 +1,7 @@
 import { RepoState } from "./repoStates";
 import { Uri } from "vscode";
 import { v4 as uuidv4 } from "uuid";
+import * as repoStates from "./repoStates";
 
 export type Mode = "code" | "ask";
 
@@ -44,4 +45,8 @@ export function createJouleBot(
 
 export function updateMessage(joule: Joule, message: string): Joule {
   return { ...joule, message };
+}
+
+export async function diff(joule: Joule, repository: any): Promise<string> {
+  return await repoStates.diff(joule.repoState, repository);
 }
