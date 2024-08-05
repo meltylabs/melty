@@ -57,6 +57,9 @@ const watchConfig = {
       console.log("[watch] build started");
       await build({
         ...extensionConfig,
+        ...watchConfig,
+      });
+      await build({
         ...testConfig,
         ...watchConfig,
       });
