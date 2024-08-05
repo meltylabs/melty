@@ -49,6 +49,7 @@ const dummy3: Message = {
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [partialResponse, setPartialResponse] = useState("");
+  const [files, setFiles] = useState<string[]>([]);
 
   function handleSendMessage(event: React.FormEvent) {
     event.preventDefault();
@@ -70,7 +71,38 @@ function App() {
     });
   }
 
+  function handleAddFile(event: React.FormEvent) {
+    event.preventDefault();
+    const filePath = (event.target as HTMLFormElement).file.value;
+    console.log("addFile in App.tsx: ", filePath);
+
+    vscode.postMessage({
+      command: "addFile",
+      filePath: filePath,
+    });
+
+    // clear the input
+    (event.target as HTMLFormElement).reset();
+
+    handleListFiles();
+  }
+
+  function handleListFiles() {
+    vscode.postMessage({
+      command: "listFiles",
+    });
+  }
+
+  function handleDropFile(file: string) {
+    vscode.postMessage({
+      command: "dropFile",
+      filePath: file,
+    });
+  }
+
   useEffect(() => {
+    handleListFiles();
+
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {
       const message = event.data;
@@ -85,6 +117,10 @@ function App() {
               diff: message.text.diff,
             },
           ]);
+          break;
+        case "listFiles":
+          console.log("listFiles", message);
+          setFiles(message.meltyFilePaths);
           break;
         case "confirmedUndo":
           console.log("confirmedUndo", message);
@@ -124,6 +160,16 @@ function App() {
           </Link>
           <Link to="/tasks">Tasks</Link>
         </nav>
+
+        <form onSubmit={handleAddFile}>
+          {files.map((file) => (
+            <button key={file} onClick={() => handleDropFile(file)}>
+              {file}
+            </button>
+          ))}
+          <input type="text" id="file" />
+          <button type="submit">Add File</button>
+        </form>
 
         <Routes>
           <Route

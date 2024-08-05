@@ -7,6 +7,7 @@ import { MeltyFile } from "./backend/meltyFiles";
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private workspaceRoot: string;
+  private meltyFilePaths: string[] = [];
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -18,8 +19,11 @@ export class SpectacleExtension {
       : "/";
   }
 
-  activate() {
+  async activate() {
     outputChannel.appendLine("Spectacle activation started");
+
+    // Initialize meltyFilePaths
+    await this.initializeMeltyFilePaths();
 
     // Register configuration change listener
     this.context.subscriptions.push(
@@ -59,6 +63,29 @@ export class SpectacleExtension {
       );
     return meltyFiles;
   }
+
+  // New method to initialize meltyFilePaths
+  private async initializeMeltyFilePaths() {
+    const meltyFiles = await this.getMeltyFiles();
+    this.meltyFilePaths = Object.keys(meltyFiles);
+    this.outputChannel
+      .appendLine(`Initialized ${this.meltyFilePaths.length} melty file
+    paths`);
+  }
+
+  public getMeltyFilePaths(): string[] {
+    return this.meltyFilePaths;
+  }
+
+  public addMeltyFilePath(filePath: string) {
+    this.meltyFilePaths.push(filePath);
+  }
+
+  public dropMeltyFilePath(filePath: string) {
+    this.meltyFilePaths = this.meltyFilePaths.filter(
+      (path) => path !== filePath
+    );
+  }
 }
 
 let outputChannel: vscode.OutputChannel;
@@ -69,25 +96,20 @@ export function activate(context: vscode.ExtensionContext) {
   outputChannel.show();
   outputChannel.appendLine("Activating Spectacle extension");
 
+  const extension = new SpectacleExtension(context, outputChannel);
+  extension.activate();
+
   const helloCommand = vscode.commands.registerCommand(
     "hello-world.showHelloWorld",
     () => {
-      HelloWorldPanel.render(context.extensionUri);
+      HelloWorldPanel.render(context.extensionUri, extension);
     }
   );
 
   context.subscriptions.push(helloCommand);
 
-  const extension = new SpectacleExtension(context, outputChannel);
-  extension.activate();
   outputChannel.appendLine("Spectacle extension activated");
   console.log("Spectacle extension activated");
-
-  // Log the registered commands
-  const commands = vscode.commands.getCommands(true);
-  commands.then((cmds) => {
-    outputChannel.appendLine("Registered commands: " + cmds.join(", "));
-  });
 }
 
 export function deactivate() {

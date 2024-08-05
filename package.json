@@ -89,7 +89,8 @@
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.7.3",
     "dotenv": "^16.4.5",
-    "python-ast": "^0.1.0"
+    "python-ast": "^0.1.0",
+    "uuid": "^10.0.0"
   },
   "capabilities": {
     "untrustedWorkspaces": {

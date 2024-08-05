@@ -10,13 +10,14 @@ import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
 import * as conversations from "../backend/conversations";
-import { Conversation} from "../backend/conversations";
+import { Conversation } from "../backend/conversations";
 import * as repoStates from "../backend/repoStates";
 import * as fs from "fs";
 import * as path from "path";
 import { MeltyFile } from "../backend/meltyFiles";
 import * as files from "../backend/meltyFiles";
 import { Joule } from "../backend/joules";
+import { SpectacleExtension } from "../extension";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -34,6 +35,7 @@ export class HelloWorldPanel {
   private _disposables: Disposable[] = [];
 
   private conversation: Conversation;
+  private spectacleExtension: SpectacleExtension;
 
   /**
    * The HelloWorldPanel class private constructor (called only from the render method).
@@ -41,7 +43,11 @@ export class HelloWorldPanel {
    * @param panel A reference to the webview panel
    * @param extensionUri The URI of the directory containing the extension
    */
-  private constructor(panel: WebviewPanel, extensionUri: Uri) {
+  private constructor(
+    panel: WebviewPanel,
+    extensionUri: Uri,
+    spectacleExtension: SpectacleExtension
+  ) {
     this._panel = panel;
 
     // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
@@ -56,6 +62,13 @@ export class HelloWorldPanel {
 
     this.conversation = conversations.create();
 
+    this.spectacleExtension = spectacleExtension;
+
+    const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
+    console.log(
+      `HelloWorldPanel initialized with ${meltyFilePaths.length} melty file paths`
+    );
+
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
   }
@@ -66,7 +79,10 @@ export class HelloWorldPanel {
    *
    * @param extensionUri The URI of the directory containing the extension.
    */
-  public static render(extensionUri: Uri) {
+  public static render(
+    extensionUri: Uri,
+    spectacleExtension: SpectacleExtension
+  ) {
     if (HelloWorldPanel.currentPanel) {
       // If the webview panel already exists reveal it
       HelloWorldPanel.currentPanel._panel.reveal(ViewColumn.One);
@@ -91,7 +107,11 @@ export class HelloWorldPanel {
         }
       );
 
-      HelloWorldPanel.currentPanel = new HelloWorldPanel(panel, extensionUri);
+      HelloWorldPanel.currentPanel = new HelloWorldPanel(
+        panel,
+        extensionUri,
+        spectacleExtension
+      );
     }
   }
 
@@ -177,11 +197,28 @@ export class HelloWorldPanel {
       async (message: any) => {
         const command = message.command;
         const text = message.text;
+        const filePath = message.filePath; // optional param for addFile and dropFile
 
         switch (command) {
           case "hello":
             // Code that should run in response to the hello message command
             window.showInformationMessage(text);
+            return;
+          case "listFiles":
+            let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
+            console.log(`listFiles: ${meltyFilePaths.length} melty file paths`);
+            this._panel.webview.postMessage({
+              command: "listFiles",
+              meltyFilePaths: meltyFilePaths,
+            });
+            return;
+          case "addFile":
+            console.log(`addFile: ${filePath}`);
+            this.spectacleExtension.addMeltyFilePath(filePath);
+            return;
+          case "dropFile":
+            console.log(`dropFile: ${filePath}`);
+            this.spectacleExtension.dropMeltyFilePath(filePath);
             return;
           case "undo":
             await this.undoLatestCommit();
@@ -226,39 +263,58 @@ export class HelloWorldPanel {
               },
             });
 
-            const workspaceRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
+            const workspaceRoot =
+              vscode.workspace.workspaceFolders![0].uri.fsPath;
 
             // read all files in the workspace
             // TODO: get rid of this and use repoState = repoStates.createFromCommit(commitHash)
-            const meltyFiles: { [relativePath: string]: MeltyFile } = Object.fromEntries(
-              await Promise.all(workspaceFileUris.map(async file => {
-                const relativePath = path.relative(vscode.workspace.workspaceFolders![0].uri.fsPath, file.fsPath);
-                const contents = await fs.promises.readFile(file.fsPath, 'utf8');
-                return [relativePath, files.create(
-                  relativePath,
-                  contents,
-                  workspaceRoot
-                )];
-              })));
+            const meltyFiles: { [relativePath: string]: MeltyFile } =
+              Object.fromEntries(
+                await Promise.all(
+                  workspaceFileUris.map(async (file) => {
+                    const relativePath = path.relative(
+                      vscode.workspace.workspaceFolders![0].uri.fsPath,
+                      file.fsPath
+                    );
+                    const contents = await fs.promises.readFile(
+                      file.fsPath,
+                      "utf8"
+                    );
+                    return [
+                      relativePath,
+                      files.create(relativePath, contents, workspaceRoot),
+                    ];
+                  })
+                )
+              );
             const repoState = repoStates.create(
               meltyFiles,
-              undefined, workspaceRoot
+              undefined,
+              workspaceRoot
             );
 
-            const meltyFilePaths = Object.keys(meltyFiles);
+            meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
 
             // human response
-            this.conversation = conversations.respondHuman(this.conversation, text, repoState);
+            this.conversation = conversations.respondHuman(
+              this.conversation,
+              text,
+              repoState
+            );
 
             // bot response
             const processPartial = (partialJoule: Joule) => {
               this._panel.webview.postMessage({
                 command: "setPartialResponse",
-                joule: partialJoule
+                joule: partialJoule,
               });
             };
             try {
-              this.conversation = await conversations.respondBot(this.conversation, meltyFilePaths, processPartial); // TODO: don't send all files as context, pick some
+              this.conversation = await conversations.respondBot(
+                this.conversation,
+                meltyFilePaths,
+                processPartial
+              ); // TODO: don't send all files as context, pick some
             } catch (e) {
               vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
               return;
@@ -268,7 +324,9 @@ export class HelloWorldPanel {
 
             // for each file in botJoule.repoState, overwrite the file on disk with the contents in botJoule.repoState
             repoStates.forEachFile(botJoule.repoState, (file) => {
-              fs.mkdirSync(path.dirname(files.absolutePath(file)), { recursive: true });
+              fs.mkdirSync(path.dirname(files.absolutePath(file)), {
+                recursive: true,
+              });
               fs.writeFileSync(files.absolutePath(file), files.contents(file));
             });
 
