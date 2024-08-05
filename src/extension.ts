@@ -69,13 +69,14 @@ export class SpectacleExtension {
   private async initializeMeltyFilePaths() {
     const meltyFiles = await this.getMeltyFiles();
     this.meltyFilePaths = Object.keys(meltyFiles);
+    console.log("exctension.ts", this.meltyFilePaths);
     this.outputChannel
       .appendLine(`Initialized ${this.meltyFilePaths.length} melty file
     paths`);
   }
 
   public getMeltyFilePaths(): string[] {
-    return this.meltyFilePaths;
+    return this.meltyFilePaths.filter((path) => path !== ""); // todo: figure out why there are empty strings in the array
   }
 
   public addMeltyFilePath(filePath: string) {
@@ -83,13 +84,10 @@ export class SpectacleExtension {
   }
 
   public dropMeltyFilePath(filePath: string) {
-    const index = this.meltyFilePaths.indexOf(filePath);
-    if (index !== -1) {
-      this.meltyFilePaths.splice(index, 1);
-      this.outputChannel.appendLine(`Dropped file: ${filePath}`);
-    } else {
-      this.outputChannel.appendLine(`File not found in list: ${filePath}`);
-    }
+    this.meltyFilePaths = this.meltyFilePaths.filter(
+      (path) => path !== filePath
+    );
+    this.outputChannel.appendLine(`Dropped file: ${filePath}`);
   }
 }
 

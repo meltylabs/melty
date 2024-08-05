@@ -219,6 +219,7 @@ export class HelloWorldPanel {
           case "dropFile":
             console.log(`dropFile: ${filePath}`);
             this.spectacleExtension.dropMeltyFilePath(filePath);
+            console.log("panels/HelloWorldPanel.ts", meltyFilePaths);
             return;
           case "undo":
             await this.undoLatestCommit();
