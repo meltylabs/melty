@@ -92,6 +92,7 @@ function MessageComponent({
       }`}
     >
       <div className="text-xs flex flex-col">
+        {message.text}
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 

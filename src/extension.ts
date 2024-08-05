@@ -41,7 +41,7 @@ export class SpectacleExtension {
   private workspaceRoot: string;
   private meltyFilePaths: string[] = [];
   private workspaceFilePaths: string[] = [];
-  private messages: Message[] = [dummy1, dummy2, dummy3];
+  private messages: Message[] = [];
   private conversation: Conversation;
 
   constructor(
