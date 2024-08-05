@@ -36,6 +36,7 @@ export async function respondBot(conversation: Conversation, contextPaths: strin
       prompts.systemPrompt()
       + prompts.diffDecoderPrompt()
       + prompts.exampleConversationsPrompt()
+      + prompts.codeChangeCommandRulesPrompt()
     ),
     messages: [
       // TODOV2 user system info

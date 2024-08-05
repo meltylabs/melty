@@ -13,7 +13,13 @@ Always reply to the user in the same language they are using.`;
 }
 
 export function exampleConversationsPrompt(): string {
-  const filePath = path.join('/Users/jacksondc/Development/spectacular_aider/spectacular/static/example_conversation_prompt.txt');
+  const filePath = path.join(__dirname, '..', 'static', 'example_conversation_prompt.txt');
+  const fileContents = fs.readFileSync(filePath, 'utf8');
+  return fileContents;
+}
+
+export function codeChangeCommandRulesPrompt(): string {
+  const filePath = path.join(__dirname, '..', 'static', 'code_change_command_rules.txt');
   const fileContents = fs.readFileSync(filePath, 'utf8');
   return fileContents;
 }
