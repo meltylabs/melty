@@ -41,6 +41,7 @@ function MessageComponent({
   message: Message;
   isPartial?: boolean;
 }) {
+
   const renderMessageContent = (text: string) => {
     const parts = text.split(/(<<<<<<< SEARCH.*?>>>>>>> REPLACE)/s);
     return parts.map((part, index) => {

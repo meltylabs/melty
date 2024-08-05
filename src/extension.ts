@@ -181,6 +181,11 @@ export class SpectacleExtension {
   public setConversation(conversation: Conversation) {
     this.conversation = conversation;
   }
+
+  public openFileInEditor(filePath: string) {
+    const fileUri = vscode.Uri.file(path.join(this.workspaceRoot, filePath));
+    vscode.window.showTextDocument(fileUri);
+  }
 }
 
 let outputChannel: vscode.OutputChannel;
