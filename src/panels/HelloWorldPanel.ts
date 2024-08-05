@@ -315,7 +315,7 @@ export class HelloWorldPanel {
     try {
       const botJoule = await task.respondBot(
         meltyFilePaths, // TODO are we sending the right files here? @soybean
-        "ask",
+        mode,
         processPartial
       );
       const botDiff = await joules.diff(botJoule, this.spectacleExtension.getRepository());
