@@ -41,24 +41,21 @@ function MessageComponent({
   message: Message;
   isPartial?: boolean;
 }) {
-  const renderSearchReplaceBlock = (text: string) => {
-    const searchStart = text.indexOf("<<<<<<< SEARCH");
-    const separatorIndex = text.indexOf("=======", searchStart);
-    const replaceEnd = text.indexOf(">>>>>>> REPLACE", separatorIndex);
-
-    if (searchStart === -1 || separatorIndex === -1 || replaceEnd === -1) {
-      return <div>{text}</div>; // If the format is incorrect, just return the text as is
-    }
-
-    const searchContent = text.slice(searchStart + 15, separatorIndex).trim();
-    const replaceContent = text.slice(separatorIndex + 7, replaceEnd).trim();
-
-    return (
-      <SearchReplaceBlock
-        searchContent={searchContent}
-        replaceContent={replaceContent}
-      />
-    );
+  const renderMessageContent = (text: string) => {
+    const parts = text.split(/(<<<<<<< SEARCH.*?>>>>>>> REPLACE)/s);
+    return parts.map((part, index) => {
+      if (part.startsWith('<<<<<<< SEARCH')) {
+        const [, searchContent, replaceContent] = part.split(/<<<<<<< SEARCH|=======|>>>>>>> REPLACE/).map(s => s.trim());
+        return (
+          <SearchReplaceBlock
+            key={index}
+            searchContent={searchContent}
+            replaceContent={replaceContent}
+          />
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
   };
 
   const renderDiff = (diff: string) => {
@@ -106,8 +103,6 @@ function MessageComponent({
     );
   };
 
-  const hasSearchReplace = message.text.includes("<<<<<<< SEARCH ");
-
   return (
     <div
       className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
@@ -115,14 +110,8 @@ function MessageComponent({
       }`}
     >
       <div className="text-xs flex flex-col">
-        {hasSearchReplace ? (
-          renderSearchReplaceBlock(message.text)
-        ) : (
-          <>
-            {message.text}
-            {isPartial && <span className="animate-pulse">▋</span>}
-          </>
-        )}
+        {renderMessageContent(message.text)}
+        {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
       <div>
