@@ -126,7 +126,7 @@ function MessagesView({
 }: {
   messages: Message[];
   partialResponse: Message | null;
-  handleSendMessage: (event: React.FormEvent) => void;
+  handleSendMessage: (mode: "ask" | "code", text: string) => void;
   handleUndo: () => void;
   handleReset: () => void;
 }) {
@@ -147,6 +147,29 @@ function MessagesView({
     };
   }, []);
 
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const message = form.message.value;
+    handleSendMessage("ask", message);
+    form.reset();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      if (event.metaKey || event.ctrlKey) {
+        // Cmd+Enter or Ctrl+Enter
+        event.preventDefault();
+        handleSendMessage("code", event.currentTarget.value);
+        event.currentTarget.value = "";
+      } else if (!event.shiftKey) {
+        // Enter without Shift (to allow multiline input)
+        event.preventDefault();
+        handleSubmit(event as unknown as React.FormEvent);
+      }
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="mb-4 rounded p-2 mx-auto">
@@ -158,7 +181,7 @@ function MessagesView({
         )}
       </div>
       <div className="">
-        <form onSubmit={handleSendMessage}>
+        <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Input
               placeholder="What should I do? (⌘K)"
@@ -166,6 +189,7 @@ function MessagesView({
               autoFocus
               required
               ref={inputRef}
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div className="flex justify-end space-x-2 mt-2">
@@ -177,13 +201,22 @@ function MessagesView({
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button>
-            <Button name="ask" variant="outline" size="sm">
+            <Button name="ask" variant="outline" size="sm" type="submit">
               Ask{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
                 <span className="text-xs">↵</span>
               </kbd>
             </Button>
-            <Button name="code" size="sm">
+            <Button
+              name="code"
+              size="sm"
+              type="button"
+              onClick={() => {
+                const message = inputRef.current?.value || "";
+                handleSendMessage("code", message);
+                if (inputRef.current) inputRef.current.value = "";
+              }}
+            >
               Code{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
                 <span className="text-xs">⌘</span>
@@ -207,22 +240,12 @@ function App() {
   ]);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  function handleSendMessage(event: React.FormEvent) {
-    event.preventDefault();
-    const submitButton = (event.nativeEvent as SubmitEvent)
-      .submitter as HTMLButtonElement;
-    console.log("submitButton", submitButton.name);
-
-    const message = (event.target as HTMLFormElement).message.value;
-
+  function handleSendMessage(mode: "ask" | "code", text: string) {
     // Send message to extension
     vscode.postMessage({
-      command: submitButton.name,
-      text: message,
+      command: mode,
+      text: text,
     });
-
-    // clear the input
-    (event.target as HTMLFormElement).reset();
   }
 
   function handleUndo() {
