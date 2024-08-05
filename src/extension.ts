@@ -17,16 +17,6 @@ export class SpectacleExtension {
     this.workspaceRoot = vscode.workspace.workspaceFolders
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
       : "/";
-    this.meltyFilePaths = [];
-    this.initializeMeltyFilePaths();
-  }
-
-  private initializeMeltyFilePaths() {
-    const workspaceFileUris = vscode.workspace.findFiles("**/*", "**/node_modules/**");
-    workspaceFileUris.then(files => {
-      this.meltyFilePaths = files.map(file => vscode.workspace.asRelativePath(file));
-      this.outputChannel.appendLine(`Initialized ${this.meltyFilePaths.length} melty file paths`);
-    });
   }
 
   async activate() {
