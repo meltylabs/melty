@@ -160,8 +160,10 @@ function MessagesView({
       if (event.metaKey || event.ctrlKey) {
         // Cmd+Enter or Ctrl+Enter
         event.preventDefault();
-        handleSendMessage("code", event.currentTarget.value);
-        event.currentTarget.value = "";
+        if (event.currentTarget && event.currentTarget.value !== undefined) {
+          handleSendMessage("code", event.currentTarget.value);
+          event.currentTarget.value = "";
+        }
       } else if (!event.shiftKey) {
         // Enter without Shift (to allow multiline input)
         event.preventDefault();
