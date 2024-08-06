@@ -244,17 +244,19 @@ export function FilePicker({
         <CommandList>
           <CommandEmpty>All files in workspace are in context.</CommandEmpty>
           {/* todo - would be nice to show recent or suggested here */}
-          <CommandGroup heading="Current">
-            {meltyFilePaths.map((filePath) => (
-              <CommandItem
-                onSelect={() => handleDropFile(filePath)}
-                key={filePath}
-              >
-                <span className="mr-2">{getFileIcon(filePath)}</span>
-                <span>{filePath}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          {meltyFilePaths.length > 0 && (
+            <CommandGroup heading="Current">
+              {meltyFilePaths.map((filePath) => (
+                <CommandItem
+                  onSelect={() => handleDropFile(filePath)}
+                  key={filePath}
+                >
+                  <span className="mr-2">{getFileIcon(filePath)}</span>
+                  <span>{filePath}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
 
           <CommandGroup heading="Add to context">
             {workspaceFilePaths
