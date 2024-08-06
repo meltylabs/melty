@@ -10,7 +10,6 @@ import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
 import { Joule } from "../types";
-import * as joules from "../backend/joules";
 import { SpectacleExtension } from "../extension";
 
 /**
@@ -278,8 +277,6 @@ export class HelloWorldPanel {
           case "code":
             await this.handleAskCode(text, "code");
             return;
-          // Add more switch case statements here as more webview message commands
-          // are created within the webview context (i.e. inside media/main.js)
         }
       },
       undefined,
@@ -291,18 +288,9 @@ export class HelloWorldPanel {
     const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
 
     const task = this.spectacleExtension.getTask();
-    const humanJoule = await task.respondHuman(text);
-    const humanDiff = await joules.diff(
-      humanJoule,
-      this.spectacleExtension.getRepository()
-    );
     this._panel.webview.postMessage({
-      command: "addMessage",
-      text: {
-        sender: "user",
-        message: text,
-        diff: humanDiff,
-      },
+      command: "loadConversation",
+      conversation: task.conversation,
     });
 
     // bot response
@@ -318,18 +306,10 @@ export class HelloWorldPanel {
         mode,
         processPartial
       );
-      const botDiff = await joules.diff(
-        botJoule,
-        this.spectacleExtension.getRepository()
-      );
       // Send the response back to the webview
       this._panel.webview.postMessage({
-        command: "addMessage",
-        text: {
-          sender: "bot",
-          message: botJoule.message,
-          diff: botDiff,
-        },
+        command: "loadConversation",
+        conversation: task.conversation,
       });
     } catch (e) {
       vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);

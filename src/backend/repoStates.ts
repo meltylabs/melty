@@ -1,27 +1,9 @@
 import { Uri } from "vscode";
-import { MeltyFile } from "../types";
+import { RepoState, RepoStateCommitted, RepoStateInMemory, MeltyFile } from "../types";
 import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
-import * as vscode from "vscode";
 import * as utils from "./utils/utils";
-
-export type RepoState = {
-  readonly repo: any;
-  readonly workspaceRoot: string;
-  impl: RepoStateInMemory | RepoStateCommitted;
-};
-
-type RepoStateCommitted = {
-  readonly status: "committed";
-  readonly commit: string;
-};
-
-type RepoStateInMemory = {
-  readonly status: "inMemory";
-  readonly parentCommit: string;
-  readonly filesChanged: { [relativePath: string]: MeltyFile };
-};
 
 export function createFromCommit(
   repo: any,

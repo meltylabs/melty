@@ -243,14 +243,12 @@ function ConversationView({
 
 // todo: move to a types file
 type CommandType =
-  | "addMessage"
-  | "loadMessages"
   | "confirmedUndo"
   | "setPartialResponse"
-  | "loadTask"
   | "listMeltyFiles"
   | "listWorkspaceFiles"
-  | "loadConversation";
+  | "loadConversation"
+  | "logHello";
 
 function App() {
   const [conversation, setConversation] = useState<Conversation | null>(null); // this will immediately get replaced
@@ -343,6 +341,9 @@ function App() {
         //   break;
         case "setPartialResponse":
           setPartialResponse(message.joule);
+          break;
+        case "logHello":
+          console.log("hello!", message);
           break;
       }
     };
