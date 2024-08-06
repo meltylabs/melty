@@ -2,15 +2,11 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
-import { MeltyFile } from "./backend/meltyFiles";
+import { MeltyFile, Conversation } from "./types";
 import { Task } from "./backend/tasks";
 import * as tasks from "./backend/tasks";
 
-export interface Message {
-  text: string;
-  sender: "user" | "bot";
-  diff?: string;
-}
+import { Message } from "./types";
 
 const dummy2: Message = {
   diff: "",
@@ -41,9 +37,7 @@ export class SpectacleExtension {
   private workspaceRoot: string;
   private meltyFilePaths: string[] = [];
   private workspaceFilePaths: string[] = [];
-  private messages: Message[] = [];
   private task: Task | undefined;
-  private repository: any;
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -160,20 +154,8 @@ export class SpectacleExtension {
     this.outputChannel.appendLine(`Dropped file: ${filePath}`);
   }
 
-  public addMessage(message: Message) {
-    this.messages.push(message);
-  }
-
-  public getMessages(): Message[] {
-    return this.messages;
-  }
-
-  public resetMessages() {
-    this.messages = [];
-  }
-  
-  public getTask(): Task {
-    return this.task!;
+  public getConversation(): Conversation {
+    return this.task!.conversation;
   }
 
   public resetTask() {
@@ -192,7 +174,11 @@ export class SpectacleExtension {
   public async initRepository() {
     await this.task!.init();
   }
- }
+
+  public getTask() {
+    return this.task!;
+  }
+}
 
 let outputChannel: vscode.OutputChannel;
 

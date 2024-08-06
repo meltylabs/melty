@@ -16,32 +16,30 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
-import { Switch } from "./components/ui/switch";
 import { Input } from "./components/ui/input";
-import { Label } from "./components/ui/label";
-import { Button as VSCodeButton } from "@vscode/webview-ui-toolkit";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Tasks } from "./components/Tasks";
+import { Conversation, Joule } from "./types";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
 import "./App.css";
-import { Message } from "../../src/extension";
 
-function MessageComponent({
-  message,
+function JouleComponent({
+  joule,
   isPartial = false,
 }: {
-  message: Message;
+  joule: Joule;
   isPartial?: boolean;
 }) {
-  const renderDiff = (diff: string) => {
+  const [diffContent, setDiffContent] = useState<React.ReactNode | null>(null);
+
+  const renderDiff2HTML = (diff: string) => {
     const lines = diff.split("\n");
     const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
     let fileName = "";
@@ -86,46 +84,55 @@ function MessageComponent({
     );
   };
 
+  useEffect(() => {
+    const renderDiff = async () => {
+      // const diff = await joules.diff(joule, task.repository);
+      const diff =
+        "diff --git a/test.pdf b/test.pdf\nindex 0000000..1111111 100644\n--- a/test.pdf\n+++ b/test.pdf\n@@ -1,3 +1,3 @@\n-Hello\n+Hi\n";
+      return renderDiff2HTML(diff);
+    };
+
+    renderDiff().then(setDiffContent);
+  }, [joule]);
+
   return (
     <div
       className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
-        message.sender === "user" ? "bg-gray-50 " : "bg-white"
+        joule.author === "human" ? "bg-gray-50 " : "bg-white"
       }`}
     >
       <div className="text-xs flex flex-col">
-        {message.text}
+        {joule.message}
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
       <div>
-        {message.diff && (
-          <Collapsible>
-            <div className="flex items-center justify-end space-x-4 px-4">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <h4 className="text-sm font-semibold mr-2">1 file changed</h4>
-                  <ChevronsUpDown className="h-4 w-4" />
-                  <span className="sr-only">Toggle</span>
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent>{renderDiff(message.diff)}</CollapsibleContent>
-          </Collapsible>
-        )}
+        <Collapsible>
+          <div className="flex items-center justify-end space-x-4 px-4">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <h4 className="text-sm font-semibold mr-2">1 file changed</h4>
+                <ChevronsUpDown className="h-4 w-4" />
+                <span className="sr-only">Toggle</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>{diffContent}</CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
 }
 
-function MessagesView({
-  messages,
+function ConversationView({
+  conversation,
   partialResponse,
   handleSendMessage,
   handleUndo,
   handleReset,
 }: {
-  messages: Message[];
-  partialResponse: Message | null;
+  conversation: Conversation | null;
+  partialResponse: Joule | null;
   handleSendMessage: (mode: "ask" | "code", text: string) => void;
   handleUndo: () => void;
   handleReset: () => void;
@@ -177,11 +184,11 @@ function MessagesView({
   return (
     <div className="p-4">
       <div className="mb-4 rounded p-2 mx-auto">
-        {messages.map((message, index) => (
-          <MessageComponent key={index} message={message} />
+        {conversation?.joules.map((joule, index) => (
+          <JouleComponent key={index} joule={joule} />
         ))}
         {partialResponse && (
-          <MessageComponent message={partialResponse} isPartial={true} />
+          <JouleComponent joule={partialResponse} isPartial={true} />
         )}
       </div>
       <div className="">
@@ -234,9 +241,18 @@ function MessagesView({
   );
 }
 
+// todo: move to a types file
+type CommandType =
+  | "confirmedUndo"
+  | "setPartialResponse"
+  | "listMeltyFiles"
+  | "listWorkspaceFiles"
+  | "loadConversation"
+  | "logHello";
+
 function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [partialResponse, setPartialResponse] = useState<Message | null>(null);
+  const [conversation, setConversation] = useState<Conversation | null>(null); // this will immediately get replaced
+  const [partialResponse, setPartialResponse] = useState<Joule | null>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>(["test.pdf"]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([
     "hi.pdf",
@@ -287,19 +303,20 @@ function App() {
     const messageListener = (event: MessageEvent) => {
       const message = event.data;
       console.log("NEW MESSAGE IN APP.TSX: ", message);
-      switch (message.command) {
-        case "addMessage":
-          console.log("addMessage", message);
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              text: message.text.message,
-              sender: message.text.sender,
-              diff: message.text.diff,
-            },
-          ]);
-          setPartialResponse(null); // Clear the partial response
-          break;
+
+      switch (message.command as CommandType) {
+        // case "addMessage":
+        //   console.log("addMessage", message);
+        //   setMessages((prevMessages) => [
+        //     ...prevMessages,
+        //     {
+        //       text: message.text.message,
+        //       sender: message.text.sender,
+        //       diff: message.text.diff,
+        //     },
+        //   ]);
+        //   setPartialResponse(null); // Clear the partial response
+        //   break;
         case "listMeltyFiles":
           console.log("listMeltyFiles", message);
           setMeltyFiles(message.meltyFilePaths);
@@ -308,25 +325,25 @@ function App() {
           console.log("listWorkspaceFiles", message);
           setWorkspaceFiles(message.workspaceFilePaths);
           break;
-        case "loadMessages":
-          console.log("loadMessages", message);
-          setMessages(message.messages);
+        case "loadConversation":
+          console.log("loadConversation", message);
+          setConversation(message.conversation);
           break;
-        case "confirmedUndo":
-          console.log("confirmedUndo", message);
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              text: "Undone commit",
-              sender: "user",
-            },
-          ]);
-          break;
+        // case "confirmedUndo":
+        //   console.log("confirmedUndo", message);
+        //   setMessages((prevMessages) => [
+        //     ...prevMessages,
+        //     {
+        //       text: "Undone commit",
+        //       sender: "user",
+        //     },
+        //   ]);
+        //   break;
         case "setPartialResponse":
-          setPartialResponse({
-            text: message.joule.message,
-            sender: "bot",
-          });
+          setPartialResponse(message.joule);
+          break;
+        case "logHello":
+          console.log("hello!", message);
           break;
       }
     };
@@ -351,8 +368,8 @@ function App() {
             path="/"
             element={
               <>
-                <MessagesView
-                  messages={messages}
+                <ConversationView
+                  conversation={conversation}
                   partialResponse={partialResponse}
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}

@@ -1,6 +1,5 @@
-import { RepoState } from './repoStates';
+import { RepoState, GitRepo, SearchReplace } from '../types';
 import * as repoStates from './repoStates';
-import { SearchReplace } from './searchReplace';
 import * as searchReplaces from './searchReplace';
 
 const CODE_FENCE = ["<CodeChange>", "</CodeChange>"];
@@ -15,9 +14,9 @@ export const testExports = {
     applySearchReplace
 };
 
-export function applySearchReplaceBlocks(repoState: RepoState, searchReplaceBlocks: SearchReplace[]): RepoState {
+export function applySearchReplaceBlocks(gitRepo: GitRepo, repoState: RepoState, searchReplaceBlocks: SearchReplace[]): RepoState {
     return searchReplaceBlocks.reduce((repoState, searchReplace) => {
-        return applySearchReplace(repoState, searchReplace);
+        return applySearchReplace(gitRepo, repoState, searchReplace);
     }, repoState);
 }
 
@@ -335,10 +334,10 @@ function extractFileName(line: string): string | undefined {
 //     }
 // }
 
-function applySearchReplace(repoState: RepoState, searchReplace: SearchReplace): RepoState {
+function applySearchReplace(gitRepo: GitRepo, repoState: RepoState, searchReplace: SearchReplace): RepoState {
     const originalContents = (
-        repoStates.hasFile(repoState, searchReplace.filePath) ?
-            repoStates.getFileContents(repoState, searchReplace.filePath) :
+        repoStates.hasFile(gitRepo, repoState, searchReplace.filePath) ?
+            repoStates.getFileContents(gitRepo, repoState, searchReplace.filePath) :
             ""
     );
     if (!originalContents.includes(searchReplace.search)) {

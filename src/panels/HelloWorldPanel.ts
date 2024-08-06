@@ -9,8 +9,7 @@ import {
 import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
-import { Joule } from "../backend/joules";
-import * as joules from "../backend/joules";
+import { Joule } from "../types";
 import { SpectacleExtension } from "../extension";
 
 /**
@@ -194,12 +193,12 @@ export class HelloWorldPanel {
             // Code that should run in response to the hello message command
             window.showInformationMessage(text);
             return;
-          case "loadMessages":
-            console.log(`loadMessages`);
-            const messages = this.spectacleExtension.getMessages();
+          case "loadConversation":
+            console.log(`loadConversation`);
+            const conversation = this.spectacleExtension.getConversation();
             this._panel.webview.postMessage({
-              command: "loadMessages",
-              messages: messages,
+              command: "loadConversation",
+              conversation: conversation,
             });
             return;
           case "listMeltyFiles":
@@ -219,10 +218,9 @@ export class HelloWorldPanel {
             return;
           case "resetTask":
             this.spectacleExtension.resetTask();
-            this.spectacleExtension.resetMessages();
             this._panel.webview.postMessage({
-              command: "loadMessages",
-              messages: this.spectacleExtension.getMessages(),
+              command: "loadConversation",
+              conversation: this.spectacleExtension.getConversation(),
             });
             return;
           case "openFileInEditor":
@@ -261,9 +259,7 @@ export class HelloWorldPanel {
             await repo.status();
 
             const latestCommit = repo.state.HEAD?.commit;
-            const latestCommitMessage = await repo.getCommit(
-              latestCommit
-            );
+            const latestCommitMessage = await repo.getCommit(latestCommit);
             const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
             vscode.window.showInformationMessage(message);
             this._panel.webview.postMessage({
@@ -281,8 +277,6 @@ export class HelloWorldPanel {
           case "code":
             await this.handleAskCode(text, "code");
             return;
-          // Add more switch case statements here as more webview message commands
-          // are created within the webview context (i.e. inside media/main.js)
         }
       },
       undefined,
@@ -292,17 +286,13 @@ export class HelloWorldPanel {
 
   private async handleAskCode(text: string, mode: "ask" | "code") {
     const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
-
     const task = this.spectacleExtension.getTask();
-    const humanJoule = await task.respondHuman(text);
-    const humanDiff = await joules.diff(humanJoule, this.spectacleExtension.getRepository());
+    
+    // human response
+    await task.respondHuman(text);
     this._panel.webview.postMessage({
-      command: "addMessage",
-      text: {
-        sender: "user",
-        message: text,
-        diff: humanDiff,
-      },
+      command: "loadConversation",
+      conversation: task.conversation,
     });
 
     // bot response
@@ -313,20 +303,15 @@ export class HelloWorldPanel {
       });
     };
     try {
-      const botJoule = await task.respondBot(
+      await task.respondBot(
         meltyFilePaths, // TODO are we sending the right files here? @soybean
         mode,
         processPartial
       );
-      const botDiff = await joules.diff(botJoule, this.spectacleExtension.getRepository());
       // Send the response back to the webview
       this._panel.webview.postMessage({
-        command: "addMessage",
-        text: {
-          sender: "bot",
-          message: botJoule.message,
-          diff: botDiff,
-        },
+        command: "loadConversation",
+        conversation: task.conversation,
       });
     } catch (e) {
       vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
@@ -334,7 +319,7 @@ export class HelloWorldPanel {
     }
   }
 
-   /**
+  /**
    * Undo the latest commit.
    *
    * TODO: confirm with dice we want to do this
