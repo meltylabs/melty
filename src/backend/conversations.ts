@@ -4,10 +4,10 @@ import {
   Mode,
   ClaudeConversation,
   ClaudeMessage,
-  RepoState,
+  PseudoCommit,
   GitRepo
 } from "../types";
-import * as repoStates from "./repoStates";
+import * as pseudoCommits from "./pseudoCommits";
 import * as joules from "./joules";
 import * as prompts from "./prompts";
 import * as claudeAPI from "../lib/claudeAPI";
@@ -27,9 +27,9 @@ function addJoule(conversation: Conversation, joule: Joule): Conversation {
 export function respondHuman(
   conversation: Conversation,
   message: string,
-  repoState: RepoState
+  pseudoCommit: PseudoCommit
 ): Conversation {
-  const newJoule = joules.createJouleHuman(message, repoState);
+  const newJoule = joules.createJouleHuman(message, pseudoCommit);
   return addJoule(conversation, newJoule);
 }
 
@@ -40,7 +40,7 @@ export async function respondBot(
   mode: Mode,
   processPartial: (partialJoule: Joule) => void
 ): Promise<Conversation> {
-  const currentRepoState = lastJoule(conversation)!.repoState;
+  const currentPseudoCommit = lastJoule(conversation)!.pseudoCommit;
   // TODO 100: Add a loop here to try to correct the response if it's not good yet
 
   // TODO 300 (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
@@ -64,8 +64,8 @@ export async function respondBot(
     system: systemPrompt,
     messages: [
       // TODOV2 user system info
-      ...encodeRepoMap(currentRepoState),
-      ...encodeContext(gitRepo, currentRepoState, contextPaths),
+      ...encodeRepoMap(currentPseudoCommit),
+      ...encodeContext(gitRepo, currentPseudoCommit, contextPaths),
       ...encodeMessages(conversation),
     ],
   };
@@ -77,7 +77,7 @@ export async function respondBot(
   let partialJoule = joules.createJouleBot(
     "",
     mode,
-    currentRepoState,
+    currentPseudoCommit,
     contextPaths
   );
   const finalResponse = await claudeAPI.streamClaude(
@@ -95,42 +95,42 @@ export async function respondBot(
     diffApplicatorXml.splitResponse(finalResponse);
 
   // reset the diff preview
-  const repoStateNoDiff = repoStates.createFromPrevious(currentRepoState);
+  const pseudoCommitNoDiff = pseudoCommits.createFromPrevious(currentPseudoCommit);
 
-  const newRepoState =
+  const newPseudoCommit =
     mode === "code"
       ? diffApplicatorXml.applySearchReplaceBlocks(
           gitRepo,
-          repoStateNoDiff,
+          pseudoCommitNoDiff,
           searchReplaceList
         )
-      : repoStateNoDiff;
+      : pseudoCommitNoDiff;
 
   const newJoule = joules.createJouleBot(
     messageChunksList.join("\n"),
     mode,
-    newRepoState,
+    newPseudoCommit,
     contextPaths
   );
   const newConversation = addJoule(conversation, newJoule);
   return newConversation;
 }
 
-function encodeFile(gitRepo: GitRepo, repoState: RepoState, path: string) {
+function encodeFile(gitRepo: GitRepo, pseudoCommit: PseudoCommit, path: string) {
   return `${path}
 \`\`\`
-${repoStates.getFileContents(gitRepo, repoState, path)}
+${pseudoCommits.getFileContents(gitRepo, pseudoCommit, path)}
 \`\`\``;
 }
 
 function encodeContext(
   gitRepo: GitRepo,
-  repoState: RepoState,
+  pseudoCommit: PseudoCommit,
   contextPaths: string[]
 ): ClaudeMessage[] {
   // in the future, this could handle other types of context, like web urls
   const fileEncodings = contextPaths
-    .map((path) => encodeFile(gitRepo, repoState, path))
+    .map((path) => encodeFile(gitRepo, pseudoCommit, path))
     .join("\n");
 
   return fileEncodings.length
@@ -146,7 +146,7 @@ ${fileEncodings}`,
     : [];
 }
 
-function encodeRepoMap(repoState: RepoState): ClaudeMessage[] {
+function encodeRepoMap(pseudoCommit: PseudoCommit): ClaudeMessage[] {
   // return [
   //   { role: "user", content: `Here's a map of the repository I'm working in:
 

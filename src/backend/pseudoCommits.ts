@@ -1,19 +1,19 @@
-import { RepoState, RepoStateCommitted, RepoStateInMemory, MeltyFile, GitRepo } from "../types";
+import { PseudoCommit, PseudoCommitInGit, PseudoCommitInMemory, MeltyFile, GitRepo } from "../types";
 import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
 import * as utils from "./utils/utils";
 
-function createFromCommitWithUdiffPreview(commit: string, preview: string): RepoState {
+function createFromCommitWithUdiffPreview(commit: string, preview: string): PseudoCommit {
   return { impl: { status: "committed", commit, udiffPreview: preview } };
 }
 
 export async function createFromCommit(
   commit: string,
   gitRepo: GitRepo,
-  associateCommitDiffWithRepoState: boolean
-): Promise<RepoState> {
-  const udiff = associateCommitDiffWithRepoState ? await (async () => {
+  associateCommitDiffWithPseudoCommit: boolean
+): Promise<PseudoCommit> {
+  const udiff = associateCommitDiffWithPseudoCommit ? await (async () => {
     const repository = gitRepo?.repository;
     const diff = await repository.diffBetween(commit + "^", commit);
     const udiffs = await Promise.all(
@@ -34,42 +34,42 @@ export async function createFromCommit(
 export function createFromDiffAndParentCommit(
   parentCommit: string,
   filesChanged: { [relativePath: string]: MeltyFile }
-): RepoState {
-  const repoStateInMemory: RepoStateInMemory = {
+): PseudoCommit {
+  const pseudoCommitInMemory: PseudoCommitInMemory = {
     status: "inMemory",
     filesChanged: filesChanged,
     parentCommit: parentCommit,
   };
   return {
-    impl: repoStateInMemory
+    impl: pseudoCommitInMemory
   };
 }
 
 /**
- * Creates a new repoState that is a copy of the previous one, but with udiff reset.
+ * Creates a new pseudoCommit that is a copy of the previous one, but with udiff reset.
  */
-export function createFromPrevious(previousRepoState: RepoState): RepoState {
-    if (previousRepoState.impl.status !== "committed") {
+export function createFromPrevious(previousPseudoCommit: PseudoCommit): PseudoCommit {
+    if (previousPseudoCommit.impl.status !== "committed") {
         throw new Error("not implemented: createFromPrevious from uncommitted repostate");
     }
 
-    const repoStateInMemory: RepoStateInMemory = {
+    const pseudoCommitInMemory: PseudoCommitInMemory = {
         status: "inMemory",
         filesChanged: {},
-        parentCommit: previousRepoState.impl.commit,
+        parentCommit: previousPseudoCommit.impl.commit,
     };
-    return { impl: repoStateInMemory };
+    return { impl: pseudoCommitInMemory };
 }
 
 export async function diff(
-  repoState: RepoState,
+  pseudoCommit: PseudoCommit,
   repository: any
 ): Promise<string> {
-  if (repoState.impl.status === "inMemory") {
+  if (pseudoCommit.impl.status === "inMemory") {
     throw new Error("not implemented: getDiff from committed repostate");
   } else {
-    const repoStateCommitted = repoState.impl;
-    const commit = repoStateCommitted.commit;
+    const pseudoCommitInGit = pseudoCommit.impl;
+    const commit = pseudoCommitInGit.commit;
     const diff = await repository.diffBetween(commit + "^", commit);
     const udiffs = await Promise.all(
       diff.map(async (change: any) => {
@@ -84,17 +84,17 @@ export async function diff(
   }
 }
 
-export function parentCommit(repoState: RepoState): string | undefined {
-  if (repoState.impl.status === "inMemory") {
-    return repoState.impl.parentCommit;
+export function parentCommit(pseudoCommit: PseudoCommit): string | undefined {
+  if (pseudoCommit.impl.status === "inMemory") {
+    return pseudoCommit.impl.parentCommit;
   } else {
     return undefined;
   }
 }
 
-export function commit(repoState: RepoState): string | undefined {
-  if (repoState.impl.status === "committed") {
-    return repoState.impl.commit;
+export function commit(pseudoCommit: PseudoCommit): string | undefined {
+  if (pseudoCommit.impl.status === "committed") {
+    return pseudoCommit.impl.commit;
   } else {
     return undefined;
   }
@@ -103,11 +103,11 @@ export function commit(repoState: RepoState): string | undefined {
 /**
  * Puts files in this repo state onto disk and creates a commit for them if there isn't one yet.
  * Out of caution, it will error if there are uncommitted changes, and it may error
- *   if git is not already on this repoState's parent (only if changes were previously in memory).
- * Returns a new repoState that is guaranteed to track the new commit.
+ *   if git is not already on this pseudoCommit's parent (only if changes were previously in memory).
+ * Returns a new pseudoCommit that is guaranteed to track the new commit.
  */
 export async function actualize(
-  repoState: RepoState,
+  pseudoCommit: PseudoCommit,
   gitRepo: GitRepo,
 ): Promise<void> {
   const repository = gitRepo.repository;
@@ -118,15 +118,15 @@ export async function actualize(
     throw new Error("Please commit or stash changes before actualizing");
   }
 
-  if (repoState.impl.status === "committed") {
-    utils.ensureRepoIsOnCommit(repository, repoState.impl.commit);
-    // no update to repoState needed
+  if (pseudoCommit.impl.status === "committed") {
+    utils.ensureRepoIsOnCommit(repository, pseudoCommit.impl.commit);
+    // no update to pseudoCommit needed
   } else {
-    const repoStateInMemory = repoState.impl;
+    const pseudoCommitInMemory = pseudoCommit.impl;
 
-    utils.ensureRepoIsOnCommit(repository, repoStateInMemory.parentCommit);
+    utils.ensureRepoIsOnCommit(repository, pseudoCommitInMemory.parentCommit);
 
-    const filesChanged = repoStateInMemory.filesChanged;
+    const filesChanged = pseudoCommitInMemory.filesChanged;
     Object.entries(filesChanged).forEach(([_path, file]) => {
       fs.mkdirSync(path.dirname(files.absolutePath(file, gitRepo.rootPath)), {
         recursive: true,
@@ -141,57 +141,57 @@ export async function actualize(
 
     await repository.status();
     const newCommit = repository.state.HEAD!.commit;
-    const newRepoState = await createFromCommit(newCommit, gitRepo, true);
+    const newPseudoCommit = await createFromCommit(newCommit, gitRepo, true);
 
-    // update repoState in place
-    repoState.impl = newRepoState.impl;
+    // update pseudoCommit in place
+    pseudoCommit.impl = newPseudoCommit.impl;
   }
 }
 
-export function hasFile(gitRepo: GitRepo, repoState: RepoState, filePath: string): boolean {
-  const fileIsInMemory = repoState.impl.status === "inMemory" ? filePath in repoState.impl.filesChanged : false;
+export function hasFile(gitRepo: GitRepo, pseudoCommit: PseudoCommit, filePath: string): boolean {
+  const fileIsInMemory = pseudoCommit.impl.status === "inMemory" ? filePath in pseudoCommit.impl.filesChanged : false;
   if (fileIsInMemory) {
     return true;
   }
 
-  const baseCommit = repoState.impl.status === "committed" ? repoState.impl.commit : repoState.impl.parentCommit;
+  const baseCommit = pseudoCommit.impl.status === "committed" ? pseudoCommit.impl.commit : pseudoCommit.impl.parentCommit;
   utils.ensureRepoIsOnCommit(gitRepo.repository, baseCommit);
   return fs.existsSync(path.join(gitRepo.rootPath, filePath));
 }
 
 export function getFileContents(
   gitRepo: GitRepo,
-  repoState: RepoState,
+  pseudoCommit: PseudoCommit,
   filePath: string
 ): string {
-  if (repoState.impl.status === "inMemory" && filePath in repoState.impl.filesChanged) {
-    return files.contents(repoState.impl.filesChanged[filePath]);
+  if (pseudoCommit.impl.status === "inMemory" && filePath in pseudoCommit.impl.filesChanged) {
+    return files.contents(pseudoCommit.impl.filesChanged[filePath]);
   } else {
-    const baseCommit = repoState.impl.status === "committed" ? repoState.impl.commit : repoState.impl.parentCommit;
+    const baseCommit = pseudoCommit.impl.status === "committed" ? pseudoCommit.impl.commit : pseudoCommit.impl.parentCommit;
     utils.ensureRepoIsOnCommit(gitRepo.repository, baseCommit);
     return fs.readFileSync( path.join(gitRepo.rootPath, filePath), "utf8");
   }
 }
 
 export function upsertFileContents(
-  repoState: RepoState,
+  pseudoCommit: PseudoCommit,
   path: string,
   contents: string
-): RepoState {
+): PseudoCommit {
   const file = files.create(path, contents);
 
   let { filesChanged, parentCommit } = (() => {
-    if (repoState.impl.status === "inMemory") {
+    if (pseudoCommit.impl.status === "inMemory") {
       // another off same parent, updating the list of files changed
       return {
-        filesChanged: { ...repoState.impl.filesChanged, [path]: file },
-        parentCommit: repoState.impl.parentCommit,
+        filesChanged: { ...pseudoCommit.impl.filesChanged, [path]: file },
+        parentCommit: pseudoCommit.impl.parentCommit,
       };
     } else {
-      // RepoStateCommitted: use repoState as the parent, start a new list of files changed
+      // PseudoCommitInGit: use pseudoCommit as the parent, start a new list of files changed
       return {
         filesChanged: { [path]: file },
-        parentCommit: repoState.impl.commit,
+        parentCommit: pseudoCommit.impl.commit,
       };
     }
   })();

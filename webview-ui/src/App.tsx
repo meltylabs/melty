@@ -82,8 +82,8 @@ function JouleComponent({
     );
   };
 
-  const diffHtml = joule.repoState.impl.status === "committed" && joule.repoState.impl.udiffPreview
-    ? renderDiff2HTML(joule.repoState.impl.udiffPreview)
+  const diffHtml = joule.pseudoCommit.impl.status === "committed" && joule.pseudoCommit.impl.udiffPreview
+    ? renderDiff2HTML(joule.pseudoCommit.impl.udiffPreview)
     : null;
 
   return (

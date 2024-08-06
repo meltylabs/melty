@@ -1,6 +1,6 @@
 import * as assert from 'assert';
-import { RepoState } from '../backend/repoStates';
-import * as repoStates from '../backend/repoStates';
+import { PseudoCommit } from '../backend/pseudoCommits';
+import * as pseudoCommits from '../backend/pseudoCommits';
 import { SearchReplace } from 'backend/searchReplace';
 import { splitResponse, applySearchReplaceBlocks } from '../backend/diffApplicatorXml';
 import * as meltyFiles from '../backend/meltyFiles';
@@ -143,7 +143,7 @@ oops!
 
 suite('applySearchReplaceBlocks', () => {
     test('should apply search and replace correctly', () => {
-        const initialState: RepoState = repoStates.createFromDiffAndParentCommit({
+        const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({
             'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
         }, "");
         const searchReplace: SearchReplace = {
@@ -154,11 +154,11 @@ suite('applySearchReplaceBlocks', () => {
 
         const newState = applySearchReplaceBlocks(initialState, [searchReplace]);
 
-        assert.strictEqual(repoStates.getFileContents(newState, 'test.txt'), 'Hello, universe!\nThis is a test.');
+        assert.strictEqual(pseudoCommits.getFileContents(newState, 'test.txt'), 'Hello, universe!\nThis is a test.');
     });
 
     test('should throw error if search text not found', () => {
-        const initialState: RepoState = repoStates.createFromDiffAndParentCommit({
+        const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({
             'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
         }, "");
         const searchReplace: SearchReplace = {
@@ -173,7 +173,7 @@ suite('applySearchReplaceBlocks', () => {
     });
 
     test('should create new file if it doesn\'t exist', () => {
-        const initialState: RepoState = repoStates.createFromDiffAndParentCommit({}, undefined, "");
+        const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({}, undefined, "");
         const searchReplace: SearchReplace = {
             filePath: 'new.txt',
             search: '',
@@ -182,6 +182,6 @@ suite('applySearchReplaceBlocks', () => {
 
         const newState = applySearchReplaceBlocks(initialState, [searchReplace]);
 
-        assert.strictEqual(repoStates.getFileContents(newState, 'new.txt'), 'New content');
+        assert.strictEqual(pseudoCommits.getFileContents(newState, 'new.txt'), 'New content');
     });
 });

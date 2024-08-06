@@ -3,19 +3,19 @@ export type GitRepo = {
   rootPath: string;
 };
 
-export type RepoState = {
+export type PseudoCommit = {
   // most operations supported regardless of implementation.
   // implementation can be swapped in place.
-  impl: RepoStateInMemory | RepoStateCommitted;
+  impl: PseudoCommitInMemory | PseudoCommitInGit;
 };
 
-export type RepoStateCommitted = {
+export type PseudoCommitInGit = {
   readonly status: "committed";
   readonly commit: string;
   readonly udiffPreview: string; // not guaranteed to be available. may be truncated.
 };
 
-export type RepoStateInMemory = {
+export type PseudoCommitInMemory = {
   readonly status: "inMemory";
   readonly parentCommit: string;
   readonly filesChanged: { [relativePath: string]: MeltyFile };
@@ -29,7 +29,7 @@ export type JouleHuman = {
   readonly id: string;
   readonly mode: null;
   readonly message: string;
-  readonly repoState: RepoState;
+  readonly pseudoCommit: PseudoCommit;
   readonly contextPaths: null;
 };
 
@@ -38,7 +38,7 @@ export type JouleBot = {
   readonly id: string;
   readonly mode: Mode;
   readonly message: string;
-  readonly repoState: RepoState;
+  readonly pseudoCommit: PseudoCommit;
   readonly contextPaths: ReadonlyArray<string>;
 };
 

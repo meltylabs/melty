@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import { Joule, Mode, Conversation, RepoState, GitRepo } from "../types";
+import { Joule, Mode, Conversation, PseudoCommit, GitRepo } from "../types";
 import * as conversations from "./conversations";
-import * as repoStates from "./repoStates";
+import * as pseudoCommits from "./pseudoCommits";
 import * as utils from "./utils/utils";
 
 /**
@@ -39,8 +39,8 @@ export class Task {
     this.gitRepo = { repository: repo, rootPath: repo.rootUri.fsPath };
   }
 
-  private getConversationState(): RepoState | undefined {
-    return conversations.lastJoule(this.conversation)?.repoState;
+  private getConversationState(): PseudoCommit | undefined {
+    return conversations.lastJoule(this.conversation)?.pseudoCommit;
   }
 
   /**
@@ -59,7 +59,7 @@ export class Task {
     if (!conversationState) {
       return; // if the conversation is empty, we're in sync
     }
-    const conversationTailCommit = repoStates.commit(conversationState);
+    const conversationTailCommit = pseudoCommits.commit(conversationState);
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
     if (latestCommit !== conversationTailCommit) {
       throw new Error(
@@ -121,8 +121,8 @@ export class Task {
     );
     const lastJoule = conversations.lastJoule(this.conversation)!;
 
-    // actualize does the commit and updates the repoState in-place
-    await repoStates.actualize(lastJoule.repoState, this.gitRepo!);
+    // actualize does the commit and updates the pseudoCommit in-place
+    await pseudoCommits.actualize(lastJoule.pseudoCommit, this.gitRepo!);
     await this.gitRepo!.repository.status();
 
     return lastJoule;
@@ -137,12 +137,12 @@ export class Task {
     const didCommit = (await this.commitChanges()) > 0;
 
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    const newRepoState = await repoStates.createFromCommit(latestCommit, this.gitRepo!, didCommit);
+    const newPseudoCommit = await pseudoCommits.createFromCommit(latestCommit, this.gitRepo!, didCommit);
 
     this.conversation = conversations.respondHuman(
       this.conversation,
       message,
-      newRepoState
+      newPseudoCommit
     );
 
     return conversations.lastJoule(this.conversation)!;

@@ -1,5 +1,5 @@
-import { RepoState, GitRepo, SearchReplace } from '../types';
-import * as repoStates from './repoStates';
+import { PseudoCommit, GitRepo, SearchReplace } from '../types';
+import * as pseudoCommits from './pseudoCommits';
 import * as searchReplaces from './searchReplace';
 
 const CODE_FENCE = ["<CodeChange>", "</CodeChange>"];
@@ -14,10 +14,10 @@ export const testExports = {
     applySearchReplace
 };
 
-export function applySearchReplaceBlocks(gitRepo: GitRepo, repoState: RepoState, searchReplaceBlocks: SearchReplace[]): RepoState {
-    return searchReplaceBlocks.reduce((repoState, searchReplace) => {
-        return applySearchReplace(gitRepo, repoState, searchReplace);
-    }, repoState);
+export function applySearchReplaceBlocks(gitRepo: GitRepo, pseudoCommit: PseudoCommit, searchReplaceBlocks: SearchReplace[]): PseudoCommit {
+    return searchReplaceBlocks.reduce((pseudoCommit, searchReplace) => {
+        return applySearchReplace(gitRepo, pseudoCommit, searchReplace);
+    }, pseudoCommit);
 }
 
 function stripFilename(filename: string): string | undefined {
@@ -334,10 +334,10 @@ function extractFileName(line: string): string | undefined {
 //     }
 // }
 
-function applySearchReplace(gitRepo: GitRepo, repoState: RepoState, searchReplace: SearchReplace): RepoState {
+function applySearchReplace(gitRepo: GitRepo, pseudoCommit: PseudoCommit, searchReplace: SearchReplace): PseudoCommit {
     const originalContents = (
-        repoStates.hasFile(gitRepo, repoState, searchReplace.filePath) ?
-            repoStates.getFileContents(gitRepo, repoState, searchReplace.filePath) :
+        pseudoCommits.hasFile(gitRepo, pseudoCommit, searchReplace.filePath) ?
+            pseudoCommits.getFileContents(gitRepo, pseudoCommit, searchReplace.filePath) :
             ""
     );
     if (!originalContents.includes(searchReplace.search)) {
@@ -350,5 +350,5 @@ function applySearchReplace(gitRepo: GitRepo, repoState: RepoState, searchReplac
         throw new Error(`Search text not found`);
     }
     const updatedContent = originalContents.replace(searchReplace.search, searchReplace.replace);
-    return repoStates.upsertFileContents(repoState, searchReplace.filePath, updatedContent);
+    return pseudoCommits.upsertFileContents(pseudoCommit, searchReplace.filePath, updatedContent);
 }

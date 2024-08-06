@@ -1,6 +1,6 @@
 // import * as assert from 'assert';
-// import { RepoState } from '../backend/repoStates';
-// import * as repoStates from '../backend/repoStates';
+// import { PseudoCommit } from '../backend/pseudoCommits';
+// import * as pseudoCommits from '../backend/pseudoCommits';
 // import { SearchReplace, testExports } from '../backend/diffApplicator';
 
 // suite('testExports.findSearchReplaceBlocks', () => {
@@ -172,7 +172,7 @@
 
 // suite('applySearchReplace', () => {
 //     test('should apply search and replace correctly', () => {
-//         const initialState: RepoState = repoStates.create({
+//         const initialState: PseudoCommit = pseudoCommits.create({
 //             'test.txt': 'Hello, world!\nThis is a test.'
 //         }, undefined, "");
 //         const searchReplace: SearchReplace = {
@@ -183,11 +183,11 @@
 
 //         const newState = testExports.applySearchReplace(initialState, searchReplace);
 
-//         assert.strictEqual(repoStates.getFileContents(newState, 'test.txt'), 'Hello, universe!\nThis is a test.');
+//         assert.strictEqual(pseudoCommits.getFileContents(newState, 'test.txt'), 'Hello, universe!\nThis is a test.');
 //     });
 
 //     test('should throw error if search text not found', () => {
-//         const initialState: RepoState = repoStates.create({
+//         const initialState: PseudoCommit = pseudoCommits.create({
 //             'test.txt': meltyFiles.create('test.txt', 'Hello, world!')
 //         }, undefined, "");
 //         const searchReplace: SearchReplace = {
@@ -202,7 +202,7 @@
 //     });
 
 //     test('should create new file if it doesn\'t exist', () => {
-//         const initialState: RepoState = repoStates.create({}, undefined, "");
+//         const initialState: PseudoCommit = pseudoCommits.create({}, undefined, "");
 //         const searchReplace: SearchReplace = {
 //             filePath: 'new.txt',
 //             search: '',
@@ -211,6 +211,6 @@
 
 //         const newState = testExports.applySearchReplace(initialState, searchReplace);
 
-//         assert.strictEqual(repoStates.getFileContents(newState, 'new.txt'), 'New content');
+//         assert.strictEqual(pseudoCommits.getFileContents(newState, 'new.txt'), 'New content');
 //     });
 // });
