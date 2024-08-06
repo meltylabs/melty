@@ -23,7 +23,6 @@ import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Tasks } from "./components/Tasks";
 import { Conversation, Joule } from "./types";
-import * as joules from "./types";
 import {
   Collapsible,
   CollapsibleContent,

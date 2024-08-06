@@ -9,7 +9,7 @@ import {
 import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
 import { getNonce } from "../util/getNonce";
-import { Joule } from "../backend/joules";
+import { Joule } from "../types";
 import * as joules from "../backend/joules";
 import { SpectacleExtension } from "../extension";
 
