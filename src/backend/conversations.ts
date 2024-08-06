@@ -94,16 +94,17 @@ export async function respondBot(
   const { messageChunksList, searchReplaceList } =
     diffApplicatorXml.splitResponse(finalResponse);
 
+  // reset the diff preview
+  const repoStateNoDiff = repoStates.createFromPrevious(currentRepoState);
+
   const newRepoState =
     mode === "code"
       ? diffApplicatorXml.applySearchReplaceBlocks(
           gitRepo,
-          currentRepoState,
+          repoStateNoDiff,
           searchReplaceList
         )
-      : currentRepoState; // repoStates.createCopyParent(currentRepoState)
-  // TODO: we might need to do a copy here. something bad happens if we don't but I can't remember what.
-  // see if this works and if not, add back createCopyParent.
+      : repoStateNoDiff;
 
   const newJoule = joules.createJouleBot(
     messageChunksList.join("\n"),

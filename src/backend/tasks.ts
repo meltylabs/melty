@@ -134,10 +134,10 @@ export class Task {
   public async respondHuman(message: string): Promise<Joule> {
     await this.gitRepo!.repository.status();
 
-    const numFilesChanged = await this.commitChanges();
+    const didCommit = (await this.commitChanges()) > 0;
 
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    const newRepoState = repoStates.createFromCommit(latestCommit, numFilesChanged > 0);
+    const newRepoState = await repoStates.createFromCommit(latestCommit, this.gitRepo!, didCommit);
 
     this.conversation = conversations.respondHuman(
       this.conversation,

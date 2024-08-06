@@ -4,14 +4,34 @@ import * as fs from "fs";
 import * as path from "path";
 import * as utils from "./utils/utils";
 
-export function createFromCommit(
-  commit: string,
-  hasChanges: boolean,
-): RepoState {
-  return { hasChanges: hasChanges, impl: { status: "committed", commit } };
+function createFromCommitWithUdiffPreview(commit: string, preview: string): RepoState {
+  return { impl: { status: "committed", commit, udiffPreview: preview } };
 }
 
-export function createFromCommitAndDiff(
+export async function createFromCommit(
+  commit: string,
+  gitRepo: GitRepo,
+  associateCommitDiffWithRepoState: boolean
+): Promise<RepoState> {
+  const udiff = associateCommitDiffWithRepoState ? await (async () => {
+    const repository = gitRepo?.repository;
+    const diff = await repository.diffBetween(commit + "^", commit);
+    const udiffs = await Promise.all(
+      diff.map(async (change: any) => {
+        return await repository.diffBetween(
+          commit + "^",
+          commit,
+          change.uri.fsPath
+        );
+      })
+    );
+    return udiffs.join("\n");
+  })() : "";
+
+  return createFromCommitWithUdiffPreview(commit, udiff);
+}
+
+export function createFromDiffAndParentCommit(
   parentCommit: string,
   filesChanged: { [relativePath: string]: MeltyFile }
 ): RepoState {
@@ -21,23 +41,25 @@ export function createFromCommitAndDiff(
     parentCommit: parentCommit,
   };
   return {
-    hasChanges: Object.keys(filesChanged).length > 0,
     impl: repoStateInMemory
   };
 }
 
-// export function createCopyParent(parentRepoState: RepoState): RepoState {
-//     if (parentRepoState.impl.status !== "committed") {
-//         throw new Error("not implemented: createCopyParent from uncommitted repostate");
-//     }
+/**
+ * Creates a new repoState that is a copy of the previous one, but with udiff reset.
+ */
+export function createFromPrevious(previousRepoState: RepoState): RepoState {
+    if (previousRepoState.impl.status !== "committed") {
+        throw new Error("not implemented: createFromPrevious from uncommitted repostate");
+    }
 
-//     const repoStateInMemory: RepoStateInMemory = {
-//         status: "inMemory",
-//         filesChanged: {},
-//         parentCommit: parentRepoState.impl.commit,
-//     };
-//     return { workspaceRoot: parentRepoState.workspaceRoot, repo: parentRepoState.repo, impl: repoStateInMemory };
-// }
+    const repoStateInMemory: RepoStateInMemory = {
+        status: "inMemory",
+        filesChanged: {},
+        parentCommit: previousRepoState.impl.commit,
+    };
+    return { impl: repoStateInMemory };
+}
 
 export async function diff(
   repoState: RepoState,
@@ -119,23 +141,22 @@ export async function actualize(
 
     await repository.status();
     const newCommit = repository.state.HEAD!.commit;
-    const repoStateCommitted: RepoStateCommitted = {
-      status: "committed",
-      commit: newCommit,
-    };
+    const newRepoState = await createFromCommit(newCommit, gitRepo, true);
 
     // update repoState in place
-    repoState.impl = repoStateCommitted;
+    repoState.impl = newRepoState.impl;
   }
 }
 
 export function hasFile(gitRepo: GitRepo, repoState: RepoState, filePath: string): boolean {
-  if (repoState.impl.status === "inMemory") {
-    return filePath in repoState.impl.filesChanged;
-  } else {
-    utils.ensureRepoIsOnCommit(gitRepo.repository, repoState.impl.commit);
-    return fs.existsSync(path.join(gitRepo.rootPath, filePath));
+  const fileIsInMemory = repoState.impl.status === "inMemory" ? filePath in repoState.impl.filesChanged : false;
+  if (fileIsInMemory) {
+    return true;
   }
+
+  const baseCommit = repoState.impl.status === "committed" ? repoState.impl.commit : repoState.impl.parentCommit;
+  utils.ensureRepoIsOnCommit(gitRepo.repository, baseCommit);
+  return fs.existsSync(path.join(gitRepo.rootPath, filePath));
 }
 
 export function getFileContents(
@@ -143,14 +164,12 @@ export function getFileContents(
   repoState: RepoState,
   filePath: string
 ): string {
-  if (repoState.impl.status === "inMemory") {
+  if (repoState.impl.status === "inMemory" && filePath in repoState.impl.filesChanged) {
     return files.contents(repoState.impl.filesChanged[filePath]);
   } else {
-    utils.ensureRepoIsOnCommit(gitRepo.repository, repoState.impl.commit);
-    return fs.readFileSync(
-      path.join(gitRepo.rootPath, filePath),
-      "utf8"
-    );
+    const baseCommit = repoState.impl.status === "committed" ? repoState.impl.commit : repoState.impl.parentCommit;
+    utils.ensureRepoIsOnCommit(gitRepo.repository, baseCommit);
+    return fs.readFileSync( path.join(gitRepo.rootPath, filePath), "utf8");
   }
 }
 

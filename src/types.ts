@@ -4,13 +4,15 @@ export type GitRepo = {
 };
 
 export type RepoState = {
-  readonly hasChanges: boolean;
+  // most operations supported regardless of implementation.
+  // implementation can be swapped in place.
   impl: RepoStateInMemory | RepoStateCommitted;
 };
 
 export type RepoStateCommitted = {
   readonly status: "committed";
   readonly commit: string;
+  readonly udiffPreview: string; // not guaranteed to be available. may be truncated.
 };
 
 export type RepoStateInMemory = {

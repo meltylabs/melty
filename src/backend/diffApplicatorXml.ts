@@ -341,7 +341,13 @@ function applySearchReplace(gitRepo: GitRepo, repoState: RepoState, searchReplac
             ""
     );
     if (!originalContents.includes(searchReplace.search)) {
-        throw new Error(`Search text ${searchReplace.search} not found in ${searchReplace.filePath}`);
+        console.log("search string:");
+        console.log(searchReplace.search);
+        console.log("search string trimmed:");
+        console.log(searchReplace.search.trim());
+        console.log("replace string:");
+        console.log(searchReplace.replace);
+        throw new Error(`Search text not found`);
     }
     const updatedContent = originalContents.replace(searchReplace.search, searchReplace.replace);
     return repoStates.upsertFileContents(repoState, searchReplace.filePath, updatedContent);

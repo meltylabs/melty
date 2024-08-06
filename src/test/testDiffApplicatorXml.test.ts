@@ -143,7 +143,7 @@ oops!
 
 suite('applySearchReplaceBlocks', () => {
     test('should apply search and replace correctly', () => {
-        const initialState: RepoState = repoStates.createFromCommitAndDiff({
+        const initialState: RepoState = repoStates.createFromDiffAndParentCommit({
             'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
         }, "");
         const searchReplace: SearchReplace = {
@@ -158,7 +158,7 @@ suite('applySearchReplaceBlocks', () => {
     });
 
     test('should throw error if search text not found', () => {
-        const initialState: RepoState = repoStates.createFromCommitAndDiff({
+        const initialState: RepoState = repoStates.createFromDiffAndParentCommit({
             'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
         }, "");
         const searchReplace: SearchReplace = {
@@ -173,7 +173,7 @@ suite('applySearchReplaceBlocks', () => {
     });
 
     test('should create new file if it doesn\'t exist', () => {
-        const initialState: RepoState = repoStates.createFromCommitAndDiff({}, undefined, "");
+        const initialState: RepoState = repoStates.createFromDiffAndParentCommit({}, undefined, "");
         const searchReplace: SearchReplace = {
             filePath: 'new.txt',
             search: '',

@@ -37,8 +37,6 @@ function JouleComponent({
   joule: Joule;
   isPartial?: boolean;
 }) {
-  const [diffContent, setDiffContent] = useState<React.ReactNode | null>(null);
-
   const renderDiff2HTML = (diff: string) => {
     const lines = diff.split("\n");
     const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
@@ -84,16 +82,9 @@ function JouleComponent({
     );
   };
 
-  useEffect(() => {
-    const renderDiff = async () => {
-      // const diff = await joules.diff(joule, task.repository);
-      const diff =
-        "diff --git a/test.pdf b/test.pdf\nindex 0000000..1111111 100644\n--- a/test.pdf\n+++ b/test.pdf\n@@ -1,3 +1,3 @@\n-Hello\n+Hi\n";
-      return renderDiff2HTML(diff);
-    };
-
-    renderDiff().then(setDiffContent);
-  }, [joule]);
+  const diffHtml = joule.repoState.impl.status === "committed" && joule.repoState.impl.udiffPreview
+    ? renderDiff2HTML(joule.repoState.impl.udiffPreview)
+    : null;
 
   return (
     <div
@@ -107,18 +98,20 @@ function JouleComponent({
       </div>
 
       <div>
-        <Collapsible>
-          <div className="flex items-center justify-end space-x-4 px-4">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <h4 className="text-sm font-semibold mr-2">1 file changed</h4>
-                <ChevronsUpDown className="h-4 w-4" />
-                <span className="sr-only">Toggle</span>
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent>{diffContent}</CollapsibleContent>
-        </Collapsible>
+        {diffHtml && (
+          <Collapsible>
+            <div className="flex items-center justify-end space-x-4 px-4">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <h4 className="text-sm font-semibold mr-2">1 file changed</h4>
+                  <ChevronsUpDown className="h-4 w-4" />
+                  <span className="sr-only">Toggle</span>
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>{diffHtml}</CollapsibleContent>
+          </Collapsible>
+        )}
       </div>
     </div>
   );
