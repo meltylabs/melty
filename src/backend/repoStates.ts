@@ -1,21 +1,16 @@
-import { Uri } from "vscode";
-import { RepoState, RepoStateCommitted, RepoStateInMemory, MeltyFile } from "../types";
+import { RepoState, RepoStateCommitted, RepoStateInMemory, MeltyFile, GitRepo } from "../types";
 import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
 import * as utils from "./utils/utils";
 
 export function createFromCommit(
-  repo: any,
-  workspaceRoot: string,
   commit: string
 ): RepoState {
-  return { repo, workspaceRoot, impl: { status: "committed", commit } };
+  return { impl: { status: "committed", commit } };
 }
 
 export function createFromCommitAndDiff(
-  repo: any,
-  workspaceRoot: string,
   parentCommit: string,
   filesChanged: { [relativePath: string]: MeltyFile }
 ): RepoState {
@@ -24,7 +19,7 @@ export function createFromCommitAndDiff(
     filesChanged: filesChanged,
     parentCommit: parentCommit,
   };
-  return { repo, workspaceRoot, impl: repoStateInMemory };
+  return { impl: repoStateInMemory };
 }
 
 // export function createCopyParent(parentRepoState: RepoState): RepoState {
@@ -87,8 +82,10 @@ export function commit(repoState: RepoState): string | undefined {
  */
 export async function actualize(
   repoState: RepoState,
-  repository: any
+  gitRepo: GitRepo,
 ): Promise<void> {
+  const repository = gitRepo.repository;
+
   await repository.status();
   // check for uncommitted changes
   if (!utils.repoIsClean(repository)) {
@@ -105,14 +102,14 @@ export async function actualize(
 
     const filesChanged = repoStateInMemory.filesChanged;
     Object.entries(filesChanged).forEach(([_path, file]) => {
-      fs.mkdirSync(path.dirname(files.absolutePath(file)), {
+      fs.mkdirSync(path.dirname(files.absolutePath(file, gitRepo.rootPath)), {
         recursive: true,
       });
-      fs.writeFileSync(files.absolutePath(file), files.contents(file));
+      fs.writeFileSync(files.absolutePath(file, gitRepo.rootPath), files.contents(file));
     });
 
     await repository.add(
-      Object.values(filesChanged).map((file) => files.absolutePath(file))
+      Object.values(filesChanged).map((file) => files.absolutePath(file, gitRepo.rootPath))
     );
     await repository.commit("bot changes", { empty: true });
 
@@ -128,25 +125,26 @@ export async function actualize(
   }
 }
 
-export function hasFile(repoState: RepoState, filePath: string): boolean {
+export function hasFile(gitRepo: GitRepo, repoState: RepoState, filePath: string): boolean {
   if (repoState.impl.status === "inMemory") {
     return filePath in repoState.impl.filesChanged;
   } else {
-    utils.ensureRepoIsOnCommit(repoState.repo, repoState.impl.commit);
-    return fs.existsSync(path.join(repoState.workspaceRoot, filePath));
+    utils.ensureRepoIsOnCommit(gitRepo.repository, repoState.impl.commit);
+    return fs.existsSync(path.join(gitRepo.rootPath, filePath));
   }
 }
 
 export function getFileContents(
+  gitRepo: GitRepo,
   repoState: RepoState,
   filePath: string
 ): string {
   if (repoState.impl.status === "inMemory") {
     return files.contents(repoState.impl.filesChanged[filePath]);
   } else {
-    utils.ensureRepoIsOnCommit(repoState.repo, repoState.impl.commit);
+    utils.ensureRepoIsOnCommit(gitRepo.repository, repoState.impl.commit);
     return fs.readFileSync(
-      path.join(repoState.workspaceRoot, filePath),
+      path.join(gitRepo.rootPath, filePath),
       "utf8"
     );
   }
@@ -157,7 +155,7 @@ export function upsertFileContents(
   path: string,
   contents: string
 ): RepoState {
-  const file = files.create(path, contents, repoState.workspaceRoot);
+  const file = files.create(path, contents);
 
   let { filesChanged, parentCommit } = (() => {
     if (repoState.impl.status === "inMemory") {
@@ -176,8 +174,6 @@ export function upsertFileContents(
   })();
 
   return {
-    repo: repoState.repo,
-    workspaceRoot: repoState.workspaceRoot,
     impl: {
       status: "inMemory",
       parentCommit: parentCommit,

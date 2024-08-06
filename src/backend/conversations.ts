@@ -4,8 +4,9 @@ import {
   Mode,
   ClaudeConversation,
   ClaudeMessage,
+  RepoState,
+  GitRepo
 } from "../types";
-import { RepoState } from "./repoStates";
 import * as repoStates from "./repoStates";
 import * as joules from "./joules";
 import * as prompts from "./prompts";
@@ -34,6 +35,7 @@ export function respondHuman(
 
 export async function respondBot(
   conversation: Conversation,
+  gitRepo: GitRepo,
   contextPaths: string[],
   mode: Mode,
   processPartial: (partialJoule: Joule) => void
@@ -63,7 +65,7 @@ export async function respondBot(
     messages: [
       // TODOV2 user system info
       ...encodeRepoMap(currentRepoState),
-      ...encodeContext(currentRepoState, contextPaths),
+      ...encodeContext(gitRepo, currentRepoState, contextPaths),
       ...encodeMessages(conversation),
     ],
   };
@@ -95,6 +97,7 @@ export async function respondBot(
   const newRepoState =
     mode === "code"
       ? diffApplicatorXml.applySearchReplaceBlocks(
+          gitRepo,
           currentRepoState,
           searchReplaceList
         )
@@ -112,20 +115,21 @@ export async function respondBot(
   return newConversation;
 }
 
-function encodeFile(repoState: RepoState, path: string) {
+function encodeFile(gitRepo: GitRepo, repoState: RepoState, path: string) {
   return `${path}
 \`\`\`
-${repoStates.getFileContents(repoState, path)}
+${repoStates.getFileContents(gitRepo, repoState, path)}
 \`\`\``;
 }
 
 function encodeContext(
+  gitRepo: GitRepo,
   repoState: RepoState,
   contextPaths: string[]
 ): ClaudeMessage[] {
   // in the future, this could handle other types of context, like web urls
   const fileEncodings = contextPaths
-    .map((path) => encodeFile(repoState, path))
+    .map((path) => encodeFile(gitRepo, repoState, path))
     .join("\n");
 
   return fileEncodings.length

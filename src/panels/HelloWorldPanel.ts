@@ -286,8 +286,10 @@ export class HelloWorldPanel {
 
   private async handleAskCode(text: string, mode: "ask" | "code") {
     const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
-
     const task = this.spectacleExtension.getTask();
+    
+    // human response
+    await task.respondHuman(text);
     this._panel.webview.postMessage({
       command: "loadConversation",
       conversation: task.conversation,
@@ -301,7 +303,7 @@ export class HelloWorldPanel {
       });
     };
     try {
-      const botJoule = await task.respondBot(
+      await task.respondBot(
         meltyFilePaths, // TODO are we sending the right files here? @soybean
         mode,
         processPartial

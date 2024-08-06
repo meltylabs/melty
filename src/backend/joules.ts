@@ -1,4 +1,4 @@
-import { RepoState } from "./repoStates";
+import { RepoState } from "../types";
 import { Uri } from "vscode";
 import { v4 as uuidv4 } from "uuid";
 import * as repoStates from "./repoStates";

@@ -84,14 +84,14 @@ function JouleComponent({
     );
   };
 
-  const renderDiff = async () => {
-    // const diff = await joules.diff(joule, task.repository);
-    const diff =
-      "diff --git a/test.pdf b/test.pdf\nindex 0000000..1111111 100644\n--- a/test.pdf\n+++ b/test.pdf\n@@ -1,3 +1,3 @@\n-Hello\n+Hi\n";
-    return renderDiff2HTML(diff);
-  };
-
   useEffect(() => {
+    const renderDiff = async () => {
+      // const diff = await joules.diff(joule, task.repository);
+      const diff =
+        "diff --git a/test.pdf b/test.pdf\nindex 0000000..1111111 100644\n--- a/test.pdf\n+++ b/test.pdf\n@@ -1,3 +1,3 @@\n-Hello\n+Hi\n";
+      return renderDiff2HTML(diff);
+    };
+
     renderDiff().then(setDiffContent);
   }, [joule]);
 

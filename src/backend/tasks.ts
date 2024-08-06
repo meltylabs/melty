@@ -1,8 +1,7 @@
-import * as conversations from "./conversations";
 import * as vscode from "vscode";
-import { RepoState } from "./repoStates";
+import { Joule, Mode, Conversation, RepoState, GitRepo } from "../types";
+import * as conversations from "./conversations";
 import * as repoStates from "./repoStates";
-import { Joule, Mode, Conversation } from "../types";
 import * as utils from "./utils/utils";
 
 /**
@@ -10,18 +9,34 @@ import * as utils from "./utils/utils";
  */
 export class Task {
   conversation: Conversation;
-  repository: any;
+  gitRepo: GitRepo | null;
 
-  constructor(readonly workspaceRoot: string) {
-    this.workspaceRoot = workspaceRoot;
+  constructor() {
     this.conversation = conversations.create();
-    this.repository = null;
+    this.gitRepo = null;
   }
 
   public async init(): Promise<void> {
-    if (!this.repository) {
-      this.repository = await this.initializeRepository();
+    if (this.gitRepo) {
+      return;
     }
+
+    const gitExtension = vscode.extensions.getExtension("vscode.git");
+    if (!gitExtension) {
+      vscode.window.showErrorMessage("Git extension not found");
+      throw new Error("Git extension not found");
+    }
+
+    const git = gitExtension.exports.getAPI(1);
+    const repositories = git.repositories;
+    if (repositories.length === 0) {
+      vscode.window.showInformationMessage("No Git repository found");
+      throw new Error("No Git repository found");
+    }
+    const repo = repositories[0];
+    await repo.status();
+
+    this.gitRepo = { repository: repo, rootPath: repo.rootUri.fsPath };
   }
 
   private getConversationState(): RepoState | undefined {
@@ -45,7 +60,7 @@ export class Task {
       return; // if the conversation is empty, we're in sync
     }
     const conversationTailCommit = repoStates.commit(conversationState);
-    const latestCommit = this.repository.state.HEAD?.commit;
+    const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
     if (latestCommit !== conversationTailCommit) {
       throw new Error(
         `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
@@ -54,11 +69,11 @@ export class Task {
   }
 
   private ensureWorkingDirectoryClean(): void {
-    if (!utils.repoIsClean(this.repository)) {
+    if (!utils.repoIsClean(this.gitRepo!.repository)) {
       throw new Error(`Working directory is not clean:
-                ${this.repository.state.workingTreeChanges.length}
-                ${this.repository.state.indexChanges.length}
-                ${this.repository.state.mergeChanges.length}`);
+                ${this.gitRepo!.repository.state.workingTreeChanges.length}
+                ${this.gitRepo!.repository.state.indexChanges.length}
+                ${this.gitRepo!.repository.state.mergeChanges.length}`);
     }
   }
 
@@ -72,12 +87,12 @@ export class Task {
       "{.git,node_modules}/**"
     );
     const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
-    await this.repository.add(absolutePaths);
+    await this.gitRepo!.repository.add(absolutePaths);
 
-    if (this.repository.state.indexChanges.length > 0) {
-      await this.repository.commit("human changes");
+    if (this.gitRepo!.repository.state.indexChanges.length > 0) {
+      await this.gitRepo!.repository.commit("human changes");
     }
-    await this.repository.status();
+    await this.gitRepo!.repository.status();
   }
 
   /**
@@ -88,12 +103,13 @@ export class Task {
     mode: Mode,
     processPartial: (partialJoule: Joule) => void
   ): Promise<Joule> {
-    await this.repository.status();
+    await this.gitRepo!.repository.status();
     this.ensureInSync();
     this.ensureWorkingDirectoryClean();
 
     this.conversation = await conversations.respondBot(
       this.conversation,
+      this.gitRepo!,
       contextPaths,
       mode,
       processPartial
@@ -101,8 +117,8 @@ export class Task {
     const lastJoule = conversations.lastJoule(this.conversation)!;
 
     // actualize does the commit and updates the repoState in-place
-    await repoStates.actualize(lastJoule.repoState, this.repository);
-    await this.repository.status();
+    await repoStates.actualize(lastJoule.repoState, this.gitRepo!);
+    await this.gitRepo!.repository.status();
 
     return lastJoule;
   }
@@ -111,16 +127,12 @@ export class Task {
    * Responds to a human message.
    */
   public async respondHuman(message: string): Promise<Joule> {
-    await this.repository.status();
+    await this.gitRepo!.repository.status();
 
     await this.commitChanges();
 
-    const latestCommit = this.repository.state.HEAD?.commit;
-    const newRepoState = repoStates.createFromCommit(
-      this.repository,
-      this.workspaceRoot,
-      latestCommit
-    );
+    const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
+    const newRepoState = repoStates.createFromCommit(latestCommit);
 
     this.conversation = conversations.respondHuman(
       this.conversation,
@@ -129,26 +141,5 @@ export class Task {
     );
 
     return conversations.lastJoule(this.conversation)!;
-  }
-
-  /**
-   * Gets current repository
-   */
-  private async initializeRepository() {
-    const gitExtension = vscode.extensions.getExtension("vscode.git");
-    if (!gitExtension) {
-      vscode.window.showErrorMessage("Git extension not found");
-      throw new Error("Git extension not found");
-    }
-
-    const git = gitExtension.exports.getAPI(1);
-    const repositories = git.repositories;
-    if (repositories.length === 0) {
-      vscode.window.showInformationMessage("No Git repository found");
-      throw new Error("No Git repository found");
-    }
-    const repo = repositories[0];
-    await repo.status();
-    return repo;
   }
 }

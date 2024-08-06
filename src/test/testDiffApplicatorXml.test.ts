@@ -144,8 +144,8 @@ oops!
 suite('applySearchReplaceBlocks', () => {
     test('should apply search and replace correctly', () => {
         const initialState: RepoState = repoStates.createFromCommitAndDiff({
-            'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.', "")
-        }, undefined, "");
+            'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
+        }, "");
         const searchReplace: SearchReplace = {
             filePath: 'test.txt',
             search: 'world',
@@ -159,8 +159,8 @@ suite('applySearchReplaceBlocks', () => {
 
     test('should throw error if search text not found', () => {
         const initialState: RepoState = repoStates.createFromCommitAndDiff({
-            'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.', "")
-        }, undefined, "");
+            'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
+        }, "");
         const searchReplace: SearchReplace = {
             filePath: 'test.txt',
             search: 'universe',

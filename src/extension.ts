@@ -38,7 +38,6 @@ export class SpectacleExtension {
   private meltyFilePaths: string[] = [];
   private workspaceFilePaths: string[] = [];
   private task: Task | undefined;
-  private repository: any;
 
   constructor(
     private context: vscode.ExtensionContext,
