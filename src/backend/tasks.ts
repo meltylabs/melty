@@ -67,7 +67,10 @@ export class Task {
         );
         const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
         await this.repository.add(absolutePaths);
-        await this.repository.commit("human changes", { empty: true });
+
+        if (this.repository.state.indexChanges.length > 0) {
+            await this.repository.commit("human changes");
+        }
         await this.repository.status();
     }
 

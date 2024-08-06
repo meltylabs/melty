@@ -104,16 +104,12 @@ export async function actualize(repoState: RepoState, repository: any): Promise<
     }
 
     if (repoState.impl.status === "committed") {
-        const repoStateCommitted = repoState.impl;
-        await repository.checkout(repoStateCommitted.commit);
+        utils.ensureRepoIsOnCommit(repository, repoState.impl.commit);
         // no update to repoState needed
     } else {
         const repoStateInMemory = repoState.impl;
 
-        const latestCommit = repository.state.HEAD?.commit;
-        if (latestCommit !== repoStateInMemory.parentCommit) {
-            throw new Error(`Please move to ${repoStateInMemory.parentCommit} before actualizing`);
-        }
+        utils.ensureRepoIsOnCommit(repository, repoStateInMemory.parentCommit);
 
         const filesChanged = repoStateInMemory.filesChanged;
         Object.entries(filesChanged).forEach(([_path, file]) => {
