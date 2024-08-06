@@ -1,26 +1,33 @@
-import { Joule, JouleBot, Mode } from './joules';
-import { RepoState } from './repoStates';
-import * as repoStates from './repoStates';
-import * as joules from './joules';
-import * as prompts from './prompts';
-import * as claudeAPI from '../lib/claudeAPI';
-import { SearchReplace } from './searchReplace';
-import * as diffApplicatorXml from './diffApplicatorXml';
+import {
+  Joule,
+  JouleBot,
+  Mode,
+  ClaudeConversation,
+  ClaudeMessage,
+} from "../types";
+import { RepoState } from "./repoStates";
+import * as repoStates from "./repoStates";
+import * as joules from "./joules";
+import * as prompts from "./prompts";
+import * as claudeAPI from "../lib/claudeAPI";
+import * as diffApplicatorXml from "./diffApplicatorXml";
 // import { RepoMap } from './repoMap';
 
-export type Conversation = {
-  readonly joules: ReadonlyArray<Joule>;
-};
+import { Conversation } from "../types";
 
 export function create(): Conversation {
-    return { joules: [] };
+  return { joules: [] };
 }
 
 function addJoule(conversation: Conversation, joule: Joule): Conversation {
   return { joules: [...conversation.joules, joule] };
 }
 
-export function respondHuman(conversation: Conversation, message: string, repoState: RepoState): Conversation {
+export function respondHuman(
+  conversation: Conversation,
+  message: string,
+  repoState: RepoState
+): Conversation {
   const newJoule = joules.createJouleHuman(message, repoState);
   return addJoule(conversation, newJoule);
 }
@@ -41,74 +48,103 @@ export async function respondBot(
     switch (mode) {
       case "code":
         return (
-          prompts.codeModeSystemPrompt()
-            + prompts.diffDecoderPrompt()
-            + prompts.exampleConversationsPrompt()
-            + prompts.codeChangeCommandRulesPrompt()
+          prompts.codeModeSystemPrompt() +
+          prompts.diffDecoderPrompt() +
+          prompts.exampleConversationsPrompt() +
+          prompts.codeChangeCommandRulesPrompt()
         );
       case "ask":
         return prompts.askModeSystemPrompt();
     }
   })();
 
-  const claudeConversation: claudeAPI.ClaudeConversation = {
+  const claudeConversation: ClaudeConversation = {
     system: systemPrompt,
     messages: [
       // TODOV2 user system info
       ...encodeRepoMap(currentRepoState),
       ...encodeContext(currentRepoState, contextPaths),
-      ...encodeMessages(conversation)
-    ]
+      ...encodeMessages(conversation),
+    ],
   };
-  
+
   // TODO 200: get five responses, pick the best one with pickResponse
 
   // TODOV2 write a claudePlus
   console.log(systemPrompt);
-  let partialJoule = joules.createJouleBot("", mode, currentRepoState, contextPaths);
-  const finalResponse = await claudeAPI.streamClaude(claudeConversation, (responseFragment) => {
-    partialJoule = joules.updateMessage(partialJoule, partialJoule.message + responseFragment) as JouleBot;
-    processPartial(partialJoule);
-  });
-
-  const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(finalResponse);
-
-  const newRepoState = (
-    mode === "code"
-      ? diffApplicatorXml.applySearchReplaceBlocks(currentRepoState, searchReplaceList)
-      : currentRepoState // repoStates.createCopyParent(currentRepoState)
-      // TODO: we might need to do a copy here. something bad happens if we don't but I can't remember what.
-      // see if this works and if not, add back createCopyParent.
+  let partialJoule = joules.createJouleBot(
+    "",
+    mode,
+    currentRepoState,
+    contextPaths
+  );
+  const finalResponse = await claudeAPI.streamClaude(
+    claudeConversation,
+    (responseFragment) => {
+      partialJoule = joules.updateMessage(
+        partialJoule,
+        partialJoule.message + responseFragment
+      ) as JouleBot;
+      processPartial(partialJoule);
+    }
   );
 
-  const newJoule = joules.createJouleBot(messageChunksList.join("\n"), mode, newRepoState, contextPaths);
+  const { messageChunksList, searchReplaceList } =
+    diffApplicatorXml.splitResponse(finalResponse);
+
+  const newRepoState =
+    mode === "code"
+      ? diffApplicatorXml.applySearchReplaceBlocks(
+          currentRepoState,
+          searchReplaceList
+        )
+      : currentRepoState; // repoStates.createCopyParent(currentRepoState)
+  // TODO: we might need to do a copy here. something bad happens if we don't but I can't remember what.
+  // see if this works and if not, add back createCopyParent.
+
+  const newJoule = joules.createJouleBot(
+    messageChunksList.join("\n"),
+    mode,
+    newRepoState,
+    contextPaths
+  );
   const newConversation = addJoule(conversation, newJoule);
   return newConversation;
 }
 
 function encodeFile(repoState: RepoState, path: string) {
-    return `${path}
+  return `${path}
 \`\`\`
 ${repoStates.getFileContents(repoState, path)}
 \`\`\``;
 }
 
-function encodeContext(repoState: RepoState, contextPaths: string[]): claudeAPI.ClaudeMessage[] {
+function encodeContext(
+  repoState: RepoState,
+  contextPaths: string[]
+): ClaudeMessage[] {
   // in the future, this could handle other types of context, like web urls
-  const fileEncodings = contextPaths.map((path) => encodeFile(repoState, path)).join("\n");
+  const fileEncodings = contextPaths
+    .map((path) => encodeFile(repoState, path))
+    .join("\n");
 
-  return fileEncodings.length ? [
-    { role: "user", content: `${prompts.filesUserIntro()}
+  return fileEncodings.length
+    ? [
+        {
+          role: "user",
+          content: `${prompts.filesUserIntro()}
 
-${fileEncodings}` },
-   { role: "assistant", content: prompts.filesAsstAck()}
-  ] : [];
+${fileEncodings}`,
+        },
+        { role: "assistant", content: prompts.filesAsstAck() },
+      ]
+    : [];
 }
 
-function encodeRepoMap(repoState: RepoState): claudeAPI.ClaudeMessage[] {
+function encodeRepoMap(repoState: RepoState): ClaudeMessage[] {
   // return [
   //   { role: "user", content: `Here's a map of the repository I'm working in:
-      
+
   //     ${new RepoMap({ root: "ROOT_DIR_TODO" }).getRepoMap(
   //       ["abc.py", "def.py"],
   //       ["ghi.py"]
@@ -119,14 +155,16 @@ function encodeRepoMap(repoState: RepoState): claudeAPI.ClaudeMessage[] {
 }
 
 export function lastJoule(conversation: Conversation): Joule | undefined {
-  return conversation.joules.length ? conversation.joules[conversation.joules.length - 1] : undefined;
+  return conversation.joules.length
+    ? conversation.joules[conversation.joules.length - 1]
+    : undefined;
 }
 
-function encodeMessages(conversation: Conversation): claudeAPI.ClaudeMessage[] {
+function encodeMessages(conversation: Conversation): ClaudeMessage[] {
   return conversation.joules.map((joule) => {
     return {
       role: joule.author === "human" ? "user" : "assistant",
-      content: joule.message.length ? joule.message : "..." // appease Claude, who demands all messages be non-empty
+      content: joule.message.length ? joule.message : "...", // appease Claude, who demands all messages be non-empty
     };
   });
 }

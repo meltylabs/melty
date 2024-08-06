@@ -1,10 +1,6 @@
 import * as path from "path";
 
-export type MeltyFile = {
-    readonly path: string;
-    readonly contents: string;
-    readonly workspaceRoot: string;
-};
+import { MeltyFile } from '../types';
 
 export function relativePath(file: MeltyFile): string {
     return file.path;

@@ -2,6 +2,7 @@
 
 const { build } = require("esbuild");
 const glob = require("glob");
+const path = require("path");
 
 const baseConfig = {
   bundle: true,
@@ -21,6 +22,16 @@ const extensionConfig = {
   entryPoints: ["./src/extension.ts"],
   outfile: "./out/extension.js",
   external: ["vscode"],
+  plugins: [
+    {
+      name: 'alias',
+      setup(build) {
+        build.onResolve({ filter: /^@backend\// }, args => {
+          return { path: path.resolve(__dirname, 'src', 'backend', args.path.slice(9)) }
+        })
+      },
+    },
+  ],
 };
 
 const testConfig = {

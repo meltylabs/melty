@@ -1,15 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
 
-export type ClaudeMessage = {
-  readonly role: "user" | "assistant";
-  readonly content: string;
-};
-
-export type ClaudeConversation = {
-  readonly messages: ClaudeMessage[];
-  readonly system: string;
-};
+import { ClaudeMessage, ClaudeConversation } from '../types';
 
 export async function claude(conversation: ClaudeConversation): Promise<string> {
   return doClaude(conversation);

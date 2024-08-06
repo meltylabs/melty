@@ -3,27 +3,7 @@ import { Uri } from "vscode";
 import { v4 as uuidv4 } from "uuid";
 import * as repoStates from "./repoStates";
 
-export type Mode = "code" | "ask";
-
-export type JouleHuman = {
-  readonly author: "human";
-  readonly id: string;
-  readonly mode: null;
-  readonly message: string;
-  readonly repoState: RepoState;
-  readonly contextPaths: null;
-};
-
-export type JouleBot = {
-  readonly author: "bot";
-  readonly id: string;
-  readonly mode: Mode;
-  readonly message: string;
-  readonly repoState: RepoState;
-  readonly contextPaths: ReadonlyArray<string>;
-};
-
-export type Joule = JouleHuman | JouleBot;
+import { Mode, JouleHuman, JouleBot, Joule } from '../types';
 
 export function createJouleHuman(
   message: string,

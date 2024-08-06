@@ -3,13 +3,7 @@ import * as path from 'path';
 import Parser from 'node-tree-sitter';
 import treeSitterTypeScript from 'tree-sitter-wasms/out/tree-sitter-typescript.wasm';
 
-interface Tag {
-    relFname: string;
-    fname: string;
-    name: string;
-    kind: 'def' | 'ref';
-    line: number;
-}
+import { Tag } from '../types';
 
 export class RepoMap {
     private parsers: Map<string, Parser>;
