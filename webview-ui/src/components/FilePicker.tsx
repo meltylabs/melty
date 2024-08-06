@@ -226,6 +226,7 @@ export function FilePicker({
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       // Check for Cmd+Shift+m on Mac or Ctrl+Shift+m on Windows/Linux
+      console.log("event.key", event.key);
       if (event.key === "\\") {
         event.preventDefault(); // Prevent default browser behavior
         setOpen(!open);
@@ -234,7 +235,7 @@ export function FilePicker({
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, []);
+  }, [open, setOpen]);
 
   return (
     <>
