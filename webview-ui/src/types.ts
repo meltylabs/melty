@@ -1,7 +1,10 @@
-// From src/backend/repoStates.ts
+export type GitRepo = {
+  repository: any;
+  rootPath: string;
+};
+
 export type RepoState = {
-  readonly repo: any;
-  readonly workspaceRoot: string;
+  readonly hasChanges: boolean;
   impl: RepoStateInMemory | RepoStateCommitted;
 };
 
@@ -91,5 +94,4 @@ export type Conversation = {
 export type MeltyFile = {
   readonly path: string;
   readonly contents: string;
-  readonly workspaceRoot: string;
 };

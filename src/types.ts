@@ -4,6 +4,7 @@ export type GitRepo = {
 };
 
 export type RepoState = {
+  readonly hasChanges: boolean;
   impl: RepoStateInMemory | RepoStateCommitted;
 };
 

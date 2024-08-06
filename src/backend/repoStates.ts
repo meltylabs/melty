@@ -5,9 +5,10 @@ import * as path from "path";
 import * as utils from "./utils/utils";
 
 export function createFromCommit(
-  commit: string
+  commit: string,
+  hasChanges: boolean,
 ): RepoState {
-  return { impl: { status: "committed", commit } };
+  return { hasChanges: hasChanges, impl: { status: "committed", commit } };
 }
 
 export function createFromCommitAndDiff(
@@ -19,7 +20,10 @@ export function createFromCommitAndDiff(
     filesChanged: filesChanged,
     parentCommit: parentCommit,
   };
-  return { impl: repoStateInMemory };
+  return {
+    hasChanges: Object.keys(filesChanged).length > 0,
+    impl: repoStateInMemory
+  };
 }
 
 // export function createCopyParent(parentRepoState: RepoState): RepoState {

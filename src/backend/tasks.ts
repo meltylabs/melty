@@ -79,8 +79,9 @@ export class Task {
 
   /**
    * Commits any local changes (or empty commit if none).
+   * @returns the number of changes committed
    */
-  private async commitChanges(): Promise<void> {
+  private async commitChanges(): Promise<number> {
     this.ensureInSync();
     const workspaceFileUris = await vscode.workspace.findFiles(
       "**/*",
@@ -89,10 +90,14 @@ export class Task {
     const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
     await this.gitRepo!.repository.add(absolutePaths);
 
-    if (this.gitRepo!.repository.state.indexChanges.length > 0) {
+    const changes = this.gitRepo!.repository.state.indexChanges;
+
+    if (changes.length > 0) {
       await this.gitRepo!.repository.commit("human changes");
     }
     await this.gitRepo!.repository.status();
+
+    return changes.length;
   }
 
   /**
@@ -129,10 +134,10 @@ export class Task {
   public async respondHuman(message: string): Promise<Joule> {
     await this.gitRepo!.repository.status();
 
-    await this.commitChanges();
+    const numFilesChanged = await this.commitChanges();
 
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    const newRepoState = repoStates.createFromCommit(latestCommit);
+    const newRepoState = repoStates.createFromCommit(latestCommit, numFilesChanged > 0);
 
     this.conversation = conversations.respondHuman(
       this.conversation,
