@@ -228,7 +228,7 @@ export function FilePicker({
       // Check for Cmd+Shift+m on Mac or Ctrl+Shift+m on Windows/Linux
       if (event.key === "\\") {
         event.preventDefault(); // Prevent default browser behavior
-        setOpen(true);
+        setOpen(!open);
       }
     };
 
