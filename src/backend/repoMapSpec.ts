@@ -12,8 +12,11 @@ export class RepoMapSpec {
     }
 
     public async getRepoMap(workspaceFilenames: string[]): Promise<string> {
+        // filter out files that are more than 10kb
+        const eligibleFiles = workspaceFilenames.filter(file => fs.statSync(path.join(this.gitRepo.rootPath, file)).size < 10000);
+
         let fullMap = "";
-        for (const file of workspaceFilenames) {
+        for (const file of eligibleFiles) {
             fullMap += this.mapFile(file);
         }
         return fullMap;
