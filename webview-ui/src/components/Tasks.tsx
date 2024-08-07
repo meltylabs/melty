@@ -7,6 +7,7 @@ import {
   CardContent,
   CardFooter,
 } from "./ui/card";
+import { vscode } from "../utilities/vscode";
 
 import { Button } from "./ui/button";
 
@@ -44,9 +45,32 @@ export function Tasks() {
       github_link: "https://github.com/cbh123/melty/pull/3",
     },
   ]);
+
+  useEffect(() => {
+    vscode.postMessage({
+      command: "listTasks",
+    });
+
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      if (message.command === "listTasks") {
+        setTasks(message.tasks);
+      }
+    });
+  }, []);
+
   return (
     <div>
-      <Button>Start new task</Button>
+      <Button
+        onClick={() => {
+          vscode.postMessage({
+            command: "createNewTask",
+            taskName: "New Task",
+          });
+        }}
+      >
+        Start new task
+      </Button>
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.map((task) => (
           <Link to="/" className="mr-4">
