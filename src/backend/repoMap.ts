@@ -1,22 +1,44 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Parser from 'node-tree-sitter';
-import treeSitterTypeScript from 'tree-sitter-wasms/out/tree-sitter-typescript.wasm';
+import Parser from 'web-tree-sitter';
+// import treeSitterTypeScript from 'tree-sitter-wasms/out/tree-sitter-typescript.wasm';
+// import treeSitterRust from "tree-sitter-wasms/out/tree-sitter-rust.wasm"
 
-import { Tag } from '../types';
+import { Tag, GitRepo } from '../types';
 
 export class RepoMap {
     private parsers: Map<string, Parser>;
+    private gitRepo: GitRepo;
 
-    constructor(private options: { root: string }) {
-        this.parsers = new Map();
-        this.initParsers();
+    constructor(gitRepo: GitRepo) {
+        this.gitRepo = gitRepo;
     }
 
-    private initParsers() {
-        const tsParser = new Parser();
-        tsParser.setLanguage(treeSitterTypeScript);
-        this.parsers.set('.ts', tsParser);
+    public async initParsers() {
+        if (this.parsers !== undefined) {
+            return;
+        }
+
+        this.parsers = new Map();
+        await Parser.init({
+            locateFile(scriptName: string) {
+                return path.join(__dirname, '..', '..', 'node_modules', 'web-tree-sitter', scriptName);
+            }
+        });
+
+        const parser = new Parser;
+        const treeSitterTypescript = await Parser.Language.load(
+            path.join(__dirname, '..', 'lib/tree-sitter-typescript.wasm')
+        );
+        parser.setLanguage(treeSitterTypescript);
+        this.parsers.set('.ts', parser);
+
+        const pyParser = new Parser;
+        const treeSitterPython = await Parser.Language.load(
+            path.join(__dirname, '..', 'lib/tree-sitter-python.wasm')
+        );
+        pyParser.setLanguage(treeSitterPython);
+        this.parsers.set('.py', pyParser);
     }
 
     private getParser(fileName: string): Parser | undefined {
@@ -24,9 +46,10 @@ export class RepoMap {
         return this.parsers.get(ext);
     }
 
-    public getRepoMap(chatFiles: string[], otherFiles: string[]): string {
-        const allFiles = [...new Set([...chatFiles, ...otherFiles])];
-        const tags = this.getAllTags(allFiles);
+    public async getRepoMap(workspaceFilenames: string[]): Promise<string> {
+        await this.initParsers();
+
+        const tags = this.getAllTags(workspaceFilenames);
         const rankedTags = this.rankTags(tags);
         return this.generateMapString(rankedTags);
     }
@@ -86,7 +109,7 @@ export class RepoMap {
 
     private createTag(fileName: string, node: Parser.SyntaxNode, kind: 'def' | 'ref'): Tag {
         return {
-            relFname: path.relative(this.options.root, fileName),
+            relFname: path.relative(this.gitRepo.rootPath, fileName),
             fname: fileName,
             name: node.text,
             kind: kind,
@@ -95,44 +118,45 @@ export class RepoMap {
     }
 
     private rankTags(tags: Tag[]): Tag[] {
-        const graph: { [key: string]: Set<string> } = {};
-        let ranks: { [key: string]: number } = {};
+        return tags;
+    //     const graph: { [key: string]: Set<string> } = {};
+    //     let ranks: { [key: string]: number } = {};
 
-        // Build the graph
-        tags.forEach(tag => {
-            if (tag.kind === 'def') {
-                if (!graph[tag.name]) {
-                    graph[tag.name] = new Set();
-                }
-                ranks[tag.name] = 1; // Initial rank
-            } else if (tag.kind === 'ref') {
-                if (!graph[tag.name]) {
-                    graph[tag.name] = new Set();
-                }
-                graph[tag.name].add(tag.relFname);
-            }
-        });
+    //     // Build the graph
+    //     tags.forEach(tag => {
+    //         if (tag.kind === 'def') {
+    //             if (!graph[tag.name]) {
+    //                 graph[tag.name] = new Set();
+    //             }
+    //             ranks[tag.name] = 1; // Initial rank
+    //         } else if (tag.kind === 'ref') {
+    //             if (!graph[tag.name]) {
+    //                 graph[tag.name] = new Set();
+    //             }
+    //             graph[tag.name].add(tag.relFname);
+    //         }
+    //     });
 
-        // Simplified PageRank
-        const damping = 0.85;
-        const iterations = 10;
+    //     // Simplified PageRank
+    //     const damping = 0.85;
+    //     const iterations = 10;
 
-        for (let i = 0; i < iterations; i++) {
-            const newRanks: { [key: string]: number } = {};
-            Object.keys(graph).forEach(node => {
-                let sum = 0;
-                Object.keys(graph).forEach(otherNode => {
-                    if (graph[otherNode].has(node)) {
-                        sum += ranks[otherNode] / graph[otherNode].size;
-                    }
-                });
-                newRanks[node] = (1 - damping) + damping * sum;
-            });
-            ranks = newRanks;
-        }
+    //     for (let i = 0; i < iterations; i++) {
+    //         const newRanks: { [key: string]: number } = {};
+    //         Object.keys(graph).forEach(node => {
+    //             let sum = 0;
+    //             Object.keys(graph).forEach(otherNode => {
+    //                 if (graph[otherNode].has(node)) {
+    //                     sum += ranks[otherNode] / graph[otherNode].size;
+    //                 }
+    //             });
+    //             newRanks[node] = (1 - damping) + damping * sum;
+    //         });
+    //         ranks = newRanks;
+    //     }
 
-        // Sort tags based on rank
-        return tags.sort((a, b) => (ranks[b.name] || 0) - (ranks[a.name] || 0));
+    //     // Sort tags based on rank
+    //     return tags.sort((a, b) => (ranks[b.name] || 0) - (ranks[a.name] || 0));
     }
 
 

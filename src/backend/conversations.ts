@@ -11,9 +11,11 @@ import {
 import * as pseudoCommits from "./pseudoCommits";
 import * as joules from "./joules";
 import * as prompts from "./prompts";
-import * as claudeAPI from "../lib/claudeAPI";
+import * as claudeAPI from "./claudeAPI";
 import * as diffApplicatorXml from "./diffApplicatorXml";
-// import { RepoMap } from './repoMap';
+import { RepoMapSpec } from './repoMapSpec';
+import * as vscode from 'vscode';
+import * as path from 'path';
 
 export function create(): Conversation {
   return { joules: [] };
@@ -63,7 +65,7 @@ export async function respondBot(
     system: systemPrompt,
     messages: [
       // TODOV2 user system info
-      ...encodeRepoMap(currentPseudoCommit),
+      ...await encodeRepoMap(gitRepo, currentPseudoCommit),
       ...encodeContext(gitRepo, currentPseudoCommit, contextPaths),
       ...encodeMessages(conversation),
     ],
@@ -158,17 +160,26 @@ ${fileEncodings}`,
     : [];
 }
 
-function encodeRepoMap(pseudoCommit: PseudoCommit): ClaudeMessage[] {
-  // return [
-  //   { role: "user", content: `Here's a map of the repository I'm working in:
+async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Promise<ClaudeMessage[]> {
+  const repoMap = new RepoMapSpec(gitRepo);
 
-  //     ${new RepoMap({ root: "ROOT_DIR_TODO" }).getRepoMap(
-  //       ["abc.py", "def.py"],
-  //       ["ghi.py"]
-  //     )}` },
-  //   { role: "assistant", content: "Thanks. I'll pay close attention to this."}
-  // ];
-  return [];
+  // TODO this logic is copied from HelloWorldPanel.ts
+  const workspaceFileUris = await vscode.workspace.findFiles(
+    "**/*",
+    "**/node_modules/**"
+  );
+  const workspaceFilePaths = workspaceFileUris.map((file) => {
+    return path.relative(gitRepo.rootPath, file.fsPath);
+  });
+
+  const repoMapMessages: ClaudeMessage[] = [
+    {
+      role: "user", content: `${prompts.repoMapIntro()}
+      
+      ${await repoMap.getRepoMap(workspaceFilePaths)}`},
+    { role: "assistant", content: prompts.repoMapAsstAck()}
+  ];
+  return repoMapMessages; // [];
 }
 
 export function lastJoule(conversation: Conversation): Joule | undefined {

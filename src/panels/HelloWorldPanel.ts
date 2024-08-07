@@ -98,6 +98,18 @@ export class HelloWorldPanel {
         spectacleExtension
       );
     }
+    
+    // Add this line to always load the conversation
+    HelloWorldPanel.currentPanel?.loadConversation();
+  }
+
+  // Add this method to the HelloWorldPanel class
+  public loadConversation() {
+    const conversation = this.spectacleExtension.getConversation();
+    this._panel.webview.postMessage({
+      command: "loadConversation",
+      conversation: conversation,
+    });
   }
 
   /**
@@ -197,6 +209,14 @@ export class HelloWorldPanel {
             this._panel.webview.postMessage({
               command: "loadConversation",
               conversation: conversation,
+            });
+            return;
+          case "loadMessages":
+            console.log(`loadMessages`);
+            const messages = this.spectacleExtension.getConversation();
+            this._panel.webview.postMessage({
+              command: "loadConversation",
+              conversation: messages,
             });
             return;
           case "listMeltyFiles":

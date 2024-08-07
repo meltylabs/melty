@@ -2,6 +2,7 @@
 
 const { build } = require("esbuild");
 const glob = require("glob");
+const fs = require("fs-extra");
 
 const baseConfig = {
   bundle: true,
@@ -28,7 +29,7 @@ const testConfig = {
   platform: "node",
   format: "cjs",
   entryPoints: glob.sync("./src/test/**/*.test.ts"),
-  outdir: "./out/test",
+  outdir: "./out",
   external: ["vscode"],
 };
 
@@ -49,6 +50,11 @@ const watchConfig = {
   },
 };
 
+const copyLibFolder = async () => {
+  await fs.copy("./src/lib", "./out/lib");
+  console.log("Lib folder copied to out directory");
+};
+
 (async () => {
   const args = process.argv.slice(2);
   try {
@@ -63,11 +69,13 @@ const watchConfig = {
         ...testConfig,
         ...watchConfig,
       });
+      await copyLibFolder();
       console.log("[watch] build finished");
     } else {
       // Build extension and test code
       await build(extensionConfig);
       await build(testConfig);
+      await copyLibFolder();
       console.log("build complete");
     }
   } catch (err) {

@@ -15,7 +15,19 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "", // disabled because defaultBuildTask was running npm watch which does not halt
+			"preLaunchTask": "npm: pretest",
+		},
+		{
+			"name": "Run Extension -- no react rebuild",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"preLaunchTask": "npm: pretest:extension",
 		},
 		{
 			"type": "node",
@@ -23,16 +35,14 @@
 			"name": "Mocha Tests",
 			"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
 			"args": [
-				"--timeout",
-				"999999",
-				"--colors",
-				"${workspaceFolder}/test/**/*.test.js",
-				"newthing"
+				"--timeout", "999999",
+				"--colors", "${workspaceFolder}/out/test/**/*.test.js",
 			],
 			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": [
 				"<node_internals>/**"
-			]
+			],
+			"preLaunchTask": "npm: pretest:extension"
 		}
 	]
 }

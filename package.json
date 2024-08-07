@@ -68,11 +68,14 @@
     "watch:webview": "cd webview-ui && npm run watch",
     "lint": "eslint src --ext ts",
     "test": "vscode-test --",
-    "pretest": "npm run compile && npm run lint",
+    "pretest:extension": "npm run compile && npm run lint",
+    "pretest:webview": "npm run build:webview",
+    "pretest": "npm run pretest:extension && npm run pretest:webview",
     "clean": "rm -rf out"
   },
   "devDependencies": {
     "@types/diff": "^5.2.1",
+    "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
     "@types/sinon": "^17.0.3",
@@ -86,8 +89,10 @@
     "concurrently": "^8.2.2",
     "esbuild": "^0.16.17",
     "eslint": "^8.57.0",
+    "fs-extra": "^11.2.0",
     "sinon": "^18.0.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "web-tree-sitter": "^0.22.6"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
