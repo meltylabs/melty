@@ -156,6 +156,7 @@ function ConversationView() {
 
   function loadConversation(taskId: string | null) {
     vscode.postMessage({ command: "loadConversation", taskId });
+    vscode.postMessage({ command: "switchTask", taskId });
   }
 
   function loadFiles() {

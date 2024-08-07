@@ -302,10 +302,12 @@ export class HelloWorldPanel {
 
           case "switchTask":
             await this.spectacleExtension.switchToTask(message.taskId);
-            this._panel.webview.postMessage({
-              command: "taskSwitched",
-              taskId: message.taskId,
-            });
+            const newTask = await this.spectacleExtension.getCurrentTask();
+            console.log(`switched to ${newTask.id}`);
+            // this._panel.webview.postMessage({
+            //   command: "taskSwitched",
+            //   taskId: message.taskId,
+            // });
             return;
         }
       },

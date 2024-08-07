@@ -18,7 +18,6 @@ export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private meltyMindFilePaths: string[] = [];
   private workspaceFilePaths: string[] | undefined;
-  //   private task: Task | undefined;
   private tasks: Map<string, Task> = dummyTasks;
   private currentTask: Task | undefined;
 
@@ -46,8 +45,11 @@ export class SpectacleExtension {
   }
 
   public async getWorkspaceFilePaths() {
+    if (!this.currentTask) {
+      throw new Error("No current task");
+    }
     if (this.workspaceFilePaths === undefined) {
-      if (!(await this.initializeWorkspaceFilePaths())) {
+      if (!(await this.initializeWorkspaceFilePaths(this.currentTask))) {
         throw new Error("Could not initialize workspace file paths");
       }
     }
@@ -64,7 +66,7 @@ export class SpectacleExtension {
     });
   }
 
-  private async initializeWorkspaceFilePaths(): Promise<boolean> {
+  private async initializeWorkspaceFilePaths(task: Task): Promise<boolean> {
     if (this.workspaceFilePaths !== undefined) {
       return true;
     }
@@ -82,7 +84,7 @@ export class SpectacleExtension {
       "**/node_modules/**"
     );
     this.workspaceFilePaths = workspaceFileUris.map((file) => {
-      return path.relative(this.currentTask!.gitRepo!.rootPath, file.fsPath);
+      return path.relative(task.gitRepo!.rootPath, file.fsPath);
     });
     return true;
   }
@@ -141,7 +143,7 @@ export class SpectacleExtension {
 
     this.currentTask = task;
     this.workspaceFilePaths = undefined; // Reset workspace file paths
-    await this.initializeWorkspaceFilePaths(); // Re-initialize workspace file paths
+    await this.initializeWorkspaceFilePaths(task); // Re-initialize workspace file paths
   }
 
   public openFileInEditor(filePath: string) {
@@ -177,7 +179,11 @@ export class SpectacleExtension {
       throw new Error("No current task");
     }
     if (!this.currentTask.gitRepo) {
+      console.log(`initializing task ${this.currentTask.id} repo`);
       await this.currentTask.init();
+    }
+    if (!this.workspaceFilePaths) {
+      await this.initializeWorkspaceFilePaths(this.currentTask);
     }
     return this.currentTask;
   }
