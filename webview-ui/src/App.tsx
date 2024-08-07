@@ -184,7 +184,7 @@ function ConversationView({
             isPartial={
               index === conversation.joules.length - 1 &&
               joule.author === "bot" &&
-              !joule.pseudoCommit.impl?.udiffPreview
+              joule.pseudoCommit.impl.status !== "committed"
             }
           />
         ))}
