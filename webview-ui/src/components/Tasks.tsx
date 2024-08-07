@@ -73,7 +73,7 @@ export function Tasks({ onTaskSelect }: { onTaskSelect: (taskId: string) => void
       </Button>
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.map((task) => (
-          <Link to="/" className="mr-4">
+          <Link to="/" className="mr-4" onClick={() => onTaskSelect(task.id)}>
             <Card key={task.id}>
               <CardHeader>
                 <CardTitle>{task.title}</CardTitle>
