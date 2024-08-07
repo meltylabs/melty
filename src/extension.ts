@@ -118,7 +118,7 @@ export class SpectacleExtension {
 
     // Create a new branch for this task
     // todo: add this back once testing is done
-    // await this.createGitBranch(branchName);
+    await this.createGitBranch(branchName);
 
     this.tasks.set(taskId, newTask);
     this.currentTask = newTask;
@@ -138,7 +138,7 @@ export class SpectacleExtension {
 
     // Switch to the task's branch
     // todo: add this back once testing is done
-    // await this.checkoutGitBranch(task.branch);
+    await this.checkoutGitBranch(task.branch);
 
     this.currentTask = task;
     this.workspaceFilePaths = undefined; // Reset workspace file paths
