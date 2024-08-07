@@ -98,7 +98,7 @@ function JouleComponent({
       </div>
 
       <div>
-        {diffHtml && (
+        {diffHtml && !isPartial && (
           <Collapsible>
             <div className="flex items-center justify-end space-x-4 px-4">
               <CollapsibleTrigger asChild>
