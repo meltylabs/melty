@@ -111,6 +111,28 @@ export class SpectacleExtension {
     return this.task!.conversation;
   }
 
+  public saveMessageToTask(message: Message, taskId: string | null) {
+    if (taskId) {
+      const task = this.tasks.get(taskId);
+      if (task) {
+        task.conversation.joules.push({
+          author: message.sender === "user" ? "human" : "bot",
+          message: message.text,
+          pseudoCommit: {
+            impl: {
+              status: "committed",
+              udiffPreview: message.diff || "",
+            },
+          },
+        });
+      } else {
+        this.outputChannel.appendLine(`Task with id ${taskId} not found`);
+      }
+    } else {
+      this.outputChannel.appendLine("No task ID provided for saving message");
+    }
+  }
+
   public async createNewTask(taskName: string): Promise<string> {
     const taskId = `task_${Date.now()}`;
     const branchName = `task/${taskName.replace(/\s+/g, "-")}`;
