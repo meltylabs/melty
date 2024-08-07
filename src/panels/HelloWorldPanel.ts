@@ -191,7 +191,9 @@ export class HelloWorldPanel {
             return;
           case "loadConversation":
             console.log(`loadConversation`);
-            const conversation = this.spectacleExtension.getConversation();
+            let taskId = message.taskId;
+            const conversation =
+              this.spectacleExtension.getConversation(taskId);
             this._panel.webview.postMessage({
               command: "loadConversation",
               conversation: conversation,
@@ -215,12 +217,12 @@ export class HelloWorldPanel {
             });
             return;
           case "resetTask":
-            this.spectacleExtension.resetTask();
-            this._panel.webview.postMessage({
-              command: "loadConversation",
-              conversation: this.spectacleExtension.getConversation(),
-            });
-            return;
+          // this.spectacleExtension.resetTask();
+          // this._panel.webview.postMessage({
+          //   command: "loadConversation",
+          //   conversation: this.spectacleExtension.getConversation(),
+          // });
+          // return;
           case "openFileInEditor":
             this.spectacleExtension.openFileInEditor(message.filePath);
             return;
@@ -282,9 +284,7 @@ export class HelloWorldPanel {
 
           case "createNewTask":
             const taskName = message.taskName;
-            const taskId = await this.spectacleExtension.createNewTask(
-              taskName
-            );
+            taskId = await this.spectacleExtension.createNewTask(taskName);
             this._panel.webview.postMessage({
               command: "taskCreated",
               taskId: taskId,
@@ -293,12 +293,7 @@ export class HelloWorldPanel {
             return;
 
           case "listTasks":
-            const tasks = Array.from(
-              this.spectacleExtension.getTasks().entries()
-            ).map(([id, task]) => ({
-              id,
-              name: task.branch.replace("task/", ""),
-            }));
+            const tasks = this.spectacleExtension.getTasks();
             this._panel.webview.postMessage({
               command: "listTasks",
               tasks: tasks,

@@ -5,7 +5,8 @@ import {
   ClaudeConversation,
   ClaudeMessage,
   PseudoCommit,
-  GitRepo
+  Conversation,
+  GitRepo,
 } from "../types";
 import * as pseudoCommits from "./pseudoCommits";
 import * as joules from "./joules";
@@ -14,10 +15,36 @@ import * as claudeAPI from "../lib/claudeAPI";
 import * as diffApplicatorXml from "./diffApplicatorXml";
 // import { RepoMap } from './repoMap';
 
-import { Conversation } from "../types";
+//make a dummy joule
+/**
+ * export type JouleHuman = {
+  readonly author: "human";
+  readonly id: string;
+  readonly mode: null;
+  readonly message: string;
+  readonly pseudoCommit: PseudoCommit;
+  readonly contextPaths: null;
+}
+ */
+const dummyPseudoCommit: PseudoCommit = {
+  impl: {
+    status: "committed",
+    commit: "0987654321",
+    udiffPreview: "",
+  },
+};
+
+const dummyJouleBot: JouleBot = {
+  author: "bot",
+  id: "1",
+  mode: "code",
+  message: "Hello!",
+  pseudoCommit: dummyPseudoCommit,
+  contextPaths: [],
+};
 
 export function create(): Conversation {
-  return { joules: [] };
+  return { joules: [dummyJouleBot] };
 }
 
 function addJoule(conversation: Conversation, joule: Joule): Conversation {
@@ -95,7 +122,8 @@ export async function respondBot(
     diffApplicatorXml.splitResponse(finalResponse);
 
   // reset the diff preview
-  const pseudoCommitNoDiff = pseudoCommits.createFromPrevious(currentPseudoCommit);
+  const pseudoCommitNoDiff =
+    pseudoCommits.createFromPrevious(currentPseudoCommit);
 
   const newPseudoCommit =
     mode === "code"
@@ -120,8 +148,16 @@ export async function respondBot(
  * Encodes files for Claude. Note that we're being loose with the newlines.
  * @returns string encoding the files
  */
-function encodeFile(gitRepo: GitRepo, pseudoCommit: PseudoCommit, path: string) {
-  const fileContents = pseudoCommits.getFileContents(gitRepo, pseudoCommit, path);
+function encodeFile(
+  gitRepo: GitRepo,
+  pseudoCommit: PseudoCommit,
+  path: string
+) {
+  const fileContents = pseudoCommits.getFileContents(
+    gitRepo,
+    pseudoCommit,
+    path
+  );
   return `${path}
 \`\`\`
 ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;

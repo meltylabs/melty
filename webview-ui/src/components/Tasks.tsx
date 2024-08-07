@@ -16,10 +16,8 @@ import { convertChangesToXML } from "diff";
 
 interface Task {
   id: string;
-  name: string;
+  branch: string;
   description: string;
-  status: string;
-  github_link: string;
 }
 
 export function Tasks() {
@@ -63,15 +61,12 @@ export function Tasks() {
           <Link to={`/task/${task.id}`} className="mr-4">
             <Card key={task.id}>
               <CardHeader>
-                <CardTitle>{task.name}</CardTitle>
-                <CardDescription>{task.github_link} </CardDescription>
+                <CardTitle>{task.branch}</CardTitle>
+                <CardDescription>{task.description} </CardDescription>
               </CardHeader>
               <CardContent>
                 <p>{task.description}</p>
               </CardContent>
-              <CardFooter>
-                <p> {task.status}</p>
-              </CardFooter>
             </Card>
           </Link>
         ))}

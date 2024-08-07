@@ -145,7 +145,11 @@ export class Task {
     const didCommit = (await this.commitChanges()) > 0;
 
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    const newPseudoCommit = await pseudoCommits.createFromCommit(latestCommit, this.gitRepo!, didCommit);
+    const newPseudoCommit = await pseudoCommits.createFromCommit(
+      latestCommit,
+      this.gitRepo!,
+      didCommit
+    );
 
     this.conversation = conversations.respondHuman(
       this.conversation,

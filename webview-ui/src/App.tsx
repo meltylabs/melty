@@ -24,7 +24,7 @@ import { Input } from "./components/ui/input";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Tasks } from "./components/Tasks";
-import { Conversation, Joule, Task } from "./types";
+import { Conversation, Joule } from "./types";
 import {
   Collapsible,
   CollapsibleContent,
@@ -154,8 +154,8 @@ function ConversationView() {
     setPickerOpen(false);
   }
 
-  function loadMessages(taskId: string | null) {
-    vscode.postMessage({ command: "loadMessages", taskId });
+  function loadConversation(taskId: string | null) {
+    vscode.postMessage({ command: "loadConversation", taskId });
   }
 
   function loadFiles() {
@@ -196,7 +196,7 @@ function ConversationView() {
 
   useEffect(() => {
     loadFiles();
-    loadMessages(taskId ?? null);
+    loadConversation(taskId ?? null);
 
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {
