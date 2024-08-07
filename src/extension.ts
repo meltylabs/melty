@@ -44,10 +44,10 @@ export class SpectacleExtension {
     outputChannel: vscode.OutputChannel
   ) {
     this.outputChannel = outputChannel;
-    this.workspaceRoot = this.task!.gitRepo!.rootPath;
-    // this.workspaceRoot = vscode.workspace.workspaceFolders
-    //   ? vscode.workspace.workspaceFolders[0].uri.fsPath
-    //   : "/";
+    // this.workspaceRoot = this.task!.gitRepo!.rootPath;
+    this.workspaceRoot = vscode.workspace.workspaceFolders
+      ? vscode.workspace.workspaceFolders[0].uri.fsPath
+      : "/";
 
     this.initializeMeltyFilePaths();
     this.initializeWorkspaceFilePaths();
