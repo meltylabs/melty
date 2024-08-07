@@ -15,36 +15,8 @@ import * as claudeAPI from "../lib/claudeAPI";
 import * as diffApplicatorXml from "./diffApplicatorXml";
 // import { RepoMap } from './repoMap';
 
-//make a dummy joule
-/**
- * export type JouleHuman = {
-  readonly author: "human";
-  readonly id: string;
-  readonly mode: null;
-  readonly message: string;
-  readonly pseudoCommit: PseudoCommit;
-  readonly contextPaths: null;
-}
- */
-const dummyPseudoCommit: PseudoCommit = {
-  impl: {
-    status: "committed",
-    commit: "0987654321",
-    udiffPreview: "",
-  },
-};
-
-const dummyJouleBot: JouleBot = {
-  author: "bot",
-  id: "1",
-  mode: "code",
-  message: "Hello!",
-  pseudoCommit: dummyPseudoCommit,
-  contextPaths: [],
-};
-
 export function create(): Conversation {
-  return { joules: [dummyJouleBot] };
+  return { joules: [] };
 }
 
 function addJoule(conversation: Conversation, joule: Joule): Conversation {
