@@ -95,7 +95,12 @@ function JouleComponent({
       }`}
     >
       <div className="text-xs flex flex-col">
-        {joule.message}
+        {joule.message.split('\n').map((line, index) => (
+          <React.Fragment key={index}>
+            {line}
+            {index < joule.message.split('\n').length - 1 && <br />}
+          </React.Fragment>
+        ))}
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
