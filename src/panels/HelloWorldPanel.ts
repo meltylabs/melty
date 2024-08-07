@@ -300,7 +300,7 @@ export class HelloWorldPanel {
               name: task.branch.replace("task/", ""),
             }));
             this._panel.webview.postMessage({
-              command: "taskList",
+              command: "listTasks",
               tasks: tasks,
             });
             return;

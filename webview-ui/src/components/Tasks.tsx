@@ -12,51 +12,41 @@ import { vscode } from "../utilities/vscode";
 import { Button } from "./ui/button";
 
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { convertChangesToXML } from "diff";
 
 interface Task {
   id: string;
-  title: string;
+  name: string;
   description: string;
   status: string;
   github_link: string;
 }
 
-export function Tasks({ onTaskSelect }: { onTaskSelect: (taskId: string) => void }) {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      title: "Task 1",
-      description: "Description 1",
-      status: "merged",
-      github_link: "https://github.com/cbh123/melty/pull/1",
-    },
-    {
-      id: "2",
-      title: "Task 2",
-      description: "Description 2",
-      status: "merged",
-      github_link: "https://github.com/cbh123/melty/pull/2",
-    },
-    {
-      id: "3",
-      title: "Task 3",
-      description: "Description 3",
-      status: "pending",
-      github_link: "https://github.com/cbh123/melty/pull/3",
-    },
-  ]);
+export function Tasks({
+  onTaskSelect,
+}: {
+  onTaskSelect: (taskId: string) => void;
+}) {
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     vscode.postMessage({
       command: "listTasks",
     });
 
-    window.addEventListener("message", (event) => {
+    const messageListener = (event: MessageEvent) => {
       const message = event.data;
+      console.log("tasks.tsx", message);
       if (message.command === "listTasks") {
         setTasks(message.tasks);
       }
-    });
+    };
+
+    window.addEventListener("message", messageListener);
+
+    return () => {
+      window.removeEventListener("message", messageListener);
+    };
   }, []);
 
   return (
@@ -72,11 +62,12 @@ export function Tasks({ onTaskSelect }: { onTaskSelect: (taskId: string) => void
         Start new task
       </Button>
       <div className="grid grid-cols-2 gap-6 mt-4">
+        {tasks.length === 0 && <p>No tasks</p>}
         {tasks.map((task) => (
           <Link to="/" className="mr-4" onClick={() => onTaskSelect(task.id)}>
             <Card key={task.id}>
               <CardHeader>
-                <CardTitle>{task.title}</CardTitle>
+                <CardTitle>{task.name}</CardTitle>
                 <CardDescription>{task.github_link} </CardDescription>
               </CardHeader>
               <CardContent>

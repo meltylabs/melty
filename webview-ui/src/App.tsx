@@ -259,7 +259,8 @@ type CommandType =
   | "listMeltyFiles"
   | "listWorkspaceFiles"
   | "loadConversation"
-  | "logHello";
+  | "logHello"
+  | "listTasks";
 
 function App() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -344,6 +345,10 @@ function App() {
             }
             return { ...prevConversation, joules: updatedJoules };
           });
+          break;
+        case "listTasks":
+          console.log("listTasks", message);
+          // The Tasks component will handle updating its state
           break;
       }
     };
