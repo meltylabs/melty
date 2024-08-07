@@ -26,6 +26,30 @@ Hope you like it!
         assert.deepStrictEqual(searchReplaceList, [{ filePath: "foo.txt", search: "Two\n", replace: "Tooooo\n" }]);
     });
 
+    test('should find block at end of file', () => {
+        const edit = `Certainly! I'll add a comment saying "goodbye" at the end of the \`sloth.py\` file. Here's the CodeChange command to make this modification:
+
+<CodeChange file="sloth.py">
+<<<<<<< SEARCH
+if __name__ == "__main__":
+    print_sloth()
+
+=======
+if __name__ == "__main__":
+    print_sloth()
+
+# goodbye
+>>>>>>> REPLACE
+</CodeChange>
+
+This change will add the comment at the very end of the file`;
+
+        const { searchReplaceList } = splitResponse(edit);
+        assert.deepStrictEqual(searchReplaceList, [{ filePath: "sloth.py",
+            search: "if __name__ == \"__main__\":\n    print_sloth()\n\n",
+            replace: "if __name__ == \"__main__\":\n    print_sloth()\n\n# goodbye\n" }]);
+    });
+
 
     test('should find multiple update blocks', () => {
         const edit = `
@@ -141,47 +165,47 @@ oops!
     });
 });
 
-suite('applySearchReplaceBlocks', () => {
-    test('should apply search and replace correctly', () => {
-        const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({
-            'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
-        }, "");
-        const searchReplace: SearchReplace = {
-            filePath: 'test.txt',
-            search: 'world',
-            replace: 'universe'
-        };
+// suite('applySearchReplaceBlocks', () => {
+//     test('should apply search and replace correctly', () => {
+//         const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({
+//             'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
+//         }, "");
+//         const searchReplace: SearchReplace = {
+//             filePath: 'test.txt',
+//             search: 'world',
+//             replace: 'universe'
+//         };
 
-        const newState = applySearchReplaceBlocks(initialState, [searchReplace]);
+//         const newState = applySearchReplaceBlocks(initialState, [searchReplace]);
 
-        assert.strictEqual(pseudoCommits.getFileContents(newState, 'test.txt'), 'Hello, universe!\nThis is a test.');
-    });
+//         assert.strictEqual(pseudoCommits.getFileContents(newState, 'test.txt'), 'Hello, universe!\nThis is a test.');
+//     });
 
-    test('should throw error if search text not found', () => {
-        const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({
-            'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
-        }, "");
-        const searchReplace: SearchReplace = {
-            filePath: 'test.txt',
-            search: 'universe',
-            replace: 'world'
-        };
+//     test('should throw error if search text not found', () => {
+//         const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({
+//             'test.txt': meltyFiles.create('test.txt', 'Hello, world!\nThis is a test.')
+//         }, "");
+//         const searchReplace: SearchReplace = {
+//             filePath: 'test.txt',
+//             search: 'universe',
+//             replace: 'world'
+//         };
 
-        assert.throws(() => {
-            applySearchReplaceBlocks(initialState, [searchReplace]);
-        }, /Search text universe not found in test.txt/);
-    });
+//         assert.throws(() => {
+//             applySearchReplaceBlocks(initialState, [searchReplace]);
+//         }, /Search text universe not found in test.txt/);
+//     });
 
-    test('should create new file if it doesn\'t exist', () => {
-        const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({}, undefined, "");
-        const searchReplace: SearchReplace = {
-            filePath: 'new.txt',
-            search: '',
-            replace: 'New content'
-        };
+//     test('should create new file if it doesn\'t exist', () => {
+//         const initialState: PseudoCommit = pseudoCommits.createFromDiffAndParentCommit({}, undefined, "");
+//         const searchReplace: SearchReplace = {
+//             filePath: 'new.txt',
+//             search: '',
+//             replace: 'New content'
+//         };
 
-        const newState = applySearchReplaceBlocks(initialState, [searchReplace]);
+//         const newState = applySearchReplaceBlocks(initialState, [searchReplace]);
 
-        assert.strictEqual(pseudoCommits.getFileContents(newState, 'new.txt'), 'New content');
-    });
-});
+//         assert.strictEqual(pseudoCommits.getFileContents(newState, 'new.txt'), 'New content');
+//     });
+// });

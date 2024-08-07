@@ -73,7 +73,6 @@ export async function respondBot(
   // TODO 200: get five responses, pick the best one with pickResponse
 
   // TODOV2 write a claudePlus
-  console.log(systemPrompt);
   let partialJoule = joules.createJouleBot(
     "",
     mode,
@@ -90,6 +89,7 @@ export async function respondBot(
       processPartial(partialJoule);
     }
   );
+  console.log(finalResponse);
 
   const { messageChunksList, searchReplaceList } =
     diffApplicatorXml.splitResponse(finalResponse);
@@ -116,11 +116,15 @@ export async function respondBot(
   return newConversation;
 }
 
+/**
+ * Encodes files for Claude. Note that we're being loose with the newlines.
+ * @returns string encoding the files
+ */
 function encodeFile(gitRepo: GitRepo, pseudoCommit: PseudoCommit, path: string) {
+  const fileContents = pseudoCommits.getFileContents(gitRepo, pseudoCommit, path);
   return `${path}
 \`\`\`
-${pseudoCommits.getFileContents(gitRepo, pseudoCommit, path)}
-\`\`\``;
+${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
 }
 
 function encodeContext(
