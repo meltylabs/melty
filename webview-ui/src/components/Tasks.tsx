@@ -21,7 +21,7 @@ interface Task {
   github_link: string;
 }
 
-export function Tasks() {
+export function Tasks({ onTaskSelect }: { onTaskSelect: (taskId: string) => void }) {
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: "1",
