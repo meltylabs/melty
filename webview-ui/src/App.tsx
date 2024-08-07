@@ -95,10 +95,10 @@ function JouleComponent({
       }`}
     >
       <div className="text-xs flex flex-col">
-        {joule.message.split('\n').map((line, index) => (
+        {joule.message.split("\n").map((line, index) => (
           <React.Fragment key={index}>
             {line}
-            {index < joule.message.split('\n').length - 1 && <br />}
+            {index < joule.message.split("\n").length - 1 && <br />}
           </React.Fragment>
         ))}
         {isPartial && <span className="animate-pulse">▋</span>}
@@ -307,18 +307,6 @@ function App() {
       console.log("NEW MESSAGE IN APP.TSX: ", message);
 
       switch (message.command as CommandType) {
-        // case "addMessage":
-        //   console.log("addMessage", message);
-        //   setMessages((prevMessages) => [
-        //     ...prevMessages,
-        //     {
-        //       text: message.text.message,
-        //       sender: message.text.sender,
-        //       diff: message.text.diff,
-        //     },
-        //   ]);
-        //   setPartialResponse(null); // Clear the partial response
-        //   break;
         case "listMeltyFiles":
           console.log("listMeltyFiles", message);
           setMeltyFiles(message.meltyMindFilePaths);
@@ -331,16 +319,6 @@ function App() {
           console.log("loadConversation", message);
           setConversation(message.conversation);
           break;
-        // case "confirmedUndo":
-        //   console.log("confirmedUndo", message);
-        //   setMessages((prevMessages) => [
-        //     ...prevMessages,
-        //     {
-        //       text: "Undone commit",
-        //       sender: "user",
-        //     },
-        //   ]);
-        //   break;
         case "setPartialResponse":
           setConversation((prevConversation) => {
             if (!prevConversation) return null;
@@ -355,9 +333,6 @@ function App() {
             }
             return { ...prevConversation, joules: updatedJoules };
           });
-          break;
-        case "logHello":
-          console.log("hello!", message);
           break;
       }
     };
