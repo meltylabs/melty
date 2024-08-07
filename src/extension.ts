@@ -18,7 +18,7 @@ export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private meltyMindFilePaths: string[] = [];
   private workspaceFilePaths: string[] | undefined;
-  private task: Task | undefined;
+  //   private task: Task | undefined;
   private tasks: Map<string, Task> = dummyTasks;
 
   constructor(
@@ -31,7 +31,7 @@ export class SpectacleExtension {
   async activate() {
     outputChannel.appendLine("Spectacle activation started");
 
-    this.task = new Task("task_1", "task/task-1");
+    // this.task = new Task("task_1", "task/task-1");
     // don't bother kicking off task.init() here; the git repo isn't ready.
 
     // kick off async init. this will also be kicked off by callers who use this object
@@ -129,7 +129,8 @@ export class SpectacleExtension {
     }
 
     // Switch to the task's branch
-    await this.checkoutGitBranch(task.branch);
+    // todo: add this back once testing is done
+    // await this.checkoutGitBranch(task.branch);
 
     this.task = task;
   }
