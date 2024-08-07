@@ -182,7 +182,9 @@ function ConversationView({
             key={index}
             joule={joule}
             isPartial={
-              index === conversation.joules.length - 1 && joule.author === "bot"
+              index === conversation.joules.length - 1 &&
+              joule.author === "bot" &&
+              !joule.pseudoCommit.impl?.udiffPreview
             }
           />
         ))}
