@@ -20,12 +20,14 @@ export class SpectacleExtension {
   private workspaceFilePaths: string[] | undefined;
   //   private task: Task | undefined;
   private tasks: Map<string, Task> = dummyTasks;
+  private currentTask: Task | undefined;
 
   constructor(
     private context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel
   ) {
     this.outputChannel = outputChannel;
+    this.currentTask = this.tasks.values().next().value; // Set the first task as current
   }
 
   async activate() {
@@ -66,7 +68,11 @@ export class SpectacleExtension {
       return true;
     }
 
-    if (!(await this.task!.init())) {
+    if (!this.currentTask) {
+      return false;
+    }
+
+    if (!(await this.currentTask.init())) {
       return false;
     }
 
@@ -75,7 +81,7 @@ export class SpectacleExtension {
       "**/node_modules/**"
     );
     this.workspaceFilePaths = workspaceFileUris.map((file) => {
-      return path.relative(this.task!.gitRepo!.rootPath, file.fsPath);
+      return path.relative(this.currentTask!.gitRepo!.rootPath, file.fsPath);
     });
     return true;
   }
@@ -132,12 +138,17 @@ export class SpectacleExtension {
     // todo: add this back once testing is done
     // await this.checkoutGitBranch(task.branch);
 
-    this.task = task;
+    this.currentTask = task;
+    this.workspaceFilePaths = undefined; // Reset workspace file paths
+    await this.initializeWorkspaceFilePaths(); // Re-initialize workspace file paths
   }
 
   public openFileInEditor(filePath: string) {
+    if (!this.currentTask || !this.currentTask.gitRepo) {
+      throw new Error("No current task or git repository");
+    }
     const fileUri = vscode.Uri.file(
-      path.join(this.task!.gitRepo!.rootPath, filePath)
+      path.join(this.currentTask.gitRepo.rootPath, filePath)
     );
     vscode.window.showTextDocument(fileUri);
   }
@@ -154,14 +165,20 @@ export class SpectacleExtension {
   }
 
   public async initRepository() {
-    await this.task!.init();
+    if (!this.currentTask) {
+      throw new Error("No current task");
+    }
+    await this.currentTask.init();
   }
 
-  public async getTask() {
-    if (!this.task!.gitRepo) {
-      await this.task!.init();
+  public async getCurrentTask() {
+    if (!this.currentTask) {
+      throw new Error("No current task");
     }
-    return this.task!;
+    if (!this.currentTask.gitRepo) {
+      await this.currentTask.init();
+    }
+    return this.currentTask;
   }
 
   private async createGitBranch(branchName: string): Promise<void> {
