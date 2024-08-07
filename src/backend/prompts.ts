@@ -59,3 +59,13 @@ export function filesUserIntro(): string {
 export function filesAsstAck(): string {
   return `Okay, any changes I make will be to those files.`;
 }
+
+export function repoMapIntro(): string {
+  return `Here are summaries of some files present in my git repository.
+Do not propose changes to these files, treat them as *read-only*.
+If you need to edit any of these files, ask me to *add them to the chat* first.`;
+}
+
+export function repoMapAsstAck(): string {
+  return `Thanks. I'll pay close attention to this.`;
+}

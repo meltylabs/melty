@@ -159,10 +159,11 @@ async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Prom
   const filePaths = files.map(file => file.fsPath);
 
   return [
-    { role: "user", content: `Here's a map of the repository I'm working in:
+    {
+      role: "user", content: `${prompts.repoMapIntro()}
       
-      ${repoMap.getRepoMap(filePaths)}` },
-    { role: "assistant", content: "Thanks. I'll pay close attention to this."}
+      ${repoMap.getRepoMap(filePaths)}`},
+    { role: "assistant", content: prompts.repoMapAsstAck()}
   ];
 }
 
