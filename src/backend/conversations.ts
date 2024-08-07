@@ -158,13 +158,14 @@ async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Prom
   const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
   const filePaths = files.map(file => file.fsPath);
 
-  return [
+  const repoMapMessages = [
     {
       role: "user", content: `${prompts.repoMapIntro()}
       
       ${repoMap.getRepoMap(filePaths)}`},
     { role: "assistant", content: prompts.repoMapAsstAck()}
   ];
+  return [];
 }
 
 export function lastJoule(conversation: Conversation): Joule | undefined {
