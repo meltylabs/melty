@@ -92,14 +92,6 @@ export type Conversation = {
   readonly joules: ReadonlyArray<Joule>;
 };
 
-// From src/backend/tasks.ts
-export type Task = {
-  id: string;
-  branch: string;
-  conversation: Conversation;
-  gitRepo: GitRepo | null;
-};
-
 // From src/backend/meltyFiles.ts
 export type MeltyFile = {
   readonly path: string;
