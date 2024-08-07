@@ -14,6 +14,7 @@ import * as claudeAPI from "./claudeAPI";
 import * as diffApplicatorXml from "./diffApplicatorXml";
 import { RepoMapSpec } from './repoMapSpec';
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 import { Conversation } from "../types";
 
@@ -154,14 +155,20 @@ ${fileEncodings}`,
 async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Promise<ClaudeMessage[]> {
   const repoMap = new RepoMapSpec(gitRepo);
 
-  const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
-  const filePaths = files.map(file => file.fsPath);
+  // TODO this logic is copied from HelloWorldPanel.ts
+  const workspaceFileUris = await vscode.workspace.findFiles(
+    "**/*",
+    "**/node_modules/**"
+  );
+  const workspaceFilePaths = workspaceFileUris.map((file) => {
+    return path.relative(gitRepo.rootPath, file.fsPath);
+  });
 
   const repoMapMessages: ClaudeMessage[] = [
     {
       role: "user", content: `${prompts.repoMapIntro()}
       
-      ${await repoMap.getRepoMap(filePaths)}`},
+      ${await repoMap.getRepoMap(workspaceFilePaths)}`},
     { role: "assistant", content: prompts.repoMapAsstAck()}
   ];
   return repoMapMessages; // [];

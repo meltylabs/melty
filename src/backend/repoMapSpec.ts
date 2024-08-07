@@ -11,22 +11,64 @@ export class RepoMapSpec {
         this.gitRepo = gitRepo;
     }
 
-    public async getRepoMap(workspaceFilenames: string[]): Promise<string> {
-        // filter out files that are more than 10kb
-        const eligibleFiles = workspaceFilenames.filter(file => fs.statSync(path.join(this.gitRepo.rootPath, file)).size < 10000);
+    public async getRepoMap(relativeFilePaths: string[]): Promise<string> {
+        // Filter out files that don't exist and files that are >10kb
+        const eligibleFiles = relativeFilePaths.filter(file => {
+            const absPath = path.join(this.gitRepo.rootPath, file);
+            return fs.existsSync(absPath) && fs.statSync(absPath).size < 10000;
+        });
 
         let fullMap = "";
         for (const file of eligibleFiles) {
+            fullMap += `<FileMap file="${file}">\n`;
             fullMap += this.mapFile(file);
+            fullMap += `</FileMap>\n`;
         }
         return fullMap;
     }
 
-    private mapFile(filename: string): string {
+    private mapFile(relativeFilePath: string): string {
+        if (!relativeFilePath.endsWith(".ts") && !relativeFilePath.endsWith(".tsx")) {
+            return "";
+        }
+        const spec = this.extractSpec(relativeFilePath);
+
+        const lines = spec.split("\n");
+        // split lines into chunks that belong to the same non-block comment (//)
+        const filteredLines = [];
+        let commentChunk = [];
+        for (const line of lines) {
+            if (!line.startsWith("//")) {
+                // possibly push comment chunk
+                if (commentChunk.length > 0) {
+                    // evaluate
+                    const keepThisChunk = commentChunk.length < 15;
+                    if (keepThisChunk) {
+                        filteredLines.push(commentChunk.join("\n"));
+                    }
+                    // reset
+                    commentChunk = [];
+                }
+
+                filteredLines.push(line);
+            } else {
+                commentChunk.push(line);
+            }
+        }
+
+        // now, truncate to 50 lines
+        const quotedLines = filteredLines.map(line => `| ${line}`);
+        const truncatedLines = (quotedLines.length < 50) ? quotedLines : quotedLines.slice(0, 50).concat(["[TRUNCATED]"]);
+        return truncatedLines.join("\n");
+    }
+
+    private extractSpec(relativeFilePath: string): string {
         console.log("extracting spec");
+
+        const absoluteFilePath = path.join(this.gitRepo.rootPath, relativeFilePath);
         const sourceFile = ts.createSourceFile(
-            filename,
-            fs.readFileSync(path.join(this.gitRepo.rootPath, filename), 'utf-8'),
+            absoluteFilePath,
+            fs.readFileSync(absoluteFilePath, 'utf-8'),
             ts.ScriptTarget.Latest,
             true
         );
@@ -112,7 +154,7 @@ export class RepoMapSpec {
         }
 
         // Transform the source
-        console.log("transforming " + filename);
+        console.log("transforming " + absoluteFilePath);
 
         const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
             return (sourceFile) => {
