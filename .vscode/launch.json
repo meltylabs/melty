@@ -23,11 +23,8 @@
 			"name": "Mocha Tests",
 			"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
 			"args": [
-				"--timeout",
-				"999999",
-				"--colors",
-				"${workspaceFolder}/test/**/*.test.js",
-				"newthing"
+				"--timeout", "999999",
+				"--colors", "${workspaceFolder}/out/test/**/*.test.js",
 			],
 			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": [
