@@ -12,10 +12,10 @@ export class RepoMapSpec {
     }
 
     public async getRepoMap(relativeFilePaths: string[]): Promise<string> {
-        // Filter out files that don't exist and files that are >10kb
+        // Filter out files that don't exist and files that are >100kb
         const eligibleFiles = relativeFilePaths.filter(file => {
             const absPath = path.join(this.gitRepo.rootPath, file);
-            return fs.existsSync(absPath) && fs.statSync(absPath).size < 10000;
+            return fs.existsSync(absPath) && fs.statSync(absPath).size < 100000;
         });
 
         let fullMap = "";
