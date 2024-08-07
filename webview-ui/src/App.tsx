@@ -16,6 +16,7 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
+import { Button } from "./components/ui/button";
 
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
@@ -270,6 +271,7 @@ function App() {
   ]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<"tasks" | "chat">("tasks");
 
   function handleSendMessage(mode: "ask" | "code", text: string) {
     // Send message to extension
@@ -356,64 +358,78 @@ function App() {
     <Router>
       <main className="p-4">
         <nav className="mb-4">
-          <Link to="/" className="mr-4">
+          <Button
+            variant={currentView === "chat" ? "default" : "outline"}
+            onClick={() => {
+              if (currentTaskId) {
+                setCurrentView("chat");
+              }
+            }}
+            disabled={!currentTaskId}
+            className="mr-4"
+          >
             Chat
-          </Link>
-          <Link to="/tasks">Tasks</Link>
+          </Button>
+          <Button
+            variant={currentView === "tasks" ? "default" : "outline"}
+            onClick={() => setCurrentView("tasks")}
+          >
+            Tasks
+          </Button>
         </nav>
 
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <ConversationView
-                  conversation={conversation}
-                  handleSendMessage={handleSendMessage}
-                  handleUndo={handleUndo}
-                  handleReset={handleReset}
-                  taskId={currentTaskId}
-                />
-                <div className="mt-6">
-                  <FilePicker
-                    open={pickerOpen}
-                    setOpen={setPickerOpen}
-                    meltyMindFilePaths={meltyFiles}
-                    workspaceFilePaths={workspaceFiles}
-                    handleAddFile={handleAddFile}
-                    handleDropFile={handleDropFile}
-                  />
-
-                  <div className="mt-2">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Melty's Mind{"  "}
-                      <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                        <span className="text-xs">\</span>
-                      </kbd>{" "}
-                    </p>
-                    {meltyFiles.length === 0 && (
-                      <p className="text-xs text-muted-foreground mb-2 italic">
-                        Melty can't see any files yet
-                      </p>
-                    )}
-                    {meltyFiles.map((file, i) => (
-                      <button
-                        onClick={() => handleDropFile(file)}
-                        className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
-                        key={`file-${i}`}
-                      >
-                        <XIcon className="h-3 w-3 mr-2" />
-                        {file}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            }
+        {currentView === "tasks" ? (
+          <Tasks
+            onTaskSelect={(taskId) => {
+              setCurrentTaskId(taskId);
+              setCurrentView("chat");
+            }}
           />
-          <Route path="/tasks" element={<Tasks onTaskSelect={setCurrentTaskId} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        ) : (
+          <>
+            <ConversationView
+              conversation={conversation}
+              handleSendMessage={handleSendMessage}
+              handleUndo={handleUndo}
+              handleReset={handleReset}
+              taskId={currentTaskId}
+            />
+            <div className="mt-6">
+              <FilePicker
+                open={pickerOpen}
+                setOpen={setPickerOpen}
+                meltyMindFilePaths={meltyFiles}
+                workspaceFilePaths={workspaceFiles}
+                handleAddFile={handleAddFile}
+                handleDropFile={handleDropFile}
+              />
+
+              <div className="mt-2">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Melty's Mind{"  "}
+                  <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                    <span className="text-xs">\</span>
+                  </kbd>{" "}
+                </p>
+                {meltyFiles.length === 0 && (
+                  <p className="text-xs text-muted-foreground mb-2 italic">
+                    Melty can't see any files yet
+                  </p>
+                )}
+                {meltyFiles.map((file, i) => (
+                  <button
+                    onClick={() => handleDropFile(file)}
+                    className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
+                    key={`file-${i}`}
+                  >
+                    <XIcon className="h-3 w-3 mr-2" />
+                    {file}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </main>
     </Router>
   );
