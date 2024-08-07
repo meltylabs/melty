@@ -35,6 +35,7 @@ export class SpectacleExtension {
   private meltyMindFilePaths: string[] = [];
   private workspaceFilePaths: string[] | undefined;
   private task: Task | undefined;
+  private tasks: Map<string, Task> = new Map();
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -60,7 +61,7 @@ export class SpectacleExtension {
 
   public async getWorkspaceFilePaths() {
     if (this.workspaceFilePaths === undefined) {
-      if (!await this.initializeWorkspaceFilePaths()) {
+      if (!(await this.initializeWorkspaceFilePaths())) {
         throw new Error("Could not initialize workspace file paths");
       }
     }
@@ -72,7 +73,7 @@ export class SpectacleExtension {
       return true;
     }
 
-    if (!await this.task!.init()) {
+    if (!(await this.task!.init())) {
       return false;
     }
 
@@ -102,13 +103,55 @@ export class SpectacleExtension {
     return this.task!.conversation;
   }
 
+  public async createNewTask(taskName: string): Promise<string> {
+    const taskId = `task_${Date.now()}`;
+    const branchName = `task/${taskName.replace(/\s+/g, "-")}`;
+
+    const newTask = new Task(taskId, branchName);
+    await newTask.init();
+
+    // Create a new branch for this task
+    await this.createGitBranch(branchName);
+
+    this.tasks.set(taskId, newTask);
+    this.task = newTask;
+
+    return taskId;
+  }
+
   public resetTask() {
-    this.task = new Task();
+    // this.task = new Task();
+    throw new Error("Not implemented");
+  }
+
+  public async switchToTask(taskId: string): Promise<void> {
+    const task = this.tasks.get(taskId);
+    if (!task) {
+      throw new Error(`Task with id ${taskId} not found`);
+    }
+
+    // Switch to the task's branch
+    await this.checkoutGitBranch(task.branch);
+
+    this.task = task;
   }
 
   public openFileInEditor(filePath: string) {
-    const fileUri = vscode.Uri.file(path.join(this.task!.gitRepo!.rootPath, filePath));
+    const fileUri = vscode.Uri.file(
+      path.join(this.task!.gitRepo!.rootPath, filePath)
+    );
     vscode.window.showTextDocument(fileUri);
+  }
+
+  private async checkoutGitBranch(branchName: string): Promise<void> {
+    const gitExtension = vscode.extensions.getExtension("vscode.git");
+    if (gitExtension) {
+      const git = gitExtension.exports.getAPI(1);
+      const repo = git.repositories[0];
+      await repo.checkout(branchName);
+    } else {
+      throw new Error("Git extension not found");
+    }
   }
 
   public async initRepository() {
@@ -120,6 +163,17 @@ export class SpectacleExtension {
       await this.task!.init();
     }
     return this.task!;
+  }
+
+  private async createGitBranch(branchName: string): Promise<void> {
+    const gitExtension = vscode.extensions.getExtension("vscode.git");
+    if (gitExtension) {
+      const git = gitExtension.exports.getAPI(1);
+      const repo = git.repositories[0];
+      await repo.createBranch(branchName, true);
+    } else {
+      throw new Error("Git extension not found");
+    }
   }
 }
 
