@@ -184,6 +184,11 @@ function ConversationView({
 
   return (
     <div className="p-4">
+      {taskId && (
+        <div className="mb-4 p-2 bg-gray-100 rounded">
+          <p className="text-sm font-semibold">Current Task ID: {taskId}</p>
+        </div>
+      )}
       <div className="mb-4 rounded p-2 mx-auto">
         {conversation?.joules.map((joule, index) => (
           <JouleComponent
