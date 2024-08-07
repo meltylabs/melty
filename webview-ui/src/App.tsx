@@ -14,6 +14,7 @@ import {
   Routes,
   Link,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 
 import * as Diff2Html from "diff2html";
@@ -129,11 +130,13 @@ function ConversationView({
   handleSendMessage,
   handleUndo,
   handleReset,
+  taskId,
 }: {
   conversation: Conversation | null;
   handleSendMessage: (mode: "ask" | "code", text: string) => void;
   handleUndo: () => void;
   handleReset: () => void;
+  taskId: string | null;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -261,17 +264,19 @@ function App() {
     "hello.txt",
   ]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
 
   function handleSendMessage(mode: "ask" | "code", text: string) {
     // Send message to extension
     vscode.postMessage({
       command: mode,
       text: text,
+      taskId: currentTaskId,
     });
   }
 
   function handleUndo() {
-    vscode.postMessage({ command: "undo" });
+    vscode.postMessage({ command: "undo", taskId: currentTaskId });
   }
 
   function loadFiles() {
@@ -289,17 +294,17 @@ function App() {
     setPickerOpen(false);
   }
 
-  function loadMessages() {
-    vscode.postMessage({ command: "loadMessages" });
+  function loadMessages(taskId: string | null) {
+    vscode.postMessage({ command: "loadMessages", taskId });
   }
 
   function handleReset() {
-    vscode.postMessage({ command: "resetTask" });
+    vscode.postMessage({ command: "resetTask", taskId: currentTaskId });
   }
 
   useEffect(() => {
     loadFiles();
-    loadMessages();
+    loadMessages(currentTaskId);
 
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {
@@ -340,7 +345,7 @@ function App() {
     window.addEventListener("message", messageListener);
 
     return () => window.removeEventListener("message", messageListener);
-  }, []);
+  }, [currentTaskId]);
 
   return (
     <Router>
@@ -362,6 +367,7 @@ function App() {
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}
                   handleReset={handleReset}
+                  taskId={currentTaskId}
                 />
                 <div className="mt-6">
                   <FilePicker
@@ -400,7 +406,7 @@ function App() {
               </>
             }
           />
-          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks" element={<Tasks onTaskSelect={setCurrentTaskId} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
