@@ -54,8 +54,14 @@ export class SpectacleExtension {
     return this.workspaceFilePaths!;
   }
 
-  public listTasks(): Task[] {
-    return Array.from(this.tasks.values());
+  public listTasks(): { id: string; branch: string }[] {
+    // don't include the git repo in the task object
+    return Array.from(this.tasks.values()).map((task) => {
+      return {
+        id: task.id,
+        branch: task.branch,
+      };
+    });
   }
 
   private async initializeWorkspaceFilePaths(): Promise<boolean> {
