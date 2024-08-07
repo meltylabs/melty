@@ -1,10 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fs from "fs";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
-import { MeltyFile, Conversation } from "./types";
+import { Conversation } from "./types";
 import { Task } from "./backend/tasks";
-import * as tasks from "./backend/tasks";
 
 import { Message } from "./types";
 
@@ -34,9 +32,8 @@ const dummy: Message = {
 
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
-  private workspaceRoot: string;
-  private meltyFilePaths: string[] = [];
-  private workspaceFilePaths: string[] = [];
+  private meltyMindFilePaths: string[] = [];
+  private workspaceFilePaths: string[] | undefined;
   private task: Task | undefined;
 
   constructor(
@@ -44,113 +41,58 @@ export class SpectacleExtension {
     outputChannel: vscode.OutputChannel
   ) {
     this.outputChannel = outputChannel;
-    throw new Error("fix the workspace root!!!");
-    // this.workspaceRoot = this.task!.gitRepo!.rootPath;
-    this.workspaceRoot = vscode.workspace.workspaceFolders
-      ? vscode.workspace.workspaceFolders[0].uri.fsPath
-      : "/";
-
-    this.initializeMeltyFilePaths();
-    this.initializeWorkspaceFilePaths();
   }
 
   async activate() {
     outputChannel.appendLine("Spectacle activation started");
 
-    this.task = new Task(this.workspaceRoot);
+    this.task = new Task();
+    // don't bother kicking off task.init() here; the git repo isn't ready.
 
-    // Initialize meltyFilePaths
-    await this.initializeMeltyFilePaths();
-
-    // Register configuration change listener
-    this.context.subscriptions.push(
-      vscode.workspace.onDidChangeConfiguration(
-        this.handleConfigChange.bind(this)
-      )
-    );
+    // kick off async init. this will also be kicked off by callers who use this object
+    await this.initializeWorkspaceFilePaths();
   }
 
-  private handleConfigChange(e: vscode.ConfigurationChangeEvent) {
-    if (e.affectsConfiguration("spectacle.anthropicApiKey")) {
-      // Optionally handle configuration changes
+  public getMeltyMindFilePaths() {
+    // TODO figure out why there are empty strings in the array
+    return this.meltyMindFilePaths!.filter((path) => path !== "");
+  }
+
+  public async getWorkspaceFilePaths() {
+    if (this.workspaceFilePaths === undefined) {
+      if (!await this.initializeWorkspaceFilePaths()) {
+        throw new Error("Could not initialize workspace file paths");
+      }
     }
+    return this.workspaceFilePaths!;
   }
 
-  async getMeltyFiles(): Promise<{ [relativePath: string]: MeltyFile }> {
-    // const workspaceFileUris = await vscode.workspace.findFiles(
-    //   "**/*",
-    //   "**/node_modules/**"
-    // );
-    // const meltyFiles: { [relativePath: string]: MeltyFile } =
-    //   Object.fromEntries(
-    //     await Promise.all(
-    //       workspaceFileUris.map(async (file) => {
-    //         const relativePath = path.relative(this.workspaceRoot, file.fsPath);
-    //         const contents = await fs.promises.readFile(file.fsPath, "utf8");
-    //         return [
-    //           relativePath,
-    //           {
-    //             path: relativePath,
-    //             contents: contents,
-    //             workspaceRoot: this.workspaceRoot,
-    //           },
-    //         ];
-    //       })
-    //     )
-    //   );
-    // return meltyFiles;
-    return {};
-  }
+  private async initializeWorkspaceFilePaths(): Promise<boolean> {
+    if (this.workspaceFilePaths !== undefined) {
+      return true;
+    }
 
-  async getWorkspaceFiles(): Promise<{ [relativePath: string]: MeltyFile }> {
+    if (!await this.task!.init()) {
+      return false;
+    }
+
     const workspaceFileUris = await vscode.workspace.findFiles(
       "**/*",
       "**/node_modules/**"
     );
-    const meltyFiles: { [relativePath: string]: MeltyFile } =
-      Object.fromEntries(
-        await Promise.all(
-          workspaceFileUris.map(async (file) => {
-            const relativePath = path.relative(this.workspaceRoot, file.fsPath);
-            const contents = await fs.promises.readFile(file.fsPath, "utf8");
-            return [
-              relativePath,
-              {
-                path: relativePath,
-                contents: contents,
-                workspaceRoot: this.workspaceRoot,
-              },
-            ];
-          })
-        )
-      );
-    return meltyFiles;
+    this.workspaceFilePaths = workspaceFileUris.map((file) => {
+      return path.relative(this.task!.gitRepo!.rootPath, file.fsPath);
+    });
+    return true;
   }
 
-  private async initializeMeltyFilePaths() {
-    const meltyFiles = await this.getMeltyFiles();
-    this.meltyFilePaths = Object.keys(meltyFiles);
+  public addMeltyMindFilePath(filePath: string) {
+    this.meltyMindFilePaths.push(filePath);
+    this.outputChannel.appendLine(`Added file: ${filePath}`);
   }
 
-  private async initializeWorkspaceFilePaths() {
-    const workspaceFiles = await this.getWorkspaceFiles();
-    this.workspaceFilePaths = Object.keys(workspaceFiles);
-  }
-
-  public getMeltyFilePaths(): string[] {
-    return this.meltyFilePaths.filter((path) => path !== ""); // todo: figure out why there are empty strings in the array
-  }
-
-  public getWorkspaceFilePaths(): string[] {
-    return this.workspaceFilePaths;
-  }
-
-  public addMeltyFilePath(filePath: string) {
-    this.meltyFilePaths.push(filePath);
-  }
-
-  public dropMeltyFilePath(filePath: string) {
-    this.meltyFilePaths = this.meltyFilePaths.filter(
+  public dropMeltyMindFilePath(filePath: string) {
+    this.meltyMindFilePaths = this.meltyMindFilePaths.filter(
       (path) => path !== filePath
     );
     this.outputChannel.appendLine(`Dropped file: ${filePath}`);
@@ -161,23 +103,22 @@ export class SpectacleExtension {
   }
 
   public resetTask() {
-    this.task = new Task(this.workspaceRoot);
+    this.task = new Task();
   }
 
   public openFileInEditor(filePath: string) {
-    const fileUri = vscode.Uri.file(path.join(this.workspaceRoot, filePath));
+    const fileUri = vscode.Uri.file(path.join(this.task!.gitRepo!.rootPath, filePath));
     vscode.window.showTextDocument(fileUri);
-  }
-
-  public getRepository() {
-    return this.task!.repository;
   }
 
   public async initRepository() {
     await this.task!.init();
   }
 
-  public getTask() {
+  public async getTask() {
+    if (!this.task!.gitRepo) {
+      await this.task!.init();
+    }
     return this.task!;
   }
 }

@@ -16,27 +16,31 @@ export class Task {
     this.gitRepo = null;
   }
 
-  public async init(): Promise<void> {
+  /**
+   * Initializes the git repo.
+   */
+  public async init(): Promise<boolean> {
     if (this.gitRepo) {
-      return;
+      return true;
     }
 
     const gitExtension = vscode.extensions.getExtension("vscode.git");
     if (!gitExtension) {
-      vscode.window.showErrorMessage("Git extension not found");
-      throw new Error("Git extension not found");
+      console.log("Could not initialize task: git extension not found");
+      return false;
     }
 
     const git = gitExtension.exports.getAPI(1);
     const repositories = git.repositories;
     if (repositories.length === 0) {
-      vscode.window.showInformationMessage("No Git repository found");
-      throw new Error("No Git repository found");
+      console.log("Could not initialize task: no git repository found");
+      return false;
     }
     const repo = repositories[0];
     await repo.status();
 
     this.gitRepo = { repository: repo, rootPath: repo.rootUri.fsPath };
+    return true;
   }
 
   private getConversationState(): PseudoCommit | undefined {

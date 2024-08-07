@@ -180,18 +180,13 @@ export class HelloWorldPanel {
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
       async (message: any) => {
-        // init repository
-        await this.spectacleExtension.initRepository();
-
         const command = message.command;
-        const text = message.text;
-        const filePath = message.filePath; // optional param for addFile and dropFile
-        let meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
+        const meltyMindFilePaths = this.spectacleExtension.getMeltyMindFilePaths();
 
         switch (command) {
           case "hello":
             // Code that should run in response to the hello message command
-            window.showInformationMessage(text);
+            window.showInformationMessage(message.text);
             return;
           case "loadConversation":
             console.log(`loadConversation`);
@@ -202,15 +197,15 @@ export class HelloWorldPanel {
             });
             return;
           case "listMeltyFiles":
-            console.log(`listFiles: ${meltyFilePaths.length} melty file paths`);
+            console.log(`listFiles: ${meltyMindFilePaths.length} melty file paths`);
             this._panel.webview.postMessage({
               command: "listMeltyFiles",
-              meltyFilePaths: meltyFilePaths,
+              meltyMindFilePaths: meltyMindFilePaths,
             });
             return;
           case "listWorkspaceFiles":
             const workspaceFilePaths =
-              this.spectacleExtension.getWorkspaceFilePaths();
+              await this.spectacleExtension.getWorkspaceFilePaths();
             this._panel.webview.postMessage({
               command: "listWorkspaceFiles",
               workspaceFilePaths: workspaceFilePaths,
@@ -224,58 +219,60 @@ export class HelloWorldPanel {
             });
             return;
           case "openFileInEditor":
-            this.spectacleExtension.openFileInEditor(filePath);
+            this.spectacleExtension.openFileInEditor(message.filePath);
             return;
 
           case "addMeltyFile":
-            console.log(`addFile: ${filePath}`);
-            this.spectacleExtension.addMeltyFilePath(filePath);
+            console.log(`addFile: ${message.filePath}`);
+            this.spectacleExtension.addMeltyMindFilePath(message.filePath);
             this._panel.webview.postMessage({
               command: "listMeltyFiles",
-              meltyFilePaths: this.spectacleExtension.getMeltyFilePaths(),
+              meltyMindFilePaths: this.spectacleExtension.getMeltyMindFilePaths(),
             });
             vscode.window.showInformationMessage(
-              `Added ${filePath} to Melty's Mind`
+              `Added ${message.filePath} to Melty's Mind`
             );
             return;
           case "dropMeltyFile":
-            console.log(`dropFile: ${filePath}`);
-            this.spectacleExtension.dropMeltyFilePath(filePath);
+            console.log(`dropFile: ${message.filePath}`);
+            this.spectacleExtension.dropMeltyMindFilePath(message.filePath);
             console.log(
-              "sending back meltyFilePaths: ",
-              this.spectacleExtension.getMeltyFilePaths()
+              "sending back meltyMindFilePaths: ",
+              this.spectacleExtension.getMeltyMindFilePaths()
             );
             vscode.window.showInformationMessage(
-              `Removed ${filePath} from Melty's Mind`
+              `Removed ${message.filePath} from Melty's Mind`
             );
             this._panel.webview.postMessage({
               command: "listMeltyFiles",
-              meltyFilePaths: this.spectacleExtension.getMeltyFilePaths(),
+              meltyMindFilePaths: this.spectacleExtension.getMeltyMindFilePaths(),
             });
             return;
           case "undo":
-            await this.undoLatestCommit();
-            const repo = this.spectacleExtension.getRepository();
-            await repo.status();
+            // todo update implementation
 
-            const latestCommit = repo.state.HEAD?.commit;
-            const latestCommitMessage = await repo.getCommit(latestCommit);
-            const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
-            vscode.window.showInformationMessage(message);
-            this._panel.webview.postMessage({
-              command: "confirmedUndo",
-              text: {
-                sender: "user",
-                message: message,
-              },
-            });
+            // await this.undoLatestCommit();
+            // const repo = this.spectacleExtension.getRepository();
+            // await repo.status();
+
+            // const latestCommit = repo.state.HEAD?.commit;
+            // const latestCommitMessage = await repo.getCommit(latestCommit);
+            // const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
+            // vscode.window.showInformationMessage(message);
+            // this._panel.webview.postMessage({
+            //   command: "confirmedUndo",
+            //   text: {
+            //     sender: "user",
+            //     message: message,
+            //   },
+            // });
             return;
           case "ask":
-            await this.handleAskCode(text, "ask");
+            await this.handleAskCode(message.text, "ask");
             return;
 
           case "code":
-            await this.handleAskCode(text, "code");
+            await this.handleAskCode(message.text, "code");
             return;
         }
       },
@@ -285,8 +282,8 @@ export class HelloWorldPanel {
   }
 
   private async handleAskCode(text: string, mode: "ask" | "code") {
-    const meltyFilePaths = this.spectacleExtension.getMeltyFilePaths();
-    const task = this.spectacleExtension.getTask();
+    const meltyMindFilePaths = this.spectacleExtension.getMeltyMindFilePaths();
+    const task = await this.spectacleExtension.getTask();
     
     // human response
     await task.respondHuman(text);
@@ -304,7 +301,7 @@ export class HelloWorldPanel {
     };
     try {
       await task.respondBot(
-        meltyFilePaths, // TODO are we sending the right files here? @soybean
+        meltyMindFilePaths, // TODO are we sending the right files here? @soybean
         mode,
         processPartial
       );
@@ -325,9 +322,11 @@ export class HelloWorldPanel {
    * TODO: confirm with dice we want to do this
    */
   private async undoLatestCommit(): Promise<void> {
-    const repo = this.spectacleExtension.getRepository();
-    await repo.status();
-    await repo.reset("HEAD~1", false);
+    // todo update implementation
+
+    // const repo = this.spectacleExtension.getRepository();
+    // await repo.status();
+    // await repo.reset("HEAD~1", false);
   }
 
   /**

@@ -316,7 +316,7 @@ function App() {
         //   break;
         case "listMeltyFiles":
           console.log("listMeltyFiles", message);
-          setMeltyFiles(message.meltyFilePaths);
+          setMeltyFiles(message.meltyMindFilePaths);
           break;
         case "listWorkspaceFiles":
           console.log("listWorkspaceFiles", message);
@@ -387,7 +387,7 @@ function App() {
                   <FilePicker
                     open={pickerOpen}
                     setOpen={setPickerOpen}
-                    meltyFilePaths={meltyFiles}
+                    meltyMindFilePaths={meltyFiles}
                     workspaceFilePaths={workspaceFiles}
                     handleAddFile={handleAddFile}
                     handleDropFile={handleDropFile}

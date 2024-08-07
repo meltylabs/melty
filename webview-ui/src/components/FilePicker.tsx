@@ -212,13 +212,13 @@ export function FilePicker({
   open,
   setOpen,
   workspaceFilePaths,
-  meltyFilePaths,
+  meltyMindFilePaths,
   handleAddFile,
   handleDropFile,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  meltyFilePaths: string[];
+  meltyMindFilePaths: string[];
   workspaceFilePaths: string[];
   handleAddFile: (filePath: string) => void;
   handleDropFile: (filePath: string) => void;
@@ -244,9 +244,9 @@ export function FilePicker({
         <CommandList>
           <CommandEmpty>All files in workspace are in context.</CommandEmpty>
           {/* todo - would be nice to show recent or suggested here */}
-          {meltyFilePaths.length > 0 && (
+          {meltyMindFilePaths.length > 0 && (
             <CommandGroup heading="Current">
-              {meltyFilePaths.map((filePath) => (
+              {meltyMindFilePaths.map((filePath) => (
                 <CommandItem
                   onSelect={() => handleDropFile(filePath)}
                   key={filePath}
@@ -260,7 +260,7 @@ export function FilePicker({
 
           <CommandGroup heading="Add to context">
             {workspaceFilePaths
-              .filter((filePath) => !meltyFilePaths.includes(filePath))
+              .filter((filePath) => !meltyMindFilePaths.includes(filePath))
               .map((filePath: string) => (
                 <CommandItem
                   onSelect={() => handleAddFile(filePath)}
