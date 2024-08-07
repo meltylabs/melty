@@ -82,9 +82,11 @@ function JouleComponent({
     );
   };
 
-  const diffHtml = joule.pseudoCommit.impl.status === "committed" && joule.pseudoCommit.impl.udiffPreview
-    ? renderDiff2HTML(joule.pseudoCommit.impl.udiffPreview)
-    : null;
+  const diffHtml =
+    joule.pseudoCommit.impl.status === "committed" &&
+    joule.pseudoCommit.impl.udiffPreview
+      ? renderDiff2HTML(joule.pseudoCommit.impl.udiffPreview)
+      : null;
 
   return (
     <div
@@ -119,13 +121,11 @@ function JouleComponent({
 
 function ConversationView({
   conversation,
-  partialResponse,
   handleSendMessage,
   handleUndo,
   handleReset,
 }: {
   conversation: Conversation | null;
-  partialResponse: Joule | null;
   handleSendMessage: (mode: "ask" | "code", text: string) => void;
   handleUndo: () => void;
   handleReset: () => void;
@@ -178,11 +178,16 @@ function ConversationView({
     <div className="p-4">
       <div className="mb-4 rounded p-2 mx-auto">
         {conversation?.joules.map((joule, index) => (
-          <JouleComponent key={index} joule={joule} />
+          <JouleComponent
+            key={index}
+            joule={joule}
+            isPartial={
+              index === conversation.joules.length - 1 &&
+              joule.author === "bot" &&
+              joule.pseudoCommit.impl.status !== "committed"
+            }
+          />
         ))}
-        {partialResponse && (
-          <JouleComponent joule={partialResponse} isPartial={true} />
-        )}
       </div>
       <div className="">
         <form onSubmit={handleSubmit}>
@@ -244,8 +249,7 @@ type CommandType =
   | "logHello";
 
 function App() {
-  const [conversation, setConversation] = useState<Conversation | null>(null); // this will immediately get replaced
-  const [partialResponse, setPartialResponse] = useState<Joule | null>(null);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>(["test.pdf"]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([
     "hi.pdf",
@@ -333,7 +337,19 @@ function App() {
         //   ]);
         //   break;
         case "setPartialResponse":
-          setPartialResponse(message.joule);
+          setConversation((prevConversation) => {
+            if (!prevConversation) return null;
+            const updatedJoules = [...prevConversation.joules];
+            if (
+              updatedJoules.length > 0 &&
+              updatedJoules[updatedJoules.length - 1].author === "bot"
+            ) {
+              updatedJoules[updatedJoules.length - 1] = message.joule;
+            } else {
+              updatedJoules.push(message.joule);
+            }
+            return { ...prevConversation, joules: updatedJoules };
+          });
           break;
         case "logHello":
           console.log("hello!", message);
@@ -363,7 +379,6 @@ function App() {
               <>
                 <ConversationView
                   conversation={conversation}
-                  partialResponse={partialResponse}
                   handleSendMessage={handleSendMessage}
                   handleUndo={handleUndo}
                   handleReset={handleReset}
