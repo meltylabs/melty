@@ -44,6 +44,7 @@ export class SpectacleExtension {
     outputChannel: vscode.OutputChannel
   ) {
     this.outputChannel = outputChannel;
+    throw new Error("fix the workspace root!!!");
     // this.workspaceRoot = this.task!.gitRepo!.rootPath;
     this.workspaceRoot = vscode.workspace.workspaceFolders
       ? vscode.workspace.workspaceFolders[0].uri.fsPath
