@@ -22,7 +22,7 @@ import { Input } from "./components/ui/input";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Tasks } from "./components/Tasks";
-import { Conversation, Joule } from "./types";
+import { Conversation, Joule, Task } from "./types";
 import {
   Collapsible,
   CollapsibleContent,
