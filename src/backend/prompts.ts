@@ -5,9 +5,7 @@ export function askModeSystemPrompt(): string {
   return `Act as an expert code analyst.
 Answer questions about the supplied code.
 Right now, you can't make any changes to the user's code directly. Do NOT offer to make changes to the user's code.
-You can, however, suggest changes to the user.
-
-Always reply to the user in the same language they are using.`;
+You can, however, suggest changes to the user.`;
 }
 
 export function codeModeSystemPrompt(): string {
@@ -16,8 +14,7 @@ Always use best practices when coding.
 Respect and use existing conventions, libraries, etc that are already present in the code base.
 
 Take requests for changes to the supplied code.
-If the request is ambiguous, ask questions.
-Always reply to the user in the same language they are using.`;
+If the request is ambiguous, ask questions.`;
 }
 
 export function exampleConversationsPrompt(): string {
