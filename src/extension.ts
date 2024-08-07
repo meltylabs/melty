@@ -72,8 +72,22 @@ export class SpectacleExtension {
     return this.workspaceFilePaths!;
   }
 
-  public getTasks(): Map<string, Task> {
-    return this.tasks;
+  public getTasks(): Task[] {
+    return Array.from(this.tasks.values());
+  }
+
+  public handleListTasks(panel: vscode.WebviewPanel) {
+    const tasks = this.getTasks();
+    panel.webview.postMessage({
+      command: "listTasks",
+      tasks: tasks.map(task => ({
+        id: task.id,
+        title: task.branch,
+        description: "Task description", // You might want to add a description field to your Task class
+        status: "pending", // You might want to add a status field to your Task class
+        github_link: "" // You might want to add a github_link field to your Task class
+      }))
+    });
   }
 
   private async initializeWorkspaceFilePaths(): Promise<boolean> {
