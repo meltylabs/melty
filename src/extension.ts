@@ -54,13 +54,8 @@ export class SpectacleExtension {
     return this.workspaceFilePaths!;
   }
 
-  public getTasks(): Task[] {
+  public listTasks(): Task[] {
     return Array.from(this.tasks.values());
-  }
-
-  public handleListTasks() {
-    const tasks = this.getTasks();
-    return tasks;
   }
 
   private async initializeWorkspaceFilePaths(): Promise<boolean> {

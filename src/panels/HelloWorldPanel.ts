@@ -293,7 +293,7 @@ export class HelloWorldPanel {
             return;
 
           case "listTasks":
-            const tasks = this.spectacleExtension.getTasks();
+            const tasks = this.spectacleExtension.listTasks();
             this._panel.webview.postMessage({
               command: "listTasks",
               tasks: tasks,
@@ -316,7 +316,7 @@ export class HelloWorldPanel {
 
   private async handleAskCode(text: string, mode: "ask" | "code") {
     const meltyMindFilePaths = this.spectacleExtension.getMeltyMindFilePaths();
-    const task = await this.spectacleExtension.getTask();
+    const task = await this.spectacleExtension.getCurrentTask();
 
     // human response
     await task.respondHuman(text);
