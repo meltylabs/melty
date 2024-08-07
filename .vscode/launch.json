@@ -15,7 +15,7 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "", // disabled because defaultBuildTask was running npm watch which does not halt
+			"preLaunchTask": "npm: pretest",
 		},
 		{
 			"type": "node",
@@ -29,7 +29,8 @@
 			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": [
 				"<node_internals>/**"
-			]
+			],
+			"preLaunchTask": "npm: pretest:extension"
 		}
 	]
 }

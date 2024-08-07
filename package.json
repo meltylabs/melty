@@ -68,7 +68,9 @@
     "watch:webview": "cd webview-ui && npm run watch",
     "lint": "eslint src --ext ts",
     "test": "vscode-test --",
-    "pretest": "npm run compile && npm run lint",
+    "pretest:extension": "npm run compile && npm run lint",
+    "pretest:webview": "npm run build:webview",
+    "pretest": "npm run pretest:extension && npm run pretest:webview",
     "clean": "rm -rf out"
   },
   "devDependencies": {

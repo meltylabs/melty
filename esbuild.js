@@ -29,7 +29,7 @@ const testConfig = {
   platform: "node",
   format: "cjs",
   entryPoints: glob.sync("./src/test/**/*.test.ts"),
-  outdir: "./out/test",
+  outdir: "./out",
   external: ["vscode"],
 };
 
