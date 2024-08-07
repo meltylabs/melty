@@ -33,11 +33,11 @@ export class SpectacleExtension {
   async activate() {
     outputChannel.appendLine("Spectacle activation started");
 
-    // this.task = new Task("task_1", "task/task-1");
+    // this.currentTask = new Task("task_1", "task/task-1");
     // don't bother kicking off task.init() here; the git repo isn't ready.
 
     // kick off async init. this will also be kicked off by callers who use this object
-    await this.initializeWorkspaceFilePaths();
+    // await this.initializeWorkspaceFilePaths();
   }
 
   public getMeltyMindFilePaths() {
@@ -118,7 +118,7 @@ export class SpectacleExtension {
     // await this.createGitBranch(branchName);
 
     this.tasks.set(taskId, newTask);
-    this.task = newTask;
+    this.currentTask = newTask;
 
     return taskId;
   }
