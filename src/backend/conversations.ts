@@ -153,19 +153,18 @@ ${fileEncodings}`,
 
 async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Promise<ClaudeMessage[]> {
   const repoMap = new RepoMap(gitRepo);
-  await repoMap.initParsers();
 
   const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
   const filePaths = files.map(file => file.fsPath);
 
-  const repoMapMessages = [
+  const repoMapMessages: ClaudeMessage[] = [
     {
       role: "user", content: `${prompts.repoMapIntro()}
       
-      ${repoMap.getRepoMap(filePaths)}`},
+      ${await repoMap.getRepoMap(filePaths)}`},
     { role: "assistant", content: prompts.repoMapAsstAck()}
   ];
-  return [];
+  return repoMapMessages; // [];
 }
 
 export function lastJoule(conversation: Conversation): Joule | undefined {
