@@ -12,7 +12,7 @@ import * as joules from "./joules";
 import * as prompts from "./prompts";
 import * as claudeAPI from "./claudeAPI";
 import * as diffApplicatorXml from "./diffApplicatorXml";
-import { RepoMap } from './repoMap';
+import { RepoMapSpec } from './repoMapSpec';
 import * as vscode from 'vscode';
 
 import { Conversation } from "../types";
@@ -152,7 +152,7 @@ ${fileEncodings}`,
 }
 
 async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Promise<ClaudeMessage[]> {
-  const repoMap = new RepoMap(gitRepo);
+  const repoMap = new RepoMapSpec(gitRepo);
 
   const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
   const filePaths = files.map(file => file.fsPath);
