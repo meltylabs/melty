@@ -301,7 +301,7 @@ function App() {
     loadFiles();
     loadMessages();
 
-    const focusListener = vscode.window.onDidChangeActiveTextEditor(() => {
+    const focusListener = window.addEventListener('focus', () => {
       loadMessages();
     });
 
@@ -370,7 +370,7 @@ function App() {
 
     return () => {
       window.removeEventListener("message", messageListener);
-      focusListener.dispose();
+      window.removeEventListener('focus', loadMessages);
     };
   }, []);
 
