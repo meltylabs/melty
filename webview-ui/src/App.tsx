@@ -154,7 +154,7 @@ function ConversationView() {
     setPickerOpen(false);
   }
 
-  function loadConversation(taskId: string | null) {
+  function loadConversation(taskId: string) {
     vscode.postMessage({ command: "loadConversation", taskId });
     vscode.postMessage({ command: "switchTask", taskId });
   }
@@ -197,7 +197,9 @@ function ConversationView() {
 
   useEffect(() => {
     loadFiles();
-    loadConversation(taskId ?? null);
+    if (taskId) {
+      loadConversation(taskId);
+    }
 
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {

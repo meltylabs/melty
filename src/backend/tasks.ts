@@ -36,7 +36,7 @@ export class Task {
 
     const git = gitExtension.exports.getAPI(1);
     const repositories = git.repositories;
-    if (repositories.length === 0) {
+    if (!repositories.length) {
       console.log("Could not initialize task: no git repository found");
       return false;
     }

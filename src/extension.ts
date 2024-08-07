@@ -4,8 +4,6 @@ import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { Conversation } from "./types";
 import { Task } from "./backend/tasks";
 
-import { Message } from "./types";
-
 const dummyTask1: Task = new Task("task_1", "task/task-1");
 const dummyTasks: Map<string, Task> = new Map();
 dummyTasks.set("task_1", dummyTask1);
@@ -32,11 +30,12 @@ export class SpectacleExtension {
   async activate() {
     outputChannel.appendLine("Spectacle activation started");
 
-    // this.currentTask = new Task("task_1", "task/task-1");
     // don't bother kicking off task.init() here; the git repo isn't ready.
 
     // kick off async init. this will also be kicked off by callers who use this object
-    // await this.initializeWorkspaceFilePaths();
+    if (this.currentTask) {
+      this.initializeWorkspaceFilePaths(this.currentTask);
+    }
   }
 
   public getMeltyMindFilePaths() {
@@ -175,7 +174,7 @@ export class SpectacleExtension {
     await this.currentTask.init();
   }
 
-  public async getCurrentTask() {
+  public async getCurrentTask(): Promise<Task> {
     if (!this.currentTask) {
       throw new Error("No current task");
     }
