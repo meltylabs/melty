@@ -127,7 +127,6 @@ export class SpectacleExtension {
   }
 
   public resetTask() {
-    // this.task = new Task();
     throw new Error("Not implemented");
   }
 
