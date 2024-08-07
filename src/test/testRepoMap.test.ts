@@ -15,7 +15,7 @@ suite('RepoMap', () => {
         fs.rmdirSync(tempDir, { recursive: true });
     });
 
-    test('get_repo_map should include all test files', () => {
+    test('getRepoMap should include all test files', () => {
         const testFiles = [
             'test_file1.py',
             'test_file2.py',
@@ -36,7 +36,7 @@ suite('RepoMap', () => {
         });
     });
 
-//     test('get_repo_map_with_identifiers should include expected identifiers', () => {
+//     test('getRepoMap_with_identifiers should include expected identifiers', () => {
 //         const testFile1 = 'test_file_with_identifiers.py';
 //         const fileContent1 = `
 // class MyClass:
@@ -73,7 +73,7 @@ suite('RepoMap', () => {
 //         });
 //     });
 
-//     test('get_repo_map_all_files should include all file types', () => {
+//     test('getRepoMap_all_files should include all file types', () => {
 //         const testFiles = [
 //             'test_file0.py',
 //             'test_file1.txt',
@@ -97,7 +97,7 @@ suite('RepoMap', () => {
 //         });
 //     });
 
-//     test('get_repo_map_excludes_added_files should exclude chat files', () => {
+//     test('getRepoMap_excludes_added_files should exclude chat files', () => {
 //         const testFiles = [
 //             'test_file1.py',
 //             'test_file2.py',
@@ -131,7 +131,7 @@ suite('RepoMap', () => {
 //         fs.rmdirSync(tempDir, { recursive: true });
 //     });
 
-//     test('get_repo_map_typescript should include TypeScript-specific identifiers', () => {
+//     test('getRepoMap_typescript should include TypeScript-specific identifiers', () => {
 //         const testFileTs = 'test_file.ts';
 //         const fileContentTs = `
 // interface IMyInterface {
@@ -186,7 +186,7 @@ suite('RepoMap', () => {
 //         fs.rmdirSync(tempDir, { recursive: true });
 //     });
 
-//     test('get_repo_map_all_languages should include files from all languages', () => {
+//     test('getRepoMap_all_languages should include files from all languages', () => {
 //         const languageFiles = {
 //             c: ['test.c', '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}\n'],
 //             csharp: ['test.cs', 'using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}\n'],
