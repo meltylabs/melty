@@ -301,6 +301,10 @@ function App() {
     loadFiles();
     loadMessages();
 
+    const focusListener = vscode.window.onDidChangeActiveTextEditor(() => {
+      loadMessages();
+    });
+
     // Listen for messages from the extension
     const messageListener = (event: MessageEvent) => {
       const message = event.data;
@@ -364,7 +368,10 @@ function App() {
 
     window.addEventListener("message", messageListener);
 
-    return () => window.removeEventListener("message", messageListener);
+    return () => {
+      window.removeEventListener("message", messageListener);
+      focusListener.dispose();
+    };
   }, []);
 
   return (
