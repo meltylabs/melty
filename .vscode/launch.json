@@ -18,6 +18,18 @@
 			"preLaunchTask": "npm: pretest",
 		},
 		{
+			"name": "Run Extension -- no react rebuild",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"preLaunchTask": "npm: pretest:extension",
+		},
+		{
 			"type": "node",
 			"request": "launch",
 			"name": "Mocha Tests",
