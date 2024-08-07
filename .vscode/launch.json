@@ -15,7 +15,19 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "", // disabled because defaultBuildTask was running npm watch which does not halt
+			"preLaunchTask": "npm: pretest",
+		},
+		{
+			"name": "Run Extension -- no react rebuild",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"preLaunchTask": "npm: pretest:extension",
 		},
 		{
 			"type": "node",
@@ -29,7 +41,8 @@
 			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": [
 				"<node_internals>/**"
-			]
+			],
+			"preLaunchTask": "npm: pretest:extension"
 		}
 	]
 }
