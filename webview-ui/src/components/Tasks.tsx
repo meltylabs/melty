@@ -22,11 +22,7 @@ interface Task {
   github_link: string;
 }
 
-export function Tasks({
-  onTaskSelect,
-}: {
-  onTaskSelect: (taskId: string) => void;
-}) {
+export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
@@ -64,7 +60,7 @@ export function Tasks({
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
         {tasks.map((task) => (
-          <Link to="/" className="mr-4" onClick={() => onTaskSelect(task.id)}>
+          <Link to={`/task/${task.id}`} className="mr-4">
             <Card key={task.id}>
               <CardHeader>
                 <CardTitle>{task.name}</CardTitle>

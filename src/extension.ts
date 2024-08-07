@@ -80,13 +80,13 @@ export class SpectacleExtension {
     const tasks = this.getTasks();
     panel.webview.postMessage({
       command: "listTasks",
-      tasks: tasks.map(task => ({
+      tasks: tasks.map((task) => ({
         id: task.id,
         title: task.branch,
         description: "Task description", // You might want to add a description field to your Task class
         status: "pending", // You might want to add a status field to your Task class
-        github_link: "" // You might want to add a github_link field to your Task class
-      }))
+        github_link: "", // You might want to add a github_link field to your Task class
+      })),
     });
   }
 
@@ -155,7 +155,8 @@ export class SpectacleExtension {
     await newTask.init();
 
     // Create a new branch for this task
-    await this.createGitBranch(branchName);
+    // todo: add this back once testing is done
+    // await this.createGitBranch(branchName);
 
     this.tasks.set(taskId, newTask);
     this.task = newTask;

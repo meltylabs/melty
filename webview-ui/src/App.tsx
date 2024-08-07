@@ -15,6 +15,7 @@ import {
   Link,
   Navigate,
   useNavigate,
+  useParams,
 } from "react-router-dom";
 
 import * as Diff2Html from "diff2html";
@@ -30,6 +31,16 @@ import {
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
 import "./App.css";
+
+// todo: move to a types file
+type CommandType =
+  | "confirmedUndo"
+  | "setPartialResponse"
+  | "listMeltyFiles"
+  | "listWorkspaceFiles"
+  | "loadConversation"
+  | "logHello"
+  | "listTasks";
 
 function JouleComponent({
   joule,
@@ -125,20 +136,48 @@ function JouleComponent({
   );
 }
 
-function ConversationView({
-  conversation,
-  handleSendMessage,
-  handleUndo,
-  handleReset,
-  taskId,
-}: {
-  conversation: Conversation | null;
-  handleSendMessage: (mode: "ask" | "code", text: string) => void;
-  handleUndo: () => void;
-  handleReset: () => void;
-  taskId: string | null;
-}) {
+function ConversationView() {
+  const { taskId } = useParams<{ taskId: string }>();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
+  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+
+  function handleAddFile(file: string) {
+    vscode.postMessage({ command: "addMeltyFile", filePath: file });
+    setPickerOpen(false);
+  }
+
+  function handleDropFile(file: string) {
+    vscode.postMessage({ command: "dropMeltyFile", filePath: file });
+    setPickerOpen(false);
+  }
+
+  function loadMessages(taskId: string | null) {
+    vscode.postMessage({ command: "loadMessages", taskId });
+  }
+
+  function loadFiles() {
+    vscode.postMessage({ command: "listMeltyFiles" });
+    vscode.postMessage({ command: "listWorkspaceFiles" });
+  }
+
+  function handleSendMessage(mode: "ask" | "code", text: string) {
+    vscode.postMessage({
+      command: mode,
+      text: text,
+      taskId: taskId,
+    });
+  }
+
+  function handleUndo() {
+    vscode.postMessage({ command: "undo", taskId: taskId });
+  }
+
+  function handleReset() {
+    vscode.postMessage({ command: "resetTask", taskId: taskId });
+  }
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -153,6 +192,51 @@ function ConversationView({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
+  }, []);
+
+  useEffect(() => {
+    loadFiles();
+    loadMessages(taskId ?? null);
+
+    // Listen for messages from the extension
+    const messageListener = (event: MessageEvent) => {
+      const message = event.data;
+      console.log("NEW MESSAGE IN APP.TSX: ", message);
+
+      switch (message.command as CommandType) {
+        case "listMeltyFiles":
+          console.log("listMeltyFiles", message);
+          setMeltyFiles(message.meltyMindFilePaths);
+          break;
+        case "listWorkspaceFiles":
+          console.log("listWorkspaceFiles", message);
+          setWorkspaceFiles(message.workspaceFilePaths);
+          break;
+        case "loadConversation":
+          console.log("loadConversation", message);
+          setConversation(message.conversation);
+          break;
+        case "setPartialResponse":
+          setConversation((prevConversation) => {
+            if (!prevConversation) return null;
+            const updatedJoules = [...prevConversation.joules];
+            if (
+              updatedJoules.length > 0 &&
+              updatedJoules[updatedJoules.length - 1].author === "bot"
+            ) {
+              updatedJoules[updatedJoules.length - 1] = message.joule;
+            } else {
+              updatedJoules.push(message.joule);
+            }
+            return { ...prevConversation, joules: updatedJoules };
+          });
+          break;
+      }
+    };
+
+    window.addEventListener("message", messageListener);
+
+    return () => window.removeEventListener("message", messageListener);
   }, []);
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -248,192 +332,58 @@ function ConversationView({
           </div>
         </form>
       </div>
+
+      <div className="mt-6">
+        <FilePicker
+          open={pickerOpen}
+          setOpen={setPickerOpen}
+          meltyMindFilePaths={meltyFiles}
+          workspaceFilePaths={workspaceFiles}
+          handleAddFile={handleAddFile}
+          handleDropFile={handleDropFile}
+        />
+
+        <div className="mt-2">
+          <p className="text-xs text-muted-foreground mb-2">
+            Melty's Mind{"  "}
+            <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">\</span>
+            </kbd>{" "}
+          </p>
+          {meltyFiles.length === 0 && (
+            <p className="text-xs text-muted-foreground mb-2 italic">
+              Melty can't see any files yet
+            </p>
+          )}
+          {meltyFiles.map((file, i) => (
+            <button
+              onClick={() => handleDropFile(file)}
+              className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
+              key={`file-${i}`}
+            >
+              <XIcon className="h-3 w-3 mr-2" />
+              {file}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
-// todo: move to a types file
-type CommandType =
-  | "confirmedUndo"
-  | "setPartialResponse"
-  | "listMeltyFiles"
-  | "listWorkspaceFiles"
-  | "loadConversation"
-  | "logHello"
-  | "listTasks";
-
 function App() {
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [meltyFiles, setMeltyFiles] = useState<string[]>(["test.pdf"]);
-  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([
-    "hi.pdf",
-    "hello.txt",
-  ]);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<"tasks" | "chat">("tasks");
-
-  function handleSendMessage(mode: "ask" | "code", text: string) {
-    // Send message to extension
-    vscode.postMessage({
-      command: mode,
-      text: text,
-      taskId: currentTaskId,
-    });
-  }
-
-  function handleUndo() {
-    vscode.postMessage({ command: "undo", taskId: currentTaskId });
-  }
-
-  function loadFiles() {
-    vscode.postMessage({ command: "listMeltyFiles" });
-    vscode.postMessage({ command: "listWorkspaceFiles" });
-  }
-
-  function handleAddFile(file: string) {
-    vscode.postMessage({ command: "addMeltyFile", filePath: file });
-    setPickerOpen(false);
-  }
-
-  function handleDropFile(file: string) {
-    vscode.postMessage({ command: "dropMeltyFile", filePath: file });
-    setPickerOpen(false);
-  }
-
-  function loadMessages(taskId: string | null) {
-    vscode.postMessage({ command: "loadMessages", taskId });
-  }
-
-  function handleReset() {
-    vscode.postMessage({ command: "resetTask", taskId: currentTaskId });
-  }
-
-  useEffect(() => {
-    loadFiles();
-    loadMessages(currentTaskId);
-
-    // Listen for messages from the extension
-    const messageListener = (event: MessageEvent) => {
-      const message = event.data;
-      console.log("NEW MESSAGE IN APP.TSX: ", message);
-
-      switch (message.command as CommandType) {
-        case "listMeltyFiles":
-          console.log("listMeltyFiles", message);
-          setMeltyFiles(message.meltyMindFilePaths);
-          break;
-        case "listWorkspaceFiles":
-          console.log("listWorkspaceFiles", message);
-          setWorkspaceFiles(message.workspaceFilePaths);
-          break;
-        case "loadConversation":
-          console.log("loadConversation", message);
-          setConversation(message.conversation);
-          break;
-        case "setPartialResponse":
-          setConversation((prevConversation) => {
-            if (!prevConversation) return null;
-            const updatedJoules = [...prevConversation.joules];
-            if (
-              updatedJoules.length > 0 &&
-              updatedJoules[updatedJoules.length - 1].author === "bot"
-            ) {
-              updatedJoules[updatedJoules.length - 1] = message.joule;
-            } else {
-              updatedJoules.push(message.joule);
-            }
-            return { ...prevConversation, joules: updatedJoules };
-          });
-          break;
-        case "listTasks":
-          console.log("listTasks", message);
-          // The Tasks component will handle updating its state
-          break;
-      }
-    };
-
-    window.addEventListener("message", messageListener);
-
-    return () => window.removeEventListener("message", messageListener);
-  }, [currentTaskId]);
-
   return (
     <Router>
       <main className="p-4">
         <nav className="mb-4">
-          <Button
-            variant={currentView === "chat" ? "default" : "outline"}
-            onClick={() => {
-              if (currentTaskId) {
-                setCurrentView("chat");
-              }
-            }}
-            disabled={!currentTaskId}
-            className="mr-4"
-          >
-            Chat
-          </Button>
-          <Button
-            variant={currentView === "tasks" ? "default" : "outline"}
-            onClick={() => setCurrentView("tasks")}
-          >
-            Tasks
-          </Button>
+          <Link to="/">Tasks</Link>
         </nav>
 
-        {currentView === "tasks" ? (
-          <Tasks
-            onTaskSelect={(taskId) => {
-              setCurrentTaskId(taskId);
-              setCurrentView("chat");
-            }}
-          />
-        ) : (
-          <>
-            <ConversationView
-              conversation={conversation}
-              handleSendMessage={handleSendMessage}
-              handleUndo={handleUndo}
-              handleReset={handleReset}
-              taskId={currentTaskId}
-            />
-            <div className="mt-6">
-              <FilePicker
-                open={pickerOpen}
-                setOpen={setPickerOpen}
-                meltyMindFilePaths={meltyFiles}
-                workspaceFilePaths={workspaceFiles}
-                handleAddFile={handleAddFile}
-                handleDropFile={handleDropFile}
-              />
-
-              <div className="mt-2">
-                <p className="text-xs text-muted-foreground mb-2">
-                  Melty's Mind{"  "}
-                  <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                    <span className="text-xs">\</span>
-                  </kbd>{" "}
-                </p>
-                {meltyFiles.length === 0 && (
-                  <p className="text-xs text-muted-foreground mb-2 italic">
-                    Melty can't see any files yet
-                  </p>
-                )}
-                {meltyFiles.map((file, i) => (
-                  <button
-                    onClick={() => handleDropFile(file)}
-                    className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
-                    key={`file-${i}`}
-                  >
-                    <XIcon className="h-3 w-3 mr-2" />
-                    {file}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+        <Routes>
+          <Route path="/task/:taskId" element={<ConversationView />} />
+          <Route path="/" element={<Tasks />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
     </Router>
   );
