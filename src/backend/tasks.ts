@@ -8,10 +8,14 @@ import * as utils from "./utils/utils";
  * A Task manages the interaction between a conversation and a git repository
  */
 export class Task {
+  id: string;
+  branch: string;
   conversation: Conversation;
   gitRepo: GitRepo | null;
 
-  constructor() {
+  constructor(id: string, branch: string) {
+    this.id = id;
+    this.branch = branch;
     this.conversation = conversations.create();
     this.gitRepo = null;
   }
