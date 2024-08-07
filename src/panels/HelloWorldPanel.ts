@@ -193,7 +193,8 @@ export class HelloWorldPanel {
     webview.onDidReceiveMessage(
       async (message: any) => {
         const command = message.command;
-        const meltyMindFilePaths = this.spectacleExtension.getMeltyMindFilePaths();
+        const meltyMindFilePaths =
+          this.spectacleExtension.getMeltyMindFilePaths();
 
         switch (command) {
           case "hello":
@@ -202,7 +203,9 @@ export class HelloWorldPanel {
             return;
           case "loadConversation":
             console.log(`loadConversation`);
-            const conversation = this.spectacleExtension.getConversation();
+            let taskId = message.taskId;
+            const conversation =
+              this.spectacleExtension.getConversation(taskId);
             this._panel.webview.postMessage({
               command: "loadConversation",
               conversation: conversation,
@@ -217,7 +220,9 @@ export class HelloWorldPanel {
             });
             return;
           case "listMeltyFiles":
-            console.log(`listFiles: ${meltyMindFilePaths.length} melty file paths`);
+            console.log(
+              `listFiles: ${meltyMindFilePaths.length} melty file paths`
+            );
             this._panel.webview.postMessage({
               command: "listMeltyFiles",
               meltyMindFilePaths: meltyMindFilePaths,
@@ -232,12 +237,12 @@ export class HelloWorldPanel {
             });
             return;
           case "resetTask":
-            this.spectacleExtension.resetTask();
-            this._panel.webview.postMessage({
-              command: "loadConversation",
-              conversation: this.spectacleExtension.getConversation(),
-            });
-            return;
+          // this.spectacleExtension.resetTask();
+          // this._panel.webview.postMessage({
+          //   command: "loadConversation",
+          //   conversation: this.spectacleExtension.getConversation(),
+          // });
+          // return;
           case "openFileInEditor":
             this.spectacleExtension.openFileInEditor(message.filePath);
             return;
@@ -247,7 +252,8 @@ export class HelloWorldPanel {
             this.spectacleExtension.addMeltyMindFilePath(message.filePath);
             this._panel.webview.postMessage({
               command: "listMeltyFiles",
-              meltyMindFilePaths: this.spectacleExtension.getMeltyMindFilePaths(),
+              meltyMindFilePaths:
+                this.spectacleExtension.getMeltyMindFilePaths(),
             });
             vscode.window.showInformationMessage(
               `Added ${message.filePath} to Melty's Mind`
@@ -265,7 +271,8 @@ export class HelloWorldPanel {
             );
             this._panel.webview.postMessage({
               command: "listMeltyFiles",
-              meltyMindFilePaths: this.spectacleExtension.getMeltyMindFilePaths(),
+              meltyMindFilePaths:
+                this.spectacleExtension.getMeltyMindFilePaths(),
             });
             return;
           case "undo":
@@ -294,6 +301,34 @@ export class HelloWorldPanel {
           case "code":
             await this.handleAskCode(message.text, "code");
             return;
+
+          case "createNewTask":
+            const taskName = message.taskName;
+            taskId = await this.spectacleExtension.createNewTask(taskName);
+            this._panel.webview.postMessage({
+              command: "taskCreated",
+              taskId: taskId,
+              taskName: taskName,
+            });
+            return;
+
+          case "listTasks":
+            const tasks = this.spectacleExtension.listTasks();
+            this._panel.webview.postMessage({
+              command: "listTasks",
+              tasks: tasks,
+            });
+            return;
+
+          case "switchTask":
+            await this.spectacleExtension.switchToTask(message.taskId);
+            const newTask = await this.spectacleExtension.getCurrentTask();
+            console.log(`switched to ${newTask.id}`);
+            // this._panel.webview.postMessage({
+            //   command: "taskSwitched",
+            //   taskId: message.taskId,
+            // });
+            return;
         }
       },
       undefined,
@@ -303,8 +338,8 @@ export class HelloWorldPanel {
 
   private async handleAskCode(text: string, mode: "ask" | "code") {
     const meltyMindFilePaths = this.spectacleExtension.getMeltyMindFilePaths();
-    const task = await this.spectacleExtension.getTask();
-    
+    const task = await this.spectacleExtension.getCurrentTask();
+
     // human response
     await task.respondHuman(text);
     this._panel.webview.postMessage({
@@ -343,7 +378,6 @@ export class HelloWorldPanel {
    */
   private async undoLatestCommit(): Promise<void> {
     // todo update implementation
-
     // const repo = this.spectacleExtension.getRepository();
     // await repo.status();
     // await repo.reset("HEAD~1", false);

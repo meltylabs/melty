@@ -8,3 +8,6 @@ Types of content that can be contained here:
 - JavaScript files
 - CSS files
 - Assets / resources (i.e. images, illustrations, etc.)
+
+Bugs
+- if you close the webview while the partial message is still being sent, it wont be saved

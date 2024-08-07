@@ -7,60 +7,66 @@ import {
   CardContent,
   CardFooter,
 } from "./ui/card";
+import { vscode } from "../utilities/vscode";
 
 import { Button } from "./ui/button";
 
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { convertChangesToXML } from "diff";
 
 interface Task {
   id: string;
-  title: string;
+  branch: string;
   description: string;
-  status: string;
-  github_link: string;
 }
 
 export function Tasks() {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      title: "Task 1",
-      description: "Description 1",
-      status: "merged",
-      github_link: "https://github.com/cbh123/melty/pull/1",
-    },
-    {
-      id: "2",
-      title: "Task 2",
-      description: "Description 2",
-      status: "merged",
-      github_link: "https://github.com/cbh123/melty/pull/2",
-    },
-    {
-      id: "3",
-      title: "Task 3",
-      description: "Description 3",
-      status: "pending",
-      github_link: "https://github.com/cbh123/melty/pull/3",
-    },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    vscode.postMessage({
+      command: "listTasks",
+    });
+
+    const messageListener = (event: MessageEvent) => {
+      const message = event.data;
+      console.log("tasks.tsx", message);
+      if (message.command === "listTasks") {
+        setTasks(message.tasks);
+      }
+    };
+
+    window.addEventListener("message", messageListener);
+
+    return () => {
+      window.removeEventListener("message", messageListener);
+    };
+  }, []);
+
   return (
     <div>
-      <Button>Start new task</Button>
+      <Button
+        onClick={() => {
+          vscode.postMessage({
+            command: "createNewTask",
+            taskName: "New Task",
+          });
+        }}
+      >
+        Start new task
+      </Button>
       <div className="grid grid-cols-2 gap-6 mt-4">
+        {tasks.length === 0 && <p>No tasks</p>}
         {tasks.map((task) => (
-          <Link to="/" className="mr-4">
+          <Link to={`/task/${task.id}`} className="mr-4">
             <Card key={task.id}>
               <CardHeader>
-                <CardTitle>{task.title}</CardTitle>
-                <CardDescription>{task.github_link} </CardDescription>
+                <CardTitle>{task.branch}</CardTitle>
+                <CardDescription>{task.description} </CardDescription>
               </CardHeader>
               <CardContent>
                 <p>{task.description}</p>
               </CardContent>
-              <CardFooter>
-                <p> {task.status}</p>
-              </CardFooter>
             </Card>
           </Link>
         ))}

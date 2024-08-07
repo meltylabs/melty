@@ -5,7 +5,8 @@ import {
   ClaudeConversation,
   ClaudeMessage,
   PseudoCommit,
-  GitRepo
+  Conversation,
+  GitRepo,
 } from "../types";
 import * as pseudoCommits from "./pseudoCommits";
 import * as joules from "./joules";
@@ -15,8 +16,6 @@ import * as diffApplicatorXml from "./diffApplicatorXml";
 import { RepoMapSpec } from './repoMapSpec';
 import * as vscode from 'vscode';
 import * as path from 'path';
-
-import { Conversation } from "../types";
 
 export function create(): Conversation {
   return { joules: [] };
@@ -97,7 +96,8 @@ export async function respondBot(
     diffApplicatorXml.splitResponse(finalResponse);
 
   // reset the diff preview
-  const pseudoCommitNoDiff = pseudoCommits.createFromPrevious(currentPseudoCommit);
+  const pseudoCommitNoDiff =
+    pseudoCommits.createFromPrevious(currentPseudoCommit);
 
   const newPseudoCommit =
     mode === "code"
@@ -122,8 +122,16 @@ export async function respondBot(
  * Encodes files for Claude. Note that we're being loose with the newlines.
  * @returns string encoding the files
  */
-function encodeFile(gitRepo: GitRepo, pseudoCommit: PseudoCommit, path: string) {
-  const fileContents = pseudoCommits.getFileContents(gitRepo, pseudoCommit, path);
+function encodeFile(
+  gitRepo: GitRepo,
+  pseudoCommit: PseudoCommit,
+  path: string
+) {
+  const fileContents = pseudoCommits.getFileContents(
+    gitRepo,
+    pseudoCommit,
+    path
+  );
   return `${path}
 \`\`\`
 ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
