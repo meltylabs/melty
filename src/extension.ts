@@ -3,14 +3,7 @@ import * as path from "path";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { Conversation } from "./types";
 import { Task } from "./backend/tasks";
-
-// create dummy tasks
-const dummyTask1: Task = new Task("task_1", "task/task-1");
-const dummyTasks: Map<string, Task> = new Map();
-dummyTasks.set("task_1", dummyTask1);
-
-const dummyTask2: Task = new Task("task_2", "task/task-2");
-dummyTasks.set("task_2", dummyTask2);
+import * as datastores from "./backend/datastores";
 
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
@@ -24,17 +17,38 @@ export class SpectacleExtension {
     outputChannel: vscode.OutputChannel
   ) {
     this.outputChannel = outputChannel;
-    this.currentTask = this.tasks.values().next().value; // Set the first task as current
   }
 
   async activate() {
     outputChannel.appendLine("Spectacle activation started");
 
-    // don't bother kicking off task.init() here; the git repo isn't ready.
+    if (vscode.workspace.workspaceFolders) {
+      this.tasks = datastores.loadTasksFromDisk(
+        // TODO for now we assume gitRepo folder == workspace folder
+        vscode.workspace.workspaceFolders![0].uri.fsPath
+      );
+    }
 
-    // kick off async init. this will also be kicked off by callers who use this object
+    // create a new task if there aren't any
+    if (!this.tasks.size) {
+      const taskId = await this.createNewTask("task0");
+      this.currentTask = (this.tasks as Map<string, Task>).get(taskId);
+    }
+
+    // Set the first task as current
+    this.currentTask = this.tasks.values().next().value;
+
+    // kick off async inits. this will also be kicked off by callers who use this object
+    // don't bother kicking off task.init() here; the git repo isn't ready.
     if (this.currentTask) {
       this.initializeWorkspaceFilePaths(this.currentTask);
+    }
+  }
+
+  async deactivate(): Promise<void> {
+    // The extension instance will be garbage collected, so we don't need to call deactivate explicitly
+    for (const task of this.tasks.values()) {
+      await datastores.writeTaskToDisk(task);
     }
   }
 
@@ -113,12 +127,9 @@ export class SpectacleExtension {
     const branchName = `task/${taskName.replace(/\s+/g, "-")}`;
 
     const newTask = new Task(taskId, branchName);
-    await newTask.init();
-
-    // Create a new branch for this task
-    // todo: add this back once testing is done
-    // await this.createGitBranch(branchName);
-    // vscode.window.showInformationMessage(`Created branch ${branchName}`);
+    
+    // kick off async (TODO see if this works)
+    newTask.init();
 
     this.tasks.set(taskId, newTask);
     this.currentTask = newTask;
@@ -201,6 +212,7 @@ export class SpectacleExtension {
 }
 
 let outputChannel: vscode.OutputChannel;
+let extension: SpectacleExtension;
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Activating Spectacle extension");
@@ -208,7 +220,7 @@ export function activate(context: vscode.ExtensionContext) {
   outputChannel.show();
   outputChannel.appendLine("Activating Spectacle extension");
 
-  const extension = new SpectacleExtension(context, outputChannel);
+  extension = new SpectacleExtension(context, outputChannel);
   extension.activate();
 
   context.subscriptions.push(
@@ -222,6 +234,7 @@ export function activate(context: vscode.ExtensionContext) {
   console.log("Spectacle extension activated");
 }
 
-export function deactivate() {
-  // The extension instance will be garbage collected, so we don't need to call deactivate explicitly
+export async function deactivate(): Promise<void> {
+  await extension.deactivate();
+  console.log("Spectacle extension deactivated");
 }
