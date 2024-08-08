@@ -264,11 +264,43 @@ function ConversationView() {
 
   return (
     <div className="p-4">
-      {taskName && (
-        <div className="mb-4 p-2">
+      <div className="mt-2 flex justify-between">
+        <div className="p-2">
           <p className="text-sm font-semibold">{taskName}</p>
         </div>
-      )}
+        <FilePicker
+          open={pickerOpen}
+          setOpen={setPickerOpen}
+          meltyMindFilePaths={meltyFiles}
+          workspaceFilePaths={workspaceFiles}
+          handleAddFile={handleAddFile}
+          handleDropFile={handleDropFile}
+        />
+
+        <div className="mt-2">
+          <p className="text-xs text-muted-foreground mb-2">
+            Melty's Mind{"  "}
+            <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">\</span>
+            </kbd>{" "}
+          </p>
+          {meltyFiles.length === 0 && (
+            <p className="text-xs text-muted-foreground mb-2 italic">
+              Melty can't see any files yet
+            </p>
+          )}
+          {meltyFiles.map((file, i) => (
+            <button
+              onClick={() => handleDropFile(file)}
+              className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
+              key={`file-${i}`}
+            >
+              <XIcon className="h-3 w-3 mr-2" />
+              {file}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="mb-4 rounded p-2 mx-auto">
         {conversation?.joules.map((joule, index) => (
           <JouleComponent
@@ -328,41 +360,6 @@ function ConversationView() {
           </div>
         </form>
       </div>
-
-      <div className="mt-6">
-        <FilePicker
-          open={pickerOpen}
-          setOpen={setPickerOpen}
-          meltyMindFilePaths={meltyFiles}
-          workspaceFilePaths={workspaceFiles}
-          handleAddFile={handleAddFile}
-          handleDropFile={handleDropFile}
-        />
-
-        <div className="mt-2">
-          <p className="text-xs text-muted-foreground mb-2">
-            Melty's Mind{"  "}
-            <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              <span className="text-xs">\</span>
-            </kbd>{" "}
-          </p>
-          {meltyFiles.length === 0 && (
-            <p className="text-xs text-muted-foreground mb-2 italic">
-              Melty can't see any files yet
-            </p>
-          )}
-          {meltyFiles.map((file, i) => (
-            <button
-              onClick={() => handleDropFile(file)}
-              className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
-              key={`file-${i}`}
-            >
-              <XIcon className="h-3 w-3 mr-2" />
-              {file}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -371,8 +368,13 @@ function App() {
   return (
     <Router>
       <main className="p-4">
-        <nav className="mb-4">
-          <Link to="/">Tasks</Link>
+        <nav className="mb-12 flex justify-between">
+          <Button variant="ghost" size="sm">
+            <Link to="/">Home</Link>
+          </Button>
+          <Button variant="ghost" size="sm">
+            Anglera
+          </Button>
         </nav>
 
         <Routes>

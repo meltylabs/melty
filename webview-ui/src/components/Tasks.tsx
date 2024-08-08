@@ -63,7 +63,7 @@ export function Tasks() {
           });
         }}
       >
-        Start new task
+        + New task
       </Button>
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
