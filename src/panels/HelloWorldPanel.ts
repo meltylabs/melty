@@ -275,21 +275,17 @@ export class HelloWorldPanel implements WebviewViewProvider {
         joule: partialJoule,
       });
     };
-    try {
-      await task.respondBot(
-        meltyMindFilePaths, // TODO are we sending the right files here? @soybean
-        mode,
-        processPartial
-      );
-      // Send the response back to the webview
-      this._view?.webview.postMessage({
-        command: "loadConversation",
-        conversation: task.conversation,
-      });
-    } catch (e) {
-      vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
-      return;
-  }
+
+    await task.respondBot(
+      meltyMindFilePaths, // TODO are we sending the right files here? @soybean
+      mode,
+      processPartial
+    );
+    // Send the response back to the webview
+    this._view?.webview.postMessage({
+      command: "loadConversation",
+      conversation: task.conversation,
+    });
   }
 
   /**
