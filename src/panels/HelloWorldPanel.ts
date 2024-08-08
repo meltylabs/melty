@@ -140,7 +140,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
             this._view?.webview.postMessage({
               command: "loadConversation",
               conversation: conversation,
-              taskName: task.name
             });
             return;
           case "listMeltyFiles":
@@ -227,14 +226,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
 
           case "createNewTask":
-            const taskName = message.taskName;
-            const newTaskId = await this.spectacleExtension.createNewTask(
-              taskName
-            );
+            const newTaskId = await this.spectacleExtension.createNewTask();
             this._view?.webview.postMessage({
               command: "taskCreated",
               taskId: newTaskId,
-              taskName: taskName,
             });
             return;
 

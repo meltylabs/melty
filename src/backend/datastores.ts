@@ -12,10 +12,9 @@ export function loadTasksFromDisk(gitRepoRoot: string): Map<string, Task> {
     const taskMap = new Map<string, Task>();
     for (const file of taskFiles) {
         // strip extension from file
-        const taskIdAndName = path.parse(file).name;
-        const [taskId, taskName] = taskIdAndName.split(":");
+        const taskId = path.parse(file).name;
         const conversation = JSON.parse(fs.readFileSync(path.join(meltyDir, file), "utf8"));
-        const task = new Task(taskId, taskId, taskName); // TODO for now, use the id as the branch
+        const task = new Task(taskId, taskId); // TODO for now, use the id as the branch
 
         // hack in the conversation
         task.conversation = conversation;
@@ -40,6 +39,6 @@ export async function writeTaskToDisk(task: Task): Promise<void> {
     }
 
     // write the conversation there
-    const conversationPath = path.join(meltyDir, `${task.id}:${task.name}.json`);
+    const conversationPath = path.join(meltyDir, `${task.id}.json`);
     fs.writeFileSync(conversationPath, JSON.stringify(task.conversation, null, 2));
 }

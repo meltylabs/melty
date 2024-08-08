@@ -13,14 +13,12 @@ export class Task {
   branch: string;
   conversation: Conversation;
   gitRepo: GitRepo | null;
-  name: string;
 
-  constructor(id: string, branch: string, name: string) {
+  constructor(id: string, branch: string) {
     this.id = id;
     this.branch = branch;
     this.conversation = conversations.create();
     this.gitRepo = null;
-    this.name = name;
   }
 
   /**
