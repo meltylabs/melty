@@ -4,6 +4,7 @@ import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { Conversation } from "./types";
 import { Task } from "./backend/tasks";
 import * as datastores from "./backend/datastores";
+import * as utils from "./util/utils";
 
 export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
@@ -92,13 +93,7 @@ export class SpectacleExtension {
       return false;
     }
 
-    const workspaceFileUris = await vscode.workspace.findFiles(
-      "**/*",
-      "**/node_modules/**"
-    );
-    this.workspaceFilePaths = workspaceFileUris.map((file) => {
-      return path.relative(task.gitRepo!.rootPath, file.fsPath);
-    });
+    this.workspaceFilePaths = await utils.getWorkspaceFilePaths(this.currentTask.gitRepo!);
     return true;
   }
 
