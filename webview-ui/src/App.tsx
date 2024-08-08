@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, RefObject } from "react";
 import { vscode } from "./utilities/vscode";
 import {
   ChevronsUpDown,
@@ -23,6 +23,7 @@ import "diff2html/bundles/css/diff2html.min.css";
 import { Input } from "./components/ui/input";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
+import { Textarea } from "./components/ui/textarea";
 import { Tasks } from "./components/Tasks";
 import { Conversation, Joule } from "./types";
 import {
@@ -138,7 +139,7 @@ function JouleComponent({
 
 function ConversationView() {
   const { taskId } = useParams<{ taskId: string }>();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -250,7 +251,7 @@ function ConversationView() {
     form.reset();
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter") {
       if (event.metaKey || event.ctrlKey) {
         // Cmd+Enter or Ctrl+Enter
@@ -292,8 +293,8 @@ function ConversationView() {
       <div className="">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
-            <Input
-              placeholder="What should I do? (⌘K)"
+            <Textarea
+              placeholder="Tell me what to do! (⌘K)"
               id="message"
               autoFocus
               required
