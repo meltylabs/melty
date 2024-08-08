@@ -263,11 +263,13 @@ function ConversationView() {
   return (
     <div className="p-4">
       <div className="mt-2 flex justify-between">
-        <div className="p-2">
-          <p className="text-sm font-semibold">
-            {new Date(taskId).toISOString().slice(0, 19).replace("T", " ")}
-          </p>
-        </div>
+        {taskId && (
+          <div className="p-2">
+            <p className="text-sm font-semibold">
+              {new Date(taskId).toISOString().slice(0, 19).replace("T", " ")}
+            </p>
+          </div>
+        )}
         <FilePicker
           open={pickerOpen}
           setOpen={setPickerOpen}
