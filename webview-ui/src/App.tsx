@@ -292,7 +292,7 @@ function ConversationView() {
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Textarea
-              placeholder="What should I do? (⌘K)"
+              placeholder="Tell me what to do! (⌘K)"
               id="message"
               autoFocus
               required
