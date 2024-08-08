@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { vscode } from "./utilities/vscode";
-import {
-  ChevronsUpDown,
-  XIcon,
-  FileIcon,
-  RotateCcwIcon,
-} from "lucide-react";
-import ReactMarkdown from 'react-markdown';
+import { ChevronsUpDown, XIcon, FileIcon, RotateCcwIcon } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import {
   BrowserRouter as Router,
   Route,
@@ -107,7 +102,7 @@ function JouleComponent({
         joule.author === "human" ? "bg-gray-50 " : "bg-white"
       }`}
     >
-      <div className="text-xs flex flex-col markdown-content">
+      <div className="text-xs flex flex-col prose">
         <ReactMarkdown>{joule.message}</ReactMarkdown>
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
