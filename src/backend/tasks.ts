@@ -91,20 +91,35 @@ export class Task {
    */
   private async commitChanges(): Promise<number> {
     this.ensureInSync();
-    const workspaceFileUris = await vscode.workspace.findFiles(
-      "**/*",
-      "{.git,node_modules}/**"
-    );
-    const absolutePaths = workspaceFileUris.map((file) => file.fsPath);
-    await this.gitRepo!.repository.add(absolutePaths);
 
-    const changes = this.gitRepo!.repository.state.indexChanges;
 
-    if (changes.length > 0) {
+    // Get all changes, including untracked files
+    const changes = await this.gitRepo!.repository.diffWithHEAD();
+
+    // Filter out ignored files
+    const nonIgnoredChanges = changes.filter((change: any) => !change.gitIgnored);
+
+    // Add only non-ignored files
+    for (const change of nonIgnoredChanges) {
+      // disable even this, for now, because it's not working --
+      // stack trace: TypeError: e.map is not a function
+      // at d.add(/Applications/Cursor.app / Contents / Resources / app / extensions / git / dist / main.js: 2: 789949)
+      // at Task.commitChanges(/Users/jacksondc / Development / melty_run / out / extension.js: 227915: 37)
+      // at async Task.respondHuman(/Users/jacksondc / Development / melty_run / out / extension.js: 227948: 23)
+      // at async HelloWorldPanel.handleAskCode(/Users/jacksondc / Development / melty_run / out / extension.js: 223370: 5)
+      // at async c.value(/Users/jacksondc / Development / melty_run / out / extension.js: 223335: 13)
+
+
+      // await this.gitRepo!.repository.add(change.uri.fsPath);
+    }
+
+    const indexChanges = this.gitRepo!.repository.state.indexChanges;
+
+    if (indexChanges.length > 0) {
       await this.gitRepo!.repository.commit("human changes");
     }
-    await this.gitRepo!.repository.status();
 
+    await this.gitRepo!.repository.status();
     return changes.length;
   }
 
