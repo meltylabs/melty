@@ -26,7 +26,6 @@ import {
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
 import "./App.css";
-import "./markdown.css";
 
 // todo: move to a types file
 type CommandType =
