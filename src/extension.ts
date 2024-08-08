@@ -32,7 +32,7 @@ export class SpectacleExtension {
 
     // create a new task if there aren't any
     if (!this.tasks.size) {
-      const taskId = await this.createNewTask(new Date().toLocaleString());
+      const taskId = await this.createNewTask();
       this.currentTask = (this.tasks as Map<string, Task>).get(taskId);
     }
 
@@ -76,7 +76,6 @@ export class SpectacleExtension {
       return {
         id: task.id,
         branch: task.branch,
-        name: task.name,
       };
     });
   }
@@ -126,12 +125,12 @@ export class SpectacleExtension {
     return task;
   }
 
-  public async createNewTask(taskName: string): Promise<string> {
+  public async createNewTask(): Promise<string> {
     const taskId = `task_${new Date()}`;
     // const taskName = `${new Date().toLocaleString()}`
     // const branchName = `task/${taskName.replace(/\s+/g, "-")}`;
 
-    const newTask = new Task(taskId, "", taskName);
+    const newTask = new Task(taskId, "",);
     
     // kick off async (TODO see if this works)
     newTask.init();
