@@ -24,6 +24,7 @@ interface Task {
   id: string;
   branch: string;
   description: string;
+  name: string;
 }
 
 export function Tasks() {
@@ -58,7 +59,7 @@ export function Tasks() {
         onClick={() => {
           vscode.postMessage({
             command: "createNewTask",
-            taskName: "New Task",
+            taskName: new Date().toLocaleString(),
           });
         }}
       >
@@ -70,7 +71,7 @@ export function Tasks() {
           <Link to={`/task/${task.id}`} className="mr-4">
             <Card key={task.id}>
               <CardHeader>
-                <CardTitle>{task.branch}</CardTitle>
+                <CardTitle>{task.name}</CardTitle>
                 <CardDescription>{task.description} </CardDescription>
               </CardHeader>
               <CardContent>

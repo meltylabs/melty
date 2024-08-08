@@ -134,11 +134,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
           case "loadConversation":
             console.log(`loadConversation`);
             let taskId = message.taskId;
+            const task = this.spectacleExtension.getTask(taskId);
             const conversation =
               this.spectacleExtension.getConversation(taskId);
             this._view?.webview.postMessage({
               command: "loadConversation",
               conversation: conversation,
+              taskName: task.name
             });
             return;
           case "listMeltyFiles":
@@ -292,7 +294,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     } catch (e) {
       vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
       return;
-    }
+  }
   }
 
   /**

@@ -98,7 +98,7 @@ function JouleComponent({
 
   return (
     <div
-      className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
+      className={`grid grid-cols-1 gap-12 mb-2 p-3 rounded ${
         joule.author === "human" ? "bg-gray-50 " : "bg-white"
       }`}
     >
@@ -107,7 +107,7 @@ function JouleComponent({
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
-      <div>
+      {/* <div>
         {diffHtml && !isPartial && (
           <Collapsible>
             <div className="flex items-center justify-end space-x-4 px-4">
@@ -122,7 +122,7 @@ function JouleComponent({
             <CollapsibleContent>{diffHtml}</CollapsibleContent>
           </Collapsible>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -134,6 +134,7 @@ function ConversationView() {
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [taskName, setTaskName] = useState<string | null>(null);
 
   function handleAddFile(file: string) {
     vscode.postMessage({ command: "addMeltyFile", filePath: file });
@@ -209,6 +210,7 @@ function ConversationView() {
         case "loadConversation":
           console.log("loadConversation", message);
           setConversation(message.conversation);
+          setTaskName(message.taskName);
           break;
         case "setPartialResponse":
           setConversation((prevConversation) => {
@@ -262,9 +264,9 @@ function ConversationView() {
 
   return (
     <div className="p-4">
-      {taskId && (
-        <div className="mb-4 p-2 bg-gray-100 rounded">
-          <p className="text-sm font-semibold">Current Task ID: {taskId}</p>
+      {taskName && (
+        <div className="mb-4 p-2">
+          <p className="text-sm font-semibold">{taskName}</p>
         </div>
       )}
       <div className="mb-4 rounded p-2 mx-auto">
@@ -293,21 +295,21 @@ function ConversationView() {
             />
           </div>
           <div className="flex justify-end space-x-2 mt-2">
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               type="button"
               onClick={handleReset}
             >
               <RotateCcwIcon className="h-3 w-3" />
-            </Button>
-            <Button name="ask" variant="outline" size="sm" type="submit">
+            </Button> */}
+            <Button name="ask" size="sm" type="submit">
               Ask{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
                 <span className="text-xs">↵</span>
               </kbd>
             </Button>
-            <Button
+            {/* <Button
               name="code"
               size="sm"
               type="button"
@@ -322,7 +324,7 @@ function ConversationView() {
                 <span className="text-xs">⌘</span>
                 <span className="text-xs">↵</span>
               </kbd>
-            </Button>
+            </Button> */}
           </div>
         </form>
       </div>
