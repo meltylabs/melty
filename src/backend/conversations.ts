@@ -13,9 +13,9 @@ import * as joules from "./joules";
 import * as prompts from "./prompts";
 import * as claudeAPI from "./claudeAPI";
 import * as diffApplicatorXml from "./diffApplicatorXml";
-import { RepoMapSpec } from './repoMapSpec';
-import * as vscode from 'vscode';
-import * as path from 'path';
+import { RepoMapSpec } from "./repoMapSpec";
+import * as vscode from "vscode";
+import * as path from "path";
 
 export function create(): Conversation {
   return { joules: [] };
@@ -65,7 +65,7 @@ export async function respondBot(
     system: systemPrompt,
     messages: [
       // TODOV2 user system info
-      ...await encodeRepoMap(gitRepo, currentPseudoCommit),
+      ...(await encodeRepoMap(gitRepo, currentPseudoCommit)),
       ...encodeContext(gitRepo, currentPseudoCommit, contextPaths),
       ...encodeMessages(conversation),
     ],
@@ -160,7 +160,10 @@ ${fileEncodings}`,
     : [];
 }
 
-async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Promise<ClaudeMessage[]> {
+async function encodeRepoMap(
+  gitRepo: GitRepo,
+  pseudoCommit: PseudoCommit
+): Promise<ClaudeMessage[]> {
   const repoMap = new RepoMapSpec(gitRepo);
 
   // TODO this logic is copied from HelloWorldPanel.ts
@@ -174,10 +177,12 @@ async function encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Prom
 
   const repoMapMessages: ClaudeMessage[] = [
     {
-      role: "user", content: `${prompts.repoMapIntro()}
-      
-      ${await repoMap.getRepoMap(workspaceFilePaths)}`},
-    { role: "assistant", content: prompts.repoMapAsstAck()}
+      role: "user",
+      content: `${prompts.repoMapIntro()}
+
+      ${await repoMap.getRepoMap(workspaceFilePaths)}`,
+    },
+    { role: "assistant", content: prompts.repoMapAsstAck() },
   ];
   return repoMapMessages; // [];
 }

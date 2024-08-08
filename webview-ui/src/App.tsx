@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useRef, RefObject } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { vscode } from "./utilities/vscode";
-import {
-  ChevronsUpDown,
-  XIcon,
-  Undo,
-  Trash2Icon,
-  FileIcon,
-  RotateCcwIcon,
-} from "lucide-react";
+import { ChevronsUpDown, XIcon, FileIcon, RotateCcwIcon } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import {
   BrowserRouter as Router,
   Route,
@@ -107,13 +101,8 @@ function JouleComponent({
         joule.author === "human" ? "bg-gray-50 " : "bg-white"
       }`}
     >
-      <div className="text-xs flex flex-col">
-        {joule.message.split("\n").map((line, index) => (
-          <React.Fragment key={index}>
-            {line}
-            {index < joule.message.split("\n").length - 1 && <br />}
-          </React.Fragment>
-        ))}
+      <div className="text-xs flex flex-col prose">
+        <ReactMarkdown>{joule.message}</ReactMarkdown>
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
