@@ -1,7 +1,7 @@
 {
-  "name": "spectacle",
-  "displayName": "Spectacle",
-  "description": "AI coding assistant",
+  "name": "melty",
+  "displayName": "Melty",
+  "description": "AI pair programmer",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.91.0"
@@ -40,9 +40,9 @@
       ]
     },
     "configuration": {
-      "title": "Spectacle",
+      "title": "Melty Settings",
       "properties": {
-        "spectacle.anthropicApiKey": {
+        "melty.anthropicApiKey": {
           "type": "string",
           "default": "",
           "description": "API key for Anthropic Claude"
