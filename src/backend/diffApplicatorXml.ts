@@ -338,8 +338,9 @@ function applySearchReplace(gitRepo: GitRepo, pseudoCommit: PseudoCommit, search
     const originalContents = (
         pseudoCommits.hasFile(gitRepo, pseudoCommit, searchReplace.filePath) ?
             pseudoCommits.getFileContents(gitRepo, pseudoCommit, searchReplace.filePath) :
-            ""
+            "\n\n" // so that it has something to search for
     );
+
     if (!originalContents.includes(searchReplace.search)) {
         console.log("search string:");
         console.log(searchReplace.search);

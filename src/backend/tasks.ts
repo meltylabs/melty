@@ -63,17 +63,17 @@ export class Task {
    * on disk. Allows for local changes.
    */
   private ensureInSync(): void {
-    const conversationState = this.getConversationState();
-    if (!conversationState) {
-      return; // if the conversation is empty, we're in sync
-    }
-    const conversationTailCommit = pseudoCommits.commit(conversationState);
-    const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    if (latestCommit !== conversationTailCommit) {
-      throw new Error(
-        `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
-      );
-    }
+    // const conversationState = this.getConversationState();
+    // if (!conversationState) {
+    //   return; // if the conversation is empty, we're in sync
+    // }
+    // const conversationTailCommit = pseudoCommits.commit(conversationState);
+    // const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
+    // if (latestCommit !== conversationTailCommit) {
+    //   throw new Error(
+    //     `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
+    //   );
+    // }
   }
 
   private ensureWorkingDirectoryClean(): void {
@@ -117,8 +117,8 @@ export class Task {
     processPartial: (partialJoule: Joule) => void
   ): Promise<Joule> {
     await this.gitRepo!.repository.status();
-    this.ensureInSync();
-    this.ensureWorkingDirectoryClean();
+    // this.ensureInSync();
+    // this.ensureWorkingDirectoryClean();
 
     this.conversation = await conversations.respondBot(
       this.conversation,

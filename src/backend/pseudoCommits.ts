@@ -114,9 +114,9 @@ export async function actualize(
 
   await repository.status();
   // check for uncommitted changes
-  if (!utils.repoIsClean(repository)) {
-    throw new Error("Please commit or stash changes before actualizing");
-  }
+  // if (!utils.repoIsClean(repository)) {
+  //   throw new Error("Please commit or stash changes before actualizing");
+  // }
 
   if (pseudoCommit.impl.status === "committed") {
     utils.ensureRepoIsOnCommit(repository, pseudoCommit.impl.commit);
