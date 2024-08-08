@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, RefObject } from "react";
 import { vscode } from "./utilities/vscode";
 import {
   ChevronsUpDown,
@@ -139,7 +139,7 @@ function JouleComponent({
 
 function ConversationView() {
   const { taskId } = useParams<{ taskId: string }>();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -249,7 +249,7 @@ function ConversationView() {
     form.reset();
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter") {
       if (event.metaKey || event.ctrlKey) {
         // Cmd+Enter or Ctrl+Enter
