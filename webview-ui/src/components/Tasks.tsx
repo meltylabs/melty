@@ -11,7 +11,13 @@ import { vscode } from "../utilities/vscode";
 
 import { Button } from "./ui/button";
 
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  useNavigate,
+} from "react-router-dom";
 import { convertChangesToXML } from "diff";
 
 interface Task {
@@ -22,6 +28,7 @@ interface Task {
 
 export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     vscode.postMessage({
@@ -33,6 +40,8 @@ export function Tasks() {
       console.log("tasks.tsx", message);
       if (message.command === "listTasks") {
         setTasks(message.tasks);
+      } else if (message.command === "taskCreated") {
+        navigate(`/task/${message.taskId}`);
       }
     };
 

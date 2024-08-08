@@ -35,7 +35,8 @@ type CommandType =
   | "listWorkspaceFiles"
   | "loadConversation"
   | "logHello"
-  | "listTasks";
+  | "listTasks"
+  | "taskCreated";
 
 function JouleComponent({
   joule,
