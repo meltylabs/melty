@@ -374,9 +374,9 @@ function App() {
           <Button variant="ghost" size="sm">
             <Link to="/">Home</Link>
           </Button>
-          <Button variant="ghost" size="sm">
-            Anglera
-          </Button>
+          <p className="text-xs text-muted-foreground">
+            Handcrafted for Anglera
+          </p>
         </nav>
 
         <Routes>
