@@ -84,7 +84,7 @@ This template includes:
 };
 
 export function create(): Conversation {
-  return { joules: [dummyJouleBot] };
+  return { joules: [] };
 }
 
 function addJoule(conversation: Conversation, joule: Joule): Conversation {
