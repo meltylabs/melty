@@ -134,7 +134,6 @@ function ConversationView() {
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [taskName, setTaskName] = useState<string | null>(null);
 
   function handleAddFile(file: string) {
     vscode.postMessage({ command: "addMeltyFile", filePath: file });
@@ -210,7 +209,6 @@ function ConversationView() {
         case "loadConversation":
           console.log("loadConversation", message);
           setConversation(message.conversation);
-          setTaskName(message.taskName);
           break;
         case "setPartialResponse":
           setConversation((prevConversation) => {
@@ -266,7 +264,9 @@ function ConversationView() {
     <div className="p-4">
       <div className="mt-2 flex justify-between">
         <div className="p-2">
-          <p className="text-sm font-semibold">{taskName}</p>
+          <p className="text-sm font-semibold">
+            {new Date(taskId).toISOString().slice(0, 19).replace("T", " ")}
+          </p>
         </div>
         <FilePicker
           open={pickerOpen}

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Joule, Mode, Conversation, PseudoCommit, GitRepo } from "../types";
 import * as conversations from "./conversations";
+import * as joules from "./joules";
 import * as pseudoCommits from "./pseudoCommits";
 import * as utils from "./utils/utils";
 import { Architect } from "../assistants/architect";
@@ -13,14 +14,12 @@ export class Task {
   branch: string;
   conversation: Conversation;
   gitRepo: GitRepo | null;
-  name: string;
 
-  constructor(id: string, branch: string, name: string) {
+  constructor(id: string, branch: string) {
     this.id = id;
     this.branch = branch;
     this.conversation = conversations.create();
     this.gitRepo = null;
-    this.name = name;
   }
 
   /**
@@ -134,24 +133,32 @@ export class Task {
     mode: Mode,
     processPartial: (partialJoule: Joule) => void
   ): Promise<Joule> {
-    await this.gitRepo!.repository.status();
-    // this.ensureInSync();
-    // this.ensureWorkingDirectoryClean();
+    try {
+      await this.gitRepo!.repository.status();
+      // this.ensureInSync();
+      // this.ensureWorkingDirectoryClean();
 
-    this.conversation = await new Architect().respond(
-      this.conversation,
-      this.gitRepo!,
-      contextPaths,
-      mode,
-      processPartial
-    );
-    const lastJoule = conversations.lastJoule(this.conversation)!;
+      this.conversation = await new Architect().respond(
+        this.conversation,
+        this.gitRepo!,
+        contextPaths,
+        mode,
+        processPartial
+      );
+      const lastJoule = conversations.lastJoule(this.conversation)!;
 
-    // actualize does the commit and updates the pseudoCommit in-place
-    await pseudoCommits.actualize(lastJoule.pseudoCommit, this.gitRepo!);
-    await this.gitRepo!.repository.status();
+      // actualize does the commit and updates the pseudoCommit in-place
+      await pseudoCommits.actualize(lastJoule.pseudoCommit, this.gitRepo!);
+      await this.gitRepo!.repository.status();
 
-    return lastJoule;
+      return lastJoule;
+    } catch (e) {
+      vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
+
+      const joule = joules.createJouleBot("[  Error :(  ]", mode, pseudoCommits.createDummy(), contextPaths);
+      this.conversation = conversations.addJoule(this.conversation, joule);
+      return joule;
+    }
   }
 
   /**

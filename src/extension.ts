@@ -230,7 +230,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
-      "spectacle.chatView",
+      "melty.chatView",
       new HelloWorldPanel(context.extensionUri, extension)
     )
   );

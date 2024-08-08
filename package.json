@@ -16,7 +16,7 @@
   "contributes": {
     "keybindings": [
       {
-        "command": "spectacle.chatView.focus",
+        "command": "melty.chatView.focus",
         "key": "ctrl+k",
         "mac": "cmd+k"
       }
@@ -34,8 +34,8 @@
       "meltyViewContainer": [
         {
           "type": "webview",
-          "id": "spectacle.chatView",
-          "name": "Spectacle Chat"
+          "id": "melty.chatView",
+          "name": "Melty Chat"
         }
       ]
     },
