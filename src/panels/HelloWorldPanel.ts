@@ -5,6 +5,10 @@ import {
   window,
   Uri,
   ViewColumn,
+  WebviewViewProvider,
+  WebviewView,
+  WebviewViewResolveContext,
+  CancellationToken,
 } from "vscode";
 import * as vscode from "vscode";
 import { getUri } from "../util/getUri";
@@ -22,100 +26,39 @@ import { SpectacleExtension } from "../extension";
  * - Setting the HTML (and by proxy CSS/JavaScript) content of the webview panel
  * - Setting message listeners so data can be passed between the webview and extension
  */
-export class HelloWorldPanel {
-  public static currentPanel: HelloWorldPanel | undefined;
-  private readonly _panel: WebviewPanel;
+export class HelloWorldPanel implements WebviewViewProvider {
+  public static currentView: HelloWorldPanel | undefined;
+  private _view?: WebviewView;
   private _disposables: Disposable[] = [];
 
   private spectacleExtension: SpectacleExtension;
 
-  /**
-   * The HelloWorldPanel class private constructor (called only from the render method).
-   *
-   * @param panel A reference to the webview panel
-   * @param extensionUri The URI of the directory containing the extension
-   */
-  private constructor(
-    panel: WebviewPanel,
-    extensionUri: Uri,
+  constructor(
+    private readonly _extensionUri: Uri,
     spectacleExtension: SpectacleExtension
   ) {
-    this._panel = panel;
-
-    // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
-    // the panel or when the panel is closed programmatically)
-    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-
-    // Set the HTML content for the webview panel
-    this._panel.webview.html = this._getWebviewContent(
-      this._panel.webview,
-      extensionUri
-    );
-
     this.spectacleExtension = spectacleExtension;
-
-    // Set an event listener to listen for messages passed from the webview context
-    this._setWebviewMessageListener(this._panel.webview);
   }
 
-  /**
-   * Renders the current webview panel if it exists otherwise a new webview panel
-   * will be created and displayed.
-   *
-   * @param extensionUri The URI of the directory containing the extension.
-   */
-  public static render(
-    extensionUri: Uri,
-    spectacleExtension: SpectacleExtension
+  public resolveWebviewView(
+    webviewView: WebviewView
   ) {
-    if (HelloWorldPanel.currentPanel) {
-      // If the webview panel already exists reveal it
-      HelloWorldPanel.currentPanel._panel.reveal(ViewColumn.One);
-    } else {
-      // If a webview panel does not already exist create and show a new one
-      const panel = window.createWebviewPanel(
-        // Panel view type
-        "showMelty",
-        // Panel title
-        "Melty",
-        // The editor column the panel should be displayed in
-        ViewColumn.One,
-        // Extra panel configurations
-        {
-          // Enable JavaScript in the webview
-          enableScripts: true,
-          // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
-          localResourceRoots: [
-            Uri.joinPath(extensionUri, "out"),
-            Uri.joinPath(extensionUri, "webview-ui/build"),
-          ],
-        }
-      );
+    console.log("Resolving WebviewView for ChatView");
+    this._view = webviewView;
 
-      HelloWorldPanel.currentPanel = new HelloWorldPanel(
-        panel,
-        extensionUri,
-        spectacleExtension
-      );
-    }
-  }
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [
+        Uri.joinPath(this._extensionUri, "out"),
+        Uri.joinPath(this._extensionUri, "webview-ui/build"),
+      ],
+    };
 
-  /**
-   * Cleans up and disposes of webview resources when the webview panel is closed.
-   */
-  public dispose() {
-    HelloWorldPanel.currentPanel = undefined;
+    webviewView.webview.html = this._getWebviewContent(webviewView.webview);
 
-    // Dispose of the current webview panel
-    this._panel.dispose();
+    this._setWebviewMessageListener(webviewView.webview);
 
-    // Dispose of all disposables (i.e. commands) for the current webview panel
-    while (this._disposables.length) {
-      const disposable = this._disposables.pop();
-      if (disposable) {
-        disposable.dispose();
-      }
-    }
+    console.log("success in resolveWebviewView!");
   }
 
   /**
@@ -129,9 +72,9 @@ export class HelloWorldPanel {
    * @returns A template string literal containing the HTML that should be
    * rendered within the webview panel
    */
-  private _getWebviewContent(webview: Webview, extensionUri: Uri) {
+  private _getWebviewContent(webview: Webview) {
     // The CSS file from the React build output
-    const stylesUri = getUri(webview, extensionUri, [
+    const stylesUri = getUri(webview, this._extensionUri, [
       "webview-ui",
       "build",
       "static",
@@ -139,7 +82,7 @@ export class HelloWorldPanel {
       "main.css",
     ]);
     // The JS file from the React build output
-    const scriptUri = getUri(webview, extensionUri, [
+    const scriptUri = getUri(webview, this._extensionUri, [
       "webview-ui",
       "build",
       "static",
@@ -194,7 +137,7 @@ export class HelloWorldPanel {
             let taskId = message.taskId;
             const conversation =
               this.spectacleExtension.getConversation(taskId);
-            this._panel.webview.postMessage({
+            this._view?.webview.postMessage({
               command: "loadConversation",
               conversation: conversation,
             });
@@ -203,7 +146,7 @@ export class HelloWorldPanel {
             console.log(
               `listFiles: ${meltyMindFilePaths.length} melty file paths`
             );
-            this._panel.webview.postMessage({
+            this._view?.webview.postMessage({
               command: "listMeltyFiles",
               meltyMindFilePaths: meltyMindFilePaths,
             });
@@ -211,7 +154,7 @@ export class HelloWorldPanel {
           case "listWorkspaceFiles":
             const workspaceFilePaths =
               await this.spectacleExtension.getWorkspaceFilePaths();
-            this._panel.webview.postMessage({
+            this._view?.webview.postMessage({
               command: "listWorkspaceFiles",
               workspaceFilePaths: workspaceFilePaths,
             });
@@ -230,7 +173,7 @@ export class HelloWorldPanel {
           case "addMeltyFile":
             console.log(`addFile: ${message.filePath}`);
             this.spectacleExtension.addMeltyMindFilePath(message.filePath);
-            this._panel.webview.postMessage({
+            this._view?.webview.postMessage({
               command: "listMeltyFiles",
               meltyMindFilePaths:
                 this.spectacleExtension.getMeltyMindFilePaths(),
@@ -249,7 +192,7 @@ export class HelloWorldPanel {
             vscode.window.showInformationMessage(
               `Removed ${message.filePath} from Melty's Mind`
             );
-            this._panel.webview.postMessage({
+            this._view?.webview.postMessage({
               command: "listMeltyFiles",
               meltyMindFilePaths:
                 this.spectacleExtension.getMeltyMindFilePaths(),
@@ -287,7 +230,7 @@ export class HelloWorldPanel {
             const newTaskId = await this.spectacleExtension.createNewTask(
               taskName
             );
-            this._panel.webview.postMessage({
+            this._view?.webview.postMessage({
               command: "taskCreated",
               taskId: newTaskId,
               taskName: taskName,
@@ -296,7 +239,7 @@ export class HelloWorldPanel {
 
           case "listTasks":
             const tasks = this.spectacleExtension.listTasks();
-            this._panel.webview.postMessage({
+            this._view?.webview.postMessage({
               command: "listTasks",
               tasks: tasks,
             });
@@ -324,14 +267,14 @@ export class HelloWorldPanel {
 
     // human response
     await task.respondHuman(text);
-    this._panel.webview.postMessage({
+    this._view?.webview.postMessage({
       command: "loadConversation",
       conversation: task.conversation,
     });
 
     // bot response
     const processPartial = (partialJoule: Joule) => {
-      this._panel.webview.postMessage({
+      this._view?.webview.postMessage({
         command: "setPartialResponse",
         joule: partialJoule,
       });
@@ -343,7 +286,7 @@ export class HelloWorldPanel {
         processPartial
       );
       // Send the response back to the webview
-      this._panel.webview.postMessage({
+      this._view?.webview.postMessage({
         command: "loadConversation",
         conversation: task.conversation,
       });

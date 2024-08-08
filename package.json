@@ -27,21 +27,21 @@
         "title": "Melty"
       }
     ],
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "meltyViewContainer",
+          "title": "Melty",
+          "icon": "resources/package-explorer.svg"
+        }
+      ]
+    },
     "views": {
-      "spectacle": [
+      "meltyViewContainer": [
         {
           "type": "webview",
           "id": "spectacle.chatView",
           "name": "Spectacle Chat"
-        }
-      ]
-    },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "spectacle",
-          "title": "Spectacle",
-          "icon": "resources/spectacle-icon.svg"
         }
       ]
     },

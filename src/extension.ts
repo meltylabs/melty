@@ -211,14 +211,12 @@ export function activate(context: vscode.ExtensionContext) {
   const extension = new SpectacleExtension(context, outputChannel);
   extension.activate();
 
-  const helloCommand = vscode.commands.registerCommand(
-    "melty.showMelty",
-    () => {
-      HelloWorldPanel.render(context.extensionUri, extension);
-    }
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      "spectacle.chatView",
+      new HelloWorldPanel(context.extensionUri, extension)
+    )
   );
-
-  context.subscriptions.push(helloCommand);
 
   outputChannel.appendLine("Spectacle extension activated");
   console.log("Spectacle extension activated");
