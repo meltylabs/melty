@@ -4,11 +4,11 @@ import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { Conversation } from "./types";
 import { Task } from "./backend/tasks";
 
+// create dummy tasks
 const dummyTask1: Task = new Task("task_1", "task/task-1");
 const dummyTasks: Map<string, Task> = new Map();
 dummyTasks.set("task_1", dummyTask1);
 
-// create another dummy task
 const dummyTask2: Task = new Task("task_2", "task/task-2");
 dummyTasks.set("task_2", dummyTask2);
 
@@ -16,7 +16,7 @@ export class SpectacleExtension {
   private outputChannel: vscode.OutputChannel;
   private meltyMindFilePaths: string[] = [];
   private workspaceFilePaths: string[] | undefined;
-  private tasks: Map<string, Task> = dummyTasks;
+  private tasks: Map<string, Task> = new Map();
   private currentTask: Task | undefined;
 
   constructor(
