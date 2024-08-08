@@ -11,8 +11,7 @@ import {
   CancellationToken,
 } from "vscode";
 import * as vscode from "vscode";
-import { getUri } from "../util/getUri";
-import { getNonce } from "../util/getNonce";
+import { getUri, getNonce } from "../util/utils";
 import { Joule } from "../types";
 import { SpectacleExtension } from "../extension";
 

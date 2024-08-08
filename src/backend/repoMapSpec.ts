@@ -12,6 +12,7 @@ export class RepoMapSpec {
     }
 
     public async getRepoMap(relativeFilePaths: string[]): Promise<string> {
+        console.log('building repomap');
         // Filter out files that don't exist and files that are >100kb
         const eligibleFiles = relativeFilePaths.filter(file => {
             const absPath = path.join(this.gitRepo.rootPath, file);
@@ -24,6 +25,7 @@ export class RepoMapSpec {
             fullMap += this.mapFile(file);
             fullMap += `</FileMap>\n`;
         }
+        console.log("repo map complete");
         return fullMap;
     }
 
@@ -63,8 +65,6 @@ export class RepoMapSpec {
     }
 
     private extractSpec(relativeFilePath: string): string {
-        console.log("extracting spec");
-
         const absoluteFilePath = path.join(this.gitRepo.rootPath, relativeFilePath);
         const sourceFile = ts.createSourceFile(
             absoluteFilePath,
@@ -152,9 +152,6 @@ export class RepoMapSpec {
             }
             return node;
         }
-
-        // Transform the source
-        console.log("transforming " + absoluteFilePath);
 
         const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
             return (sourceFile) => {

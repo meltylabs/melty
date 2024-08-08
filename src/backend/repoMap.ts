@@ -7,7 +7,7 @@ import Parser from 'web-tree-sitter';
 import { Tag, GitRepo } from '../types';
 
 export class RepoMap {
-    private parsers: Map<string, Parser>;
+    private parsers: Map<string, Parser> | undefined;
     private gitRepo: GitRepo;
 
     constructor(gitRepo: GitRepo) {
@@ -43,7 +43,7 @@ export class RepoMap {
 
     private getParser(fileName: string): Parser | undefined {
         const ext = path.extname(fileName);
-        return this.parsers.get(ext);
+        return this.parsers!.get(ext);
     }
 
     public async getRepoMap(workspaceFilenames: string[]): Promise<string> {
@@ -51,6 +51,7 @@ export class RepoMap {
 
         const tags = this.getAllTags(workspaceFilenames);
         const rankedTags = this.rankTags(tags);
+
         return this.generateMapString(rankedTags);
     }
 

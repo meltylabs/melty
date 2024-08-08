@@ -68,6 +68,7 @@ export async function streamClaude(
   });
 
   try {
+    console.log('waiting for claude...');
     const stream = await anthropic.messages.stream(
       {
         model: "claude-3-5-sonnet-20240620",
