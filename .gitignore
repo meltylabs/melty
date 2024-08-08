@@ -8,3 +8,4 @@ venv
 .vscode-test
 __pycache__
 spectacle-0.0.1.vsix
+melty-0.0.1.vsix
