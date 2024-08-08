@@ -183,7 +183,7 @@ export class HelloWorldPanel {
         const command = message.command;
         const meltyMindFilePaths =
           this.spectacleExtension.getMeltyMindFilePaths();
-        
+
         switch (command) {
           case "hello":
             // Code that should run in response to the hello message command
@@ -284,10 +284,12 @@ export class HelloWorldPanel {
 
           case "createNewTask":
             const taskName = message.taskName;
-            taskId = await this.spectacleExtension.createNewTask(taskName);
+            const newTaskId = await this.spectacleExtension.createNewTask(
+              taskName
+            );
             this._panel.webview.postMessage({
               command: "taskCreated",
-              taskId: taskId,
+              taskId: newTaskId,
               taskName: taskName,
             });
             return;
