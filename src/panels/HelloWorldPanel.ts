@@ -13,7 +13,7 @@ import {
 import * as vscode from "vscode";
 import { getUri, getNonce } from "../util/utils";
 import { Joule } from "../types";
-import { SpectacleExtension } from "../extension";
+import { MeltyExtension } from "../extension";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -30,13 +30,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
   private _view?: WebviewView;
   private _disposables: Disposable[] = [];
 
-  private spectacleExtension: SpectacleExtension;
+  private MeltyExtension: MeltyExtension;
 
   constructor(
     private readonly _extensionUri: Uri,
-    spectacleExtension: SpectacleExtension
+    MeltyExtension: MeltyExtension
   ) {
-    this.spectacleExtension = spectacleExtension;
+    this.MeltyExtension = MeltyExtension;
   }
 
   public resolveWebviewView(
@@ -124,7 +124,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
       async (message: any) => {
         const command = message.command;
         const meltyMindFilePaths =
-          this.spectacleExtension.getMeltyMindFilePaths();
+          this.MeltyExtension.getMeltyMindFilePaths();
 
         switch (command) {
           case "hello":
@@ -134,9 +134,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
           case "loadConversation":
             console.log(`loadConversation`);
             let taskId = message.taskId;
-            const task = this.spectacleExtension.getTask(taskId);
+            const task = this.MeltyExtension.getTask(taskId);
             const conversation =
-              this.spectacleExtension.getConversation(taskId);
+              this.MeltyExtension.getConversation(taskId);
             this._view?.webview.postMessage({
               command: "loadConversation",
               conversation: conversation,
@@ -153,30 +153,30 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
           case "listWorkspaceFiles":
             const workspaceFilePaths =
-              await this.spectacleExtension.getWorkspaceFilePaths();
+              await this.MeltyExtension.getWorkspaceFilePaths();
             this._view?.webview.postMessage({
               command: "listWorkspaceFiles",
               workspaceFilePaths: workspaceFilePaths,
             });
             return;
           case "resetTask":
-          // this.spectacleExtension.resetTask();
+          // this.MeltyExtension.resetTask();
           // this._panel.webview.postMessage({
           //   command: "loadConversation",
-          //   conversation: this.spectacleExtension.getConversation(),
+          //   conversation: this.MeltyExtension.getConversation(),
           // });
           // return;
           case "openFileInEditor":
-            this.spectacleExtension.openFileInEditor(message.filePath);
+            this.MeltyExtension.openFileInEditor(message.filePath);
             return;
 
           case "addMeltyFile":
             console.log(`addFile: ${message.filePath}`);
-            this.spectacleExtension.addMeltyMindFilePath(message.filePath);
+            this.MeltyExtension.addMeltyMindFilePath(message.filePath);
             this._view?.webview.postMessage({
               command: "listMeltyFiles",
               meltyMindFilePaths:
-                this.spectacleExtension.getMeltyMindFilePaths(),
+                this.MeltyExtension.getMeltyMindFilePaths(),
             });
             vscode.window.showInformationMessage(
               `Added ${message.filePath} to Melty's Mind`
@@ -184,10 +184,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
           case "dropMeltyFile":
             console.log(`dropFile: ${message.filePath}`);
-            this.spectacleExtension.dropMeltyMindFilePath(message.filePath);
+            this.MeltyExtension.dropMeltyMindFilePath(message.filePath);
             console.log(
               "sending back meltyMindFilePaths: ",
-              this.spectacleExtension.getMeltyMindFilePaths()
+              this.MeltyExtension.getMeltyMindFilePaths()
             );
             vscode.window.showInformationMessage(
               `Removed ${message.filePath} from Melty's Mind`
@@ -195,14 +195,14 @@ export class HelloWorldPanel implements WebviewViewProvider {
             this._view?.webview.postMessage({
               command: "listMeltyFiles",
               meltyMindFilePaths:
-                this.spectacleExtension.getMeltyMindFilePaths(),
+                this.MeltyExtension.getMeltyMindFilePaths(),
             });
             return;
           case "undo":
             // todo update implementation
 
             // await this.undoLatestCommit();
-            // const repo = this.spectacleExtension.getRepository();
+            // const repo = this.MeltyExtension.getRepository();
             // await repo.status();
 
             // const latestCommit = repo.state.HEAD?.commit;
@@ -226,7 +226,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
 
           case "createNewTask":
-            const newTaskId = await this.spectacleExtension.createNewTask();
+            const newTaskId = await this.MeltyExtension.createNewTask();
             this._view?.webview.postMessage({
               command: "taskCreated",
               taskId: newTaskId,
@@ -234,7 +234,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
 
           case "listTasks":
-            const tasks = this.spectacleExtension.listTasks();
+            const tasks = this.MeltyExtension.listTasks();
             this._view?.webview.postMessage({
               command: "listTasks",
               tasks: tasks,
@@ -242,8 +242,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
 
           case "switchTask":
-            await this.spectacleExtension.switchToTask(message.taskId);
-            const newTask = await this.spectacleExtension.getCurrentTask();
+            await this.MeltyExtension.switchToTask(message.taskId);
+            const newTask = await this.MeltyExtension.getCurrentTask();
             console.log(`switched to ${newTask.id}`);
             // this._panel.webview.postMessage({
             //   command: "taskSwitched",
@@ -258,8 +258,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
   }
 
   private async handleAskCode(text: string, mode: "ask" | "code") {
-    const meltyMindFilePaths = this.spectacleExtension.getMeltyMindFilePaths();
-    const task = await this.spectacleExtension.getCurrentTask();
+    const meltyMindFilePaths = this.MeltyExtension.getMeltyMindFilePaths();
+    const task = await this.MeltyExtension.getCurrentTask();
 
     // human response
     await task.respondHuman(text);
@@ -295,7 +295,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
    */
   private async undoLatestCommit(): Promise<void> {
     // todo update implementation
-    // const repo = this.spectacleExtension.getRepository();
+    // const repo = this.MeltyExtension.getRepository();
     // await repo.status();
     // await repo.reset("HEAD~1", false);
   }

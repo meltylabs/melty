@@ -6,7 +6,7 @@ import { Task } from "./backend/tasks";
 import * as datastores from "./backend/datastores";
 import * as utils from "./util/utils";
 
-export class SpectacleExtension {
+export class MeltyExtension {
   private outputChannel: vscode.OutputChannel;
   private meltyMindFilePaths: string[] = [];
   private workspaceFilePaths: string[] | undefined;
@@ -21,7 +21,7 @@ export class SpectacleExtension {
   }
 
   async activate() {
-    outputChannel.appendLine("Spectacle activation started");
+    outputChannel.appendLine("Melty activation started");
 
     if (vscode.workspace.workspaceFolders) {
       this.tasks = datastores.loadTasksFromDisk(
@@ -131,7 +131,7 @@ export class SpectacleExtension {
     // const branchName = `task/${taskName.replace(/\s+/g, "-")}`;
 
     const newTask = new Task(taskId, "",);
-    
+
     // kick off async (TODO see if this works)
     newTask.init();
 
@@ -216,15 +216,15 @@ export class SpectacleExtension {
 }
 
 let outputChannel: vscode.OutputChannel;
-let extension: SpectacleExtension;
+let extension: MeltyExtension;
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log("Activating Spectacle extension");
-  outputChannel = vscode.window.createOutputChannel("Spectacle");
+  console.log("Activating Melty extension");
+  outputChannel = vscode.window.createOutputChannel("Melty");
   outputChannel.show();
-  outputChannel.appendLine("Activating Spectacle extension");
+  outputChannel.appendLine("Activating Melty extension");
 
-  extension = new SpectacleExtension(context, outputChannel);
+  extension = new MeltyExtension(context, outputChannel);
   extension.activate();
 
   context.subscriptions.push(
@@ -234,11 +234,11 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  outputChannel.appendLine("Spectacle extension activated");
-  console.log("Spectacle extension activated");
+  outputChannel.appendLine("Melty extension activated");
+  console.log("Melty extension activated");
 }
 
 export async function deactivate(): Promise<void> {
   await extension.deactivate();
-  console.log("Spectacle extension deactivated");
+  console.log("Melty extension deactivated");
 }

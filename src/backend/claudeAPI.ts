@@ -8,7 +8,7 @@ export async function claude(conversation: ClaudeConversation): Promise<string> 
 }
 
 async function doClaude(conversation: ClaudeConversation): Promise<string> {
-  const config = vscode.workspace.getConfiguration("spectacle");
+  const config = vscode.workspace.getConfiguration("melty");
   const apiKey = config.get<string>("anthropicApiKey");
 
   if (!apiKey) {
