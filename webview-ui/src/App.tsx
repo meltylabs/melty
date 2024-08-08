@@ -23,6 +23,7 @@ import "diff2html/bundles/css/diff2html.min.css";
 import { Input } from "./components/ui/input";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
+import { Textarea } from "./components/ui/textarea";
 import { Tasks } from "./components/Tasks";
 import { Conversation, Joule } from "./types";
 import {
@@ -290,7 +291,7 @@ function ConversationView() {
       <div className="">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
-            <Input
+            <Textarea
               placeholder="What should I do? (⌘K)"
               id="message"
               autoFocus
