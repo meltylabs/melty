@@ -16,7 +16,7 @@
   "contributes": {
     "keybindings": [
       {
-        "command": "melty.showMelty",
+        "command": "spectacle.chatView.focus",
         "key": "ctrl+k",
         "mac": "cmd+k"
       }
