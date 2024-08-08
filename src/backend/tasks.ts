@@ -3,6 +3,7 @@ import { Joule, Mode, Conversation, PseudoCommit, GitRepo } from "../types";
 import * as conversations from "./conversations";
 import * as pseudoCommits from "./pseudoCommits";
 import * as utils from "./utils/utils";
+import { Architect } from "../assistants/architect";
 
 /**
  * A Task manages the interaction between a conversation and a git repository
@@ -135,7 +136,7 @@ export class Task {
     // this.ensureInSync();
     // this.ensureWorkingDirectoryClean();
 
-    this.conversation = await conversations.respondBot(
+    this.conversation = await new Architect().respond(
       this.conversation,
       this.gitRepo!,
       contextPaths,

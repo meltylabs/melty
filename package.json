@@ -21,12 +21,6 @@
         "mac": "cmd+k"
       }
     ],
-    "commands": [
-      {
-        "command": "melty.showMelty",
-        "title": "Melty"
-      }
-    ],
     "viewsContainers": {
       "panel": [
         {
