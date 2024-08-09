@@ -47,6 +47,13 @@ type CommandType =
   | "listTasks"
   | "taskCreated";
 
+const markdown = `Here is some JavaScript code:
+
+~~~js
+console.log('It works!')
+~~~
+`;
+
 function JouleComponent({
   joule,
   isPartial = false,
@@ -117,13 +124,16 @@ function JouleComponent({
             code({ node, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || "");
               return match ? (
-                <div className="relative">
+                <div className="relative p-0">
                   {!isPartial && (
                     <CopyButton code={String(children).replace(/\n$/, "")} />
                   )}
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
+                  <SyntaxHighlighter
+                    language={match[1]}
+                    style={vscDarkPlus}
+                    PreTag="div"
+                    children={String(children).replace(/\n$/, "")}
+                  />
                 </div>
               ) : (
                 <code className={className} {...props}>
