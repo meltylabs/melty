@@ -13,16 +13,25 @@ export function error(message: string) {
     }
 }
 
+export function info(message: string) {
+    console.info(message);
+    vscode.window.showInformationMessage(message);
+}
+
 export function repoIsClean(repository: any) {
     return (!repository.state.workingTreeChanges.length &&
         !repository.state.indexChanges.length &&
         !repository.state.mergeChanges.length);
 }
 
+export function repoIsOnMain(repo: any) {
+    return repo.state.HEAD?.name === "main";
+}
+
 export function ensureRepoIsOnCommit(repo: any, commit: string) {
-    // if (repo.state.HEAD?.commit !== commit) {
-    //     throw new Error(`Expected repo to be on commit ${commit} but found ${repo.state.HEAD?.commit}`);
-    // }
+    if (repo.state.HEAD?.commit !== commit) {
+        error(`Expected repo to be on commit ${commit} but found ${repo.state.HEAD?.commit}`);
+    }
 }
 
 export function serializableTask(task: Task) {
