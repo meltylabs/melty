@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { vscode } from "./utilities/vscode";
 import {
-  ChevronsUpDown,
   XIcon,
   FileIcon,
-  RotateCcwIcon,
-  PlusIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -14,38 +11,21 @@ import {
   Routes,
   Link,
   Navigate,
-  useNavigate,
   useParams,
 } from "react-router-dom";
 
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
-import { Input } from "./components/ui/input";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
 import { Tasks } from "./components/Tasks";
 import { Task, Joule } from "./types";
 import CopyButton from "./components/CopyButton";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "./components/ui/collapsible";
 import "./App.css";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-
-// todo: move to a types file
-type CommandType =
-  | "confirmedUndo"
-  | "setPartialResponse"
-  | "listMeltyFiles"
-  | "listWorkspaceFiles"
-  | "loadTask"
-  | "logHello"
-  | "listTasks"
-  | "taskCreated";
+import { ExtensionRPC } from "./extensionRPC";
 
 function JouleComponent({
   joule,
@@ -161,6 +141,7 @@ function JouleComponent({
 }
 
 function ConversationView() {
+  const [extensionRPC] = useState(() => new ExtensionRPC());
   const { taskId } = useParams<{ taskId: string }>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
@@ -168,41 +149,44 @@ function ConversationView() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
 
-  function handleAddFile(file: string) {
-    vscode.postMessage({ command: "addMeltyFile", filePath: file });
+  async function handleAddFile(file: string) {
+    const meltyFiles = await extensionRPC.run("addMeltyFile", { filePath: file });
+    setMeltyFiles(meltyFiles);
     setPickerOpen(false);
   }
 
-  function handleDropFile(file: string) {
-    vscode.postMessage({ command: "dropMeltyFile", filePath: file });
+  async function handleDropFile(file: string) {
+    const meltyFiles = await extensionRPC.run("dropMeltyFile", { filePath: file });
+    setMeltyFiles(meltyFiles);
     setPickerOpen(false);
   }
 
-  function loadTask(taskId: string) {
-    vscode.postMessage({ command: "loadTask", taskId });
-    vscode.postMessage({ command: "switchTask", taskId });
+  async function loadTask(taskId: string) {
+    // TODO refactor loadTask and switchTask
+    const task = await extensionRPC.run("loadTask", { taskId });
+    setTask(task);
+    await extensionRPC.run("switchTask", { taskId }); // discard output
   }
 
-  function loadFiles() {
-    vscode.postMessage({ command: "listMeltyFiles" });
-    vscode.postMessage({ command: "listWorkspaceFiles" });
+  async function loadFiles() {
+    const meltyFiles = await extensionRPC.run("listMeltyFiles");
+    setMeltyFiles(meltyFiles);
+    const workspaceFiles = await extensionRPC.run("listWorkspaceFiles");
+    setWorkspaceFiles(workspaceFiles);
   }
 
   function handleSendMessage(mode: "ask" | "code", text: string) {
-    vscode.postMessage({
-      command: mode,
-      text: text,
-      taskId: taskId,
-    });
+    extensionRPC.run("chatMessage", { mode, text });
+    // response will be returned asynchronously through notifications
   }
 
-  function handleUndo() {
-    vscode.postMessage({ command: "undo", taskId: taskId });
-  }
+  // function handleUndo() {
+  //   vscode.postMessage({ command: "undo", taskId: taskId });
+  // }
 
-  function handleReset() {
-    vscode.postMessage({ command: "resetTask", taskId: taskId });
-  }
+  // function handleReset() {
+  //   vscode.postMessage({ command: "resetTask", taskId: taskId });
+  // }
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -225,37 +209,26 @@ function ConversationView() {
       loadTask(taskId);
     }
 
-    // Listen for messages from the extension
-    const messageListener = (event: MessageEvent) => {
+    // handle rpc calls and notifications
+    const handleNotification = (event: MessageEvent) => {
       const message = event.data;
-      console.log("NEW MESSAGE IN APP.TSX: ", message);
-
-      switch (message.command as CommandType) {
-        case "listMeltyFiles":
-          console.log("listMeltyFiles", message);
-          setMeltyFiles(message.meltyMindFilePaths);
-          break;
-        case "listWorkspaceFiles":
-          console.log("listWorkspaceFiles", message);
-          setWorkspaceFiles(message.workspaceFilePaths);
-          break;
-        case "loadTask":
-          console.log("loadTask", message);
-          setTask(message.task);
-          break;
-        case "setPartialResponse":
-          setTask((prevTask: Task | null) => {
-            if (!prevTask) return null;
-            prevTask.conversation = message.conversation;
-            return prevTask;
-          });
-          break;
+      if (message.type === "notification") {
+        console.log(`Webview received notification ${message.notificationType} -- ${message}`);
+        switch (message.notificationType) {
+          case "setPartialResponse":
+            setTask(message.task);
+            return;
+        }
       }
-    };
+    }
 
-    window.addEventListener("message", messageListener);
+    window.addEventListener("message", extensionRPC.handleMessage);
+    window.addEventListener("message", handleNotification);
 
-    return () => window.removeEventListener("message", messageListener);
+    return () => {
+      window.removeEventListener("message", extensionRPC.handleMessage);
+      window.removeEventListener("message", handleNotification)
+    }
   }, []);
 
   const handleSubmit = (event: React.FormEvent) => {

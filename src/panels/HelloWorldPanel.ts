@@ -15,6 +15,7 @@ import { getUri, getNonce } from "../util/utils";
 import { Conversation } from "../types";
 import { MeltyExtension } from "../extension";
 import * as utils from "../util/utils";
+import { Task } from "../backend/tasks";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -121,142 +122,105 @@ export class HelloWorldPanel implements WebviewViewProvider {
    * @param context A reference to the extension context
    */
   private _setWebviewMessageListener(webview: Webview) {
-    webview.onDidReceiveMessage(
-      async (message: any) => {
-        const command = message.command;
+    webview.onDidReceiveMessage(message => {
+      if (message.type === 'rpc') {
+        this.handleRPCCall(message.method, message.params)
+          .then(result => {
+            console.log(`[HelloWorldPanel] sending RPC response for ${message.id} with result ${result}`);
+            webview.postMessage({ type: 'rpcResponse', id: message.id, result });
+          })
+          .catch(error => {
+            console.log(`[HelloWorldPanel] sending RPCresponse for ${message.id} with error ${error.message}`);
+            webview.postMessage({ type: 'rpcResponse', id: message.id, error: error.message });
+          });
+      }
+    });
+  }
+
+  private async handleRPCCall(method: string, params: any): Promise<any> {
+    console.log(`[HelloWorldPanel] RPC call for ${method} with params ${JSON.stringify(params)}`);
+    switch (method) {
+      case "loadTask":
+        console.log(`loadTask`);
+        let taskId = params.taskId;
+        const task = this.MeltyExtension.getTask(taskId);
+        return Promise.resolve(utils.serializableTask(task));
+      case "listMeltyFiles":
         const meltyMindFilePaths =
           this.MeltyExtension.getMeltyMindFilePaths();
+        return Promise.resolve(meltyMindFilePaths);
+      case "listWorkspaceFiles":
+        const workspaceFilePaths =
+          await this.MeltyExtension.getWorkspaceFilePaths();
+        return Promise.resolve(workspaceFilePaths);
+      case "resetTask":
+        // this.MeltyExtension.resetTask();
+        // this._panel.webview.postMessage({
+        //   command: "loadConversation",
+        //   conversation: this.MeltyExtension.getConversation(),
+        // });
+        // return;
+        throw new Error("Not implemented");
+        return;
+      case "openFileInEditor":
+        this.MeltyExtension.openFileInEditor(params.filePath);
+        return Promise.resolve(null);
+      case "addMeltyFile":
+        this.MeltyExtension.addMeltyMindFilePath(params.filePath);
+        // TODO responds with listMeltyFiles
+        vscode.window.showInformationMessage(
+          `Added ${params.filePath} to Melty's Mind`
+        );
+        const meltyMindFilePaths2 = this.MeltyExtension.getMeltyMindFilePaths();
+        return Promise.resolve(meltyMindFilePaths2);
+      case "dropMeltyFile":
+        this.MeltyExtension.dropMeltyMindFilePath(params.filePath);
+        vscode.window.showInformationMessage(
+          `Removed ${params.filePath} from Melty's Mind`
+        );
+        const meltyMindFilePaths3 = this.MeltyExtension.getMeltyMindFilePaths()
+        // TODO responds with listMeltyFiles
+        return Promise.resolve(meltyMindFilePaths3);
+      case "undo":
+        // todo update implementation
 
-        switch (command) {
-          case "hello":
-            // Code that should run in response to the hello message command
-            window.showInformationMessage(message.text);
-            return;
-          case "loadTask":
-            console.log(`loadTask`);
-            let taskId = message.taskId;
-            const task = this.MeltyExtension.getTask(taskId);
-            this._view?.webview.postMessage({
-              command: "loadTask",
-              task: utils.serializableTask(task),
-            });
-            return;
-          case "listMeltyFiles":
-            console.log(
-              `listFiles: ${meltyMindFilePaths.length} melty file paths`
-            );
-            this._view?.webview.postMessage({
-              command: "listMeltyFiles",
-              meltyMindFilePaths: meltyMindFilePaths,
-            });
-            return;
-          case "listWorkspaceFiles":
-            const workspaceFilePaths =
-              await this.MeltyExtension.getWorkspaceFilePaths();
-            this._view?.webview.postMessage({
-              command: "listWorkspaceFiles",
-              workspaceFilePaths: workspaceFilePaths,
-            });
-            return;
-          case "resetTask":
-          // this.MeltyExtension.resetTask();
-          // this._panel.webview.postMessage({
-          //   command: "loadConversation",
-          //   conversation: this.MeltyExtension.getConversation(),
-          // });
-          // return;
-          case "openFileInEditor":
-            this.MeltyExtension.openFileInEditor(message.filePath);
-            return;
+        // await this.undoLatestCommit();
+        // const repo = this.MeltyExtension.getRepository();
+        // await repo.status();
 
-          case "addMeltyFile":
-            console.log(`addFile: ${message.filePath}`);
-            this.MeltyExtension.addMeltyMindFilePath(message.filePath);
-            this._view?.webview.postMessage({
-              command: "listMeltyFiles",
-              meltyMindFilePaths:
-                this.MeltyExtension.getMeltyMindFilePaths(),
-            });
-            vscode.window.showInformationMessage(
-              `Added ${message.filePath} to Melty's Mind`
-            );
-            return;
-          case "dropMeltyFile":
-            console.log(`dropFile: ${message.filePath}`);
-            this.MeltyExtension.dropMeltyMindFilePath(message.filePath);
-            console.log(
-              "sending back meltyMindFilePaths: ",
-              this.MeltyExtension.getMeltyMindFilePaths()
-            );
-            vscode.window.showInformationMessage(
-              `Removed ${message.filePath} from Melty's Mind`
-            );
-            this._view?.webview.postMessage({
-              command: "listMeltyFiles",
-              meltyMindFilePaths:
-                this.MeltyExtension.getMeltyMindFilePaths(),
-            });
-            return;
-          case "undo":
-            // todo update implementation
+        // const latestCommit = repo.state.HEAD?.commit;
+        // const latestCommitMessage = await repo.getCommit(latestCommit);
+        // const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
+        // vscode.window.showInformationMessage(message);
+        // this._panel.webview.postMessage({
+        //   command: "confirmedUndo",
+        //   text: {
+        //     sender: "user",
+        //     message: message,
+        //   },
+        // });
+        // return;
+        throw new Error("Not implemented");
+        return;
+      case "chatMessage":
+        await this.handleAskCode(params.text, params.mode);
+        return Promise.resolve(null);
+      case "createNewTask":
+        const newTaskId = await this.MeltyExtension.createNewTask(params.name);
+        // TODO resolves to taskCreated
+        return Promise.resolve(newTaskId);
 
-            // await this.undoLatestCommit();
-            // const repo = this.MeltyExtension.getRepository();
-            // await repo.status();
+      case "listTasks":
+        const tasks = this.MeltyExtension.listTasks();
+        return Promise.resolve(tasks);
 
-            // const latestCommit = repo.state.HEAD?.commit;
-            // const latestCommitMessage = await repo.getCommit(latestCommit);
-            // const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
-            // vscode.window.showInformationMessage(message);
-            // this._panel.webview.postMessage({
-            //   command: "confirmedUndo",
-            //   text: {
-            //     sender: "user",
-            //     message: message,
-            //   },
-            // });
-            return;
-          case "ask":
-            await this.handleAskCode(message.text, "ask");
-            return;
-
-          case "code":
-            await this.handleAskCode(message.text, "code");
-            return;
-
-          case "createNewTask":
-            const newTaskId = await this.MeltyExtension.createNewTask(message.name);
-            this._view?.webview.postMessage({
-              command: "taskCreated",
-              taskId: newTaskId,
-            });
-            return;
-
-          case "listTasks":
-            const tasks = this.MeltyExtension.listTasks();
-            this._view?.webview.postMessage({
-              command: "listTasks",
-              tasks: tasks,
-            });
-            return;
-
-          case "switchTask":
-            await this.MeltyExtension.switchToTask(message.taskId);
-            const newTask = await this.MeltyExtension.getCurrentTask();
-            console.log(`switched to ${newTask.id}`);
-
-            // kick this off (todo: make sure it completes in time?)
-            newTask.init();
-            // this._panel.webview.postMessage({
-            //   command: "taskSwitched",
-            //   taskId: message.taskId,
-            // });
-            return;
-        }
-      },
-      undefined,
-      this._disposables
-    );
+      case "switchTask":
+        await this.MeltyExtension.switchToTask(params.taskId);
+        const newTask = await this.MeltyExtension.getCurrentTask();
+        await newTask.init();
+        // TODO resolves to taskSwitched
+        return Promise.resolve(utils.serializableTask(newTask));
+    }
   }
 
   private async handleAskCode(text: string, mode: "ask" | "code") {
@@ -266,29 +230,31 @@ export class HelloWorldPanel implements WebviewViewProvider {
     // human response
     await task.respondHuman(text);
     this._view?.webview.postMessage({
-      command: "loadTask",
+      type: "notification",
+      notificationType: "updateTask",
       task: utils.serializableTask(task),
     });
 
     // bot response
     const processPartial = (partialConversation: Conversation) => {
       // copy task
-      const partialTask = { ...task };
+      const partialTask = { ...task } as Task;
       partialTask.conversation = partialConversation;
       this._view?.webview.postMessage({
-        command: "loadTask",
-        task: utils.serializableTask(partialTask as Task),
+        type: "notification",
+        notificationType: "setPartialResponse",
+        task: utils.serializableTask(partialTask),
       });
     };
 
     await task.respondBot(
-      meltyMindFilePaths, // TODO are we sending the right files here? @soybean
+      meltyMindFilePaths,
       mode,
       processPartial
     );
-    // Send the response back to the webview
     this._view?.webview.postMessage({
-      command: "loadTask",
+      type: "notification",
+      notificationType: "updateTask",
       task: utils.serializableTask(task),
     });
   }
