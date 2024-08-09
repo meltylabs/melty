@@ -47,13 +47,6 @@ type CommandType =
   | "listTasks"
   | "taskCreated";
 
-const markdown = `Here is some JavaScript code:
-
-~~~js
-console.log('It works!')
-~~~
-`;
-
 function JouleComponent({
   joule,
   isPartial = false,
@@ -378,13 +371,13 @@ function ConversationView() {
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button> */}
-            <Button name="ask" size="sm" type="submit">
+            <Button name="ask" size="sm" type="submit" variant="outline">
               Ask{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
                 <span className="text-xs">↵</span>
               </kbd>
             </Button>
-            {/* <Button
+            <Button
               name="code"
               size="sm"
               type="button"
@@ -399,7 +392,7 @@ function ConversationView() {
                 <span className="text-xs">⌘</span>
                 <span className="text-xs">↵</span>
               </kbd>
-            </Button> */}
+            </Button>
           </div>
         </form>
       </div>
