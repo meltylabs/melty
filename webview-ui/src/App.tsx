@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { vscode } from "./utilities/vscode";
-import { ChevronsUpDown, XIcon, FileIcon, RotateCcwIcon } from "lucide-react";
+import {
+  ChevronsUpDown,
+  XIcon,
+  FileIcon,
+  RotateCcwIcon,
+  PlusIcon,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
   BrowserRouter as Router,
@@ -20,12 +26,15 @@ import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
 import { Tasks } from "./components/Tasks";
 import { Conversation, Joule } from "./types";
+import CopyButton from "./components/CopyButton";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
 import "./App.css";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 // todo: move to a types file
 type CommandType =
@@ -103,7 +112,29 @@ function JouleComponent({
       }`}
     >
       <div className="text-xs flex flex-col prose">
-        <ReactMarkdown>{joule.message}</ReactMarkdown>
+        <ReactMarkdown
+          components={{
+            code({ node, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || "");
+              return match ? (
+                <div className="relative">
+                  {!isPartial && (
+                    <CopyButton code={String(children).replace(/\n$/, "")} />
+                  )}
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                </div>
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            },
+          }}
+        >
+          {joule.message}
+        </ReactMarkdown>
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
@@ -374,9 +405,6 @@ function App() {
           <Button variant="ghost" size="sm">
             <Link to="/">Home</Link>
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Handcrafted for Anglera
-          </p>
         </nav>
 
         <Routes>
