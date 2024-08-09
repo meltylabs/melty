@@ -5,7 +5,7 @@ import * as joules from "./joules";
 import * as pseudoCommits from "./pseudoCommits";
 import * as utils from "./utils/utils";
 import { Architect } from "../assistants/architect";
-
+import { Coder } from "../assistants/coder";
 /**
  * A Task manages the interaction between a conversation and a git repository
  */
@@ -94,12 +94,13 @@ export class Task {
   private async commitChanges(): Promise<number> {
     this.ensureInSync();
 
-
     // Get all changes, including untracked files
     const changes = await this.gitRepo!.repository.diffWithHEAD();
 
     // Filter out ignored files
-    const nonIgnoredChanges = changes.filter((change: any) => !change.gitIgnored);
+    const nonIgnoredChanges = changes.filter(
+      (change: any) => !change.gitIgnored
+    );
 
     // Add only non-ignored files
     for (const change of nonIgnoredChanges) {
@@ -110,8 +111,6 @@ export class Task {
       // at async Task.respondHuman(/Users/jacksondc / Development / melty_run / out / extension.js: 227948: 23)
       // at async HelloWorldPanel.handleAskCode(/Users/jacksondc / Development / melty_run / out / extension.js: 223370: 5)
       // at async c.value(/Users/jacksondc / Development / melty_run / out / extension.js: 223335: 13)
-
-
       // await this.gitRepo!.repository.add(change.uri.fsPath);
     }
 
@@ -138,7 +137,18 @@ export class Task {
       // this.ensureInSync();
       // this.ensureWorkingDirectoryClean();
 
-      this.conversation = await new Architect().respond(
+      let assistant;
+      switch (mode) {
+        case "code":
+          assistant = new Coder();
+          break;
+        case "ask":
+          assistant = new Architect();
+        default:
+          assistant = new Architect();
+      }
+
+      this.conversation = await assistant.respond(
         this.conversation,
         this.gitRepo!,
         contextPaths,
@@ -155,7 +165,12 @@ export class Task {
     } catch (e) {
       vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
 
-      const joule = joules.createJouleBot("[  Error :(  ]", mode, pseudoCommits.createDummy(), contextPaths);
+      const joule = joules.createJouleBot(
+        "[  Error :(  ]",
+        mode,
+        pseudoCommits.createDummy(),
+        contextPaths
+      );
       this.conversation = conversations.addJoule(this.conversation, joule);
       return joule;
     }
