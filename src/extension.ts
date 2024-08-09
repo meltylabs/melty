@@ -228,6 +228,18 @@ export class MeltyExtension {
       }
 
       // Push the current branch to remote
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "Pushing changes...",
+          cancellable: false,
+        },
+        async (progress) => {
+          await repository.push(repository.state.HEAD?.name, true);
+        }
+      );
+
+      // Push the current branch to remote
       await repository.push(currentBranch);
 
       const token = vscode.workspace
@@ -235,7 +247,7 @@ export class MeltyExtension {
         .get("melty.githubToken");
 
       // Create PR using GitHub API
-      const octokit = new Octokit({ auth: "your-github-token" });
+      const octokit = new Octokit({ auth: token });
       const [owner, repo] =
         repository.state.remotes[0].fetchUrl?.split(":")[1].split("/") || [];
 
