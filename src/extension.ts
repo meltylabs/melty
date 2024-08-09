@@ -33,7 +33,7 @@ export class MeltyExtension {
 
     // create a new task if there aren't any
     if (!this.tasks.size) {
-      const taskId = await this.createNewTask("my_first_task");
+      const taskId = await this.createNewTask("First task");
       this.currentTask = (this.tasks as Map<string, Task>).get(taskId);
     }
 
