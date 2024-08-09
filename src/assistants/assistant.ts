@@ -1,4 +1,4 @@
-import { Conversation, GitRepo, Mode, Joule } from "../../types";
+import { Conversation, GitRepo, Mode, Joule } from "../types";
 
 export interface Assistant {
     respond(

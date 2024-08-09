@@ -1,7 +1,7 @@
 {
-  "name": "spectacle",
-  "displayName": "Spectacle",
-  "description": "AI coding assistant",
+  "name": "melty",
+  "displayName": "Melty",
+  "description": "AI pair programmer",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.91.0"
@@ -16,15 +16,9 @@
   "contributes": {
     "keybindings": [
       {
-        "command": "spectacle.chatView.focus",
-        "key": "ctrl+k",
-        "mac": "cmd+k"
-      }
-    ],
-    "commands": [
-      {
-        "command": "melty.showMelty",
-        "title": "Melty"
+        "command": "melty.chatView.focus",
+        "key": "ctrl+m",
+        "mac": "cmd+m"
       }
     ],
     "viewsContainers": {
@@ -40,15 +34,15 @@
       "meltyViewContainer": [
         {
           "type": "webview",
-          "id": "spectacle.chatView",
-          "name": "Spectacle Chat"
+          "id": "melty.chatView",
+          "name": "Melty Chat"
         }
       ]
     },
     "configuration": {
-      "title": "Spectacle",
+      "title": "Melty Settings",
       "properties": {
-        "spectacle.anthropicApiKey": {
+        "melty.anthropicApiKey": {
           "type": "string",
           "default": "",
           "description": "API key for Anthropic Claude"

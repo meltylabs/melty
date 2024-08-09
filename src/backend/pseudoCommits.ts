@@ -8,6 +8,10 @@ function createFromCommitWithUdiffPreview(commit: string, preview: string): Pseu
   return { impl: { status: "committed", commit, udiffPreview: preview } };
 }
 
+export function createDummy(): PseudoCommit {
+  return { impl: { status: "committed", commit: "dummy", udiffPreview: "" } };
+}
+
 export async function createFromCommit(
   commit: string,
   gitRepo: GitRepo,
