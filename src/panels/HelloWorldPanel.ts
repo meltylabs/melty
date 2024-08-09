@@ -167,7 +167,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
         return Promise.resolve(null);
       case "addMeltyFile":
         this.MeltyExtension.addMeltyMindFilePath(params.filePath);
-        // TODO responds with listMeltyFiles
         vscode.window.showInformationMessage(
           `Added ${params.filePath} to Melty's Mind`
         );
@@ -179,7 +178,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
           `Removed ${params.filePath} from Melty's Mind`
         );
         const meltyMindFilePaths3 = this.MeltyExtension.getMeltyMindFilePaths()
-        // TODO responds with listMeltyFiles
         return Promise.resolve(meltyMindFilePaths3);
       case "undo":
         // todo update implementation
@@ -207,7 +205,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
         return Promise.resolve(null);
       case "createNewTask":
         const newTaskId = await this.MeltyExtension.createNewTask(params.name);
-        // TODO resolves to taskCreated
         return Promise.resolve(newTaskId);
 
       case "listTasks":
@@ -218,7 +215,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
         await this.MeltyExtension.switchToTask(params.taskId);
         const newTask = await this.MeltyExtension.getCurrentTask();
         await newTask.init();
-        // TODO resolves to taskSwitched
         return Promise.resolve(utils.serializableTask(newTask));
     }
   }
