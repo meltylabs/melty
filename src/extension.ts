@@ -6,6 +6,7 @@ import { Task } from "./backend/tasks";
 import * as datastores from "./backend/datastores";
 import * as utils from "./util/utils";
 import { v4 as uuidv4 } from "uuid";
+import { Octokit } from "@octokit/rest";
 
 export class MeltyExtension {
   private outputChannel: vscode.OutputChannel;
@@ -88,7 +89,9 @@ export class MeltyExtension {
       return false;
     }
 
-    this.workspaceFilePaths = await utils.getWorkspaceFilePaths(this.currentTask.gitRepo!);
+    this.workspaceFilePaths = await utils.getWorkspaceFilePaths(
+      this.currentTask.gitRepo!
+    );
     return true;
   }
 
@@ -122,7 +125,7 @@ export class MeltyExtension {
 
   public async createNewTask(name: string): Promise<string> {
     const taskId = uuidv4();
-    const taskName = `${new Date().toLocaleString()}`
+    const taskName = `${new Date().toLocaleString()}`;
     const branchName = `melty/${taskName.replace(/\s+/g, "-")}`;
 
     const newTask = new Task(taskId, name, branchName);
@@ -203,6 +206,55 @@ export class MeltyExtension {
       await repo.createBranch(branchName, true);
     } else {
       throw new Error("Git extension not found");
+    }
+  }
+
+  public async createPullRequest() {
+    try {
+      const gitExtension =
+        vscode.extensions.getExtension("vscode.git")?.exports;
+      const git = gitExtension.getAPI(1);
+      const repository = git.repositories[0];
+
+      if (!repository) {
+        vscode.window.showErrorMessage("No Git repository found");
+        return;
+      }
+
+      const currentBranch = repository.state.HEAD?.name;
+      if (!currentBranch) {
+        vscode.window.showErrorMessage("No current branch found");
+        return;
+      }
+
+      // Push the current branch to remote
+      await repository.push(currentBranch);
+
+      const token = vscode.workspace
+        .getConfiguration()
+        .get("melty.githubToken");
+
+      // Create PR using GitHub API
+      const octokit = new Octokit({ auth: "your-github-token" });
+      const [owner, repo] =
+        repository.state.remotes[0].fetchUrl?.split(":")[1].split("/") || [];
+
+      const { data: pullRequest } = await octokit.pulls.create({
+        owner,
+        repo,
+        title: `PR from ${currentBranch}`,
+        head: currentBranch,
+        base: "main", // or your default branch name
+        body: "Please review these changes",
+      });
+
+      vscode.window.showInformationMessage(
+        `Pull request created: ${pullRequest.html_url}`
+      );
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Failed to create PR: ${(error as Error).message}`
+      );
     }
   }
 }

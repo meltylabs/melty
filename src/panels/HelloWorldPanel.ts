@@ -40,9 +40,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     this.MeltyExtension = MeltyExtension;
   }
 
-  public resolveWebviewView(
-    webviewView: WebviewView
-  ) {
+  public resolveWebviewView(webviewView: WebviewView) {
     console.log("Resolving WebviewView for ChatView");
     this._view = webviewView;
 
@@ -124,8 +122,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     webview.onDidReceiveMessage(
       async (message: any) => {
         const command = message.command;
-        const meltyMindFilePaths =
-          this.MeltyExtension.getMeltyMindFilePaths();
+        const meltyMindFilePaths = this.MeltyExtension.getMeltyMindFilePaths();
 
         switch (command) {
           case "hello":
@@ -168,14 +165,16 @@ export class HelloWorldPanel implements WebviewViewProvider {
           case "openFileInEditor":
             this.MeltyExtension.openFileInEditor(message.filePath);
             return;
+          case "createPR":
+            await this.MeltyExtension.createPullRequest();
+            break;
 
           case "addMeltyFile":
             console.log(`addFile: ${message.filePath}`);
             this.MeltyExtension.addMeltyMindFilePath(message.filePath);
             this._view?.webview.postMessage({
               command: "listMeltyFiles",
-              meltyMindFilePaths:
-                this.MeltyExtension.getMeltyMindFilePaths(),
+              meltyMindFilePaths: this.MeltyExtension.getMeltyMindFilePaths(),
             });
             vscode.window.showInformationMessage(
               `Added ${message.filePath} to Melty's Mind`
@@ -193,8 +192,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
             );
             this._view?.webview.postMessage({
               command: "listMeltyFiles",
-              meltyMindFilePaths:
-                this.MeltyExtension.getMeltyMindFilePaths(),
+              meltyMindFilePaths: this.MeltyExtension.getMeltyMindFilePaths(),
             });
             return;
           case "undo":
@@ -225,7 +223,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
 
           case "createNewTask":
-            const newTaskId = await this.MeltyExtension.createNewTask(message.name);
+            const newTaskId = await this.MeltyExtension.createNewTask(
+              message.name
+            );
             this._view?.webview.postMessage({
               command: "taskCreated",
               taskId: newTaskId,

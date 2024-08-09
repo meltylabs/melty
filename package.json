@@ -46,6 +46,11 @@
           "type": "string",
           "default": "",
           "description": "API key for Anthropic Claude"
+        },
+        "melty.githubToken": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub token"
         }
       }
     }
@@ -90,6 +95,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
+    "@octokit/rest": "^21.0.1",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.7.3",
     "dotenv": "^16.4.5",

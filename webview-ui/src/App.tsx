@@ -6,6 +6,7 @@ import {
   FileIcon,
   RotateCcwIcon,
   PlusIcon,
+  GitPullRequestIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -101,14 +102,15 @@ function JouleComponent({
 
   const diffHtml =
     joule.pseudoCommit.impl.status === "committed" &&
-      joule.pseudoCommit.impl.udiffPreview
+    joule.pseudoCommit.impl.udiffPreview
       ? renderDiff2HTML(joule.pseudoCommit.impl.udiffPreview)
       : null;
 
   return (
     <div
-      className={`grid grid-cols-1 gap-12 mb-2 p-3 rounded ${joule.author === "human" ? "bg-gray-50 " : "bg-white"
-        }`}
+      className={`grid grid-cols-1 gap-12 mb-2 p-3 rounded ${
+        joule.author === "human" ? "bg-gray-50 " : "bg-white"
+      }`}
     >
       <div className="text-xs flex flex-col prose">
         <ReactMarkdown
@@ -202,6 +204,10 @@ function ConversationView() {
 
   function handleReset() {
     vscode.postMessage({ command: "resetTask", taskId: taskId });
+  }
+
+  function handleCreatePR() {
+    vscode.postMessage({ command: "createPR" });
   }
 
   useEffect(() => {
@@ -360,6 +366,16 @@ function ConversationView() {
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button> */}
+            <Button
+              name="createPR"
+              size="sm"
+              type="button"
+              onClick={handleCreatePR}
+              variant="outline"
+            >
+              <GitPullRequestIcon className="h-4 w-4 mr-2" />
+              Create PR
+            </Button>
             <Button name="ask" size="sm" type="submit" variant="outline">
               Ask{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
