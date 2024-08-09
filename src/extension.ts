@@ -228,19 +228,20 @@ export class MeltyExtension {
       }
 
       // Push the current branch to remote
-      await vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: "Pushing changes...",
-          cancellable: false,
-        },
-        async (progress) => {
-          await repository.push(repository.state.HEAD?.name, true);
-        }
-      );
-
-      // Push the current branch to remote
-      await repository.push(currentBranch);
+      // may want to try pushTo?
+      //   async pushTo(remote?: string, name?: string, setUpstream = false, forcePushMode?: ForcePushMode): Promise<void> {
+      // 	await this.run(Operation.Push, () => this._push(remote, name, setUpstream, undefined, forcePushMode));
+      // }
+      //   await vscode.window.withProgress(
+      //     {
+      //       location: vscode.ProgressLocation.Notification,
+      //       title: "Pushing changes...",
+      //       cancellable: false,
+      //     },
+      //     async (progress) => {
+      //       await repository.pushTo("origin", currentBranch, true);
+      //     }
+      //   );
 
       const token = vscode.workspace
         .getConfiguration()
@@ -248,8 +249,38 @@ export class MeltyExtension {
 
       // Create PR using GitHub API
       const octokit = new Octokit({ auth: token });
-      const [owner, repo] =
-        repository.state.remotes[0].fetchUrl?.split(":")[1].split("/") || [];
+      //   const [owner, repo] =
+      //     repository.state.remotes[0].fetchUrl?.split(":")[1].split("/") || [];
+
+      const owner = "cbh123";
+      const repo = "prompt";
+      // https://github.com/jacksondc/spectacular.git'
+      // get owner and repo from fetchUrl
+
+      try {
+        const { data: repoData } = await octokit.repos.get({ owner, repo });
+        console.log("Repository found:", repoData.full_name);
+      } catch (error) {
+        console.error("Error fetching repository:", error);
+        vscode.window.showErrorMessage(
+          `Failed to find repository: ${owner}/${repo}`
+        );
+        return;
+      }
+
+      try {
+        const { data: pulls } = await octokit.pulls.list({ owner, repo });
+        console.log(
+          "Existing pull requests:",
+          pulls.map((pr) => pr.number)
+        );
+      } catch (error) {
+        console.error("Error listing pull requests:", error);
+        vscode.window.showErrorMessage(
+          `Failed to list pull requests: ${(error as Error).message}`
+        );
+        return;
+      }
 
       const { data: pullRequest } = await octokit.pulls.create({
         owner,

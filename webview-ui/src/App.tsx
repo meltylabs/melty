@@ -293,6 +293,16 @@ function ConversationView() {
 
   return (
     <div className="p-4">
+      <Button
+        name="createPR"
+        size="sm"
+        type="button"
+        onClick={handleCreatePR}
+        variant="outline"
+      >
+        <GitPullRequestIcon className="h-4 w-4 mr-2" />
+        Create PR
+      </Button>
       <div className="mt-2 flex justify-between">
         {task && (
           <div className="p-2">
@@ -366,16 +376,7 @@ function ConversationView() {
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button> */}
-            <Button
-              name="createPR"
-              size="sm"
-              type="button"
-              onClick={handleCreatePR}
-              variant="outline"
-            >
-              <GitPullRequestIcon className="h-4 w-4 mr-2" />
-              Create PR
-            </Button>
+
             <Button name="ask" size="sm" type="submit" variant="outline">
               Ask{" "}
               <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
