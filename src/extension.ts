@@ -227,11 +227,11 @@ export class MeltyExtension {
         return;
       }
 
-      // Push the current branch to remote
-      // may want to try pushTo?
-      //   async pushTo(remote?: string, name?: string, setUpstream = false, forcePushMode?: ForcePushMode): Promise<void> {
-      // 	await this.run(Operation.Push, () => this._push(remote, name, setUpstream, undefined, forcePushMode));
-      // }
+      //   // Push the current branch to remote
+      //   // may want to try pushTo?
+      //   //   async pushTo(remote?: string, name?: string, setUpstream = false, forcePushMode?: ForcePushMode): Promise<void> {
+      //   // 	await this.run(Operation.Push, () => this._push(remote, name, setUpstream, undefined, forcePushMode));
+      //   // }
       //   await vscode.window.withProgress(
       //     {
       //       location: vscode.ProgressLocation.Notification,
@@ -239,23 +239,24 @@ export class MeltyExtension {
       //       cancellable: false,
       //     },
       //     async (progress) => {
-      //       await repository.pushTo("origin", currentBranch, true);
+      //       await repository.pushTo("origin", currentBranch);
       //     }
       //   );
 
-      const token = vscode.workspace
-        .getConfiguration()
-        .get("melty.githubToken");
+      //   const token = vscode.workspace
+      //     .getConfiguration()
+      //     .get("melty.githubToken");
+
+      const token =
+        "***REMOVED***";
 
       // Create PR using GitHub API
       const octokit = new Octokit({ auth: token });
       //   const [owner, repo] =
       //     repository.state.remotes[0].fetchUrl?.split(":")[1].split("/") || [];
 
-      const owner = "cbh123";
-      const repo = "prompt";
-      // https://github.com/jacksondc/spectacular.git'
-      // get owner and repo from fetchUrl
+      const owner = "jacksondc";
+      const repo = "spectacular";
 
       try {
         const { data: repoData } = await octokit.repos.get({ owner, repo });
@@ -282,6 +283,36 @@ export class MeltyExtension {
         return;
       }
 
+      // 1. Get the latest commit SHA
+      const latestCommit = await repository.getCommit("HEAD");
+      const commitSha = latestCommit.hash;
+
+      // 2. Get the current branch reference
+      const ref = `heads/${currentBranch}`;
+
+      try {
+        // 3. Create or update the remote branch
+        await octokit.git.createRef({
+          owner,
+          repo,
+          ref: `refs/${ref}`,
+          sha: commitSha,
+        });
+      } catch (error) {
+        if (this.isOctokitError(error) && error.status === 422) {
+          // If the branch already exists, update it
+          await octokit.git.updateRef({
+            owner,
+            repo,
+            ref,
+            sha: commitSha,
+            force: true,
+          });
+        } else {
+          throw error;
+        }
+      }
+
       const { data: pullRequest } = await octokit.pulls.create({
         owner,
         repo,
@@ -299,6 +330,10 @@ export class MeltyExtension {
         `Failed to create PR: ${(error as Error).message}`
       );
     }
+  }
+
+  private isOctokitError(error: unknown): error is { status: number } {
+    return typeof error === "object" && error !== null && "status" in error;
   }
 }
 
