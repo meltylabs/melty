@@ -17,6 +17,26 @@ module.exports = {
       },
     },
     extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            pre: {
+              margin: "0",
+              padding: "0",
+            },
+            code: {
+              backgroundColor: "transparent",
+              padding: "0",
+            },
+            "code::before": {
+              content: '""',
+            },
+            "code::after": {
+              content: '""',
+            },
+          },
+        },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

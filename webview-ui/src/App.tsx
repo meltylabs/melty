@@ -124,7 +124,7 @@ function JouleComponent({
             code({ node, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || "");
               return match ? (
-                <div className="relative p-0">
+                <div className="relative p-0 ">
                   {!isPartial && (
                     <CopyButton code={String(children).replace(/\n$/, "")} />
                   )}
@@ -412,9 +412,11 @@ function App() {
     <Router>
       <main className="p-4">
         <nav className="mb-12 flex justify-between">
-          <Button variant="ghost" size="sm">
-            <Link to="/">Home</Link>
-          </Button>
+          <Link to="/">
+            <Button variant="ghost" size="sm">
+              Home
+            </Button>
+          </Link>
         </nav>
 
         <Routes>
