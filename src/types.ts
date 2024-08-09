@@ -1,3 +1,12 @@
+// implemented by the Task class. this is the UI-facing one
+export interface Task {
+  id: string;
+  name: string;
+  branch: string;
+  conversation: Conversation;
+  gitRepo: GitRepo | null;
+}
+
 export type GitRepo = {
   repository: any;
   rootPath: string;

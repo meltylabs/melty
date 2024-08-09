@@ -22,6 +22,7 @@ import { convertChangesToXML } from "diff";
 
 interface Task {
   id: string;
+  name: string;
   branch: string;
   description: string;
 }
@@ -58,6 +59,9 @@ export function Tasks() {
         onClick={() => {
           vscode.postMessage({
             command: "createNewTask",
+            name: ["Zucchini", "Rutabega", "Tomato", "Cucumber", "Celery", "Lemon", "Artichoke"][
+              Math.floor(Math.random() * 7)
+            ],
           });
         }}
       >
@@ -70,10 +74,7 @@ export function Tasks() {
             <Card key={task.id}>
               <CardHeader>
                 <CardTitle>
-                  {new Date(task.id)
-                    .toISOString()
-                    .slice(0, 19)
-                    .replace("T", " ")}
+                  {task.name}
                 </CardTitle>
                 <CardDescription>{task.description}</CardDescription>
               </CardHeader>
@@ -84,6 +85,6 @@ export function Tasks() {
           </Link>
         ))}
       </div>
-    </div>
+    </div >
   );
 }

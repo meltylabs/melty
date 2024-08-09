@@ -1,6 +1,7 @@
 import { Task } from "./tasks";
 import * as fs from "fs";
 import * as path from "path";
+import * as utils from "../util/utils";
 
 export function loadTasksFromDisk(gitRepoRoot: string): Map<string, Task> {
     const meltyDir = path.join(gitRepoRoot, ".melty");
@@ -14,7 +15,7 @@ export function loadTasksFromDisk(gitRepoRoot: string): Map<string, Task> {
         // strip extension from file
         const taskId = path.parse(file).name;
         const taskData = JSON.parse(fs.readFileSync(path.join(meltyDir, file), "utf8"));
-        const task = Object.assign(new Task(taskId, taskId), taskData);
+        const task = Object.assign(new Task(taskId, "", ""), taskData);
 
         taskMap.set(task.id, task);
     }
@@ -33,11 +34,7 @@ export async function writeTaskToDisk(task: Task): Promise<void> {
     }
 
     // Create a copy of the task to modify for serialization
-    const serializableTask = { ...task };
-    if (serializableTask.gitRepo) {
-        // get rid of gitRepo.repository field
-        serializableTask.gitRepo = { ...serializableTask.gitRepo, repository: null };
-    }
+    const serializableTask = utils.serializableTask(task);
 
     const taskPath = path.join(meltyDir, `${task.id}.json`);
     fs.writeFileSync(taskPath, JSON.stringify(serializableTask, null, 2));

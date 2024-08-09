@@ -21,7 +21,7 @@ export class Architect implements Assistant {
         gitRepo: GitRepo,
         contextPaths: string[],
         mode: Mode,
-        processPartial: (partialJoule: Joule) => void
+        processPartial: (partialConversation: Conversation) => void
     ) {
         const currentPseudoCommit = conversations.lastJoule(conversation)!.pseudoCommit;
         const systemPrompt = prompts.architectModeSystemPrompt();
@@ -47,7 +47,8 @@ export class Architect implements Assistant {
                     partialJoule,
                     partialJoule.message + responseFragment
                 ) as JouleBot;
-                processPartial(partialJoule);
+                const partialConversation = conversations.addJoule(conversation, partialJoule);
+                processPartial(partialConversation);
             }
         );
         console.log(finalResponse);
