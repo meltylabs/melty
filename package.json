@@ -17,8 +17,8 @@
     "keybindings": [
       {
         "command": "melty.chatView.focus",
-        "key": "ctrl+k",
-        "mac": "cmd+k"
+        "key": "ctrl+m",
+        "mac": "cmd+m"
       }
     ],
     "viewsContainers": {

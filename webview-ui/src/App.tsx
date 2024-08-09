@@ -173,7 +173,7 @@ function ConversationView() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+      if ((event.metaKey || event.ctrlKey) && event.key === "m") {
         event.preventDefault();
         inputRef.current?.focus();
       }
@@ -320,7 +320,7 @@ function ConversationView() {
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Textarea
-              placeholder="Tell me what to do! (⌘K)"
+              placeholder="Tell me what to do! (⌘m)"
               id="message"
               autoFocus
               required
