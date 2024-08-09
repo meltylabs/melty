@@ -126,6 +126,10 @@ export class Task {
 
   /**
    * Responds to a bot message
+   *
+   * @param contextPaths - the paths to the files in the context of which to respond (melty's mind)
+   * @param mode - the mode of the assistant to use
+   * @param processPartial - a function to process the partial joule
    */
   public async respondBot(
     contextPaths: string[],
