@@ -6,6 +6,6 @@ export interface Assistant {
         gitRepo: GitRepo,
         contextPaths: string[],
         mode: Mode,
-        processPartial: (partialJoule: Joule) => void
+        processPartial: (partialConversation: Conversation) => void
     ): Promise<Conversation>;
 }

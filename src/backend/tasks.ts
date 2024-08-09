@@ -9,24 +9,27 @@ import { Coder } from "../assistants/coder";
 /**
  * A Task manages the interaction between a conversation and a git repository
  */
-export class Task {
+export class Task implements Task {
   id: string;
+  name: string;
   branch: string;
   conversation: Conversation;
   gitRepo: GitRepo | null;
 
-  constructor(id: string, branch: string) {
+  constructor(id: string, name: string, branch: string) {
     this.id = id;
+    this.name = name;
     this.branch = branch;
     this.conversation = conversations.create();
     this.gitRepo = null;
   }
 
   /**
-   * Initializes the git repo.
+   * Initializes the GitRepo's repository field. Note that if the GitRepo has only a rootPath,
+   * then we still need to run `git init` to create the repository.
    */
   public async init(): Promise<boolean> {
-    if (this.gitRepo) {
+    if (this.gitRepo && this.gitRepo.repository) {
       return true;
     }
 
@@ -46,6 +49,7 @@ export class Task {
     await repo.status();
 
     this.gitRepo = { repository: repo, rootPath: repo.rootUri.fsPath };
+    console.log(`Initialized task ${this.id}`);
     return true;
   }
 
@@ -134,7 +138,7 @@ export class Task {
   public async respondBot(
     contextPaths: string[],
     mode: Mode,
-    processPartial: (partialJoule: Joule) => void
+    processPartial: (partialConversation: Conversation) => void
   ): Promise<Joule> {
     try {
       await this.gitRepo!.repository.status();

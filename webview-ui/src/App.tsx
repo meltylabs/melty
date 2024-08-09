@@ -25,7 +25,7 @@ import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
 import { Tasks } from "./components/Tasks";
-import { Conversation, Joule } from "./types";
+import { Task, Joule } from "./types";
 import CopyButton from "./components/CopyButton";
 import {
   Collapsible,
@@ -42,7 +42,7 @@ type CommandType =
   | "setPartialResponse"
   | "listMeltyFiles"
   | "listWorkspaceFiles"
-  | "loadConversation"
+  | "loadTask"
   | "logHello"
   | "listTasks"
   | "taskCreated";
@@ -101,15 +101,14 @@ function JouleComponent({
 
   const diffHtml =
     joule.pseudoCommit.impl.status === "committed" &&
-    joule.pseudoCommit.impl.udiffPreview
+      joule.pseudoCommit.impl.udiffPreview
       ? renderDiff2HTML(joule.pseudoCommit.impl.udiffPreview)
       : null;
 
   return (
     <div
-      className={`grid grid-cols-1 gap-12 mb-2 p-3 rounded ${
-        joule.author === "human" ? "bg-gray-50 " : "bg-white"
-      }`}
+      className={`grid grid-cols-1 gap-12 mb-2 p-3 rounded ${joule.author === "human" ? "bg-gray-50 " : "bg-white"
+        }`}
     >
       <div className="text-xs flex flex-col prose">
         <ReactMarkdown
@@ -167,7 +166,7 @@ function ConversationView() {
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [task, setTask] = useState<Task | null>(null);
 
   function handleAddFile(file: string) {
     vscode.postMessage({ command: "addMeltyFile", filePath: file });
@@ -179,8 +178,8 @@ function ConversationView() {
     setPickerOpen(false);
   }
 
-  function loadConversation(taskId: string) {
-    vscode.postMessage({ command: "loadConversation", taskId });
+  function loadTask(taskId: string) {
+    vscode.postMessage({ command: "loadTask", taskId });
     vscode.postMessage({ command: "switchTask", taskId });
   }
 
@@ -223,7 +222,7 @@ function ConversationView() {
   useEffect(() => {
     loadFiles();
     if (taskId) {
-      loadConversation(taskId);
+      loadTask(taskId);
     }
 
     // Listen for messages from the extension
@@ -240,23 +239,15 @@ function ConversationView() {
           console.log("listWorkspaceFiles", message);
           setWorkspaceFiles(message.workspaceFilePaths);
           break;
-        case "loadConversation":
-          console.log("loadConversation", message);
-          setConversation(message.conversation);
+        case "loadTask":
+          console.log("loadTask", message);
+          setTask(message.task);
           break;
         case "setPartialResponse":
-          setConversation((prevConversation) => {
-            if (!prevConversation) return null;
-            const updatedJoules = [...prevConversation.joules];
-            if (
-              updatedJoules.length > 0 &&
-              updatedJoules[updatedJoules.length - 1].author === "bot"
-            ) {
-              updatedJoules[updatedJoules.length - 1] = message.joule;
-            } else {
-              updatedJoules.push(message.joule);
-            }
-            return { ...prevConversation, joules: updatedJoules };
+          setTask((prevTask: Task | null) => {
+            if (!prevTask) return null;
+            prevTask.conversation = message.conversation;
+            return prevTask;
           });
           break;
       }
@@ -297,11 +288,9 @@ function ConversationView() {
   return (
     <div className="p-4">
       <div className="mt-2 flex justify-between">
-        {taskId && (
+        {task && (
           <div className="p-2">
-            <p className="text-sm font-semibold">
-              {new Date(taskId).toISOString().slice(0, 19).replace("T", " ")}
-            </p>
+            <p className="text-sm font-semibold">{task.name}</p>
           </div>
         )}
         <FilePicker
@@ -338,12 +327,12 @@ function ConversationView() {
         </div>
       </div>
       <div className="mb-4 rounded p-2 mx-auto">
-        {conversation?.joules.map((joule, index) => (
+        {task?.conversation.joules.map((joule, index) => (
           <JouleComponent
             key={index}
             joule={joule}
             isPartial={
-              index === conversation.joules.length - 1 &&
+              index === task.conversation.joules.length - 1 &&
               joule.author === "bot" &&
               joule.pseudoCommit.impl.status !== "committed"
             }

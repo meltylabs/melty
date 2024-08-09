@@ -24,10 +24,9 @@ export class Coder implements Assistant {
     gitRepo: GitRepo,
     contextPaths: string[],
     mode: Mode,
-    processPartial: (partialJoule: Joule) => void
+    processPartial: (partialConversation: Conversation) => void
   ) {
-    const currentPseudoCommit =
-      conversations.lastJoule(conversation)!.pseudoCommit;
+    const currentPseudoCommit = conversations.lastJoule(conversation)!.pseudoCommit;
     // TODO 100: Add a loop here to try to correct the response if it's not good yet
 
     // TODO 300 (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
@@ -73,7 +72,7 @@ export class Coder implements Assistant {
           partialJoule,
           partialJoule.message + responseFragment
         ) as JouleBot;
-        processPartial(partialJoule);
+        processPartial(conversations.addJoule(conversation, partialJoule));
       }
     );
     console.log(finalResponse);
@@ -88,10 +87,10 @@ export class Coder implements Assistant {
     const newPseudoCommit =
       mode === "code"
         ? diffApplicatorXml.applySearchReplaceBlocks(
-            gitRepo,
-            pseudoCommitNoDiff,
-            searchReplaceList
-          )
+          gitRepo,
+          pseudoCommitNoDiff,
+          searchReplaceList
+        )
         : pseudoCommitNoDiff;
 
     const newJoule = joules.createJouleBot(
@@ -135,14 +134,14 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
 
     return fileEncodings.length
       ? [
-          {
-            role: "user",
-            content: `${prompts.filesUserIntro()}
+        {
+          role: "user",
+          content: `${prompts.filesUserIntro()}
 
 ${fileEncodings}`,
-          },
-          { role: "assistant", content: prompts.filesAsstAck() },
-        ]
+        },
+        { role: "assistant", content: prompts.filesAsstAck() },
+      ]
       : [];
   }
 

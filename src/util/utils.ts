@@ -3,6 +3,17 @@ import * as vscode from "vscode";
 import * as config from "./config";
 import * as path from "path";
 import { GitRepo } from "../types";
+import { Task } from "../backend/tasks";
+
+export function serializableTask(task: Task) {
+    return {
+        ...task,
+        gitRepo: {
+            ...task.gitRepo,
+            repository: null
+        },
+    };
+}
 
 /**
  * Get all the file paths in the workspace. Get their paths relative to the root of a git repo

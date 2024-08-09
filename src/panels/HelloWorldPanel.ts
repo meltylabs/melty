@@ -12,8 +12,9 @@ import {
 } from "vscode";
 import * as vscode from "vscode";
 import { getUri, getNonce } from "../util/utils";
-import { Joule } from "../types";
+import { Conversation } from "../types";
 import { MeltyExtension } from "../extension";
+import * as utils from "../util/utils";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -131,15 +132,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
             // Code that should run in response to the hello message command
             window.showInformationMessage(message.text);
             return;
-          case "loadConversation":
-            console.log(`loadConversation`);
+          case "loadTask":
+            console.log(`loadTask`);
             let taskId = message.taskId;
             const task = this.MeltyExtension.getTask(taskId);
-            const conversation =
-              this.MeltyExtension.getConversation(taskId);
             this._view?.webview.postMessage({
-              command: "loadConversation",
-              conversation: conversation,
+              command: "loadTask",
+              task: utils.serializableTask(task),
             });
             return;
           case "listMeltyFiles":
@@ -226,7 +225,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
             return;
 
           case "createNewTask":
-            const newTaskId = await this.MeltyExtension.createNewTask();
+            const newTaskId = await this.MeltyExtension.createNewTask(message.name);
             this._view?.webview.postMessage({
               command: "taskCreated",
               taskId: newTaskId,
@@ -245,6 +244,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
             await this.MeltyExtension.switchToTask(message.taskId);
             const newTask = await this.MeltyExtension.getCurrentTask();
             console.log(`switched to ${newTask.id}`);
+
+            // kick this off (todo: make sure it completes in time?)
+            newTask.init();
             // this._panel.webview.postMessage({
             //   command: "taskSwitched",
             //   taskId: message.taskId,
@@ -264,15 +266,18 @@ export class HelloWorldPanel implements WebviewViewProvider {
     // human response
     await task.respondHuman(text);
     this._view?.webview.postMessage({
-      command: "loadConversation",
-      conversation: task.conversation,
+      command: "loadTask",
+      task: utils.serializableTask(task),
     });
 
     // bot response
-    const processPartial = (partialJoule: Joule) => {
+    const processPartial = (partialConversation: Conversation) => {
+      // copy task
+      const partialTask = { ...task };
+      partialTask.conversation = partialConversation;
       this._view?.webview.postMessage({
-        command: "setPartialResponse",
-        joule: partialJoule,
+        command: "loadTask",
+        task: utils.serializableTask(partialTask as Task),
       });
     };
 
@@ -283,8 +288,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
     );
     // Send the response back to the webview
     this._view?.webview.postMessage({
-      command: "loadConversation",
-      conversation: task.conversation,
+      command: "loadTask",
+      task: utils.serializableTask(task),
     });
   }
 

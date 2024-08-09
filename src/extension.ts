@@ -5,6 +5,7 @@ import { Conversation } from "./types";
 import { Task } from "./backend/tasks";
 import * as datastores from "./backend/datastores";
 import * as utils from "./util/utils";
+import { v4 as uuidv4 } from "uuid";
 
 export class MeltyExtension {
   private outputChannel: vscode.OutputChannel;
@@ -32,7 +33,7 @@ export class MeltyExtension {
 
     // create a new task if there aren't any
     if (!this.tasks.size) {
-      const taskId = await this.createNewTask();
+      const taskId = await this.createNewTask("First task");
       this.currentTask = (this.tasks as Map<string, Task>).get(taskId);
     }
 
@@ -71,13 +72,7 @@ export class MeltyExtension {
   }
 
   public listTasks(): { id: string; branch: string }[] {
-    // don't include the git repo in the task object
-    return Array.from(this.tasks.values()).map((task) => {
-      return {
-        id: task.id,
-        branch: task.branch,
-      };
-    });
+    return Array.from(this.tasks.values()).map(utils.serializableTask);
   }
 
   private async initializeWorkspaceFilePaths(task: Task): Promise<boolean> {
@@ -125,15 +120,12 @@ export class MeltyExtension {
     return task;
   }
 
-  public async createNewTask(): Promise<string> {
-    const taskId = `task_${new Date()}`;
-    // const taskName = `${new Date().toLocaleString()}`
-    // const branchName = `task/${taskName.replace(/\s+/g, "-")}`;
+  public async createNewTask(name: string): Promise<string> {
+    const taskId = uuidv4();
+    const taskName = `${new Date().toLocaleString()}`
+    const branchName = `melty/${taskName.replace(/\s+/g, "-")}`;
 
-    const newTask = new Task(taskId, "",);
-
-    // kick off async (TODO see if this works)
-    newTask.init();
+    const newTask = new Task(taskId, name, branchName);
 
     this.tasks.set(taskId, newTask);
     this.currentTask = newTask;
