@@ -1,21 +1,11 @@
-import {
-    Joule,
-    JouleBot,
-    Mode,
-    ClaudeConversation,
-    ClaudeMessage,
-    Conversation,
-    GitRepo,
-    PseudoCommit,
-} from "../types";
+import { Conversation, GitRepo, Mode, ClaudeConversation, JouleBot } from "../types";
 import * as joules from "../backend/joules";
 import * as prompts from "../backend/prompts";
 import * as claudeAPI from "../backend/claudeAPI";
-import * as pseudoCommits from "../backend/pseudoCommits";
-import { Assistant } from "./assistant";
 import * as conversations from "../backend/conversations";
+import { BaseAssistant } from "./baseAssistant";
 
-export class Architect implements Assistant {
+export class Architect extends BaseAssistant {
     async respond(
         conversation: Conversation,
         gitRepo: GitRepo,
@@ -34,85 +24,17 @@ export class Architect implements Assistant {
             ]
         };
 
-        let partialJoule = joules.createJouleBot(
-            "",
-            mode,
-            currentPseudoCommit,
-            contextPaths
-        );
+        let partialJoule = joules.createJouleBot("", mode, currentPseudoCommit, contextPaths);
         const finalResponse = await claudeAPI.streamClaude(
             claudeConversation,
             (responseFragment: string) => {
-                partialJoule = joules.updateMessage(
-                    partialJoule,
-                    partialJoule.message + responseFragment
-                ) as JouleBot;
+                partialJoule = joules.updateMessage(partialJoule, partialJoule.message + responseFragment) as JouleBot;
                 const partialConversation = conversations.addJoule(conversation, partialJoule);
                 processPartial(partialConversation);
             }
         );
-        console.log(finalResponse);
 
-        const newJoule = joules.createJouleBot(
-            finalResponse,
-            mode,
-            currentPseudoCommit,
-            contextPaths
-        );
-        const newConversation = conversations.addJoule(conversation, newJoule);
-        return newConversation;
-    }
-
-    // copied from Coder
-    private encodeMessages(conversation: Conversation): ClaudeMessage[] {
-        return conversation.joules.map((joule: Joule) => {
-            return {
-                role: joule.author === "human" ? "user" : "assistant",
-                content: joule.message.length ? joule.message : "...", // appease Claude, who demands all messages be non-empty
-            };
-        });
-    }
-
-    // copied from Coder
-    /**
- * Encodes files for Claude. Note that we're being loose with the newlines.
- * @returns string encoding the files
- */
-    private encodeFile(
-        gitRepo: GitRepo,
-        pseudoCommit: PseudoCommit,
-        path: string
-    ) {
-        const fileContents = pseudoCommits.getFileContents(
-            gitRepo,
-            pseudoCommit,
-            path
-        );
-        return `${path}
-\`\`\`
-${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
-    }
-
-    private encodeContext(
-        gitRepo: GitRepo,
-        pseudoCommit: PseudoCommit,
-        contextPaths: string[]
-    ): ClaudeMessage[] {
-        // in the future, this could handle other types of context, like web urls
-        const fileEncodings = contextPaths
-            .map((path) => this.encodeFile(gitRepo, pseudoCommit, path))
-            .join("\n");
-
-        return fileEncodings.length
-            ? [
-                {
-                    role: "user",
-                    content: `${prompts.filesUserIntro()}
-
-${fileEncodings}`,
-                },
-                { role: "assistant", content: prompts.filesAsstAck() },
-            ]
-            : [];
+        const newJoule = joules.createJouleBot(finalResponse, mode, currentPseudoCommit, contextPaths);
+        return conversations.addJoule(conversation, newJoule);
     }
 }
