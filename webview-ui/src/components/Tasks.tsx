@@ -57,6 +57,9 @@ export function Tasks() {
     <div>
       <Button
         onClick={() => {
+          // if we're not on the main branch, ask user to confirm
+          // TODO: implement this
+
           vscode.postMessage({
             command: "createNewTask",
             name: ["Zucchini", "Rutabega", "Tomato", "Cucumber", "Celery", "Lemon", "Artichoke"][
