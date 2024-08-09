@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { vscode } from "./utilities/vscode";
-import { ChevronsUpDown, XIcon, FileIcon, RotateCcwIcon } from "lucide-react";
+import {
+  ChevronsUpDown,
+  XIcon,
+  FileIcon,
+  RotateCcwIcon,
+  PlusIcon,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
   BrowserRouter as Router,
@@ -20,12 +26,15 @@ import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
 import { Tasks } from "./components/Tasks";
 import { Conversation, Joule } from "./types";
+import CopyButton from "./components/CopyButton";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./components/ui/collapsible";
 import "./App.css";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 // todo: move to a types file
 type CommandType =
@@ -98,16 +107,41 @@ function JouleComponent({
 
   return (
     <div
-      className={`grid grid-cols-2 gap-12 mb-2 p-3 rounded ${
+      className={`grid grid-cols-1 gap-12 mb-2 p-3 rounded ${
         joule.author === "human" ? "bg-gray-50 " : "bg-white"
       }`}
     >
       <div className="text-xs flex flex-col prose">
-        <ReactMarkdown>{joule.message}</ReactMarkdown>
+        <ReactMarkdown
+          components={{
+            code({ node, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || "");
+              return match ? (
+                <div className="relative p-0 ">
+                  {!isPartial && (
+                    <CopyButton code={String(children).replace(/\n$/, "")} />
+                  )}
+                  <SyntaxHighlighter
+                    language={match[1]}
+                    style={vscDarkPlus}
+                    PreTag="div"
+                    children={String(children).replace(/\n$/, "")}
+                  />
+                </div>
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            },
+          }}
+        >
+          {joule.message}
+        </ReactMarkdown>
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
-      <div>
+      {/* <div>
         {diffHtml && !isPartial && (
           <Collapsible>
             <div className="flex items-center justify-end space-x-4 px-4">
@@ -122,7 +156,7 @@ function JouleComponent({
             <CollapsibleContent>{diffHtml}</CollapsibleContent>
           </Collapsible>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -173,7 +207,7 @@ function ConversationView() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+      if ((event.metaKey || event.ctrlKey) && event.key === "m") {
         event.preventDefault();
         inputRef.current?.focus();
       }
@@ -262,72 +296,14 @@ function ConversationView() {
 
   return (
     <div className="p-4">
-      {taskId && (
-        <div className="mb-4 p-2 bg-gray-100 rounded">
-          <p className="text-sm font-semibold">Current Task ID: {taskId}</p>
-        </div>
-      )}
-      <div className="mb-4 rounded p-2 mx-auto">
-        {conversation?.joules.map((joule, index) => (
-          <JouleComponent
-            key={index}
-            joule={joule}
-            isPartial={
-              index === conversation.joules.length - 1 &&
-              joule.author === "bot" &&
-              joule.pseudoCommit.impl.status !== "committed"
-            }
-          />
-        ))}
-      </div>
-      <div className="">
-        <form onSubmit={handleSubmit}>
-          <div className="mt-4 flex">
-            <Textarea
-              placeholder="Tell me what to do! (⌘K)"
-              id="message"
-              autoFocus
-              required
-              ref={inputRef}
-              onKeyDown={handleKeyDown}
-            />
+      <div className="mt-2 flex justify-between">
+        {taskId && (
+          <div className="p-2">
+            <p className="text-sm font-semibold">
+              {new Date(taskId).toISOString().slice(0, 19).replace("T", " ")}
+            </p>
           </div>
-          <div className="flex justify-end space-x-2 mt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={handleReset}
-            >
-              <RotateCcwIcon className="h-3 w-3" />
-            </Button>
-            <Button name="ask" variant="outline" size="sm" type="submit">
-              Ask{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
-                <span className="text-xs">↵</span>
-              </kbd>
-            </Button>
-            <Button
-              name="code"
-              size="sm"
-              type="button"
-              onClick={() => {
-                const message = inputRef.current?.value || "";
-                handleSendMessage("code", message);
-                if (inputRef.current) inputRef.current.value = "";
-              }}
-            >
-              Code{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
-                <span className="text-xs">⌘</span>
-                <span className="text-xs">↵</span>
-              </kbd>
-            </Button>
-          </div>
-        </form>
-      </div>
-
-      <div className="mt-6">
+        )}
         <FilePicker
           open={pickerOpen}
           setOpen={setPickerOpen}
@@ -361,6 +337,65 @@ function ConversationView() {
           ))}
         </div>
       </div>
+      <div className="mb-4 rounded p-2 mx-auto">
+        {conversation?.joules.map((joule, index) => (
+          <JouleComponent
+            key={index}
+            joule={joule}
+            isPartial={
+              index === conversation.joules.length - 1 &&
+              joule.author === "bot" &&
+              joule.pseudoCommit.impl.status !== "committed"
+            }
+          />
+        ))}
+      </div>
+      <div className="">
+        <form onSubmit={handleSubmit}>
+          <div className="mt-4 flex">
+            <Textarea
+              placeholder="Tell me what to do! (⌘m)"
+              id="message"
+              autoFocus
+              required
+              ref={inputRef}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+          <div className="flex justify-end space-x-2 mt-2">
+            {/* <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              onClick={handleReset}
+            >
+              <RotateCcwIcon className="h-3 w-3" />
+            </Button> */}
+            <Button name="ask" size="sm" type="submit" variant="outline">
+              Ask{" "}
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
+                <span className="text-xs">↵</span>
+              </kbd>
+            </Button>
+            <Button
+              name="code"
+              size="sm"
+              type="button"
+              onClick={() => {
+                const message = inputRef.current?.value || "";
+                handleSendMessage("code", message);
+                if (inputRef.current) inputRef.current.value = "";
+              }}
+            >
+              Code{" "}
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
+                <span className="text-xs">⌘</span>
+                <span className="text-xs">↵</span>
+              </kbd>
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -369,8 +404,12 @@ function App() {
   return (
     <Router>
       <main className="p-4">
-        <nav className="mb-4">
-          <Link to="/">Tasks</Link>
+        <nav className="mb-12 flex justify-between">
+          <Link to="/">
+            <Button variant="ghost" size="sm">
+              Home
+            </Button>
+          </Link>
         </nav>
 
         <Routes>

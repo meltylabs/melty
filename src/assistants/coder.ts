@@ -7,16 +7,16 @@ import {
     PseudoCommit,
     Conversation,
     GitRepo,
-} from "../../types";
-import * as pseudoCommits from "../pseudoCommits";
-import * as joules from "../joules";
-import * as prompts from "../prompts";
-import * as claudeAPI from "../claudeAPI";
-import * as diffApplicatorXml from "../diffApplicatorXml";
-import { RepoMapSpec } from "../repoMapSpec";
-import * as utils from "../../util/utils";
+} from "../types";
+import * as pseudoCommits from "../backend/pseudoCommits";
+import * as joules from "../backend/joules";
+import * as prompts from "../backend/prompts";
+import * as claudeAPI from "../backend/claudeAPI";
+import * as diffApplicatorXml from "../backend/diffApplicatorXml";
+import { RepoMapSpec } from "../backend/repoMapSpec";
+import * as utils from "../util/utils";
 import { Assistant } from "./assistant";
-import * as conversations from "../conversations";
+import * as conversations from "../backend/conversations";
 
 export class Coder implements Assistant {
     async respond(
@@ -130,7 +130,7 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
     ): ClaudeMessage[] {
         // in the future, this could handle other types of context, like web urls
         const fileEncodings = contextPaths
-            .map((path) => encodeFile(gitRepo, pseudoCommit, path))
+            .map((path) => this.encodeFile(gitRepo, pseudoCommit, path))
             .join("\n");
 
         return fileEncodings.length
@@ -167,7 +167,7 @@ ${fileEncodings}`,
     }
 
     private encodeMessages(conversation: Conversation): ClaudeMessage[] {
-        return conversation.joules.map((joule) => {
+        return conversation.joules.map((joule: Joule) => {
             return {
                 role: joule.author === "human" ? "user" : "assistant",
                 content: joule.message.length ? joule.message : "...", // appease Claude, who demands all messages be non-empty

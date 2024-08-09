@@ -58,20 +58,24 @@ export function Tasks() {
         onClick={() => {
           vscode.postMessage({
             command: "createNewTask",
-            taskName: "New Task",
           });
         }}
       >
-        Start new task
+        + New task
       </Button>
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
-        {tasks.map((task) => (
+        {tasks.reverse().map((task) => (
           <Link to={`/task/${task.id}`} className="mr-4">
             <Card key={task.id}>
               <CardHeader>
-                <CardTitle>{task.branch}</CardTitle>
-                <CardDescription>{task.description} </CardDescription>
+                <CardTitle>
+                  {new Date(task.id)
+                    .toISOString()
+                    .slice(0, 19)
+                    .replace("T", " ")}
+                </CardTitle>
+                <CardDescription>{task.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <p>{task.description}</p>
