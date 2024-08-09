@@ -120,12 +120,11 @@ export class MeltyExtension {
     return task;
   }
 
-  public async createNewTask(name: string): Promise<string> {
+  public async createNewTask(taskName: string): Promise<string> {
     const taskId = uuidv4();
-    const taskName = `${new Date().toLocaleString()}`;
     const branchName = `melty/${taskName.replace(/\s+/g, "-")}`;
 
-    const newTask = new Task(taskId, name, branchName);
+    const newTask = new Task(taskId, taskName, branchName);
 
     this.tasks.set(taskId, newTask);
     this.currentTask = newTask;

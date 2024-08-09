@@ -62,12 +62,12 @@ export class Task implements Task {
     if (!utils.repoIsClean(this.gitRepo!.repository)) {
       utils.error("Working directory is not clean. Cannot proceed activating task.");
     } else {
-      const branch = await this.gitRepo!.repository.getBranch(this.branch);
-      if (!branch) {
-        await this.gitRepo!.repository.createBranch(this.branch, true);
-      } else {
-        await this.gitRepo!.repository.checkout(this.branch);
-      }
+      // const branch = await this.gitRepo!.repository.getBranch(this.branch);
+      // if (!branch) {
+      await this.gitRepo!.repository.createBranch(this.branch, true);
+      // } else {
+      //   await this.gitRepo!.repository.checkout(this.branch);
+      // }
     }
   }
 
