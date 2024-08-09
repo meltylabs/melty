@@ -3,9 +3,11 @@ import { Joule, Mode, Conversation, PseudoCommit, GitRepo } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as pseudoCommits from "./pseudoCommits";
-import * as utils from "./utils/utils";
+import * as utils from "../util/utils";
 import { Architect } from "../assistants/architect";
 import { Coder } from "../assistants/coder";
+import * as config from "../util/config";
+
 /**
  * A Task manages the interaction between a conversation and a git repository
  */
@@ -53,6 +55,17 @@ export class Task implements Task {
     return true;
   }
 
+  public async switchTo(): Promise<void> {
+    await this.init();
+    await this.gitRepo!.repository.status();
+
+    if (!utils.repoIsClean(this.gitRepo!.repository)) {
+      utils.error("Working directory is not clean. Cannot proceed activating task.");
+    } else {
+      await this.gitRepo!.repository.checkout(this.branch, this.gitRepo!);
+    }
+  }
+
   private getConversationState(): PseudoCommit | undefined {
     return conversations.lastJoule(this.conversation)?.pseudoCommit;
   }
@@ -69,22 +82,22 @@ export class Task implements Task {
    * on disk. Allows for local changes.
    */
   private ensureInSync(): void {
-    // const conversationState = this.getConversationState();
-    // if (!conversationState) {
-    //   return; // if the conversation is empty, we're in sync
-    // }
-    // const conversationTailCommit = pseudoCommits.commit(conversationState);
-    // const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    // if (latestCommit !== conversationTailCommit) {
-    //   throw new Error(
-    //     `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
-    //   );
-    // }
+    const conversationState = this.getConversationState();
+    if (!conversationState) {
+      return; // if the conversation is empty, we're in sync
+    }
+    const conversationTailCommit = pseudoCommits.commit(conversationState);
+    const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
+    if (latestCommit !== conversationTailCommit) {
+      utils.error(
+        `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
+      );
+    }
   }
 
   private ensureWorkingDirectoryClean(): void {
     if (!utils.repoIsClean(this.gitRepo!.repository)) {
-      throw new Error(`Working directory is not clean:
+      utils.error(`Working directory is not clean:
                 ${this.gitRepo!.repository.state.workingTreeChanges.length}
                 ${this.gitRepo!.repository.state.indexChanges.length}
                 ${this.gitRepo!.repository.state.mergeChanges.length}`);
@@ -142,8 +155,8 @@ export class Task implements Task {
   ): Promise<Joule> {
     try {
       await this.gitRepo!.repository.status();
-      // this.ensureInSync();
-      // this.ensureWorkingDirectoryClean();
+      this.ensureInSync();
+      this.ensureWorkingDirectoryClean();
 
       let assistant;
       switch (mode) {
