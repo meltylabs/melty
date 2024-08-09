@@ -3,6 +3,13 @@ import * as prompts from "../backend/prompts";
 import * as pseudoCommits from "../backend/pseudoCommits";
 
 export abstract class BaseAssistant {
+    abstract respond(
+        conversation: Conversation,
+        gitRepo: GitRepo,
+        contextPaths: string[],
+        mode: Mode,
+        processPartial: (partialConversation: Conversation) => void
+    ): Promise<Conversation>;
     protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
         return conversation.joules.map((joule) => ({
             role: joule.author === "human" ? "user" : "assistant",
@@ -10,12 +17,31 @@ export abstract class BaseAssistant {
         }));
     }
 
-    protected encodeFile(gitRepo: GitRepo, pseudoCommit: PseudoCommit, path: string): string {
-        const fileContents = pseudoCommits.getFileContents(gitRepo, pseudoCommit, path);
-        return `${path}\n\`\`\`\n${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
+    /**
+     * Encodes files for Claude. Note that we're being loose with the newlines.
+     * @returns string encoding the files
+     */
+    protected encodeFile(
+        gitRepo: GitRepo,
+        pseudoCommit: PseudoCommit,
+        path: string
+    ) {
+        const fileContents = pseudoCommits.getFileContents(
+            gitRepo,
+            pseudoCommit,
+            path
+        );
+        return `${path}
+\`\`\`
+${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
     }
 
-    protected encodeContext(gitRepo: GitRepo, pseudoCommit: PseudoCommit, contextPaths: string[]): ClaudeMessage[] {
+    protected encodeContext(
+        gitRepo: GitRepo,
+        pseudoCommit: PseudoCommit,
+        contextPaths: string[]
+    ): ClaudeMessage[] {
+        // in the future, this could handle other types of context, like web urls
         const fileEncodings = contextPaths
             .map((path) => this.encodeFile(gitRepo, pseudoCommit, path))
             .join("\n");
@@ -24,18 +50,11 @@ export abstract class BaseAssistant {
             ? [
                 {
                     role: "user",
-                    content: `${prompts.filesUserIntro()}\n\n${fileEncodings}`,
+                    content: `${prompts.filesUserIntro()}
+${fileEncodings}`,
                 },
                 { role: "assistant", content: prompts.filesAsstAck() },
             ]
             : [];
     }
-
-    abstract respond(
-        conversation: Conversation,
-        gitRepo: GitRepo,
-        contextPaths: string[],
-        mode: Mode,
-        processPartial: (partialConversation: Conversation) => void
-    ): Promise<Conversation>;
 }
