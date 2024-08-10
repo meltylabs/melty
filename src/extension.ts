@@ -353,6 +353,7 @@ export class MeltyExtension {
         vscode.window.showInformationMessage(
           `Pull request created: ${pullRequest.html_url}`
         );
+        vscode.env.openExternal(vscode.Uri.parse(pullRequest.html_url));
       } catch (error) {
         console.error(
           "Error creating pull request:",
