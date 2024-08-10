@@ -47,6 +47,7 @@ export type JouleBot = {
   readonly id: string;
   readonly mode: Mode;
   readonly message: string;
+  readonly rawOutput: string;
   readonly pseudoCommit: PseudoCommit;
   readonly contextPaths: ReadonlyArray<string>;
 };

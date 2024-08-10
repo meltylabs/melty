@@ -97,10 +97,17 @@ function nextSection(currentSection: Section, nextSection: Section): Section {
     return nextSection;
 }
 
-export function splitResponse(content: string): { searchReplaceList: SearchReplace[], messageChunksList: string[] } {
+/**
+ * Splits the response into search/replace blocks and message chunks.
+ * 
+ * @param content The content to split
+ * @param partialMode In partial mode, we expect a partial response, so we're more lenient in parsing
+ * @returns The search/replace blocks and message chunks
+ */
+export function splitResponse(content: string, partialMode: boolean): { searchReplaceList: SearchReplace[], messageChunksList: string[] } {
     const searchReplaceList: SearchReplace[] = [];
     const messageChunksList: string[] = [""];
-    let currentFile: string | undefined;
+    let currentFile: string | null | undefined;
     let currentSearch: string[] = [];
     let currentReplace: string[] = [];
     let currentSection: Section = "topLevel";
@@ -112,7 +119,15 @@ export function splitResponse(content: string): { searchReplaceList: SearchRepla
             case "ccOpen":
                 messageChunksList.push("");
 
-                currentFile = extractFileName(line);
+                try {
+                    currentFile = extractFileName(line);
+                } catch (e) {
+                    if (partialMode) {
+                        currentFile = null;
+                    } else {
+                        throw e;
+                    }
+                }
                 currentSection = nextSection(currentSection, "codeChange");
                 break;
             case "srOpen":
@@ -122,7 +137,13 @@ export function splitResponse(content: string): { searchReplaceList: SearchRepla
                 currentSection = nextSection(currentSection, "replace");
                 break;
             case "srClose":
-                messageChunksList.push(`[Writing code for ${currentFile}...]\n`);
+                if (currentFile) {
+                    messageChunksList.push(`[Writing code for ${currentFile}...]\n`);
+                } else if (partialMode && currentFile === null) {
+                    messageChunksList.push("[Writing code for");
+                } else {
+                    throw new Error(`Unexpected file name ${currentFile}`);
+                }
                 messageChunksList.push("");
                 searchReplaceList.push(searchReplaces.create(currentFile!,
                     currentSearch.join("\n") + "\n", // match whole lines only
@@ -137,11 +158,11 @@ export function splitResponse(content: string): { searchReplaceList: SearchRepla
                 currentSection = nextSection(currentSection, "topLevel");
                 break;
             case "other":
-                if(currentSection === "search") {
+                if (currentSection === "search") {
                     currentSearch.push(line);
                 } else if (currentSection === "replace") {
                     currentReplace.push(line);
-                } else if(currentSection === "topLevel") {
+                } else if (currentSection === "topLevel") {
                     messageChunksList[messageChunksList.length - 1] += line + "\n";
                 } else {
                     // otherwise, it's in CodeChange but not in search/replace

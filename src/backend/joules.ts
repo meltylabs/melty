@@ -15,12 +15,13 @@ export function createJouleHuman(
 
 export function createJouleBot(
   message: string,
+  rawOutput: string,
   mode: Mode,
   pseudoCommit: PseudoCommit,
   contextPaths: string[],
 ): JouleBot {
   const id = uuidv4();
-  return { message, author: "bot", mode: mode, pseudoCommit, contextPaths, id };
+  return { message, rawOutput: string, author: "bot", mode: mode, pseudoCommit, contextPaths, id };
 }
 
 export function updateMessage(joule: Joule, message: string): Joule {
@@ -29,4 +30,15 @@ export function updateMessage(joule: Joule, message: string): Joule {
 
 export async function diff(joule: Joule, repository: any): Promise<string> {
   return await pseudoCommits.diff(joule.pseudoCommit, repository);
+}
+
+export function formatMessageForClaude(joule: Joule): string {
+  // note that if we show a processed message, we'll need to use `message.length ? message : "..."`
+  // to ensure no Anthropic API errors
+  switch (joule.author) {
+    case "human":
+      return joule.message;
+    case "bot":
+      return joule.rawOutput;
+  }
 }
