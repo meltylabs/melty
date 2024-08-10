@@ -41,9 +41,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     this.MeltyExtension = MeltyExtension;
   }
 
-  public resolveWebviewView(
-    webviewView: WebviewView
-  ) {
+  public resolveWebviewView(webviewView: WebviewView) {
     console.log("Resolving WebviewView for ChatView");
     this._view = webviewView;
 
@@ -122,23 +120,39 @@ export class HelloWorldPanel implements WebviewViewProvider {
    * @param context A reference to the extension context
    */
   private _setWebviewMessageListener(webview: Webview) {
-    webview.onDidReceiveMessage(message => {
-      if (message.type === 'rpc') {
+    webview.onDidReceiveMessage((message) => {
+      if (message.type === "rpc") {
         this.handleRPCCall(message.method, message.params)
-          .then(result => {
-            console.log(`[HelloWorldPanel] sending RPC response for ${message.id} with result ${result}`);
-            webview.postMessage({ type: 'rpcResponse', id: message.id, result });
+          .then((result) => {
+            console.log(
+              `[HelloWorldPanel] sending RPC response for ${message.id} with result ${result}`
+            );
+            webview.postMessage({
+              type: "rpcResponse",
+              id: message.id,
+              result,
+            });
           })
-          .catch(error => {
-            console.log(`[HelloWorldPanel] sending RPCresponse for ${message.id} with error ${error.message}`);
-            webview.postMessage({ type: 'rpcResponse', id: message.id, error: error.message });
+          .catch((error) => {
+            console.log(
+              `[HelloWorldPanel] sending RPCresponse for ${message.id} with error ${error.message}`
+            );
+            webview.postMessage({
+              type: "rpcResponse",
+              id: message.id,
+              error: error.message,
+            });
           });
       }
     });
   }
 
   private async handleRPCCall(method: string, params: any): Promise<any> {
-    console.log(`[HelloWorldPanel] RPC call for ${method} with params ${JSON.stringify(params)}`);
+    console.log(
+      `[HelloWorldPanel] RPC call for ${method} with params ${JSON.stringify(
+        params
+      )}`
+    );
     switch (method) {
       case "loadTask":
         console.log(`loadTask`);
@@ -146,8 +160,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
         const task = this.MeltyExtension.getTask(taskId);
         return Promise.resolve(utils.serializableTask(task));
       case "listMeltyFiles":
-        const meltyMindFilePaths =
-          this.MeltyExtension.getMeltyMindFilePaths();
+        const meltyMindFilePaths = this.MeltyExtension.getMeltyMindFilePaths();
         return Promise.resolve(meltyMindFilePaths);
       case "listWorkspaceFiles":
         const workspaceFilePaths =
@@ -177,7 +190,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
         vscode.window.showInformationMessage(
           `Removed ${params.filePath} from Melty's Mind`
         );
-        const meltyMindFilePaths3 = this.MeltyExtension.getMeltyMindFilePaths()
+        const meltyMindFilePaths3 = this.MeltyExtension.getMeltyMindFilePaths();
         return Promise.resolve(meltyMindFilePaths3);
       case "undo":
         // todo update implementation
@@ -243,11 +256,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
       });
     };
 
-    await task.respondBot(
-      meltyMindFilePaths,
-      mode,
-      processPartial
-    );
+    await task.respondBot(meltyMindFilePaths, mode, processPartial);
     this._view?.webview.postMessage({
       type: "notification",
       notificationType: "updateTask",
