@@ -219,7 +219,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
         throw new Error("Not implemented");
         return;
       case "chatMessage":
-        await this.handleAskCode(params.text, params.mode);
+        this.handleAskCode(params.text, params.mode);
         return Promise.resolve(null);
       case "createNewTask":
         const newTaskId = await this.MeltyExtension.createNewTask(params.name);
@@ -247,9 +247,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
     // human response
     await task.respondHuman(text);
-    this._view?.webview.postMessage({
-      type: "notification",
-      notificationType: "updateTask",
+    this.sendNotificationToWebview("updateTask", {
       task: utils.serializableTask(task),
     });
 
@@ -258,17 +256,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
       // copy task
       const partialTask = { ...task } as Task;
       partialTask.conversation = partialConversation;
-      this._view?.webview.postMessage({
-        type: "notification",
-        notificationType: "setPartialResponse",
+      this.sendNotificationToWebview("updateTask", {
         task: utils.serializableTask(partialTask),
       });
     };
 
     await task.respondBot(meltyMindFilePaths, mode, processPartial);
-    this._view?.webview.postMessage({
-      type: "notification",
-      notificationType: "updateTask",
+    this.sendNotificationToWebview("updateTask", {
       task: utils.serializableTask(task),
     });
   }
@@ -304,5 +298,16 @@ export class HelloWorldPanel implements WebviewViewProvider {
     } else {
       vscode.window.showInformationMessage("No active terminal");
     }
+  }
+
+  private sendNotificationToWebview(notificationType: string, params: any) {
+    console.log(
+      `[HelloWorldPanel] sending notification to webview: ${notificationType}`
+    );
+    this._view?.webview.postMessage({
+      type: "notification",
+      notificationType: notificationType,
+      ...params,
+    });
   }
 }

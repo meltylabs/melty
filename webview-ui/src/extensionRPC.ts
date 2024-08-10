@@ -27,8 +27,11 @@ export class ExtensionRPC {
 
   public handleMessage(event: MessageEvent) {
     const message = event.data;
-    console.log("[ExtensionRPC] Webview received message", message);
     if (message.type === "rpcResponse") {
+      console.log(
+        "[ExtensionRPC] Webview received rpcResponse message",
+        message
+      );
       const pending = this.pendingMessages.get(message.id);
       if (pending) {
         this.pendingMessages.delete(message.id);

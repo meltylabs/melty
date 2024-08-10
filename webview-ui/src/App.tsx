@@ -234,12 +234,10 @@ function ConversationView() {
     const handleNotification = (event: MessageEvent) => {
       const message = event.data;
       if (message.type === "notification") {
-        console.log(
-          `Webview received notification ${message.notificationType} -- ${message}`
-        );
+        console.log("[App.tsx] Webview received notification message", message);
         switch (message.notificationType) {
-          case "setPartialResponse":
-            console.log("setPartialResponse", task);
+          case "updateTask":
+            console.log("[App.tsx] updateTask", message.task === task);
             setTask(message.task);
             return;
         }
