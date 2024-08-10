@@ -243,6 +243,7 @@ function ConversationView() {
         );
         switch (message.notificationType) {
           case "setPartialResponse":
+            console.log("setPartialResponse", task);
             setTask(message.task);
             return;
         }
