@@ -123,12 +123,11 @@ export class MeltyExtension {
     return task;
   }
 
-  public async createNewTask(name: string): Promise<string> {
+  public async createNewTask(taskName: string): Promise<string> {
     const taskId = uuidv4();
-    const taskName = `${new Date().toLocaleString()}`;
     const branchName = `melty/${taskName.replace(/\s+/g, "-")}`;
 
-    const newTask = new Task(taskId, name, branchName);
+    const newTask = new Task(taskId, taskName, branchName);
 
     this.tasks.set(taskId, newTask);
     this.currentTask = newTask;
@@ -146,10 +145,7 @@ export class MeltyExtension {
       throw new Error(`Task with id ${taskId} not found`);
     }
 
-    // Switch to the task's branch
-    // todo: add this back once testing is done
-    // await this.checkoutGitBranch(task.branch);
-    // vscode.window.showInformationMessage(`Switched to branch ${task.branch}`);
+    await task.switchTo();
 
     this.currentTask = task;
     this.workspaceFilePaths = undefined; // Reset workspace file paths
@@ -164,17 +160,6 @@ export class MeltyExtension {
       path.join(this.currentTask.gitRepo.rootPath, filePath)
     );
     vscode.window.showTextDocument(fileUri);
-  }
-
-  private async checkoutGitBranch(branchName: string): Promise<void> {
-    const gitExtension = vscode.extensions.getExtension("vscode.git");
-    if (gitExtension) {
-      const git = gitExtension.exports.getAPI(1);
-      const repo = git.repositories[0];
-      await repo.checkout(branchName);
-    } else {
-      throw new Error("Git extension not found");
-    }
   }
 
   public async initRepository() {

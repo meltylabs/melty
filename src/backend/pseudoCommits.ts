@@ -2,7 +2,7 @@ import { PseudoCommit, PseudoCommitInGit, PseudoCommitInMemory, MeltyFile, GitRe
 import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
-import * as utils from "./utils/utils";
+import * as utils from "../util/utils";
 
 function createFromCommitWithUdiffPreview(commit: string, preview: string): PseudoCommit {
   return { impl: { status: "committed", commit, udiffPreview: preview } };
@@ -53,16 +53,16 @@ export function createFromDiffAndParentCommit(
  * Creates a new pseudoCommit that is a copy of the previous one, but with udiff reset.
  */
 export function createFromPrevious(previousPseudoCommit: PseudoCommit): PseudoCommit {
-    if (previousPseudoCommit.impl.status !== "committed") {
-        throw new Error("not implemented: createFromPrevious from uncommitted repostate");
-    }
+  if (previousPseudoCommit.impl.status !== "committed") {
+    throw new Error("not implemented: createFromPrevious from uncommitted repostate");
+  }
 
-    const pseudoCommitInMemory: PseudoCommitInMemory = {
-        status: "inMemory",
-        filesChanged: {},
-        parentCommit: previousPseudoCommit.impl.commit,
-    };
-    return { impl: pseudoCommitInMemory };
+  const pseudoCommitInMemory: PseudoCommitInMemory = {
+    status: "inMemory",
+    filesChanged: {},
+    parentCommit: previousPseudoCommit.impl.commit,
+  };
+  return { impl: pseudoCommitInMemory };
 }
 
 export async function diff(
@@ -173,7 +173,7 @@ export function getFileContents(
   } else {
     const baseCommit = pseudoCommit.impl.status === "committed" ? pseudoCommit.impl.commit : pseudoCommit.impl.parentCommit;
     utils.ensureRepoIsOnCommit(gitRepo.repository, baseCommit);
-    return fs.readFileSync( path.join(gitRepo.rootPath, filePath), "utf8");
+    return fs.readFileSync(path.join(gitRepo.rootPath, filePath), "utf8");
   }
 }
 

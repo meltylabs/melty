@@ -5,20 +5,15 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "./ui/card";
-import { vscode } from "../utilities/vscode";
+import { ExtensionRPC } from "../extensionRPC";
 
 import { Button } from "./ui/button";
 
 import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
   Link,
   useNavigate,
 } from "react-router-dom";
-import { convertChangesToXML } from "diff";
 
 interface Task {
   id: string;
@@ -30,39 +25,39 @@ interface Task {
 export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const navigate = useNavigate();
+  const [extensionRPC] = useState(() => new ExtensionRPC());
 
   useEffect(() => {
-    vscode.postMessage({
-      command: "listTasks",
-    });
+    const fetchTasks = async () => {
+      const tasks = await extensionRPC.run("listTasks") as Task[];
+      console.log(`[Tasks] fetched ${tasks.length} tasks`);
+      setTasks(tasks);
+    }
+    fetchTasks();
 
-    const messageListener = (event: MessageEvent) => {
-      const message = event.data;
-      console.log("tasks.tsx", message);
-      if (message.command === "listTasks") {
-        setTasks(message.tasks);
-      } else if (message.command === "taskCreated") {
-        navigate(`/task/${message.taskId}`);
-      }
-    };
-
-    window.addEventListener("message", messageListener);
+    window.addEventListener("message", extensionRPC.handleMessage);
 
     return () => {
-      window.removeEventListener("message", messageListener);
+      window.removeEventListener("message", extensionRPC.handleMessage);
     };
   }, []);
 
   return (
     <div>
       <Button
-        onClick={() => {
-          vscode.postMessage({
-            command: "createNewTask",
+        onClick={async () => {
+          // if we're not on the main branch, ask user to confirm
+          // TODO: implement this
+
+          const newTask = await extensionRPC.run("createNewTask", {
             name: ["Zucchini", "Rutabega", "Tomato", "Cucumber", "Celery", "Lemon", "Artichoke"][
               Math.floor(Math.random() * 7)
             ],
-          });
+          }) as Task;
+
+          console.log(`resolved new task ${newTask.id}`);
+
+          navigate(`/task/${newTask.id}`);
         }}
       >
         + New task
