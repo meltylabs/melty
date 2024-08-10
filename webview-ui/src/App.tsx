@@ -27,6 +27,9 @@ import "diff2html/bundles/css/diff2html.min.css";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
+import { Label } from "./components/ui/label";
+import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
+
 import { Tasks } from "./components/Tasks";
 import { Task, Joule } from "./types";
 import CopyButton from "./components/CopyButton";
@@ -194,14 +197,6 @@ function ConversationView() {
     // response will be returned asynchronously through notifications
   }
 
-  // function handleUndo() {
-  //   vscode.postMessage({ command: "undo", taskId: taskId });
-  // }
-
-  // function handleReset() {
-  //   vscode.postMessage({ command: "resetTask", taskId: taskId });
-  // }
-
   async function handleCreatePR() {
     const result = await extensionRPC.run("createPullRequest");
     console.log("PR created", result);
@@ -288,8 +283,8 @@ function ConversationView() {
   };
 
   return (
-    <div className="p-4">
-      <div className="mt-2 flex justify-between">
+    <div className="p-4 flex flex-col h-screen">
+      <div className="mt-2 flex-1 justify-between">
         {task && (
           <div className="p-2">
             <p className="text-sm font-semibold">{task.name}</p>
@@ -330,7 +325,7 @@ function ConversationView() {
         </div>
       </div>
       <div
-        className="mb-16 rounded p-2 mx-auto overflow-y-auto"
+        className="mb-20 rounded p-2 mx-auto overflow-y-auto"
         ref={conversationRef}
       >
         {task?.conversation.joules.map((joule, index) => (
@@ -347,6 +342,17 @@ function ConversationView() {
       </div>
       <div className="">
         <form onSubmit={handleSubmit}>
+          <RadioGroup defaultValue="coder">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="coder" id="coder" />
+              <Label htmlFor="coder">Coder</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="architect" id="architect" />
+              <Label htmlFor="architect">Architect</Label>
+            </div>
+          </RadioGroup>
+
           <div className="mt-4 flex">
             <Textarea
               placeholder="Tell me what to do! (⌘m)"
@@ -380,24 +386,8 @@ function ConversationView() {
 
             <div className="space-x-2">
               <Button name="ask" size="sm" type="submit" variant="outline">
-                Ask{" "}
+                Go{" "}
                 <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
-                  <span className="text-xs">↵</span>
-                </kbd>
-              </Button>
-              <Button
-                name="code"
-                size="sm"
-                type="button"
-                onClick={() => {
-                  const message = inputRef.current?.value || "";
-                  handleSendMessage("code", message);
-                  if (inputRef.current) inputRef.current.value = "";
-                }}
-              >
-                Code{" "}
-                <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
-                  <span className="text-xs">⌘</span>
                   <span className="text-xs">↵</span>
                 </kbd>
               </Button>
