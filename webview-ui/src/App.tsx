@@ -274,16 +274,6 @@ function ConversationView() {
 
   return (
     <div className="p-4">
-      <Button
-        name="createPR"
-        size="sm"
-        type="button"
-        onClick={handleCreatePR}
-        variant="outline"
-      >
-        <GitPullRequestIcon className="h-4 w-4 mr-2" />
-        Create PR
-      </Button>
       <div className="mt-2 flex justify-between">
         {task && (
           <div className="p-2">
@@ -348,7 +338,7 @@ function ConversationView() {
               onKeyDown={handleKeyDown}
             />
           </div>
-          <div className="flex justify-end space-x-2 mt-2">
+          <div className="flex justify-between space-x-2 mt-2">
             {/* <Button
               variant="ghost"
               size="sm"
@@ -357,29 +347,40 @@ function ConversationView() {
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button> */}
-
-            <Button name="ask" size="sm" type="submit" variant="outline">
-              Ask{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
-                <span className="text-xs">↵</span>
-              </kbd>
-            </Button>
             <Button
-              name="code"
+              name="createPR"
               size="sm"
               type="button"
-              onClick={() => {
-                const message = inputRef.current?.value || "";
-                handleSendMessage("code", message);
-                if (inputRef.current) inputRef.current.value = "";
-              }}
+              onClick={handleCreatePR}
+              variant="outline"
             >
-              Code{" "}
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
-                <span className="text-xs">⌘</span>
-                <span className="text-xs">↵</span>
-              </kbd>
+              <GitPullRequestIcon className="h-4 w-4 mr-2" />
+              Create PR
             </Button>
+            <div>
+              <Button name="ask" size="sm" type="submit" variant="outline">
+                Ask{" "}
+                <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
+                  <span className="text-xs">↵</span>
+                </kbd>
+              </Button>
+              <Button
+                name="code"
+                size="sm"
+                type="button"
+                onClick={() => {
+                  const message = inputRef.current?.value || "";
+                  handleSendMessage("code", message);
+                  if (inputRef.current) inputRef.current.value = "";
+                }}
+              >
+                Code{" "}
+                <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
+                  <span className="text-xs">⌘</span>
+                  <span className="text-xs">↵</span>
+                </kbd>
+              </Button>
+            </div>
           </div>
         </form>
       </div>
