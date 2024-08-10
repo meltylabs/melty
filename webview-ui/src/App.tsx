@@ -161,6 +161,7 @@ function ConversationView() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<"code" | "ask">("code");
 
   async function handleAddFile(file: string) {
     const meltyFiles = await extensionRPC.run("addMeltyFile", {
@@ -192,7 +193,7 @@ function ConversationView() {
     setWorkspaceFiles(workspaceFiles);
   }
 
-  function handleSendMessage(mode: "ask" | "code", text: string) {
+  function handleSendMessage(text: string) {
     extensionRPC.run("chatMessage", { mode, text });
     // response will be returned asynchronously through notifications
   }
@@ -259,25 +260,16 @@ function ConversationView() {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const message = form.message.value;
-    handleSendMessage("ask", message);
+    handleSendMessage(message);
     form.reset();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter") {
-      if (event.metaKey || event.ctrlKey) {
-        // Cmd+Enter or Ctrl+Enter
-        event.preventDefault();
-        if (event.currentTarget && event.currentTarget.value !== undefined) {
-          handleSendMessage("code", event.currentTarget.value);
-          event.currentTarget.value = "";
-        }
-      } else if (!event.shiftKey) {
-        event.preventDefault();
-        if (event.currentTarget && event.currentTarget.value !== undefined) {
-          handleSendMessage("ask", event.currentTarget.value);
-          event.currentTarget.value = "";
-        }
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (event.currentTarget && event.currentTarget.value !== undefined) {
+        handleSendMessage(event.currentTarget.value);
+        event.currentTarget.value = "";
       }
     }
   };
@@ -342,14 +334,14 @@ function ConversationView() {
       </div>
       <div className="">
         <form onSubmit={handleSubmit}>
-          <RadioGroup defaultValue="coder">
+          <RadioGroup value={mode} onValueChange={(value) => setMode(value as "code" | "ask")}>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="coder" id="coder" />
-              <Label htmlFor="coder">Coder</Label>
+              <RadioGroupItem value="code" id="code" />
+              <Label htmlFor="code">Coder</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="architect" id="architect" />
-              <Label htmlFor="architect">Architect</Label>
+              <RadioGroupItem value="ask" id="ask" />
+              <Label htmlFor="ask">Architect</Label>
             </div>
           </RadioGroup>
 
