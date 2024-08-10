@@ -60,16 +60,23 @@ export class Task implements Task {
     await this.gitRepo!.repository.status();
 
     if (!utils.repoIsClean(this.gitRepo!.repository)) {
-      utils.handleGitError("Working directory is not clean. Cannot proceed activating task.");
+      utils.handleGitError(
+        "Working directory is not clean. Cannot proceed activating task."
+      );
     } else {
       try {
         await this.gitRepo!.repository.checkout(this.branch);
         utils.info(`Switched to branch ${this.branch}`);
       } catch (error: any) {
-        if (error.stderr && error.stderr.includes("did not match any file(s) known to git")) {
+        if (
+          error.stderr &&
+          error.stderr.includes("did not match any file(s) known to git")
+        ) {
           // we need to create the branch
           if (!utils.repoIsOnMain(this.gitRepo!.repository)) {
-            utils.handleGitError("Cannot activate task: working directory is not on main branch");
+            utils.handleGitError(
+              "Cannot activate task: working directory is not on main branch"
+            );
           }
           console.log(`Branch ${this.branch} does not exist. Creating it.`);
           await this.gitRepo!.repository.createBranch(this.branch, true);
@@ -200,17 +207,20 @@ export class Task implements Task {
 
       return lastJoule;
     } catch (e) {
-      vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
-
-      const joule = joules.createJouleBot(
-        "[  Error :(  ]",
-        "[ There was an error communicating with the bot. ]",
-        mode,
-        pseudoCommits.createDummy(),
-        contextPaths
-      );
-      this.conversation = conversations.addJoule(this.conversation, joule);
-      return joule;
+      if (config.DEV_MODE) {
+        throw e;
+      } else {
+        vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
+        const joule = joules.createJouleBot(
+          "[  Error :(  ]",
+          "[ There was an error communicating with the bot. ]",
+          mode,
+          pseudoCommits.createDummy(),
+          contextPaths
+        );
+        this.conversation = conversations.addJoule(this.conversation, joule);
+        return joule;
+      }
     }
   }
 

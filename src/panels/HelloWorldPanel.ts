@@ -16,6 +16,7 @@ import { Conversation } from "../types";
 import { MeltyExtension } from "../extension";
 import * as utils from "../util/utils";
 import { Task } from "../backend/tasks";
+import * as config from "../util/config";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -134,6 +135,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
             });
           })
           .catch((error) => {
+            if (config.DEV_MODE) {
+              throw error;
+            }
+
             console.log(
               `[HelloWorldPanel] sending RPCresponse for ${message.id} with error ${error.message}`
             );

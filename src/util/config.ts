@@ -11,3 +11,5 @@ const EXCLUDES = [
 export const EXCLUDES_GLOB = `{${EXCLUDES.join(",")}}`;
 
 export const STRICT_GIT = false;
+
+export const DEV_MODE = true;
