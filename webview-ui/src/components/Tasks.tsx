@@ -9,10 +9,7 @@ import {
 import { ExtensionRPC } from "../extensionRPC";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Task {
   id: string;
@@ -29,10 +26,10 @@ export function Tasks() {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      const tasks = await extensionRPC.run("listTasks") as Task[];
+      const tasks = (await extensionRPC.run("listTasks")) as Task[];
       console.log(`[Tasks] fetched ${tasks.length} tasks`);
       setTasks(tasks);
-    }
+    };
     fetchTasks();
 
     window.addEventListener("message", extensionRPC.handleMessage);
@@ -43,19 +40,25 @@ export function Tasks() {
   }, []);
 
   const createNewTask = async (message: string) => {
-    const newTask = await extensionRPC.run("createNewTask", {
-      name: ["Zucchini", "Rutabega", "Tomato", "Cucumber", "Celery", "Lemon", "Artichoke"][
-        Math.floor(Math.random() * 7)
-      ],
-    }) as Task;
+    const newTask = (await extensionRPC.run("createNewTask", {
+      name: [
+        "Zucchini",
+        "Rutabega",
+        "Tomato",
+        "Cucumber",
+        "Celery",
+        "Lemon",
+        "Artichoke",
+      ][Math.floor(Math.random() * 7)],
+    })) as Task;
 
     console.log(`resolved new task ${newTask.id}`);
 
     // Send the initial message
-    await extensionRPC.run("chatMessage", { 
+    await extensionRPC.run("chatMessage", {
       taskId: newTask.id,
-      mode: "ask", 
-      text: message 
+      mode: "ask",
+      text: message,
     });
 
     navigate(`/task/${newTask.id}`);
@@ -71,7 +74,7 @@ export function Tasks() {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="mb-4">
+      {/* <form onSubmit={handleSubmit} className="mb-4">
         <div className="flex space-x-2">
           <Input
             type="text"
@@ -82,16 +85,14 @@ export function Tasks() {
           />
           <Button type="submit">Create Task</Button>
         </div>
-      </form>
+      </form> */}
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
         {tasks.reverse().map((task) => (
           <Link to={`/task/${task.id}`} key={task.id} className="mr-4">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {task.name}
-                </CardTitle>
+                <CardTitle>{task.name}</CardTitle>
                 <CardDescription>{task.description}</CardDescription>
               </CardHeader>
               <CardContent>
