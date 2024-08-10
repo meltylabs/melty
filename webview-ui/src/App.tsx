@@ -202,8 +202,10 @@ function ConversationView() {
   //   vscode.postMessage({ command: "resetTask", taskId: taskId });
   // }
 
-  function handleCreatePR() {
-    vscode.postMessage({ command: "createPR" });
+  async function handleCreatePR() {
+    console.log("createPR");
+    const result = await extensionRPC.run("createPullRequest");
+    console.log(result);
   }
 
   // auto scroll to bottom
@@ -294,6 +296,16 @@ function ConversationView() {
             <p className="text-sm font-semibold">{task.name}</p>
           </div>
         )}
+        <Button
+          name="createPR"
+          size="sm"
+          type="button"
+          onClick={handleCreatePR}
+          variant="outline"
+        >
+          <GitPullRequestIcon className="h-4 w-4 mr-2" />
+          Create PR
+        </Button>
         <FilePicker
           open={pickerOpen}
           setOpen={setPickerOpen}
@@ -365,16 +377,7 @@ function ConversationView() {
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button> */}
-            <Button
-              name="createPR"
-              size="sm"
-              type="button"
-              onClick={handleCreatePR}
-              variant="outline"
-            >
-              <GitPullRequestIcon className="h-4 w-4 mr-2" />
-              Create PR
-            </Button>
+
             <div className="space-x-2">
               <Button name="ask" size="sm" type="submit" variant="outline">
                 Ask{" "}
