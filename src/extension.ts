@@ -264,6 +264,24 @@ export class MeltyExtension {
         }
       }
 
+      // Ensure the commit exists on the remote
+      try {
+        await octokit.git.getCommit({
+          owner,
+          repo,
+          commit_sha: commitSha,
+        });
+        console.log("Commit exists on remote");
+      } catch (error) {
+        if ((error as any).status === 404) {
+          console.log("Commit does not exist on remote, pushing changes");
+          await repository.push();
+        } else {
+          console.error("Error checking commit:", error);
+          throw error;
+        }
+      }
+
       // Create or update the branch
       try {
         if (branchExists) {
