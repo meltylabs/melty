@@ -157,6 +157,7 @@ function ConversationView() {
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
+  const conversationRef = useRef<HTMLDivElement>(null);
 
   async function handleAddFile(file: string) {
     const meltyFiles = await extensionRPC.run("addMeltyFile", {
@@ -204,6 +205,13 @@ function ConversationView() {
   function handleCreatePR() {
     vscode.postMessage({ command: "createPR" });
   }
+
+  // auto scroll to bottom
+  useEffect(() => {
+    if (conversationRef.current) {
+      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+    }
+  }, [task]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -318,7 +326,10 @@ function ConversationView() {
           ))}
         </div>
       </div>
-      <div className="mb-16 rounded p-2 mx-auto">
+      <div
+        className="mb-16 rounded p-2 mx-auto overflow-y-auto"
+        ref={conversationRef}
+      >
         {task?.conversation.joules.map((joule, index) => (
           <JouleComponent
             key={index}
