@@ -8,9 +8,10 @@ import {
 } from "./ui/card";
 import { ExtensionRPC } from "../extensionRPC";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import * as Diff2Html from "diff2html";
+import "diff2html/bundles/css/diff2html.min.css";
+import Diff2HtmlComponent from "./DiffViewer";
 import { Link, useNavigate } from "react-router-dom";
-
 interface Task {
   id: string;
   name: string;
@@ -71,7 +72,19 @@ export function Tasks() {
       setNewTaskMessage("");
     }
   };
+  const dummyDiff =
+    "diff --git a/src/main.py b/src/main.py\nindex 3333333..4444444 100644\n--- a/main.py\n+++ b/main.py\n@@ -1,7 +1,7 @@\n def main():\n     print('Hello, world!')\n\nif __name__ == '__main__':\n    main()\n\ndiff --git a/utils.py b/utils.py\nindex 5555555..6666666 100644\n--- a/utils.py\n+++ b/utils.py\n@@ -1,5 +1,6 @@\n def helper_function():\n     return 'I am a helper'\n+\ndef another_helper():\n+    return 'I am another helper'\n\ndiff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n--- a/README.md\n+++ b/README.md\n@@ -1,3 +1,4 @@\n # My Project\n\n This is a sample project.\n+It now has more files and functionality.";
 
+  const dummyMessages = [
+    {
+      sender: "bot",
+      message: "hello",
+    },
+    {
+      sender: "human",
+      message: "coooool",
+    },
+  ];
   return (
     <div>
       {/* <form onSubmit={handleSubmit} className="mb-4">
@@ -86,6 +99,23 @@ export function Tasks() {
           <Button type="submit">Create Task</Button>
         </div>
       </form> */}
+
+      {/* <div className="grid grid-cols-2">
+        <div className="">
+          <div className="overflow-y-scroll ">
+            <Diff2HtmlComponent diff={dummyDiff} />
+          </div>
+        </div>
+
+        <div className="space-y-2 overflow-y-auto">
+          {dummyMessages.map((message) => (
+            <div className="bg-gray-100" key={message.message}>
+              <p>{message.message}</p>
+            </div>
+          ))}
+        </div>
+      </div> */}
+
       <Button
         onClick={async () => {
           // if we're not on the main branch, ask user to confirm

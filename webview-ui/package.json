@@ -29,6 +29,7 @@
     "diff2html": "^3.4.48",
     "lucide-react": "^0.424.0",
     "react": "^18.2.0",
+    "react-diff-view": "^3.2.1",
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.26.0",

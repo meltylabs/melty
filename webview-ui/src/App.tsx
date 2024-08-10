@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { vscode } from "./utilities/vscode";
 import {
   XIcon,
   FileIcon,
@@ -17,13 +16,6 @@ import {
   Navigate,
   useParams,
 } from "react-router-dom";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "./components/ui/collapsible";
-import * as Diff2Html from "diff2html";
-import "diff2html/bundles/css/diff2html.min.css";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
@@ -37,6 +29,7 @@ import "./App.css";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ExtensionRPC } from "./extensionRPC";
+import DiffViewer from "./components/DiffViewer";
 
 function JouleComponent({
   joule,
@@ -45,70 +38,25 @@ function JouleComponent({
   joule: Joule;
   isPartial?: boolean;
 }) {
-  const renderDiff2HTML = (diff: string) => {
-    const lines = diff.split("\n");
-    const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
-    let fileName = "";
-    if (fileNameLine) {
-      const match = fileNameLine.match(/diff --git a\/(.*) b\/(.*)/);
-      if (match) {
-        fileName = match[2]; // Use the 'b' file name (new file)
-      }
-    }
-
-    const customHeader = fileName ? (
-      <div className="diff-header flex items-center space-x-2 p-2 bg-gray-100 rounded-t">
-        <FileIcon className="h-4 w-4" />
-        <button
-          className="text-blue-600 hover:underline"
-          onClick={() =>
-            vscode.postMessage({
-              command: "openFileInEditor",
-              filePath: fileName,
-            })
-          }
-        >
-          {fileName}
-        </button>
-      </div>
-    ) : null;
-
-    return (
-      <>
-        {customHeader}
-        <div
-          className="text-xs mt-4 font-mono"
-          dangerouslySetInnerHTML={{
-            __html: Diff2Html.html(diff, {
-              drawFileList: false,
-              matching: "lines",
-              outputFormat: "line-by-line",
-            }),
-          }}
-        />
-      </>
-    );
-  };
-
   const diffHtml =
     joule.pseudoCommit.impl.status === "committed" &&
     joule.pseudoCommit.impl.udiffPreview
-      ? renderDiff2HTML(joule.pseudoCommit.impl.udiffPreview)
+      ? joule.pseudoCommit.impl.udiffPreview
       : null;
 
   return (
     <div
-      className={`grid grid-cols-1 gap-12 mb-2 p-3 rounded ${
+      className={`grid grid-cols-12 gap-6 mb-2 p-3 rounded ${
         joule.author === "human" ? "bg-gray-50 " : "bg-white"
       }`}
     >
-      <div className="text-xs flex flex-col prose">
+      <div className="text-xs prose col-span-5">
         <ReactMarkdown
           components={{
             code({ node, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || "");
               return match ? (
-                <div className="relative p-0 ">
+                <div className="relative p-0 max-h-[300px] overflow-y-auto">
                   {!isPartial && (
                     <CopyButton code={String(children).replace(/\n$/, "")} />
                   )}
@@ -131,22 +79,8 @@ function JouleComponent({
         </ReactMarkdown>
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
-
-      <div>
-        {diffHtml && !isPartial && (
-          <Collapsible>
-            <div className="flex items-center justify-end space-x-4 px-4">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <h4 className="text-sm font-semibold mr-2">1 file changed</h4>
-                  <ChevronsUpDown className="h-4 w-4" />
-                  <span className="sr-only">Toggle</span>
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent>{diffHtml}</CollapsibleContent>
-          </Collapsible>
-        )}
+      <div className="overflow-y-auto col-span-7 text-xs">
+        {diffHtml && !isPartial && <DiffViewer diff={diffHtml} />}
       </div>
     </div>
   );
@@ -278,7 +212,7 @@ function ConversationView() {
 
   return (
     <div className="p-4 flex flex-col h-screen">
-      <div className="mt-2 flex-1 justify-between">
+      <div className="mt-2 justify-between">
         {task && (
           <div className="p-2">
             <p className="text-sm font-semibold">{task.name}</p>
