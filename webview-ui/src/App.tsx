@@ -6,6 +6,7 @@ import {
   RotateCcwIcon,
   PlusIcon,
   GitPullRequestIcon,
+  ChevronsUpDown,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -16,7 +17,11 @@ import {
   Navigate,
   useParams,
 } from "react-router-dom";
-
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./components/ui/collapsible";
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import { FilePicker } from "./components/FilePicker";
@@ -124,7 +129,7 @@ function JouleComponent({
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
-      {/* <div>
+      <div>
         {diffHtml && !isPartial && (
           <Collapsible>
             <div className="flex items-center justify-end space-x-4 px-4">
@@ -139,7 +144,7 @@ function JouleComponent({
             <CollapsibleContent>{diffHtml}</CollapsibleContent>
           </Collapsible>
         )}
-      </div> */}
+      </div>
     </div>
   );
 }
