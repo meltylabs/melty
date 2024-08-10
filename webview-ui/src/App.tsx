@@ -326,7 +326,7 @@ function ConversationView() {
           />
         ))}
       </div>
-      <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white">
+      <div className="">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Textarea
@@ -357,7 +357,7 @@ function ConversationView() {
               <GitPullRequestIcon className="h-4 w-4 mr-2" />
               Create PR
             </Button>
-            <div>
+            <div className="space-x-2">
               <Button name="ask" size="sm" type="submit" variant="outline">
                 Ask{" "}
                 <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
