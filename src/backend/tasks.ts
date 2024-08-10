@@ -143,16 +143,9 @@ export class Task implements Task {
     );
 
     // Add only non-ignored files
-    for (const change of nonIgnoredChanges) {
-      // disable even this, for now, because it's not working --
-      // stack trace: TypeError: e.map is not a function
-      // at d.add(/Applications/Cursor.app / Contents / Resources / app / extensions / git / dist / main.js: 2: 789949)
-      // at Task.commitChanges(/Users/jacksondc / Development / melty_run / out / extension.js: 227915: 37)
-      // at async Task.respondHuman(/Users/jacksondc / Development / melty_run / out / extension.js: 227948: 23)
-      // at async HelloWorldPanel.handleAskCode(/Users/jacksondc / Development / melty_run / out / extension.js: 223370: 5)
-      // at async c.value(/Users/jacksondc / Development / melty_run / out / extension.js: 223335: 13)
-      // await this.gitRepo!.repository.add(change.uri.fsPath);
-    }
+    await this.gitRepo!.repository.add(
+      nonIgnoredChanges.map((change: any) => change.uri.fsPath)
+    );
 
     const indexChanges = this.gitRepo!.repository.state.indexChanges;
 
@@ -215,7 +208,9 @@ export class Task implements Task {
           "[  Error :(  ]",
           "[ There was an error communicating with the bot. ]",
           mode,
-          pseudoCommits.createDummy(),
+          pseudoCommits.createFromPrevious(
+            conversations.lastJoule(this.conversation)!.pseudoCommit
+          ),
           contextPaths
         );
         this.conversation = conversations.addJoule(this.conversation, joule);

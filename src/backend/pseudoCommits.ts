@@ -1,15 +1,20 @@
-import { PseudoCommit, PseudoCommitInGit, PseudoCommitInMemory, MeltyFile, GitRepo } from "../types";
+import {
+  PseudoCommit,
+  PseudoCommitInGit,
+  PseudoCommitInMemory,
+  MeltyFile,
+  GitRepo,
+} from "../types";
 import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
 import * as utils from "../util/utils";
 
-function createFromCommitWithUdiffPreview(commit: string, preview: string): PseudoCommit {
+function createFromCommitWithUdiffPreview(
+  commit: string,
+  preview: string
+): PseudoCommit {
   return { impl: { status: "committed", commit, udiffPreview: preview } };
-}
-
-export function createDummy(): PseudoCommit {
-  return { impl: { status: "committed", commit: "dummy", udiffPreview: "" } };
 }
 
 export async function createFromCommit(
@@ -17,20 +22,22 @@ export async function createFromCommit(
   gitRepo: GitRepo,
   associateCommitDiffWithPseudoCommit: boolean
 ): Promise<PseudoCommit> {
-  const udiff = associateCommitDiffWithPseudoCommit ? await (async () => {
-    const repository = gitRepo?.repository;
-    const diff = await repository.diffBetween(commit + "^", commit);
-    const udiffs = await Promise.all(
-      diff.map(async (change: any) => {
-        return await repository.diffBetween(
-          commit + "^",
-          commit,
-          change.uri.fsPath
+  const udiff = associateCommitDiffWithPseudoCommit
+    ? await (async () => {
+        const repository = gitRepo?.repository;
+        const diff = await repository.diffBetween(commit + "^", commit);
+        const udiffs = await Promise.all(
+          diff.map(async (change: any) => {
+            return await repository.diffBetween(
+              commit + "^",
+              commit,
+              change.uri.fsPath
+            );
+          })
         );
-      })
-    );
-    return udiffs.join("\n");
-  })() : "";
+        return udiffs.join("\n");
+      })()
+    : "";
 
   return createFromCommitWithUdiffPreview(commit, udiff);
 }
@@ -45,16 +52,20 @@ export function createFromDiffAndParentCommit(
     parentCommit: parentCommit,
   };
   return {
-    impl: pseudoCommitInMemory
+    impl: pseudoCommitInMemory,
   };
 }
 
 /**
  * Creates a new pseudoCommit that is a copy of the previous one, but with udiff reset.
  */
-export function createFromPrevious(previousPseudoCommit: PseudoCommit): PseudoCommit {
+export function createFromPrevious(
+  previousPseudoCommit: PseudoCommit
+): PseudoCommit {
   if (previousPseudoCommit.impl.status !== "committed") {
-    throw new Error("not implemented: createFromPrevious from uncommitted repostate");
+    throw new Error(
+      "not implemented: createFromPrevious from uncommitted repostate"
+    );
   }
 
   const pseudoCommitInMemory: PseudoCommitInMemory = {
@@ -112,15 +123,17 @@ export function commit(pseudoCommit: PseudoCommit): string | undefined {
  */
 export async function actualize(
   pseudoCommit: PseudoCommit,
-  gitRepo: GitRepo,
+  gitRepo: GitRepo
 ): Promise<void> {
   const repository = gitRepo.repository;
 
   await repository.status();
   // check for uncommitted changes
-  // if (!utils.repoIsClean(repository)) {
-  //   throw new Error("Please commit or stash changes before actualizing");
-  // }
+  if (!utils.repoIsClean(repository)) {
+    utils.handleGitError(
+      "Actualizing despite unclean repo. Seems a bit weird..."
+    );
+  }
 
   if (pseudoCommit.impl.status === "committed") {
     utils.ensureRepoIsOnCommit(repository, pseudoCommit.impl.commit);
@@ -135,11 +148,16 @@ export async function actualize(
       fs.mkdirSync(path.dirname(files.absolutePath(file, gitRepo.rootPath)), {
         recursive: true,
       });
-      fs.writeFileSync(files.absolutePath(file, gitRepo.rootPath), files.contents(file));
+      fs.writeFileSync(
+        files.absolutePath(file, gitRepo.rootPath),
+        files.contents(file)
+      );
     });
 
     await repository.add(
-      Object.values(filesChanged).map((file) => files.absolutePath(file, gitRepo.rootPath))
+      Object.values(filesChanged).map((file) =>
+        files.absolutePath(file, gitRepo.rootPath)
+      )
     );
     await repository.commit("bot changes", { empty: true });
 
@@ -152,13 +170,23 @@ export async function actualize(
   }
 }
 
-export function hasFile(gitRepo: GitRepo, pseudoCommit: PseudoCommit, filePath: string): boolean {
-  const fileIsInMemory = pseudoCommit.impl.status === "inMemory" ? filePath in pseudoCommit.impl.filesChanged : false;
+export function hasFile(
+  gitRepo: GitRepo,
+  pseudoCommit: PseudoCommit,
+  filePath: string
+): boolean {
+  const fileIsInMemory =
+    pseudoCommit.impl.status === "inMemory"
+      ? filePath in pseudoCommit.impl.filesChanged
+      : false;
   if (fileIsInMemory) {
     return true;
   }
 
-  const baseCommit = pseudoCommit.impl.status === "committed" ? pseudoCommit.impl.commit : pseudoCommit.impl.parentCommit;
+  const baseCommit =
+    pseudoCommit.impl.status === "committed"
+      ? pseudoCommit.impl.commit
+      : pseudoCommit.impl.parentCommit;
   utils.ensureRepoIsOnCommit(gitRepo.repository, baseCommit);
   return fs.existsSync(path.join(gitRepo.rootPath, filePath));
 }
@@ -168,10 +196,16 @@ export function getFileContents(
   pseudoCommit: PseudoCommit,
   filePath: string
 ): string {
-  if (pseudoCommit.impl.status === "inMemory" && filePath in pseudoCommit.impl.filesChanged) {
+  if (
+    pseudoCommit.impl.status === "inMemory" &&
+    filePath in pseudoCommit.impl.filesChanged
+  ) {
     return files.contents(pseudoCommit.impl.filesChanged[filePath]);
   } else {
-    const baseCommit = pseudoCommit.impl.status === "committed" ? pseudoCommit.impl.commit : pseudoCommit.impl.parentCommit;
+    const baseCommit =
+      pseudoCommit.impl.status === "committed"
+        ? pseudoCommit.impl.commit
+        : pseudoCommit.impl.parentCommit;
     utils.ensureRepoIsOnCommit(gitRepo.repository, baseCommit);
     return fs.readFileSync(path.join(gitRepo.rootPath, filePath), "utf8");
   }

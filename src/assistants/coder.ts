@@ -1,4 +1,11 @@
-import { Conversation, GitRepo, Mode, ClaudeConversation, PseudoCommit, JouleBot, ClaudeMessage } from "../types";
+import {
+  Conversation,
+  GitRepo,
+  Mode,
+  ClaudeConversation,
+  PseudoCommit,
+  ClaudeMessage,
+} from "../types";
 import * as pseudoCommits from "../backend/pseudoCommits";
 import * as joules from "../backend/joules";
 import * as prompts from "../backend/prompts";
@@ -17,7 +24,8 @@ export class Coder extends BaseAssistant {
     mode: Mode,
     processPartial: (partialConversation: Conversation) => void
   ) {
-    const currentPseudoCommit = conversations.lastJoule(conversation)!.pseudoCommit;
+    const currentPseudoCommit =
+      conversations.lastJoule(conversation)!.pseudoCommit;
 
     // TODO 100: Add a loop here to try to correct the response if it's not good yet
     // TODO 300: (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
@@ -44,32 +52,54 @@ export class Coder extends BaseAssistant {
       claudeConversation,
       (responseFragment: string) => {
         partialMessage += responseFragment;
-        const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(partialMessage, true);
-        const pseudoCommitNoDiff = pseudoCommits.createDummy();
-        const newPseudoCommit = this.getNewPseudoCommit(gitRepo, pseudoCommitNoDiff, mode, searchReplaceList);
-        const partialJoule = joules.createJouleBot(messageChunksList.join("\n"), partialMessage, mode, newPseudoCommit, contextPaths);
+        const { messageChunksList, searchReplaceList } =
+          diffApplicatorXml.splitResponse(partialMessage, true);
+        const newPseudoCommit = this.getNewPseudoCommit(
+          gitRepo,
+          currentPseudoCommit,
+          mode,
+          searchReplaceList
+        );
+        const partialJoule = joules.createJouleBot(
+          messageChunksList.join("\n"),
+          partialMessage,
+          mode,
+          newPseudoCommit,
+          contextPaths
+        );
         processPartial(conversations.addJoule(conversation, partialJoule));
       }
     );
     console.log(finalResponse);
 
-    const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(finalResponse, false);
+    const { messageChunksList, searchReplaceList } =
+      diffApplicatorXml.splitResponse(finalResponse, false);
 
-    // reset the diff preview
-    // TODO replace `pseudoCommits.createDummy()` with `pseudoCommits.createFromPrevious(currentPseudoCommit)` when we're tracking diffs again
-    const pseudoCommitNoDiff = pseudoCommits.createDummy();
-    const newPseudoCommit = this.getNewPseudoCommit(gitRepo, pseudoCommitNoDiff, mode, searchReplaceList);
-    const newJoule = joules.createJouleBot(messageChunksList.join("\n"), finalResponse, mode, newPseudoCommit, contextPaths);
+    const newPseudoCommit = this.getNewPseudoCommit(
+      gitRepo,
+      currentPseudoCommit,
+      mode,
+      searchReplaceList
+    );
+    const newJoule = joules.createJouleBot(
+      messageChunksList.join("\n"),
+      finalResponse,
+      mode,
+      newPseudoCommit,
+      contextPaths
+    );
     return conversations.addJoule(conversation, newJoule);
   }
 
   private getSystemPrompt(mode: Mode): string {
     switch (mode) {
       case "code":
-        return prompts.codeModeSystemPrompt() +
+        return (
+          prompts.codeModeSystemPrompt() +
           prompts.diffDecoderPrompt() +
           prompts.exampleConversationsPrompt() +
-          prompts.codeChangeCommandRulesPrompt();
+          prompts.codeChangeCommandRulesPrompt()
+        );
       case "ask":
         return prompts.askModeSystemPrompt();
       default:
@@ -77,22 +107,42 @@ export class Coder extends BaseAssistant {
     }
   }
 
-  private async encodeRepoMap(gitRepo: GitRepo, pseudoCommit: PseudoCommit): Promise<ClaudeMessage[]> {
+  private async encodeRepoMap(
+    gitRepo: GitRepo,
+    pseudoCommit: PseudoCommit
+  ): Promise<ClaudeMessage[]> {
     const repoMap = new RepoMapSpec(gitRepo);
     const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
     return [
       {
         role: "user",
-        content: `${prompts.repoMapIntro()}\n\n${await repoMap.getRepoMap(workspaceFilePaths)}`,
+        content: `${prompts.repoMapIntro()}\n\n${await repoMap.getRepoMap(
+          workspaceFilePaths
+        )}`,
       },
       { role: "assistant", content: prompts.repoMapAsstAck() },
     ];
   }
 
-  private getNewPseudoCommit(gitRepo: GitRepo, currentPseudoCommit: PseudoCommit, mode: Mode, searchReplaceList: any[]) {
-    const pseudoCommitNoDiff = pseudoCommits.createFromPrevious(currentPseudoCommit);
+  /**
+   * Creates a new pseudo commit representing changes (if there are any) on top of currentPseudoCommit.
+   */
+  private getNewPseudoCommit(
+    gitRepo: GitRepo,
+    currentPseudoCommit: PseudoCommit,
+    mode: Mode,
+    searchReplaceList: any[]
+  ) {
+    // Reset the diff preview
+    const pseudoCommitNoDiff =
+      pseudoCommits.createFromPrevious(currentPseudoCommit);
+
     return mode === "code"
-      ? diffApplicatorXml.applySearchReplaceBlocks(gitRepo, pseudoCommitNoDiff, searchReplaceList)
+      ? diffApplicatorXml.applySearchReplaceBlocks(
+          gitRepo,
+          pseudoCommitNoDiff,
+          searchReplaceList
+        )
       : pseudoCommitNoDiff;
   }
 }
