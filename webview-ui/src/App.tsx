@@ -345,7 +345,7 @@ function ConversationView() {
           />
         ))}
       </div>
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 rounded-lg shadow-md">
+      <div className="">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Textarea
@@ -413,7 +413,7 @@ function App() {
   return (
     <Router>
       <main className="p-4">
-        <nav className="mb-12 flex justify-between">
+        <nav className="mb-4 flex justify-between">
           <Link to="/">
             <Button variant="ghost" size="sm">
               Home
