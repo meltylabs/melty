@@ -86,6 +86,30 @@ export function Tasks() {
           <Button type="submit">Create Task</Button>
         </div>
       </form> */}
+      <Button
+        onClick={async () => {
+          // if we're not on the main branch, ask user to confirm
+          // TODO: implement this
+
+          const newTask = (await extensionRPC.run("createNewTask", {
+            name: [
+              "Zucchini",
+              "Rutabega",
+              "Tomato",
+              "Cucumber",
+              "Celery",
+              "Lemon",
+              "Artichoke",
+            ][Math.floor(Math.random() * 7)],
+          })) as Task;
+
+          console.log(`resolved new task ${newTask.id}`);
+
+          navigate(`/task/${newTask.id}`);
+        }}
+      >
+        + New task
+      </Button>
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
         {tasks.reverse().map((task) => (

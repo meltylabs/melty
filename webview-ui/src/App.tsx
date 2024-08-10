@@ -289,22 +289,24 @@ function ConversationView() {
 
   return (
     <div className="p-4">
+      <Button
+        name="createPR"
+        size="sm"
+        type="button"
+        onClick={handleCreatePR}
+        variant="outline"
+      >
+        <GitPullRequestIcon className="h-4 w-4 mr-2" />
+        Create PR
+      </Button>
+
       <div className="mt-2 flex justify-between">
         {task && (
           <div className="p-2">
             <p className="text-sm font-semibold">{task.name}</p>
           </div>
         )}
-        <Button
-          name="createPR"
-          size="sm"
-          type="button"
-          onClick={handleCreatePR}
-          variant="outline"
-        >
-          <GitPullRequestIcon className="h-4 w-4 mr-2" />
-          Create PR
-        </Button>
+
         <FilePicker
           open={pickerOpen}
           setOpen={setPickerOpen}
