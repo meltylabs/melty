@@ -331,7 +331,7 @@ function ConversationView() {
           />
         ))}
       </div>
-      <div className="">
+      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-gray-200 p-4 m-4 rounded-lg shadow-md">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Textarea
