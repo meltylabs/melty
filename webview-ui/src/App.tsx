@@ -161,7 +161,6 @@ function ConversationView() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
   const conversationRef = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<"code" | "ask">("code");
 
   async function handleAddFile(file: string) {
     const meltyFiles = await extensionRPC.run("addMeltyFile", {
@@ -193,7 +192,7 @@ function ConversationView() {
     setWorkspaceFiles(workspaceFiles);
   }
 
-  function handleSendMessage(text: string) {
+  function handleSendMessage(mode: "code" | "ask", text: string) {
     extensionRPC.run("chatMessage", { mode, text });
     // response will be returned asynchronously through notifications
   }
@@ -260,7 +259,8 @@ function ConversationView() {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const message = form.message.value;
-    handleSendMessage(message);
+    const mode = form.mode.value as "code" | "ask";
+    handleSendMessage(mode, message);
     form.reset();
   };
 
@@ -268,8 +268,12 @@ function ConversationView() {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       if (event.currentTarget && event.currentTarget.value !== undefined) {
-        handleSendMessage(event.currentTarget.value);
-        event.currentTarget.value = "";
+        const form = event.currentTarget.form;
+        if (form) {
+          const mode = form.mode.value as "code" | "ask";
+          handleSendMessage(mode, event.currentTarget.value);
+          event.currentTarget.value = "";
+        }
       }
     }
   };
@@ -334,7 +338,7 @@ function ConversationView() {
       </div>
       <div className="">
         <form onSubmit={handleSubmit}>
-          <RadioGroup value={mode} onValueChange={(value) => setMode(value as "code" | "ask")}>
+          <RadioGroup name="mode" defaultValue="code">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="code" id="code" />
               <Label htmlFor="code">Coder</Label>
