@@ -264,6 +264,20 @@ function ConversationView() {
     form.reset();
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (event.currentTarget && event.currentTarget.value !== undefined) {
+        const form = event.currentTarget.form;
+        if (form) {
+          const mode = form.mode.value as "code" | "ask";
+          handleSendMessage(mode, event.currentTarget.value);
+          event.currentTarget.value = "";
+        }
+      }
+    }
+  };
+
   return (
     <div className="p-4 flex flex-col h-screen">
       <div className="mt-2 flex-1 justify-between">
@@ -343,6 +357,7 @@ function ConversationView() {
               required
               rows={1}
               ref={inputRef}
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div className="flex justify-between space-x-2 mt-2">
