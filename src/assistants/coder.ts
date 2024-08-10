@@ -46,49 +46,34 @@ export class Coder extends BaseAssistant {
     // TODO 200: get five responses, pick the best one with pickResponse
     // TODO 400: write a claudePlus
 
-    // let partialJoule = joules.createJouleBot("", mode, currentPseudoCommit, contextPaths);
     let partialMessage = "";
     const finalResponse = await claudeAPI.streamClaude(
       claudeConversation,
       (responseFragment: string) => {
         partialMessage += responseFragment;
-        const { messageChunksList, searchReplaceList } =
-          diffApplicatorXml.splitResponse(partialMessage, true);
-        const newPseudoCommit = this.getNewPseudoCommit(
-          gitRepo,
+        const newConversation = this.claudeOutputToConversation(
+          conversation,
+          partialMessage,
+          true,
           currentPseudoCommit,
           mode,
-          searchReplaceList
+          contextPaths,
+          gitRepo
         );
-        const partialJoule = joules.createJouleBot(
-          messageChunksList.join("\n"),
-          partialMessage,
-          mode,
-          newPseudoCommit,
-          contextPaths
-        );
-        processPartial(conversations.addJoule(conversation, partialJoule));
+        processPartial(newConversation);
       }
     );
     console.log(finalResponse);
 
-    const { messageChunksList, searchReplaceList } =
-      diffApplicatorXml.splitResponse(finalResponse, false);
-
-    const newPseudoCommit = this.getNewPseudoCommit(
-      gitRepo,
+    return this.claudeOutputToConversation(
+      conversation,
+      finalResponse,
+      true,
       currentPseudoCommit,
       mode,
-      searchReplaceList
+      contextPaths,
+      gitRepo
     );
-    const newJoule = joules.createJouleBot(
-      messageChunksList.join("\n"),
-      finalResponse,
-      mode,
-      newPseudoCommit,
-      contextPaths
-    );
-    return conversations.addJoule(conversation, newJoule);
   }
 
   private getSystemPrompt(mode: Mode): string {
@@ -122,6 +107,33 @@ export class Coder extends BaseAssistant {
       },
       { role: "assistant", content: prompts.repoMapAsstAck() },
     ];
+  }
+
+  private claudeOutputToConversation(
+    prevConversation: Conversation,
+    response: string,
+    partialMode: boolean,
+    currentPseudoCommit: PseudoCommit,
+    mode: Mode,
+    contextPaths: string[],
+    gitRepo: GitRepo
+  ): Conversation {
+    const { messageChunksList, searchReplaceList } =
+      diffApplicatorXml.splitResponse(response, partialMode);
+    const newPseudoCommit = this.getNewPseudoCommit(
+      gitRepo,
+      currentPseudoCommit,
+      mode,
+      searchReplaceList
+    );
+    const newJoule = joules.createJouleBot(
+      messageChunksList.join("\n"),
+      response,
+      mode,
+      newPseudoCommit,
+      contextPaths
+    );
+    return conversations.addJoule(prevConversation, newJoule);
   }
 
   /**

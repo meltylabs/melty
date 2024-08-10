@@ -3,6 +3,7 @@ import {
   GitRepo,
   Mode,
   ClaudeConversation,
+  PseudoCommit,
   JouleBot,
 } from "../types";
 import * as joules from "../backend/joules";
@@ -32,39 +33,49 @@ export class Architect extends BaseAssistant {
       ],
     };
 
-    let partialJoule = joules.createJouleBot(
-      "",
-      "",
-      mode,
-      currentPseudoCommit,
-      contextPaths
-    );
+    let partialResponse = "";
     const finalResponse = await claudeAPI.streamClaude(
       claudeConversation,
       (responseFragment: string) => {
-        const newPseudoCommit =
-          pseudoCommits.createFromPrevious(currentPseudoCommit);
-        partialJoule = joules.createJouleBot(
-          partialJoule.message + responseFragment,
-          partialJoule.message + responseFragment,
-          mode,
-          newPseudoCommit,
-          contextPaths
-        );
-        const partialConversation = conversations.addJoule(
+        partialResponse += responseFragment;
+        const partialConversation = this.claudeOutputToConversation(
           conversation,
-          partialJoule
+          partialResponse,
+          true,
+          currentPseudoCommit,
+          mode,
+          contextPaths
         );
         processPartial(partialConversation);
       }
     );
     console.log(finalResponse);
 
-    const newJoule = joules.createJouleBot(
+    return this.claudeOutputToConversation(
+      conversation,
       finalResponse,
-      finalResponse,
-      mode,
+      false,
       currentPseudoCommit,
+      mode,
+      contextPaths
+    );
+  }
+
+  private claudeOutputToConversation(
+    conversation: Conversation,
+    response: string,
+    partialMode: boolean,
+    currentPseudoCommit: PseudoCommit,
+    mode: Mode,
+    contextPaths: string[]
+  ): Conversation {
+    const newPseudoCommit =
+      pseudoCommits.createFromPrevious(currentPseudoCommit);
+    const newJoule = joules.createJouleBot(
+      response,
+      response,
+      mode,
+      newPseudoCommit,
       contextPaths
     );
     return conversations.addJoule(conversation, newJoule);
