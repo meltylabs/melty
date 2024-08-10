@@ -60,7 +60,7 @@ export class Task implements Task {
     await this.gitRepo!.repository.status();
 
     if (!utils.repoIsClean(this.gitRepo!.repository)) {
-      utils.error("Working directory is not clean. Cannot proceed activating task.");
+      utils.handleGitError("Working directory is not clean. Cannot proceed activating task.");
     } else {
       try {
         await this.gitRepo!.repository.checkout(this.branch);
@@ -69,7 +69,7 @@ export class Task implements Task {
         if (error.stderr && error.stderr.includes("did not match any file(s) known to git")) {
           // we need to create the branch
           if (!utils.repoIsOnMain(this.gitRepo!.repository)) {
-            utils.error("Cannot activate task: working directory is not on main branch");
+            utils.handleGitError("Cannot activate task: working directory is not on main branch");
           }
           console.log(`Branch ${this.branch} does not exist. Creating it.`);
           await this.gitRepo!.repository.createBranch(this.branch, true);
@@ -105,7 +105,7 @@ export class Task implements Task {
     const conversationTailCommit = pseudoCommits.commit(conversationState);
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
     if (latestCommit !== conversationTailCommit) {
-      utils.error(
+      utils.handleGitError(
         `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
       );
     }
@@ -113,7 +113,7 @@ export class Task implements Task {
 
   private ensureWorkingDirectoryClean(): void {
     if (!utils.repoIsClean(this.gitRepo!.repository)) {
-      utils.error(`Working directory is not clean:
+      utils.handleGitError(`Working directory is not clean:
                 ${this.gitRepo!.repository.state.workingTreeChanges.length}
                 ${this.gitRepo!.repository.state.indexChanges.length}
                 ${this.gitRepo!.repository.state.mergeChanges.length}`);

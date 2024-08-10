@@ -10,4 +10,4 @@ const EXCLUDES = [
 
 export const EXCLUDES_GLOB = `{${EXCLUDES.join(",")}}`;
 
-export const STRICT_MODE = true as boolean;
+export const STRICT_GIT = false;

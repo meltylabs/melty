@@ -5,12 +5,17 @@ import * as path from "path";
 import { GitRepo } from "../types";
 import { Task } from "../backend/tasks";
 
-export function error(message: string) {
-    console.warn(message);
-    vscode.window.showErrorMessage(message);
-    if (config.STRICT_MODE) {
-        throw new Error(message);
+export function handleGitError(message: string) {
+    if (config.STRICT_GIT) {
+        error(message);
+    } else {
+        console.log(message);
     }
+}
+
+export function error(message: string) {
+    vscode.window.showErrorMessage(message);
+    throw new Error(message);
 }
 
 export function info(message: string) {
@@ -30,7 +35,7 @@ export function repoIsOnMain(repo: any) {
 
 export function ensureRepoIsOnCommit(repo: any, commit: string) {
     if (repo.state.HEAD?.commit !== commit) {
-        error(`Expected repo to be on commit ${commit} but found ${repo.state.HEAD?.commit}`);
+        handleGitError(`Expected repo to be on commit ${commit} but found ${repo.state.HEAD?.commit}`);
     }
 }
 
