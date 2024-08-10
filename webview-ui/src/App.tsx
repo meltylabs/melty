@@ -203,9 +203,8 @@ function ConversationView() {
   // }
 
   async function handleCreatePR() {
-    console.log("createPR");
     const result = await extensionRPC.run("createPullRequest");
-    console.log(result);
+    console.log("PR created", result);
   }
 
   // auto scroll to bottom
