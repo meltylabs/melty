@@ -6,6 +6,7 @@ import {
   RotateCcwIcon,
   PlusIcon,
   GitPullRequestIcon,
+  ChevronsUpDown,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -16,7 +17,11 @@ import {
   Navigate,
   useParams,
 } from "react-router-dom";
-
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./components/ui/collapsible";
 import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import { FilePicker } from "./components/FilePicker";
@@ -124,7 +129,7 @@ function JouleComponent({
         {isPartial && <span className="animate-pulse">▋</span>}
       </div>
 
-      {/* <div>
+      <div>
         {diffHtml && !isPartial && (
           <Collapsible>
             <div className="flex items-center justify-end space-x-4 px-4">
@@ -139,7 +144,7 @@ function JouleComponent({
             <CollapsibleContent>{diffHtml}</CollapsibleContent>
           </Collapsible>
         )}
-      </div> */}
+      </div>
     </div>
   );
 }
@@ -152,6 +157,7 @@ function ConversationView() {
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
+  const conversationRef = useRef<HTMLDivElement>(null);
 
   async function handleAddFile(file: string) {
     const meltyFiles = await extensionRPC.run("addMeltyFile", {
@@ -196,9 +202,17 @@ function ConversationView() {
   //   vscode.postMessage({ command: "resetTask", taskId: taskId });
   // }
 
-  function handleCreatePR() {
-    vscode.postMessage({ command: "createPR" });
+  async function handleCreatePR() {
+    const result = await extensionRPC.run("createPullRequest");
+    console.log("PR created", result);
   }
+
+  // auto scroll to bottom
+  useEffect(() => {
+    if (conversationRef.current) {
+      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+    }
+  }, [task]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -230,6 +244,7 @@ function ConversationView() {
         );
         switch (message.notificationType) {
           case "setPartialResponse":
+            console.log("setPartialResponse", task);
             setTask(message.task);
             return;
         }
@@ -280,6 +295,16 @@ function ConversationView() {
             <p className="text-sm font-semibold">{task.name}</p>
           </div>
         )}
+        <Button
+          name="createPR"
+          size="sm"
+          type="button"
+          onClick={handleCreatePR}
+          variant="outline"
+        >
+          <GitPullRequestIcon className="h-4 w-4 mr-2" />
+          Create PR
+        </Button>
         <FilePicker
           open={pickerOpen}
           setOpen={setPickerOpen}
@@ -313,7 +338,10 @@ function ConversationView() {
           ))}
         </div>
       </div>
-      <div className="mb-4 rounded p-2 mx-auto">
+      <div
+        className="mb-16 rounded p-2 mx-auto overflow-y-auto"
+        ref={conversationRef}
+      >
         {task?.conversation.joules.map((joule, index) => (
           <JouleComponent
             key={index}
@@ -326,7 +354,7 @@ function ConversationView() {
           />
         ))}
       </div>
-      <div className="">
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 rounded-lg shadow-md">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Textarea
@@ -334,6 +362,7 @@ function ConversationView() {
               id="message"
               autoFocus
               required
+              rows={1}
               ref={inputRef}
               onKeyDown={handleKeyDown}
             />
@@ -347,16 +376,7 @@ function ConversationView() {
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button> */}
-            <Button
-              name="createPR"
-              size="sm"
-              type="button"
-              onClick={handleCreatePR}
-              variant="outline"
-            >
-              <GitPullRequestIcon className="h-4 w-4 mr-2" />
-              Create PR
-            </Button>
+
             <div className="space-x-2">
               <Button name="ask" size="sm" type="submit" variant="outline">
                 Ask{" "}
