@@ -50,8 +50,8 @@ export class Coder extends BaseAssistant {
     const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(finalResponse);
 
     // reset the diff preview
-    const pseudoCommitNoDiff =
-      pseudoCommits.createFromPrevious(currentPseudoCommit);
+    // TODO replace `pseudoCommits.createDummy()` with `pseudoCommits.createFromPrevious(currentPseudoCommit)` when we're tracking diffs again
+    const pseudoCommitNoDiff = pseudoCommits.createDummy();
     const newPseudoCommit = this.getNewPseudoCommit(gitRepo, pseudoCommitNoDiff, mode, searchReplaceList);
     const newJoule = joules.createJouleBot(messageChunksList.join("\n"), mode, newPseudoCommit, contextPaths);
     return conversations.addJoule(conversation, newJoule);
