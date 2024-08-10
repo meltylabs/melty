@@ -3,14 +3,21 @@ import { Uri } from "vscode";
 import { v4 as uuidv4 } from "uuid";
 import * as pseudoCommits from "./pseudoCommits";
 
-import { Mode, JouleHuman, JouleBot, Joule } from '../types';
+import { Mode, JouleHuman, JouleBot, Joule } from "../types";
 
 export function createJouleHuman(
   message: string,
-  pseudoCommit: PseudoCommit,
+  pseudoCommit: PseudoCommit
 ): JouleHuman {
   const id = uuidv4();
-  return { message, author: "human", mode: null, pseudoCommit, contextPaths: null, id };
+  return {
+    message,
+    author: "human",
+    mode: null,
+    pseudoCommit,
+    contextPaths: null,
+    id,
+  };
 }
 
 export function createJouleBot(
@@ -18,10 +25,18 @@ export function createJouleBot(
   rawOutput: string,
   mode: Mode,
   pseudoCommit: PseudoCommit,
-  contextPaths: string[],
+  contextPaths: string[]
 ): JouleBot {
   const id = uuidv4();
-  return { message, rawOutput: string, author: "bot", mode: mode, pseudoCommit, contextPaths, id };
+  return {
+    message,
+    rawOutput: rawOutput,
+    author: "bot",
+    mode: mode,
+    pseudoCommit,
+    contextPaths,
+    id,
+  };
 }
 
 export function updateMessage(joule: Joule, message: string): Joule {
