@@ -10,10 +10,11 @@ export abstract class BaseAssistant {
         mode: Mode,
         processPartial: (partialConversation: Conversation) => void
     ): Promise<Conversation>;
+
     protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
         return conversation.joules.map((joule) => ({
             role: joule.author === "human" ? "user" : "assistant",
-            content: joule.message.length ? joule.message : "...",
+            content: joules.formatMessageForClaude(joule)
         }));
     }
 

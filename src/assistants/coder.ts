@@ -38,22 +38,28 @@ export class Coder extends BaseAssistant {
     // TODO 200: get five responses, pick the best one with pickResponse
     // TODO 400: write a claudePlus
 
-    let partialJoule = joules.createJouleBot("", mode, currentPseudoCommit, contextPaths);
+    // let partialJoule = joules.createJouleBot("", mode, currentPseudoCommit, contextPaths);
+    let partialMessage = "";
     const finalResponse = await claudeAPI.streamClaude(
       claudeConversation,
       (responseFragment: string) => {
-        partialJoule = joules.updateMessage(partialJoule, partialJoule.message + responseFragment) as JouleBot;
+        partialMessage += responseFragment;
+        const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(partialMessage, true);
+        const pseudoCommitNoDiff = pseudoCommits.createDummy();
+        const newPseudoCommit = this.getNewPseudoCommit(gitRepo, pseudoCommitNoDiff, mode, searchReplaceList);
+        const partialJoule = joules.createJouleBot(messageChunksList.join("\n"), partialMessage, mode, newPseudoCommit, contextPaths);
         processPartial(conversations.addJoule(conversation, partialJoule));
       }
     );
+    console.log(finalResponse);
 
-    const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(finalResponse);
+    const { messageChunksList, searchReplaceList } = diffApplicatorXml.splitResponse(finalResponse, false);
 
     // reset the diff preview
     // TODO replace `pseudoCommits.createDummy()` with `pseudoCommits.createFromPrevious(currentPseudoCommit)` when we're tracking diffs again
     const pseudoCommitNoDiff = pseudoCommits.createDummy();
     const newPseudoCommit = this.getNewPseudoCommit(gitRepo, pseudoCommitNoDiff, mode, searchReplaceList);
-    const newJoule = joules.createJouleBot(messageChunksList.join("\n"), mode, newPseudoCommit, contextPaths);
+    const newJoule = joules.createJouleBot(messageChunksList.join("\n"), finalResponse, mode, newPseudoCommit, contextPaths);
     return conversations.addJoule(conversation, newJoule);
   }
 

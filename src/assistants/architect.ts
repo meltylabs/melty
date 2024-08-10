@@ -24,7 +24,7 @@ export class Architect extends BaseAssistant {
             ]
         };
 
-        let partialJoule = joules.createJouleBot("", mode, currentPseudoCommit, contextPaths);
+        let partialJoule = joules.createJouleBot("", "", mode, currentPseudoCommit, contextPaths);
         const finalResponse = await claudeAPI.streamClaude(
             claudeConversation,
             (responseFragment: string) => {
@@ -33,8 +33,9 @@ export class Architect extends BaseAssistant {
                 processPartial(partialConversation);
             }
         );
+        console.log(finalResponse);
 
-        const newJoule = joules.createJouleBot(finalResponse, mode, currentPseudoCommit, contextPaths);
+        const newJoule = joules.createJouleBot(finalResponse, finalResponse, mode, currentPseudoCommit, contextPaths);
         return conversations.addJoule(conversation, newJoule);
     }
 }
