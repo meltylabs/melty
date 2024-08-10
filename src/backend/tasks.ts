@@ -204,6 +204,7 @@ export class Task implements Task {
 
       const joule = joules.createJouleBot(
         "[  Error :(  ]",
+        "[ There was an error communicating with the bot. ]",
         mode,
         pseudoCommits.createDummy(),
         contextPaths
