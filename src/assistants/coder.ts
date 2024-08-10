@@ -1,10 +1,10 @@
 import {
-  Conversation,
-  GitRepo,
-  Mode,
-  ClaudeConversation,
-  PseudoCommit,
-  ClaudeMessage,
+    Conversation,
+    GitRepo,
+    Mode,
+    ClaudeConversation,
+    PseudoCommit,
+    ClaudeMessage,
 } from "../types";
 import * as pseudoCommits from "../backend/pseudoCommits";
 import * as joules from "../backend/joules";
@@ -17,144 +17,148 @@ import * as conversations from "../backend/conversations";
 import { BaseAssistant } from "./baseAssistant";
 
 export class Coder extends BaseAssistant {
-  async respond(
-    conversation: Conversation,
-    gitRepo: GitRepo,
-    contextPaths: string[],
-    mode: Mode,
-    processPartial: (partialConversation: Conversation) => void
-  ) {
-    const currentPseudoCommit =
-      conversations.lastJoule(conversation)!.pseudoCommit;
+    async respond(
+        conversation: Conversation,
+        gitRepo: GitRepo,
+        contextPaths: string[],
+        mode: Mode,
+        processPartial: (partialConversation: Conversation) => void
+    ) {
+        const currentPseudoCommit =
+            conversations.lastJoule(conversation)!.pseudoCommit;
 
-    // TODO 100: Add a loop here to try to correct the response if it's not good yet
-    // TODO 300: (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
-    // We can try each step multiple times. All attempts should be represented by a tree. We pick one leaf to respond with.
+        // TODO 100: Add a loop here to try to correct the response if it's not good yet
+        // TODO 300: (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
+        // We can try each step multiple times. All attempts should be represented by a tree. We pick one leaf to respond with.
 
-    const systemPrompt = this.getSystemPrompt(mode);
+        const systemPrompt = this.getSystemPrompt(mode);
 
-    const claudeConversation: ClaudeConversation = {
-      system: systemPrompt,
-      messages: [
-        // TODOV2 user system info
-        ...(await this.encodeRepoMap(gitRepo, currentPseudoCommit)),
-        ...this.encodeContext(gitRepo, currentPseudoCommit, contextPaths),
-        ...this.encodeMessages(conversation),
-      ],
-    };
+        const claudeConversation: ClaudeConversation = {
+            system: systemPrompt,
+            messages: [
+                // TODOV2 user system info
+                // ...(await this.encodeRepoMap(gitRepo, currentPseudoCommit)),
+                ...this.encodeContext(
+                    gitRepo,
+                    currentPseudoCommit,
+                    contextPaths
+                ),
+                ...this.encodeMessages(conversation),
+            ],
+        };
 
-    // TODO 200: get five responses, pick the best one with pickResponse
-    // TODO 400: write a claudePlus
+        // TODO 200: get five responses, pick the best one with pickResponse
+        // TODO 400: write a claudePlus
 
-    let partialMessage = "";
-    const finalResponse = await claudeAPI.streamClaude(
-      claudeConversation,
-      (responseFragment: string) => {
-        partialMessage += responseFragment;
-        const newConversation = this.claudeOutputToConversation(
-          conversation,
-          partialMessage,
-          true,
-          currentPseudoCommit,
-          mode,
-          contextPaths,
-          gitRepo
+        let partialMessage = "";
+        const finalResponse = await claudeAPI.streamClaude(
+            claudeConversation,
+            (responseFragment: string) => {
+                partialMessage += responseFragment;
+                const newConversation = this.claudeOutputToConversation(
+                    conversation,
+                    partialMessage,
+                    true,
+                    currentPseudoCommit,
+                    mode,
+                    contextPaths,
+                    gitRepo
+                );
+                processPartial(newConversation);
+            }
         );
-        processPartial(newConversation);
-      }
-    );
-    console.log(finalResponse);
+        console.log(finalResponse);
 
-    return this.claudeOutputToConversation(
-      conversation,
-      finalResponse,
-      true,
-      currentPseudoCommit,
-      mode,
-      contextPaths,
-      gitRepo
-    );
-  }
-
-  private getSystemPrompt(mode: Mode): string {
-    switch (mode) {
-      case "code":
-        return (
-          prompts.codeModeSystemPrompt() +
-          prompts.diffDecoderPrompt() +
-          prompts.exampleConversationsPrompt() +
-          prompts.codeChangeCommandRulesPrompt()
+        return this.claudeOutputToConversation(
+            conversation,
+            finalResponse,
+            true,
+            currentPseudoCommit,
+            mode,
+            contextPaths,
+            gitRepo
         );
-      case "ask":
-        return prompts.askModeSystemPrompt();
-      default:
-        throw new Error(`Unsupported mode: ${mode}`);
     }
-  }
 
-  private async encodeRepoMap(
-    gitRepo: GitRepo,
-    pseudoCommit: PseudoCommit
-  ): Promise<ClaudeMessage[]> {
-    const repoMap = new RepoMapSpec(gitRepo);
-    const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
-    return [
-      {
-        role: "user",
-        content: `${prompts.repoMapIntro()}\n\n${await repoMap.getRepoMap(
-          workspaceFilePaths
-        )}`,
-      },
-      { role: "assistant", content: prompts.repoMapAsstAck() },
-    ];
-  }
+    private getSystemPrompt(mode: Mode): string {
+        switch (mode) {
+            case "code":
+                return (
+                    prompts.codeModeSystemPrompt() +
+                    prompts.diffDecoderPrompt() +
+                    prompts.exampleConversationsPrompt() +
+                    prompts.codeChangeCommandRulesPrompt()
+                );
+            case "ask":
+                return prompts.askModeSystemPrompt();
+            default:
+                throw new Error(`Unsupported mode: ${mode}`);
+        }
+    }
 
-  private claudeOutputToConversation(
-    prevConversation: Conversation,
-    response: string,
-    partialMode: boolean,
-    currentPseudoCommit: PseudoCommit,
-    mode: Mode,
-    contextPaths: string[],
-    gitRepo: GitRepo
-  ): Conversation {
-    const { messageChunksList, searchReplaceList } =
-      diffApplicatorXml.splitResponse(response, partialMode);
-    const newPseudoCommit = this.getNewPseudoCommit(
-      gitRepo,
-      currentPseudoCommit,
-      mode,
-      searchReplaceList
-    );
-    const newJoule = joules.createJouleBot(
-      messageChunksList.join("\n"),
-      response,
-      mode,
-      newPseudoCommit,
-      contextPaths
-    );
-    return conversations.addJoule(prevConversation, newJoule);
-  }
+    // private async encodeRepoMap(
+    //   gitRepo: GitRepo,
+    //   pseudoCommit: PseudoCommit
+    // ): Promise<ClaudeMessage[]> {
+    //   const repoMap = new RepoMapSpec(gitRepo);
+    //   const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
+    //   return [
+    //     {
+    //       role: "user",
+    //       content: `${prompts.repoMapIntro()}\n\n${await repoMap.getRepoMap(
+    //         workspaceFilePaths
+    //       )}`,
+    //     },
+    //     { role: "assistant", content: prompts.repoMapAsstAck() },
+    //   ];
+    // }
 
-  /**
-   * Creates a new pseudo commit representing changes (if there are any) on top of currentPseudoCommit.
-   */
-  private getNewPseudoCommit(
-    gitRepo: GitRepo,
-    currentPseudoCommit: PseudoCommit,
-    mode: Mode,
-    searchReplaceList: any[]
-  ) {
-    // Reset the diff preview
-    const pseudoCommitNoDiff =
-      pseudoCommits.createFromPrevious(currentPseudoCommit);
+    private claudeOutputToConversation(
+        prevConversation: Conversation,
+        response: string,
+        partialMode: boolean,
+        currentPseudoCommit: PseudoCommit,
+        mode: Mode,
+        contextPaths: string[],
+        gitRepo: GitRepo
+    ): Conversation {
+        const { messageChunksList, searchReplaceList } =
+            diffApplicatorXml.splitResponse(response, partialMode);
+        const newPseudoCommit = this.getNewPseudoCommit(
+            gitRepo,
+            currentPseudoCommit,
+            mode,
+            searchReplaceList
+        );
+        const newJoule = joules.createJouleBot(
+            messageChunksList.join("\n"),
+            response,
+            mode,
+            newPseudoCommit,
+            contextPaths
+        );
+        return conversations.addJoule(prevConversation, newJoule);
+    }
 
-    return mode === "code"
-      ? diffApplicatorXml.applySearchReplaceBlocks(
-          gitRepo,
-          pseudoCommitNoDiff,
-          searchReplaceList
-        )
-      : pseudoCommitNoDiff;
-  }
+    /**
+     * Creates a new pseudo commit representing changes (if there are any) on top of currentPseudoCommit.
+     */
+    private getNewPseudoCommit(
+        gitRepo: GitRepo,
+        currentPseudoCommit: PseudoCommit,
+        mode: Mode,
+        searchReplaceList: any[]
+    ) {
+        // Reset the diff preview
+        const pseudoCommitNoDiff =
+            pseudoCommits.createFromPrevious(currentPseudoCommit);
+
+        return mode === "code"
+            ? diffApplicatorXml.applySearchReplaceBlocks(
+                  gitRepo,
+                  pseudoCommitNoDiff,
+                  searchReplaceList
+              )
+            : pseudoCommitNoDiff;
+    }
 }
