@@ -318,7 +318,7 @@ function ConversationView() {
           ))}
         </div>
       </div>
-      <div className="mb-4 rounded p-2 mx-auto">
+      <div className="mb-16 rounded p-2 mx-auto">
         {task?.conversation.joules.map((joule, index) => (
           <JouleComponent
             key={index}
@@ -331,7 +331,7 @@ function ConversationView() {
           />
         ))}
       </div>
-      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-gray-200 p-4 m-4 rounded-lg shadow-md">
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 rounded-lg shadow-md">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 flex">
             <Textarea
@@ -339,6 +339,7 @@ function ConversationView() {
               id="message"
               autoFocus
               required
+              rows={1}
               ref={inputRef}
               onKeyDown={handleKeyDown}
             />
