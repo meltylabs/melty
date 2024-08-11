@@ -36,7 +36,7 @@ export class Coder extends BaseAssistant {
             system: systemPrompt,
             messages: [
                 // TODOV2 user system info
-                // ...(await this.encodeRepoMap(gitRepo, currentPseudoCommit)),
+                ...(await this.encodeRepoMap(gitRepo, currentPseudoCommit)),
                 ...this.encodeContext(
                     gitRepo,
                     currentPseudoCommit,
@@ -86,22 +86,22 @@ export class Coder extends BaseAssistant {
         );
     }
 
-    // private async encodeRepoMap(
-    //   gitRepo: GitRepo,
-    //   pseudoCommit: PseudoCommit
-    // ): Promise<ClaudeMessage[]> {
-    //   const repoMap = new RepoMapSpec(gitRepo);
-    //   const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
-    //   return [
-    //     {
-    //       role: "user",
-    //       content: `${prompts.repoMapIntro()}\n\n${await repoMap.getRepoMap(
-    //         workspaceFilePaths
-    //       )}`,
-    //     },
-    //     { role: "assistant", content: prompts.repoMapAsstAck() },
-    //   ];
-    // }
+    private async encodeRepoMap(
+        gitRepo: GitRepo,
+        pseudoCommit: PseudoCommit
+    ): Promise<ClaudeMessage[]> {
+        const repoMap = new RepoMapSpec(gitRepo);
+        const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
+        return [
+            {
+                role: "user",
+                content: `${prompts.repoMapIntro()}\n\n${await repoMap.getRepoMap(
+                    workspaceFilePaths
+                )}`,
+            },
+            { role: "assistant", content: prompts.repoMapAsstAck() },
+        ];
+    }
 
     private claudeOutputToConversation(
         prevConversation: Conversation,
