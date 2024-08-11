@@ -65,4 +65,5 @@ type rpcMethod =
   | "addMeltyFile"
   | "dropMeltyFile"
   | "chatMessage"
-  | "createPullRequest";
+  | "createPullRequest"
+  | "deleteTask";

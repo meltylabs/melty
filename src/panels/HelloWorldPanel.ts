@@ -253,6 +253,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
             case "createPullRequest":
                 this.MeltyExtension.createPullRequest();
                 return Promise.resolve(null);
+
+            case "deleteTask":
+                this.MeltyExtension.deleteTask(params.taskId);
+                return Promise.resolve(null);
         }
     }
 

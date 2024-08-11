@@ -14,7 +14,9 @@ export function loadTasksFromDisk(gitRepoRoot: string): Map<string, Task> {
     for (const file of taskFiles) {
         // strip extension from file
         const taskId = path.parse(file).name;
-        const taskData = JSON.parse(fs.readFileSync(path.join(meltyDir, file), "utf8"));
+        const taskData = JSON.parse(
+            fs.readFileSync(path.join(meltyDir, file), "utf8")
+        );
         const task = Object.assign(new Task(taskId, "", ""), taskData);
 
         taskMap.set(task.id, task);
@@ -38,4 +40,25 @@ export async function writeTaskToDisk(task: Task): Promise<void> {
 
     const taskPath = path.join(meltyDir, `${task.id}.json`);
     fs.writeFileSync(taskPath, JSON.stringify(serializableTask, null, 2));
+}
+
+export async function deleteTaskFromDisk(task: Task): Promise<void> {
+    if (!task.gitRepo) {
+        console.log(
+            `Cannot delete task ${task.id} from disk, no git repo found`
+        );
+        return;
+    }
+
+    const meltyDir = path.join(task.gitRepo.rootPath, ".melty");
+    const taskPath = path.join(meltyDir, `${task.id}.json`);
+
+    if (fs.existsSync(taskPath)) {
+        fs.unlinkSync(taskPath);
+        console.log(`Deleted task file for task ${task.id}`);
+    } else {
+        console.log(
+            `Task file for task ${task.id} not found, skipping deletion`
+        );
+    }
 }

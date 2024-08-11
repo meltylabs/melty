@@ -147,6 +147,26 @@ export class MeltyExtension {
     /**
      * Creates a pull request for the current branch.
      */
+    public async deleteTask(taskId: string): Promise<void> {
+        const task = this.tasks.get(taskId);
+        if (!task) {
+            throw new Error(`Task with id ${taskId} not found`);
+        }
+
+        // Remove the task from the map
+        this.tasks.delete(taskId);
+
+        // If the deleted task was the current task, set currentTask to undefined
+        if (this.currentTask && this.currentTask.id === taskId) {
+            this.currentTask = undefined;
+        }
+
+        // Delete the task from disk
+        await datastores.deleteTaskFromDisk(task);
+
+        // TODO: Consider cleaning up any associated Git branches or other resources
+    }
+
     public async createPullRequest() {
         try {
             const gitExtension =
