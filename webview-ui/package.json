@@ -1,75 +1,75 @@
 {
-  "name": "melty",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "start": "EXTEND_ESLINT=true react-scripts start",
-    "build": "node ./scripts/build-react-no-split.js",
-    "test": "EXTEND_ESLINT=true react-scripts test",
-    "eject": "react-scripts eject",
-    "watch": "EXTEND_ESLINT=true react-scripts start"
-  },
-  "dependencies": {
-    "@radix-ui/react-avatar": "^1.1.0",
-    "@radix-ui/react-collapsible": "^1.1.0",
-    "@radix-ui/react-dialog": "^1.1.1",
-    "@radix-ui/react-label": "^2.1.0",
-    "@radix-ui/react-menubar": "^1.1.1",
-    "@radix-ui/react-radio-group": "^1.2.0",
-    "@radix-ui/react-separator": "^1.1.0",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@radix-ui/react-switch": "^1.1.0",
-    "@radix-ui/react-toast": "^1.2.1",
-    "@radix-ui/react-tooltip": "^1.1.2",
-    "@types/react-syntax-highlighter": "^15.5.13",
-    "@vscode/webview-ui-toolkit": "^1.2.2",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "cmdk": "^1.0.0",
-    "diff2html": "^3.4.48",
-    "lucide-react": "^0.424.0",
-    "react": "^18.2.0",
-    "react-diff-view": "^3.2.1",
-    "react-dom": "^18.2.0",
-    "react-markdown": "^9.0.1",
-    "react-router-dom": "^6.26.0",
-    "react-syntax-highlighter": "^15.5.0",
-    "tailwind-merge": "^2.4.0",
-    "tailwindcss-animate": "^1.0.7"
-  },
-  "devDependencies": {
-    "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.14",
-    "@types/node": "^12.20.37",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@types/vscode-webview": "^1.57.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.40",
-    "react-scripts": "^5.0.1",
-    "rewire": "^5.0.0",
-    "tailwindcss": "^3.4.7",
-    "typescript": "^4.4.4"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "no-unused-expressions": "off"
+    "name": "melty",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+        "start": "EXTEND_ESLINT=true react-scripts start",
+        "build": "node ./scripts/build-react-no-split.js",
+        "test": "EXTEND_ESLINT=true react-scripts test",
+        "eject": "react-scripts eject",
+        "watch": "EXTEND_ESLINT=true react-scripts start"
+    },
+    "dependencies": {
+        "@radix-ui/react-avatar": "^1.1.0",
+        "@radix-ui/react-collapsible": "^1.1.0",
+        "@radix-ui/react-dialog": "^1.1.1",
+        "@radix-ui/react-label": "^2.1.0",
+        "@radix-ui/react-menubar": "^1.1.1",
+        "@radix-ui/react-radio-group": "^1.2.0",
+        "@radix-ui/react-separator": "^1.1.0",
+        "@radix-ui/react-slot": "^1.1.0",
+        "@radix-ui/react-switch": "^1.1.0",
+        "@radix-ui/react-toast": "^1.2.1",
+        "@radix-ui/react-tooltip": "^1.1.2",
+        "@types/react-syntax-highlighter": "^15.5.13",
+        "@vscode/webview-ui-toolkit": "^1.2.2",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
+        "cmdk": "^1.0.0",
+        "diff2html": "^3.4.48",
+        "lucide-react": "^0.424.0",
+        "react": "^18.2.0",
+        "react-diff-view": "^3.2.1",
+        "react-dom": "^18.2.0",
+        "react-markdown": "^9.0.1",
+        "react-router-dom": "^6.26.0",
+        "react-syntax-highlighter": "^15.5.0",
+        "tailwind-merge": "^2.4.0",
+        "tailwindcss-animate": "^1.0.7"
+    },
+    "devDependencies": {
+        "@tailwindcss/forms": "^0.5.7",
+        "@tailwindcss/typography": "^0.5.14",
+        "@types/node": "^12.20.37",
+        "@types/react": "^18.2.0",
+        "@types/react-dom": "^18.2.0",
+        "@types/vscode-webview": "^1.57.0",
+        "autoprefixer": "^10.4.19",
+        "postcss": "^8.4.40",
+        "react-scripts": "^5.0.1",
+        "rewire": "^5.0.0",
+        "tailwindcss": "^3.4.7",
+        "typescript": "^4.4.4"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ],
+        "rules": {
+            "no-unused-expressions": "off"
+        }
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
     }
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
 }

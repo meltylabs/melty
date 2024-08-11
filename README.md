@@ -55,6 +55,9 @@ Initial release of Melty
 - Run `npm run watch` to start the compiler in watch mode
 - Run `npm run watch:webview` to start the webview compiler in watch mode
 
+Webview / Frontend:
+- Run `npm run watch:all` to start the webview compiler in watch mode. It will automatically open a new browser window with the webview. Whenever changes are made to webview-ui, it will automatically create a build.
+
 ### Testing
 
 - Run `npm test` to run the test suite
