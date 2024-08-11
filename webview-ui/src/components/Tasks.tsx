@@ -5,10 +5,7 @@ import {
     CardTitle,
     CardDescription,
     CardContent,
-<<<<<<< HEAD
     CardFooter,
-=======
->>>>>>> 159d6fa (standardize naming for assistant types / modes)
 } from "./ui/card";
 import { ExtensionRPC } from "../extensionRPC";
 import { Button } from "./ui/button";
@@ -161,7 +158,6 @@ export function Tasks() {
             <div className="grid grid-cols-2 gap-6 mt-4">
                 {tasks.length === 0 && <p>No tasks</p>}
                 {tasks.reverse().map((task) => (
-<<<<<<< HEAD
                     <div key={task.id} className="mr-4 relative">
                         <Link to={`/task/${task.id}`}>
                             <Card>
@@ -185,25 +181,6 @@ export function Tasks() {
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
-=======
-                    <Link
-                        to={`/task/${task.id}`}
-                        key={task.id}
-                        className="mr-4"
-                    >
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{task.name}</CardTitle>
-                                <CardDescription>
-                                    {task.description}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p>{task.description}</p>
-                            </CardContent>
-                        </Card>
-                    </Link>
->>>>>>> 159d6fa (standardize naming for assistant types / modes)
                 ))}
             </div>
         </div>
