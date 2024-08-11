@@ -12,7 +12,7 @@ import {
 } from "vscode";
 import * as vscode from "vscode";
 import { getUri, getNonce } from "../util/utils";
-import { Conversation } from "../types";
+import { Conversation, AssistantType } from "../types";
 import { MeltyExtension } from "../extension";
 import * as utils from "../util/utils";
 import { Task } from "../backend/tasks";
@@ -232,7 +232,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
                 throw new Error("Not implemented");
                 return;
             case "chatMessage":
-                this.handleAskCode(params.text, params.mode);
+                this.handleAskCode(params.text, params.assistantType);
                 return Promise.resolve(null);
             case "createNewTask":
                 const newTaskId = await this.MeltyExtension.createNewTask(
@@ -260,7 +260,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
         }
     }
 
-    private async handleAskCode(text: string, mode: "ask" | "code") {
+    private async handleAskCode(text: string, assistantType: AssistantType) {
         const meltyMindFilePaths =
             await this.workspaceFiles!.getMeltyMindFilesRelative();
         const task = await this.MeltyExtension.getCurrentTask();
@@ -281,7 +281,11 @@ export class HelloWorldPanel implements WebviewViewProvider {
             });
         };
 
-        await task.respondBot(meltyMindFilePaths, mode, processPartial);
+        await task.respondBot(
+            meltyMindFilePaths,
+            assistantType,
+            processPartial
+        );
         this.bridgeToWebview?.sendNotification("updateTask", {
             task: utils.serializableTask(task),
         });

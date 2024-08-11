@@ -23,7 +23,7 @@ import { Label } from "./components/ui/label";
 import { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
 
 import { Tasks } from "./components/Tasks";
-import { Task, Joule } from "./types";
+import { Task, Joule, AssistantType } from "./types";
 import CopyButton from "./components/CopyButton";
 import "./App.css";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -136,8 +136,8 @@ function ConversationView() {
         setWorkspaceFiles(workspaceFiles);
     }
 
-    function handleSendMessage(mode: "code" | "ask", text: string) {
-        extensionRPC.run("chatMessage", { mode, text });
+    function handleSendMessage(assistantType: AssistantType, text: string) {
+        extensionRPC.run("chatMessage", { assistantType, text });
         // response will be returned asynchronously through notifications
     }
 
@@ -214,8 +214,8 @@ function ConversationView() {
         event.preventDefault();
         const form = event.target as HTMLFormElement;
         const message = form.message.value;
-        const mode = form.mode.value as "code" | "ask";
-        handleSendMessage(mode, message);
+        const assistantType = form.assistantType.value as AssistantType;
+        handleSendMessage(assistantType, message);
         form.reset();
     };
 
@@ -228,8 +228,9 @@ function ConversationView() {
             ) {
                 const form = event.currentTarget.form;
                 if (form) {
-                    const mode = form.mode.value as "code" | "ask";
-                    handleSendMessage(mode, event.currentTarget.value);
+                    const assistantType = form.assistantType
+                        .value as AssistantType;
+                    handleSendMessage(assistantType, event.currentTarget.value);
                     event.currentTarget.value = "";
                 }
             }
@@ -296,14 +297,14 @@ function ConversationView() {
             </div>
             <div className="">
                 <form onSubmit={handleSubmit}>
-                    <RadioGroup name="mode" defaultValue="code">
+                    <RadioGroup name="assistantType" defaultValue="coder">
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="code" id="code" />
-                            <Label htmlFor="code">Coder</Label>
+                            <RadioGroupItem value="coder" id="coder" />
+                            <Label htmlFor="coder">Coder</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="ask" id="ask" />
-                            <Label htmlFor="ask">Architect</Label>
+                            <RadioGroupItem value="architect" id="architect" />
+                            <Label htmlFor="architect">Architect</Label>
                         </div>
                     </RadioGroup>
 

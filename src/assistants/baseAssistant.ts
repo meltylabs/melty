@@ -14,7 +14,6 @@ export abstract class BaseAssistant {
         conversation: Conversation,
         gitRepo: GitRepo,
         contextPaths: string[],
-        mode: Mode,
         processPartial: (partialConversation: Conversation) => void
     ): Promise<Conversation>;
 

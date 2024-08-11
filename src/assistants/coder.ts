@@ -21,7 +21,6 @@ export class Coder extends BaseAssistant {
         conversation: Conversation,
         gitRepo: GitRepo,
         contextPaths: string[],
-        mode: Mode,
         processPartial: (partialConversation: Conversation) => void
     ) {
         const currentPseudoCommit =
@@ -31,7 +30,7 @@ export class Coder extends BaseAssistant {
         // TODO 300: (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
         // We can try each step multiple times. All attempts should be represented by a tree. We pick one leaf to respond with.
 
-        const systemPrompt = this.getSystemPrompt(mode);
+        const systemPrompt = this.getSystemPrompt();
 
         const claudeConversation: ClaudeConversation = {
             system: systemPrompt,
@@ -60,7 +59,6 @@ export class Coder extends BaseAssistant {
                     partialMessage,
                     true,
                     currentPseudoCommit,
-                    mode,
                     contextPaths,
                     gitRepo
                 );
@@ -74,26 +72,18 @@ export class Coder extends BaseAssistant {
             finalResponse,
             true,
             currentPseudoCommit,
-            mode,
             contextPaths,
             gitRepo
         );
     }
 
-    private getSystemPrompt(mode: Mode): string {
-        switch (mode) {
-            case "code":
-                return (
-                    prompts.codeModeSystemPrompt() +
-                    prompts.diffDecoderPrompt() +
-                    prompts.exampleConversationsPrompt() +
-                    prompts.codeChangeCommandRulesPrompt()
-                );
-            case "ask":
-                return prompts.askModeSystemPrompt();
-            default:
-                throw new Error(`Unsupported mode: ${mode}`);
-        }
+    private getSystemPrompt(): string {
+        return (
+            prompts.codeModeSystemPrompt() +
+            prompts.diffDecoderPrompt() +
+            prompts.exampleConversationsPrompt() +
+            prompts.codeChangeCommandRulesPrompt()
+        );
     }
 
     // private async encodeRepoMap(
@@ -118,7 +108,6 @@ export class Coder extends BaseAssistant {
         response: string,
         partialMode: boolean,
         currentPseudoCommit: PseudoCommit,
-        mode: Mode,
         contextPaths: string[],
         gitRepo: GitRepo
     ): Conversation {
@@ -127,15 +116,14 @@ export class Coder extends BaseAssistant {
         const newPseudoCommit = this.getNewPseudoCommit(
             gitRepo,
             currentPseudoCommit,
-            mode,
             searchReplaceList
         );
         const newJoule = joules.createJouleBot(
             messageChunksList.join("\n"),
             response,
-            mode,
             newPseudoCommit,
-            contextPaths
+            contextPaths,
+            "coder"
         );
         return conversations.addJoule(prevConversation, newJoule);
     }
@@ -146,19 +134,16 @@ export class Coder extends BaseAssistant {
     private getNewPseudoCommit(
         gitRepo: GitRepo,
         currentPseudoCommit: PseudoCommit,
-        mode: Mode,
         searchReplaceList: any[]
     ) {
         // Reset the diff preview
         const pseudoCommitNoDiff =
             pseudoCommits.createFromPrevious(currentPseudoCommit);
 
-        return mode === "code"
-            ? diffApplicatorXml.applySearchReplaceBlocks(
-                  gitRepo,
-                  pseudoCommitNoDiff,
-                  searchReplaceList
-              )
-            : pseudoCommitNoDiff;
+        return diffApplicatorXml.applySearchReplaceBlocks(
+            gitRepo,
+            pseudoCommitNoDiff,
+            searchReplaceList
+        );
     }
 }
