@@ -124,7 +124,7 @@ export function splitResponse(
         // messageChunksList.push("");
 
         // ENABLED -- raw message strategy (each CC is a chunk)
-        messageChunksList.push("");
+        messageChunksList.push("```\n");
 
         try {
           currentFile = extractFileName(line);
@@ -187,6 +187,10 @@ export function splitResponse(
     }
     // ENABLED -- raw message strategy (all lines included in chunks)
     messageChunksList[messageChunksList.length - 1] += line + "\n";
+    if (categorizeLine(line) === "ccClose") {
+      messageChunksList[messageChunksList.length - 1] += "```\n";
+      messageChunksList.push("\n");
+    }
   }
 
   return {
