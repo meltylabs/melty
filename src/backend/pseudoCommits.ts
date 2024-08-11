@@ -222,7 +222,10 @@ export function upsertFileContents(
     if (pseudoCommit.impl.status === "inMemory") {
       // another off same parent, updating the list of files changed
       return {
-        filesChanged: { ...pseudoCommit.impl.filesChanged, [path]: file },
+        filesChanged: {
+          ...pseudoCommit.impl.filesChanged,
+          [path]: file,
+        },
         parentCommit: pseudoCommit.impl.parentCommit,
       };
     } else {
