@@ -9,6 +9,7 @@ import {
 } from "./ui/card";
 import { ExtensionRPC } from "../extensionRPC";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { Trash2 } from "lucide-react";
 import { MouseEvent } from "react";
 import * as Diff2Html from "diff2html";
@@ -24,7 +25,7 @@ interface Task {
 
 export function Tasks() {
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [newTaskMessage, setNewTaskMessage] = useState("");
+    const [newTaskName, setNewTaskName] = useState("");
     const navigate = useNavigate();
     const [extensionRPC] = useState(() => new ExtensionRPC());
 
@@ -55,36 +56,15 @@ export function Tasks() {
         }
     };
 
-    const createNewTask = async (message: string) => {
-        const newTask = (await extensionRPC.run("createNewTask", {
-            name: [
-                "Zucchini",
-                "Rutabega",
-                "Tomato",
-                "Cucumber",
-                "Celery",
-                "Lemon",
-                "Artichoke",
-            ][Math.floor(Math.random() * 7)],
-        })) as Task;
+    const createNewTask = async () => {
+        if (newTaskName.trim()) {
+            const newTask = (await extensionRPC.run("createNewTask", {
+                name: newTaskName.trim(),
+            })) as Task;
 
-        console.log(`resolved new task ${newTask.id}`);
-
-        // Send the initial message
-        await extensionRPC.run("chatMessage", {
-            taskId: newTask.id,
-            assistantType: "architect",
-            text: message,
-        });
-
-        navigate(`/task/${newTask.id}`);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (newTaskMessage.trim()) {
-            createNewTask(newTaskMessage.trim());
-            setNewTaskMessage("");
+            console.log(`resolved new task ${newTask.id}`);
+            setNewTaskName(""); // Clear the input after creating the task
+            navigate(`/task/${newTask.id}`);
         }
     };
     const dummyDiff =
@@ -131,30 +111,18 @@ export function Tasks() {
         </div>
       </div> */}
 
-            <Button
-                onClick={async () => {
-                    // if we're not on the main branch, ask user to confirm
-                    // TODO: implement this
-
-                    const newTask = (await extensionRPC.run("createNewTask", {
-                        name: [
-                            "Zucchini",
-                            "Rutabega",
-                            "Tomato",
-                            "Cucumber",
-                            "Celery",
-                            "Lemon",
-                            "Artichoke",
-                        ][Math.floor(Math.random() * 7)],
-                    })) as Task;
-
-                    console.log(`resolved new task ${newTask.id}`);
-
-                    navigate(`/task/${newTask.id}`);
-                }}
-            >
-                + New task
-            </Button>
+            <div className="flex space-x-2 mb-4">
+                <Input
+                    type="text"
+                    value={newTaskName}
+                    onChange={(e) => setNewTaskName(e.target.value)}
+                    placeholder="Enter task name"
+                    className="flex-grow"
+                />
+                <Button onClick={createNewTask}>
+                    + New task
+                </Button>
+            </div>
             <div className="grid grid-cols-2 gap-6 mt-4">
                 {tasks.length === 0 && <p>No tasks</p>}
                 {tasks.reverse().map((task) => (
