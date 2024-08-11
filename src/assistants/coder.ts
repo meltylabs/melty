@@ -1,7 +1,6 @@
 import {
   Conversation,
   GitRepo,
-  Mode,
   ClaudeConversation,
   PseudoCommit,
   ClaudeMessage,

@@ -1,4 +1,4 @@
-import { Joule, Mode, PseudoCommit, Conversation, GitRepo } from "../types";
+import { Joule, PseudoCommit, Conversation, GitRepo } from "../types";
 import * as joules from "./joules";
 import * as pseudoCommits from "./pseudoCommits";
 

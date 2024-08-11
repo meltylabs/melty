@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import {
   Joule,
-  Mode,
   Conversation,
   PseudoCommit,
   GitRepo,
