@@ -1,113 +1,129 @@
 {
-  "name": "melty",
-  "displayName": "Melty",
-  "description": "AI pair programmer",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.91.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "main": "./out/extension.js",
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "contributes": {
-    "keybindings": [
-      {
-        "command": "melty.chatView.focus",
-        "key": "ctrl+m",
-        "mac": "cmd+m"
-      }
+    "name": "melty",
+    "displayName": "Melty",
+    "description": "AI pair programmer",
+    "version": "0.1.0",
+    "publisher": "meltylabs",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/YourUsername/melty.git"
+    },
+    "license": "MIT",
+    "galleryBanner": {
+        "color": "#C80000",
+        "theme": "dark"
+    },
+    "keywords": [
+        "AI",
+        "pair programming",
+        "code generation",
+        "productivity"
     ],
-    "viewsContainers": {
-      "panel": [
-        {
-          "id": "meltyViewContainer",
-          "title": "Melty",
-          "icon": "resources/package-explorer.svg"
-        }
-      ]
+    "engines": {
+        "vscode": "^1.91.0"
     },
-    "views": {
-      "meltyViewContainer": [
-        {
-          "type": "webview",
-          "id": "melty.chatView",
-          "name": "Melty Chat"
-        }
-      ]
-    },
-    "configuration": {
-      "title": "Melty Settings",
-      "properties": {
-        "melty.anthropicApiKey": {
-          "type": "string",
-          "default": "",
-          "description": "API key for Anthropic Claude"
+    "categories": [
+        "Other"
+    ],
+    "main": "./out/extension.js",
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "contributes": {
+        "keybindings": [
+            {
+                "command": "melty.chatView.focus",
+                "key": "ctrl+m",
+                "mac": "cmd+m"
+            }
+        ],
+        "viewsContainers": {
+            "panel": [
+                {
+                    "id": "meltyViewContainer",
+                    "title": "Melty",
+                    "icon": "resources/package-explorer.svg"
+                }
+            ]
         },
-        "melty.githubToken": {
-          "type": "string",
-          "default": "",
-          "description": "GitHub token"
+        "views": {
+            "meltyViewContainer": [
+                {
+                    "type": "webview",
+                    "id": "melty.chatView",
+                    "name": "Melty Chat"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "Melty Settings",
+            "properties": {
+                "melty.anthropicApiKey": {
+                    "type": "string",
+                    "default": "",
+                    "description": "API key for Anthropic Claude"
+                },
+                "melty.githubToken": {
+                    "type": "string",
+                    "default": "",
+                    "description": "GitHub token"
+                }
+            }
         }
-      }
+    },
+    "scripts": {
+        "install:all": "npm install && cd webview-ui && npm install",
+        "start:webview": "cd webview-ui && npm run start",
+        "build:webview": "cd webview-ui && npm run build",
+        "test:webview": "cd webview-ui && npm run test",
+        "vscode:prepublish": "npm run compile",
+        "compile": "node ./esbuild.js",
+        "package": "NODE_ENV=production node ./esbuild.js",
+        "watch": "node ./esbuild.js --watch",
+        "watch:webview": "cd webview-ui && npm run watch",
+        "lint": "eslint src --ext ts",
+        "test": "vscode-test --",
+        "pretest:extension": "npm run compile && npm run lint",
+        "pretest:webview": "npm run build:webview",
+        "pretest": "npm run pretest:extension && npm run pretest:webview",
+        "clean": "rm -rf out"
+    },
+    "devDependencies": {
+        "@types/diff": "^5.2.1",
+        "@types/fs-extra": "^11.0.4",
+        "@types/mocha": "^10.0.7",
+        "@types/node": "20.x",
+        "@types/sinon": "^17.0.3",
+        "@types/uuid": "^10.0.0",
+        "@types/vscode": "^1.91.0",
+        "@types/vscode-webview": "^1.57.5",
+        "@typescript-eslint/eslint-plugin": "^7.14.1",
+        "@typescript-eslint/parser": "^7.11.0",
+        "@vscode/test-cli": "^0.0.9",
+        "@vscode/test-electron": "^2.4.1",
+        "concurrently": "^8.2.2",
+        "esbuild": "^0.16.17",
+        "eslint": "^8.57.0",
+        "fs-extra": "^11.2.0",
+        "sinon": "^18.0.0",
+        "typescript": "^5.5.4",
+        "web-tree-sitter": "^0.22.6"
+    },
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.24.3",
+        "@octokit/rest": "^21.0.1",
+        "@vscode/webview-ui-toolkit": "^1.4.0",
+        "axios": "^1.7.3",
+        "dotenv": "^16.4.5",
+        "node-tree-sitter": "^0.0.1",
+        "python-ast": "^0.1.0",
+        "tree-sitter-wasms": "^0.1.11",
+        "uuid": "^10.0.0"
+    },
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": true,
+            "description": "This extension requires access to modify workspace files."
+        }
     }
-  },
-  "scripts": {
-    "install:all": "npm install && cd webview-ui && npm install",
-    "start:webview": "cd webview-ui && npm run start",
-    "build:webview": "cd webview-ui && npm run build",
-    "test:webview": "cd webview-ui && npm run test",
-    "vscode:prepublish": "npm run compile",
-    "compile": "node ./esbuild.js",
-    "package": "NODE_ENV=production node ./esbuild.js",
-    "watch": "node ./esbuild.js --watch",
-    "watch:webview": "cd webview-ui && npm run watch",
-    "lint": "eslint src --ext ts",
-    "test": "vscode-test --",
-    "pretest:extension": "npm run compile && npm run lint",
-    "pretest:webview": "npm run build:webview",
-    "pretest": "npm run pretest:extension && npm run pretest:webview",
-    "clean": "rm -rf out"
-  },
-  "devDependencies": {
-    "@types/diff": "^5.2.1",
-    "@types/fs-extra": "^11.0.4",
-    "@types/mocha": "^10.0.7",
-    "@types/node": "20.x",
-    "@types/sinon": "^17.0.3",
-    "@types/uuid": "^10.0.0",
-    "@types/vscode": "^1.91.0",
-    "@types/vscode-webview": "^1.57.5",
-    "@typescript-eslint/eslint-plugin": "^7.14.1",
-    "@typescript-eslint/parser": "^7.11.0",
-    "@vscode/test-cli": "^0.0.9",
-    "@vscode/test-electron": "^2.4.1",
-    "concurrently": "^8.2.2",
-    "esbuild": "^0.16.17",
-    "eslint": "^8.57.0",
-    "fs-extra": "^11.2.0",
-    "sinon": "^18.0.0",
-    "typescript": "^5.5.4",
-    "web-tree-sitter": "^0.22.6"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.3",
-    "@octokit/rest": "^21.0.1",
-    "@vscode/webview-ui-toolkit": "^1.4.0",
-    "axios": "^1.7.3",
-    "dotenv": "^16.4.5",
-    "node-tree-sitter": "^0.0.1",
-    "python-ast": "^0.1.0",
-    "tree-sitter-wasms": "^0.1.11",
-    "uuid": "^10.0.0"
-  },
-  "capabilities": {
-    "untrustedWorkspaces": {
-      "supported": true,
-      "description": "This extension requires access to modify workspace files."
-    }
-  }
 }
