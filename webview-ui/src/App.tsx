@@ -46,40 +46,42 @@ function JouleComponent({
 
   return (
     <div
-      className={`flex flex-col md:flex-row gap-6 mb-2 p-3 rounded ${
+      className={`flex mb-2 p-3 rounded ${
         joule.author === "human" ? "bg-gray-50" : "bg-white"
       }`}
     >
-      <div className="text-xs prose min-w-[400px] md:w-2/5 flex-shrink-0">
-        <ReactMarkdown
-          components={{
-            code({ node, className, children, ...props }) {
-              const match = /language-(\w+)/.exec(className || "");
-              return match ? (
-                <div className="relative p-0 max-h-[300px] overflow-y-auto">
-                  {!isPartial && (
-                    <CopyButton code={String(children).replace(/\n$/, "")} />
-                  )}
-                  <SyntaxHighlighter
-                    language={match[1]}
-                    style={vscDarkPlus}
-                    PreTag="div"
-                    children={String(children).replace(/\n$/, "")}
-                  />
-                </div>
-              ) : (
-                <code className={className} {...props}>
-                  {children}
-                </code>
-              );
-            },
-          }}
-        >
-          {joule.message}
-        </ReactMarkdown>
-        {isPartial && <span className="animate-pulse">▋</span>}
+      <div className="w-[40%] pr-4 overflow-auto h-full">
+        <div className="text-xs prose">
+          <ReactMarkdown
+            components={{
+              code({ node, className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || "");
+                return match ? (
+                  <div className="relative p-0 max-h-[300px] overflow-y-auto">
+                    {!isPartial && (
+                      <CopyButton code={String(children).replace(/\n$/, "")} />
+                    )}
+                    <SyntaxHighlighter
+                      language={match[1]}
+                      style={vscDarkPlus}
+                      PreTag="div"
+                      children={String(children).replace(/\n$/, "")}
+                    />
+                  </div>
+                ) : (
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                );
+              },
+            }}
+          >
+            {joule.message}
+          </ReactMarkdown>
+          {isPartial && <span className="animate-pulse">▋</span>}
+        </div>
       </div>
-      <div className="md:w-3/5 text-xs">
+      <div className="w-[60%] overflow-auto h-full">
         {diffHtml && !isPartial && <DiffViewer diff={diffHtml} />}
       </div>
     </div>
@@ -136,10 +138,15 @@ function ConversationView() {
     console.log("PR created", result);
   }
 
-  // auto scroll to bottom
+  // auto scroll to bottom if already near bottom
   useEffect(() => {
     if (conversationRef.current) {
-      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+      const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100; // within 100px of bottom
+
+      if (isNearBottom) {
+        conversationRef.current.scrollTop = scrollHeight;
+      }
     }
   }, [task]);
 
@@ -259,20 +266,22 @@ function ConversationView() {
         </div>
       </div>
       <div
-        className="mb-20 rounded p-2 mx-auto overflow-y-auto"
+        className="flex-grow mb-20 rounded p-2 overflow-y-auto"
         ref={conversationRef}
       >
-        {task?.conversation.joules.map((joule, index) => (
-          <JouleComponent
-            key={index}
-            joule={joule}
-            isPartial={
-              index === task.conversation.joules.length - 1 &&
-              joule.author === "bot" &&
-              joule.pseudoCommit.impl.status !== "committed"
-            }
-          />
-        ))}
+        <div className="flex flex-col h-full">
+          {task?.conversation.joules.map((joule, index) => (
+            <JouleComponent
+              key={index}
+              joule={joule}
+              isPartial={
+                index === task.conversation.joules.length - 1 &&
+                joule.author === "bot" &&
+                joule.pseudoCommit.impl.status !== "committed"
+              }
+            />
+          ))}
+        </div>
       </div>
       <div className="">
         <form onSubmit={handleSubmit}>
