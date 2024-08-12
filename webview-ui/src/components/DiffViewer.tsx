@@ -50,9 +50,7 @@ const dummyDiff =
 
 const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [outputFormat, setOutputFormat] = useState<"unified" | "side-by-side">(
-    "side-by-side"
-  );
+  const [outputFormat, setOutputFormat] = useState<"unified" | "side-by-side">("side-by-side");
 
   useEffect(() => {
     if (containerRef.current) {
@@ -79,8 +77,8 @@ const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
   }, [diff, outputFormat]);
 
   return (
-    <div className="overflow-y-scroll relative max-h-96">
-      <div className="flex justify-end items-center space-x-2">
+    <div className="sticky top-0 overflow-y-auto max-h-[calc(100vh-200px)]">
+      <div className="flex justify-end items-center space-x-2 mb-2">
         <Switch
           onClick={() =>
             setOutputFormat(
@@ -93,7 +91,7 @@ const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
           Unified
         </Label>
       </div>
-      <div ref={containerRef} />
+      <div ref={containerRef} className="overflow-x-auto" />
     </div>
   );
 };

@@ -46,11 +46,11 @@ function JouleComponent({
 
     return (
         <div
-            className={`grid grid-cols-12 gap-6 mb-2 p-3 rounded ${
-                joule.author === "human" ? "bg-gray-50 " : "bg-white"
+            className={`flex flex-col md:flex-row gap-6 mb-2 p-3 rounded ${
+                joule.author === "human" ? "bg-gray-50" : "bg-white"
             }`}
         >
-            <div className="text-xs prose col-span-5">
+            <div className="text-xs prose md:w-2/5 flex-shrink-0">
                 <ReactMarkdown
                     components={{
                         code({ node, className, children, ...props }) {
@@ -89,7 +89,7 @@ function JouleComponent({
                 </ReactMarkdown>
                 {isPartial && <span className="animate-pulse">▋</span>}
             </div>
-            <div className="overflow-y-auto col-span-7 text-xs">
+            <div className="md:w-3/5 text-xs">
                 {diffHtml && !isPartial && <DiffViewer diff={diffHtml} />}
             </div>
         </div>
