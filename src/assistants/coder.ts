@@ -75,9 +75,9 @@ export class Coder extends BaseAssistant {
   private getSystemPrompt(): string {
     return (
       prompts.codeModeSystemPrompt() +
-      prompts.diffDecoderPrompt() +
+      prompts.codeChangeCommandRulesPrompt() +
       prompts.exampleConversationsPrompt() +
-      prompts.codeChangeCommandRulesPrompt()
+      prompts.diffDecoderPrompt()
     );
   }
 

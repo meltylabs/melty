@@ -1,4 +1,4 @@
-# Example conversations:
+# Example conversation using the CodeChange format
 
 ## USER: Change get_factorial() to use math.factorial
 
@@ -57,7 +57,7 @@ print("hello")
 >>>>>>> REPLACE
 </CodeChange>
 
-<CodeChange file="hello.py>
+<CodeChange file="main.py>
 <<<<<<< SEARCH
 def hello():
 "print a greeting"

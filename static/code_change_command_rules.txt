@@ -1,34 +1,50 @@
-# CodeChange command rules:
+# CodeChange format rules
 
-Every CodeChange command must use this format:
+Please provide code changes using the CodeChange format. In the CodeChange format, changes are wrapped in a <CodeChange> XML tag
+containing a `file` attribute. Within the <CodeChange> tag, they are structured in *SEARCH/REPLACE* blocks. For example:
+
+<CodeChange file="main.py">
+<<<<<<< SEARCH
+    def count_sheep():
+        # counts all the sheep in the system
+        return count_domestic_sheep() + count_wild_sheep()
+=======
+    def do_calcluation():
+        # counts all the sheep in the system
+        return count_domestic_sheep() + count_wild_sheep() + count_stray_sheep()
+>>>>>>> REPLACE
+</CodeChange>
+
+Your response can include any number of CodeChange tags.
+
+Each CodeChange tag must use this format:
+
 1. A CodeChange tag containing a `file` attribute, with the name of the file to modify. Example: <CodeChange file="foo/bar/baz.py">
-2. Any number of SEARCH/REPLACE blocks
+2. Any number of *SEARCH/REPLACE* blocks
 3. A CodeChange close tag. Example: </CodeChange>
 
-Every *SEARCH/REPLACE* block must use this format:
+Each *SEARCH/REPLACE* block must use this format:
+
 1. The start of the search block: <<<<<<< SEARCH
-2. A contiguous chunk of lines to search for in the existing source code
+2. A contiguous chunk of lines to search for in the existing source code.
 3. The dividing line: =======
 4. The lines to replace into the source code
 5. The end of the replace block: >>>>>>> REPLACE
 
-Every *SEARCH* section must *EXACTLY MATCH* the existing source code, character for character, including all comments, docstrings, etc.
+How *SEARCH/REPLACE* blocks are applied:
 
-*SEARCH/REPLACE* blocks will replace *all* matching occurrences.
-Include enough lines to make the SEARCH blocks uniquely match the lines to change.
+- The *SEARCH* section must *EXACTLY MATCH* the existing source code, character for character, including all comments, docstrings, etc.
+- *SEARCH/REPLACE* blocks will replace *all* matching occurrences.
 
-Keep *SEARCH/REPLACE* blocks concise.
-Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file.
-Include just the changing lines, and a few surrounding lines if needed for uniqueness.
-Do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks.
+Instructions for writing a great *SEARCH/REPLACE* block:
 
-Only create *SEARCH/REPLACE* blocks for files in the context!
+- Include enough lines to make the SEARCH blocks uniquely match the lines to change.
+- On the other hand, do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks. Include just the changing lines, and a few surrounding lines if needed for uniqueness.
+- Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file.
 
-To move code within a file, use two *SEARCH/REPLACE* blocks: one to delete it from its current location and one to insert it in the new location.
+Tips:
 
-If you want to put code in a new file, use a CodeChange command with:
-- A new file path, including dir name if needed
-- An empty `SEARCH` section
-- The new file's contents in the `REPLACE` section
+- To move code within a file, use two *SEARCH/REPLACE* blocks: one to delete it from its current location and one to insert it in the new location.
+- To create a new file, use a CodeChange command with a new file path (including dir name if needed), an empty `SEARCH` section, and the new file's contents in the `REPLACE` section
 
-ONLY EVER RETURN CODE INSIDE A CODECHANGE COMMAND AND *SEARCH/REPLACE BLOCK*!
+Please only ever return code inside a CodeChange tag and *SEARCH/REPLACE* block!

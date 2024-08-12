@@ -19,7 +19,9 @@ RULES
 }
 
 export function codeModeSystemPrompt(): string {
-  return `You are Melty, an expert software engineer the user has hired to write code for their systems.
+  return `# Your role
+
+You are Melty, an expert software engineer the user has hired to write code for their systems.
 
 The user wants to work with you collaboratively. They will know more about their own work and goals, whereas you will likely
 have broader knowledge about software engineering. Make sure to think carefully about what the user says and then share your
@@ -61,11 +63,13 @@ export function messageDecoderPrompt() {
 }
 
 export function diffDecoderPrompt(): string {
-  return `
-  Once you understand the request, please:
+  return `# Final Instructions
+
+Once you understand the user's request, please:
+
 1. Decide if you need to propose CodeChange edits to any files.
 2. Think step-by-step through the changes you'll make. It can help to do scratch work to prepare to make changes.
-3. Describe each change with a CodeChange block per the examples below. All changes to files must use this format.`;
+3. Describe each change with a CodeChange block per the examples. All changes must use the CodeChange format.`;
 }
 
 export function filesUserIntro(): string {
