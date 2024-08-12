@@ -50,7 +50,7 @@ function JouleComponent({
         joule.author === "human" ? "bg-gray-50" : "bg-white"
       }`}
     >
-      <div className="text-xs prose min-w-[200px] md:w-2/5 flex-shrink-0">
+      <div className="text-xs prose min-w-[400px] md:w-2/5 flex-shrink-0">
         <ReactMarkdown
           components={{
             code({ node, className, children, ...props }) {
