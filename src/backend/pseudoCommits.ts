@@ -159,6 +159,7 @@ export async function actualize(
         files.absolutePath(file, gitRepo.rootPath)
       )
     );
+
     await repository.commit("bot changes", { empty: true });
 
     await repository.status();
