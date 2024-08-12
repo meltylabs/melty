@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-    XIcon,
-    FileIcon,
-    RotateCcwIcon,
-    PlusIcon,
-    GitPullRequestIcon,
-    ChevronsUpDown,
+  XIcon,
+  FileIcon,
+  RotateCcwIcon,
+  PlusIcon,
+  GitPullRequestIcon,
+  ChevronsUpDown,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
-    BrowserRouter as Router,
-    Route,
-    Routes,
-    Link,
-    Navigate,
-    useParams,
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Link,
+  Navigate,
+  useParams,
 } from "react-router-dom";
 import { FilePicker } from "./components/FilePicker";
 import { Button } from "./components/ui/button";
@@ -32,295 +32,274 @@ import { ExtensionRPC } from "./extensionRPC";
 import DiffViewer from "./components/DiffViewer";
 
 function JouleComponent({
-    joule,
-    isPartial = false,
+  joule,
+  isPartial = false,
 }: {
-    joule: Joule;
-    isPartial?: boolean;
+  joule: Joule;
+  isPartial?: boolean;
 }) {
-    const diffHtml =
-        joule.pseudoCommit.impl.status === "committed" &&
-        joule.pseudoCommit.impl.udiffPreview
-            ? joule.pseudoCommit.impl.udiffPreview
-            : null;
+  const diffHtml =
+    joule.pseudoCommit.impl.status === "committed" &&
+    joule.pseudoCommit.impl.udiffPreview
+      ? joule.pseudoCommit.impl.udiffPreview
+      : null;
 
-    return (
-        <div
-            className={`flex flex-col md:flex-row gap-6 mb-2 p-3 rounded ${
-                joule.author === "human" ? "bg-gray-50" : "bg-white"
-            }`}
+  return (
+    <div
+      className={`flex flex-col md:flex-row gap-6 mb-2 p-3 rounded ${
+        joule.author === "human" ? "bg-gray-50" : "bg-white"
+      }`}
+    >
+      <div className="text-xs prose min-w-[200px] md:w-2/5 flex-shrink-0">
+        <ReactMarkdown
+          components={{
+            code({ node, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || "");
+              return match ? (
+                <div className="relative p-0 max-h-[300px] overflow-y-auto">
+                  {!isPartial && (
+                    <CopyButton code={String(children).replace(/\n$/, "")} />
+                  )}
+                  <SyntaxHighlighter
+                    language={match[1]}
+                    style={vscDarkPlus}
+                    PreTag="div"
+                    children={String(children).replace(/\n$/, "")}
+                  />
+                </div>
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            },
+          }}
         >
-            <div className="text-xs prose md:w-2/5 flex-shrink-0">
-                <ReactMarkdown
-                    components={{
-                        code({ node, className, children, ...props }) {
-                            const match = /language-(\w+)/.exec(
-                                className || ""
-                            );
-                            return match ? (
-                                <div className="relative p-0 max-h-[300px] overflow-y-auto">
-                                    {!isPartial && (
-                                        <CopyButton
-                                            code={String(children).replace(
-                                                /\n$/,
-                                                ""
-                                            )}
-                                        />
-                                    )}
-                                    <SyntaxHighlighter
-                                        language={match[1]}
-                                        style={vscDarkPlus}
-                                        PreTag="div"
-                                        children={String(children).replace(
-                                            /\n$/,
-                                            ""
-                                        )}
-                                    />
-                                </div>
-                            ) : (
-                                <code className={className} {...props}>
-                                    {children}
-                                </code>
-                            );
-                        },
-                    }}
-                >
-                    {joule.message}
-                </ReactMarkdown>
-                {isPartial && <span className="animate-pulse">▋</span>}
-            </div>
-            <div className="md:w-3/5 text-xs">
-                {diffHtml && !isPartial && <DiffViewer diff={diffHtml} />}
-            </div>
-        </div>
-    );
+          {joule.message}
+        </ReactMarkdown>
+        {isPartial && <span className="animate-pulse">▋</span>}
+      </div>
+      <div className="md:w-3/5 text-xs">
+        {diffHtml && !isPartial && <DiffViewer diff={diffHtml} />}
+      </div>
+    </div>
+  );
 }
 
 function ConversationView() {
-    const [extensionRPC] = useState(() => new ExtensionRPC());
-    const { taskId } = useParams<{ taskId: string }>();
-    const inputRef = useRef<HTMLTextAreaElement>(null);
-    const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
-    const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
-    const [pickerOpen, setPickerOpen] = useState(false);
-    const [task, setTask] = useState<Task | null>(null);
-    const conversationRef = useRef<HTMLDivElement>(null);
+  const [extensionRPC] = useState(() => new ExtensionRPC());
+  const { taskId } = useParams<{ taskId: string }>();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
+  const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [task, setTask] = useState<Task | null>(null);
+  const conversationRef = useRef<HTMLDivElement>(null);
 
-    async function handleAddFile(file: string) {
-        const meltyFiles = await extensionRPC.run("addMeltyFile", {
-            filePath: file,
-        });
-        setMeltyFiles(meltyFiles);
-        setPickerOpen(false);
+  async function handleAddFile(file: string) {
+    const meltyFiles = await extensionRPC.run("addMeltyFile", {
+      filePath: file,
+    });
+    setMeltyFiles(meltyFiles);
+    setPickerOpen(false);
+  }
+
+  async function handleDropFile(file: string) {
+    const meltyFiles = await extensionRPC.run("dropMeltyFile", {
+      filePath: file,
+    });
+    setMeltyFiles(meltyFiles);
+    setPickerOpen(false);
+  }
+
+  async function loadTask(taskId: string) {
+    // TODO refactor loadTask and switchTask
+    const task = await extensionRPC.run("loadTask", { taskId });
+    setTask(task);
+    await extensionRPC.run("switchTask", { taskId }); // discard output
+  }
+
+  async function loadFiles() {
+    const meltyFiles = await extensionRPC.run("listMeltyFiles");
+    setMeltyFiles(meltyFiles);
+    const workspaceFiles = await extensionRPC.run("listWorkspaceFiles");
+    setWorkspaceFiles(workspaceFiles);
+  }
+
+  function handleSendMessage(assistantType: AssistantType, text: string) {
+    extensionRPC.run("chatMessage", { assistantType, text });
+    // response will be returned asynchronously through notifications
+  }
+
+  async function handleCreatePR() {
+    const result = await extensionRPC.run("createPullRequest");
+    console.log("PR created", result);
+  }
+
+  // auto scroll to bottom
+  useEffect(() => {
+    if (conversationRef.current) {
+      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
     }
+  }, [task]);
 
-    async function handleDropFile(file: string) {
-        const meltyFiles = await extensionRPC.run("dropMeltyFile", {
-            filePath: file,
-        });
-        setMeltyFiles(meltyFiles);
-        setPickerOpen(false);
-    }
-
-    async function loadTask(taskId: string) {
-        // TODO refactor loadTask and switchTask
-        const task = await extensionRPC.run("loadTask", { taskId });
-        setTask(task);
-        await extensionRPC.run("switchTask", { taskId }); // discard output
-    }
-
-    async function loadFiles() {
-        const meltyFiles = await extensionRPC.run("listMeltyFiles");
-        setMeltyFiles(meltyFiles);
-        const workspaceFiles = await extensionRPC.run("listWorkspaceFiles");
-        setWorkspaceFiles(workspaceFiles);
-    }
-
-    function handleSendMessage(assistantType: AssistantType, text: string) {
-        extensionRPC.run("chatMessage", { assistantType, text });
-        // response will be returned asynchronously through notifications
-    }
-
-    async function handleCreatePR() {
-        const result = await extensionRPC.run("createPullRequest");
-        console.log("PR created", result);
-    }
-
-    // auto scroll to bottom
-    useEffect(() => {
-        if (conversationRef.current) {
-            conversationRef.current.scrollTop =
-                conversationRef.current.scrollHeight;
-        }
-    }, [task]);
-
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === "m") {
-                event.preventDefault();
-                inputRef.current?.focus();
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, []);
-
-    useEffect(() => {
-        loadFiles();
-        if (taskId) {
-            loadTask(taskId);
-        }
-
-        // handle rpc calls and notifications
-        const handleNotification = (event: MessageEvent) => {
-            const message = event.data;
-            if (message.type === "notification") {
-                console.log(
-                    "[App.tsx] Webview received notification message",
-                    message
-                );
-                switch (message.notificationType) {
-                    case "updateTask":
-                        console.log(
-                            "[App.tsx] updateTask",
-                            message.task === task
-                        );
-                        setTask(message.task);
-                        return;
-                    case "updateWorkspaceFiles":
-                        setWorkspaceFiles(message.files);
-                        return;
-                    case "updateMeltyMindFiles":
-                        setMeltyFiles(message.files);
-                        return;
-                }
-            }
-        };
-
-        window.addEventListener("message", extensionRPC.handleMessage);
-        window.addEventListener("message", handleNotification);
-
-        return () => {
-            window.removeEventListener("message", extensionRPC.handleMessage);
-            window.removeEventListener("message", handleNotification);
-        };
-    }, []);
-
-    const handleSubmit = (event: React.FormEvent) => {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "m") {
         event.preventDefault();
-        const form = event.target as HTMLFormElement;
-        const message = form.message.value;
-        const assistantType = form.assistantType.value as AssistantType;
-        handleSendMessage(assistantType, message);
-        form.reset();
+        inputRef.current?.focus();
+      }
     };
 
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            if (
-                event.currentTarget &&
-                event.currentTarget.value !== undefined
-            ) {
-                const form = event.currentTarget.form;
-                if (form) {
-                    const assistantType = form.assistantType
-                        .value as AssistantType;
-                    handleSendMessage(assistantType, event.currentTarget.value);
-                    event.currentTarget.value = "";
-                }
-            }
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    loadFiles();
+    if (taskId) {
+      loadTask(taskId);
+    }
+
+    // handle rpc calls and notifications
+    const handleNotification = (event: MessageEvent) => {
+      const message = event.data;
+      if (message.type === "notification") {
+        console.log("[App.tsx] Webview received notification message", message);
+        switch (message.notificationType) {
+          case "updateTask":
+            console.log("[App.tsx] updateTask", message.task === task);
+            setTask(message.task);
+            return;
+          case "updateWorkspaceFiles":
+            setWorkspaceFiles(message.files);
+            return;
+          case "updateMeltyMindFiles":
+            setMeltyFiles(message.files);
+            return;
         }
+      }
     };
 
-    return (
-        <div className="p-4 flex flex-col h-screen">
-            <div className="mt-2 justify-between">
-                {task && (
-                    <div className="p-2">
-                        <p className="text-sm font-semibold">{task.name}</p>
-                    </div>
-                )}
+    window.addEventListener("message", extensionRPC.handleMessage);
+    window.addEventListener("message", handleNotification);
 
-                <FilePicker
-                    open={pickerOpen}
-                    setOpen={setPickerOpen}
-                    meltyMindFilePaths={meltyFiles}
-                    workspaceFilePaths={workspaceFiles}
-                    handleAddFile={handleAddFile}
-                    handleDropFile={handleDropFile}
-                />
+    return () => {
+      window.removeEventListener("message", extensionRPC.handleMessage);
+      window.removeEventListener("message", handleNotification);
+    };
+  }, []);
 
-                <div className="mt-2">
-                    <p className="text-xs text-muted-foreground mb-2">
-                        Melty's Mind{"  "}
-                        <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                            <span className="text-xs">\</span>
-                        </kbd>{" "}
-                    </p>
-                    {meltyFiles.length === 0 && (
-                        <p className="text-xs text-muted-foreground mb-2 italic">
-                            Melty can't see any files yet
-                        </p>
-                    )}
-                    {meltyFiles.map((file, i) => (
-                        <button
-                            onClick={() => handleDropFile(file)}
-                            className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
-                            key={`file-${i}`}
-                        >
-                            <XIcon className="h-3 w-3 mr-2" />
-                            {file}
-                        </button>
-                    ))}
-                </div>
-            </div>
-            <div
-                className="mb-20 rounded p-2 mx-auto overflow-y-auto"
-                ref={conversationRef}
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const message = form.message.value;
+    const assistantType = form.assistantType.value as AssistantType;
+    handleSendMessage(assistantType, message);
+    form.reset();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (event.currentTarget && event.currentTarget.value !== undefined) {
+        const form = event.currentTarget.form;
+        if (form) {
+          const assistantType = form.assistantType.value as AssistantType;
+          handleSendMessage(assistantType, event.currentTarget.value);
+          event.currentTarget.value = "";
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="p-4 flex flex-col h-screen">
+      <div className="mt-2 justify-between">
+        {task && (
+          <div className="p-2">
+            <p className="text-sm font-semibold">{task.name}</p>
+          </div>
+        )}
+
+        <FilePicker
+          open={pickerOpen}
+          setOpen={setPickerOpen}
+          meltyMindFilePaths={meltyFiles}
+          workspaceFilePaths={workspaceFiles}
+          handleAddFile={handleAddFile}
+          handleDropFile={handleDropFile}
+        />
+
+        <div className="mt-2">
+          <p className="text-xs text-muted-foreground mb-2">
+            Melty's Mind{"  "}
+            <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+              <span className="text-xs">\</span>
+            </kbd>{" "}
+          </p>
+          {meltyFiles.length === 0 && (
+            <p className="text-xs text-muted-foreground mb-2 italic">
+              Melty can't see any files yet
+            </p>
+          )}
+          {meltyFiles.map((file, i) => (
+            <button
+              onClick={() => handleDropFile(file)}
+              className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
+              key={`file-${i}`}
             >
-                {task?.conversation.joules.map((joule, index) => (
-                    <JouleComponent
-                        key={index}
-                        joule={joule}
-                        isPartial={
-                            index === task.conversation.joules.length - 1 &&
-                            joule.author === "bot" &&
-                            joule.pseudoCommit.impl.status !== "committed"
-                        }
-                    />
-                ))}
+              <XIcon className="h-3 w-3 mr-2" />
+              {file}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div
+        className="mb-20 rounded p-2 mx-auto overflow-y-auto"
+        ref={conversationRef}
+      >
+        {task?.conversation.joules.map((joule, index) => (
+          <JouleComponent
+            key={index}
+            joule={joule}
+            isPartial={
+              index === task.conversation.joules.length - 1 &&
+              joule.author === "bot" &&
+              joule.pseudoCommit.impl.status !== "committed"
+            }
+          />
+        ))}
+      </div>
+      <div className="">
+        <form onSubmit={handleSubmit}>
+          <RadioGroup name="assistantType" defaultValue="coder">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="coder" id="coder" />
+              <Label htmlFor="coder">Coder</Label>
             </div>
-            <div className="">
-                <form onSubmit={handleSubmit}>
-                    <RadioGroup name="assistantType" defaultValue="coder">
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="coder" id="coder" />
-                            <Label htmlFor="coder">Coder</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="architect" id="architect" />
-                            <Label htmlFor="architect">Architect</Label>
-                        </div>
-                    </RadioGroup>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="architect" id="architect" />
+              <Label htmlFor="architect">Architect</Label>
+            </div>
+          </RadioGroup>
 
-                    <div className="mt-4 flex">
-                        <Textarea
-                            placeholder="Tell me what to do (⌘m)"
-                            id="message"
-                            autoFocus
-                            required
-                            rows={1}
-                            ref={inputRef}
-                            onKeyDown={handleKeyDown}
-                        />
-                    </div>
-                    <div className="flex justify-between space-x-2 mt-2">
-                        {/* <Button
+          <div className="mt-4 flex">
+            <Textarea
+              placeholder="Tell me what to do (⌘m)"
+              id="message"
+              autoFocus
+              required
+              rows={1}
+              ref={inputRef}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+          <div className="flex justify-between space-x-2 mt-2">
+            {/* <Button
               variant="ghost"
               size="sm"
               type="button"
@@ -328,60 +307,52 @@ function ConversationView() {
             >
               <RotateCcwIcon className="h-3 w-3" />
             </Button> */}
-                        <Button
-                            name="createPR"
-                            size="sm"
-                            type="button"
-                            onClick={handleCreatePR}
-                            variant="outline"
-                        >
-                            <GitPullRequestIcon className="h-4 w-4 mr-2" />
-                            Create PR
-                        </Button>
+            <Button
+              name="createPR"
+              size="sm"
+              type="button"
+              onClick={handleCreatePR}
+              variant="outline"
+            >
+              <GitPullRequestIcon className="h-4 w-4 mr-2" />
+              Create PR
+            </Button>
 
-                        <div className="space-x-2">
-                            <Button
-                                name="ask"
-                                size="sm"
-                                type="submit"
-                                variant="outline"
-                            >
-                                Go{" "}
-                                <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
-                                    <span className="text-xs">↵</span>
-                                </kbd>
-                            </Button>
-                        </div>
-                    </div>
-                </form>
+            <div className="space-x-2">
+              <Button name="ask" size="sm" type="submit" variant="outline">
+                Go{" "}
+                <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
+                  <span className="text-xs">↵</span>
+                </kbd>
+              </Button>
             </div>
-        </div>
-    );
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function App() {
-    return (
-        <Router>
-            <main className="p-4">
-                <nav className="mb-4 flex justify-between">
-                    <Link to="/">
-                        <Button variant="ghost" size="sm">
-                            Home
-                        </Button>
-                    </Link>
-                </nav>
+  return (
+    <Router>
+      <main className="p-4">
+        <nav className="mb-4 flex justify-between">
+          <Link to="/">
+            <Button variant="ghost" size="sm">
+              Home
+            </Button>
+          </Link>
+        </nav>
 
-                <Routes>
-                    <Route
-                        path="/task/:taskId"
-                        element={<ConversationView />}
-                    />
-                    <Route path="/" element={<Tasks />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-            </main>
-        </Router>
-    );
+        <Routes>
+          <Route path="/task/:taskId" element={<ConversationView />} />
+          <Route path="/" element={<Tasks />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </Router>
+  );
 }
 
 export default App;
