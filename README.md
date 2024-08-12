@@ -2,6 +2,7 @@
 
 Melty is a VS Code extension that acts as an AI pair programmer, helping you write and improve your code.
 
+
 ## Features
 
 - AI-assisted code generation
@@ -57,6 +58,10 @@ Initial release of Melty
 
 Webview / Frontend:
 - Run `npm run watch:all` to start the webview compiler in watch mode. It will automatically open a new browser window with the webview. Whenever changes are made to webview-ui, it will automatically create a build.
+
+
+## Publish
+- `vsce publish minor`
 
 ### Testing
 
