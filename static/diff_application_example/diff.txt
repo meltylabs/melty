@@ -1,0 +1,51 @@
+<<<<<<< SEARCH
+export class Task implements Task {
+    id: string;
+    name: string;
+    branch: string;
+    conversation: Conversation;
+    gitRepo: GitRepo | null;
+=======
+export class Task implements Task {
+    id: string;
+    name: string;
+    branch: string;
+    conversation: Conversation;
+    gitRepo: GitRepo | null;
+
+    /**
+     * Undo the last action by removing the last Joule and rolling back to the previous commit.
+     * @returns The updated Conversation or null if there's nothing to undo.
+     */
+    public async undo(): Promise<Conversation | null> {
+        if (!this.gitRepo) {
+            throw new Error("GitRepo is not initialized");
+        }
+
+        const joules = this.listJoules();
+        if (joules.length < 2) {
+            // Nothing to undo
+            return null;
+        }
+
+        // Remove the last Joule
+        const updatedConversation = conversations.create();
+        for (let i = 0; i < joules.length - 1; i++) {
+            updatedConversation = conversations.addJoule(updatedConversation, joules[i]);
+        }
+
+        // Get the commit from the second-to-last Joule
+        const previousJoule = joules[joules.length - 2];
+        const previousCommit = previousJoule.pseudoCommit.commit;
+
+        if (!previousCommit) {
+            throw new Error("Previous commit not found");
+        }
+
+        // Roll back to the previous commit
+        await this.gitRepo.checkout(previousCommit);
+
+        this.conversation = updatedConversation;
+        return updatedConversation;
+    }
+>>>>>>> REPLACE

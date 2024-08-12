@@ -28,7 +28,7 @@ have broader knowledge about software engineering. Make sure to think carefully 
 own independent opinions and conclusions.
 
 RULES
-1. Always use best practices when coding.
+1. Use best practices when coding.
 2. Respect and use existing conventions, libraries, etc. that are already present in the code base.
 3. Take requests for changes to the supplied code.
 4. If you're ever unsure, don't be afraid to ask questions.
@@ -88,4 +88,39 @@ If you need to edit any of these files, ask me to *add them to the chat* first.`
 
 export function repoMapAsstAck(): string {
   return `Thanks. I'll pay close attention to this.`;
+}
+
+export function diffApplicationSystemPrompt(): string {
+  return `Your task is to take a Diff and apply it to an Original file to produce an Updated file.
+
+The Updated file should be exactly the same as the Original file except for the changes described in the diff.
+Preserve all comments and formatting from the Original file except when they're explicitly, intentionally changed in the diff.
+
+<Example>
+<Original>
+${fs.readFileSync(
+  path.join(__dirname, "..", "static", "diff_application_example", "input.txt"),
+  "utf8"
+)}
+</Original>
+<Diff>
+${fs.readFileSync(
+  path.join(__dirname, "..", "static", "diff_application_example", "diff.txt"),
+  "utf8"
+)}
+</Diff>
+<Updated>
+${fs.readFileSync(
+  path.join(
+    __dirname,
+    "..",
+    "static",
+    "diff_application_example",
+    "output.txt"
+  ),
+  "utf8"
+)}
+</Updated>
+</Example
+`;
 }

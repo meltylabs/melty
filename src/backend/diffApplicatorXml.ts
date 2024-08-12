@@ -1,13 +1,20 @@
-import { PseudoCommit, GitRepo, SearchReplace } from "../types";
+import {
+  PseudoCommit,
+  GitRepo,
+  SearchReplace,
+  ClaudeConversation,
+  ClaudeMessage,
+} from "../types";
 import * as pseudoCommits from "./pseudoCommits";
 import * as searchReplaces from "./searchReplace";
+import * as claudeAPI from "./claudeAPI";
+import * as prompts from "./prompts";
 import * as vscode from "vscode";
 
 const CODE_FENCE = ["<CodeChange>", "</CodeChange>"];
 const DIFF_OPEN = "<<<<<<< SEARCH";
 const DIFF_DIVIDER = "=======";
 const DIFF_CLOSE = ">>>>>>> REPLACE";
-const DIFF_PIECES = [DIFF_OPEN, DIFF_DIVIDER, DIFF_CLOSE];
 
 type Section = "search" | "replace" | "codeChange" | "topLevel";
 
@@ -23,6 +30,20 @@ export function applySearchReplaceBlocks(
   return searchReplaceBlocks.reduce((pseudoCommit, searchReplace) => {
     return applySearchReplace(gitRepo, pseudoCommit, searchReplace);
   }, pseudoCommit);
+}
+
+export async function applyByHaiku(
+  gitRepo: GitRepo,
+  pseudoCommit: PseudoCommit,
+  searchReplaceBlocks: SearchReplace[]
+): Promise<PseudoCommit> {
+  return searchReplaceBlocks.reduce(
+    async (pseudoCommitPromise, searchReplace) => {
+      const pseudoCommit = await pseudoCommitPromise;
+      return applySearchReplaceHaiku(gitRepo, pseudoCommit, searchReplace);
+    },
+    Promise.resolve(pseudoCommit)
+  );
 }
 
 function stripFilename(filename: string): string | undefined {
@@ -205,6 +226,56 @@ function extractFileName(line: string): string | undefined {
     throw new Error(`Unable to get filename from: ${line}`); // TODO: relax this to undefined
   }
   return stripFilename(match[1]);
+}
+
+async function applySearchReplaceHaiku(
+  gitRepo: GitRepo,
+  pseudoCommit: PseudoCommit,
+  searchReplace: SearchReplace
+): Promise<PseudoCommit> {
+  const originalContents = pseudoCommits.hasFile(
+    gitRepo,
+    pseudoCommit,
+    searchReplace.filePath
+  )
+    ? pseudoCommits.getFileContents(
+        gitRepo,
+        pseudoCommit,
+        searchReplace.filePath
+      )
+    : "\n\n"; // so that it has something to search for
+
+  const claudeConversation: ClaudeConversation = {
+    system: prompts.diffApplicationSystemPrompt(),
+    messages: [
+      {
+        role: "user",
+        content: `<Original>${originalContents}</Original>
+<Diff>
+<<<<<<< SEARCH
+${searchReplace.search}
+======
+${searchReplace.replace}
+>>>>>>> REPLACE
+</Diff>`,
+      },
+      {
+        role: "assistant",
+        content: `<Updated>`,
+      },
+    ],
+  };
+
+  const response = await claudeAPI.streamClaude(claudeConversation, () => {});
+
+  // remove the closing </Updated> tag
+  const updatedContent = response.split("</Updated>")[0];
+
+  return pseudoCommits.upsertFileContents(
+    pseudoCommit,
+    searchReplace.filePath,
+    updatedContent
+  );
 }
 
 function applySearchReplace(

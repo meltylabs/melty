@@ -6,7 +6,7 @@ import { ClaudeMessage, ClaudeConversation } from "../types";
 export async function streamClaude(
   claudeConversation: ClaudeConversation,
   processPartial: (text: string) => void
-): Promise<any> {
+): Promise<string> {
   const config = vscode.workspace.getConfiguration("spectacle");
   const apiKey = config.get<string>("anthropicApiKey");
 

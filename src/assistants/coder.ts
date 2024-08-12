@@ -49,7 +49,7 @@ export class Coder extends BaseAssistant {
       claudeConversation,
       (responseFragment: string) => {
         partialMessage += responseFragment;
-        const newConversation = this.claudeOutputToConversation(
+        const newConversation = this.claudeOutputToConversationNoChanges(
           conversation,
           partialMessage,
           true,
@@ -62,7 +62,7 @@ export class Coder extends BaseAssistant {
     );
     console.log(finalResponse);
 
-    return this.claudeOutputToConversation(
+    return await this.claudeOutputToConversationApplyChanges(
       conversation,
       finalResponse,
       true,
@@ -98,7 +98,7 @@ export class Coder extends BaseAssistant {
     ];
   }
 
-  private claudeOutputToConversation(
+  private claudeOutputToConversationNoChanges(
     prevConversation: Conversation,
     response: string,
     partialMode: boolean,
@@ -123,6 +123,31 @@ export class Coder extends BaseAssistant {
     return conversations.addJoule(prevConversation, newJoule);
   }
 
+  private async claudeOutputToConversationApplyChanges(
+    prevConversation: Conversation,
+    response: string,
+    partialMode: boolean,
+    currentPseudoCommit: PseudoCommit,
+    contextPaths: string[],
+    gitRepo: GitRepo
+  ): Promise<Conversation> {
+    const { messageChunksList, searchReplaceList } =
+      diffApplicatorXml.splitResponse(response, partialMode);
+    const newPseudoCommit = await this.getNewPseudoCommitApplyChanges(
+      gitRepo,
+      currentPseudoCommit,
+      searchReplaceList
+    );
+    const newJoule = joules.createJouleBot(
+      messageChunksList.join("\n"),
+      response,
+      newPseudoCommit,
+      contextPaths,
+      "coder"
+    );
+    return conversations.addJoule(prevConversation, newJoule);
+  }
+
   /**
    * Creates a new pseudo commit representing changes (if there are any) on top of currentPseudoCommit.
    */
@@ -130,12 +155,23 @@ export class Coder extends BaseAssistant {
     gitRepo: GitRepo,
     currentPseudoCommit: PseudoCommit,
     searchReplaceList: any[]
-  ) {
+  ): PseudoCommit {
+    // Reset the diff preview
+    const pseudoCommitNoDiff =
+      pseudoCommits.createFromPrevious(currentPseudoCommit);
+    return pseudoCommitNoDiff;
+  }
+
+  private async getNewPseudoCommitApplyChanges(
+    gitRepo: GitRepo,
+    currentPseudoCommit: PseudoCommit,
+    searchReplaceList: any[]
+  ): Promise<PseudoCommit> {
     // Reset the diff preview
     const pseudoCommitNoDiff =
       pseudoCommits.createFromPrevious(currentPseudoCommit);
 
-    return diffApplicatorXml.applySearchReplaceBlocks(
+    return await diffApplicatorXml.applyByHaiku(
       gitRepo,
       pseudoCommitNoDiff,
       searchReplaceList

@@ -39,12 +39,15 @@ How *SEARCH/REPLACE* blocks are applied:
 Instructions for writing a great *SEARCH/REPLACE* block:
 
 - Include enough lines to make the SEARCH blocks uniquely match the lines to change.
-- On the other hand, do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks. Include just the changing lines, and a few surrounding lines if needed for uniqueness.
+- On the other hand, do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks. Include just the changing lines, and a few
+  surrounding lines if needed for uniqueness.
 - Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file.
 
 Tips:
 
 - To move code within a file, use two *SEARCH/REPLACE* blocks: one to delete it from its current location and one to insert it in the new location.
-- To create a new file, use a CodeChange command with a new file path (including dir name if needed), an empty `SEARCH` section, and the new file's contents in the `REPLACE` section
+- To create a new file, use a CodeChange command with a new file path (including dir name if needed), an empty `SEARCH` section, and the
+  new file's contents in the `REPLACE` section
 
-Please only ever return code inside a CodeChange tag and *SEARCH/REPLACE* block!
+You may write code outside of a CodeChange tag and *SEARCH/REPLACE* block, but it will not be applied to the codebase. For example, you could
+use this to explain something to the user, or to suggest potential changes.
