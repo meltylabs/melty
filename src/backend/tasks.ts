@@ -208,7 +208,11 @@ export class Task implements Task {
       });
 
       // actualize does the commit and updates the pseudoCommit in-place
-      await pseudoCommits.actualize(lastJoule.pseudoCommit, this.gitRepo!);
+      await pseudoCommits.actualize(
+        lastJoule.pseudoCommit,
+        this.gitRepo!,
+        assistantType !== "architect"
+      );
       await this.gitRepo!.repository.status();
     } catch (e) {
       if (config.DEV_MODE) {
@@ -232,16 +236,25 @@ export class Task implements Task {
   /**
    * Responds to a human message.
    */
-  public async respondHuman(message: string): Promise<Joule> {
-    await this.gitRepo!.repository.status();
+  public async respondHuman(
+    assistantType: AssistantType,
+    message: string
+  ): Promise<Joule> {
+    let associateDiffWithPseudoCommit = false;
 
-    const didCommit = (await this.commitChanges()) > 0;
+    if (assistantType !== "architect") {
+      await this.gitRepo!.repository.status();
+      const didCommit = (await this.commitChanges()) > 0;
+      associateDiffWithPseudoCommit = didCommit;
+    }
 
+    // if using the architect, this commit will be old, but it
+    // shouldn't matter because we never read from it anyway
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
     const newPseudoCommit = await pseudoCommits.createFromCommit(
       latestCommit,
       this.gitRepo!,
-      didCommit
+      associateDiffWithPseudoCommit
     );
 
     this.conversation = conversations.respondHuman(

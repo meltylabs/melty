@@ -259,7 +259,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     task.setFileManager(this.fileManager!);
 
     // human response
-    await task.respondHuman(text);
+    await task.respondHuman(assistantType, text);
     this.bridgeToWebview?.sendNotification("updateTask", {
       task: utils.serializableTask(task),
     });
