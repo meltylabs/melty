@@ -50,7 +50,9 @@ const dummyDiff =
 
 const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [outputFormat, setOutputFormat] = useState<"unified" | "side-by-side">("side-by-side");
+  const [outputFormat, setOutputFormat] = useState<"unified" | "side-by-side">(
+    "side-by-side"
+  );
 
   useEffect(() => {
     if (containerRef.current) {

@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
-import {
-  XIcon,
-  GitPullRequestIcon,
-} from "lucide-react";
+import { XIcon, GitPullRequestIcon } from "lucide-react";
 import { FilePicker } from "./FilePicker";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -96,10 +93,16 @@ export function ConversationView() {
     const handleNotification = (event: MessageEvent) => {
       const message = event.data;
       if (message.type === "notification") {
-        console.log("[ConversationView.tsx] Webview received notification message", message);
+        console.log(
+          "[ConversationView.tsx] Webview received notification message",
+          message
+        );
         switch (message.notificationType) {
           case "updateTask":
-            console.log("[ConversationView.tsx] updateTask", message.task === task);
+            console.log(
+              "[ConversationView.tsx] updateTask",
+              message.task === task
+            );
             setTask(message.task);
             return;
           case "updateWorkspaceFiles":
