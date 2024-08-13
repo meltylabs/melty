@@ -16,6 +16,7 @@ import * as Diff2Html from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 import Diff2HtmlComponent from "./DiffViewer";
 import { Link, useNavigate } from "react-router-dom";
+
 interface Task {
   id: string;
   name: string;
@@ -82,35 +83,6 @@ export function Tasks() {
   ];
   return (
     <div>
-      {/* <form onSubmit={handleSubmit} className="mb-4">
-        <div className="flex space-x-2">
-          <Input
-            type="text"
-            value={newTaskMessage}
-            onChange={(e) => setNewTaskMessage(e.target.value)}
-            placeholder="Type a message to create a new task"
-            className="flex-grow"
-          />
-          <Button type="submit">Create Task</Button>
-        </div>
-      </form> */}
-
-      {/* <div className="grid grid-cols-2">
-        <div className="">
-          <div className="overflow-y-scroll ">
-            <Diff2HtmlComponent diff={dummyDiff} />
-          </div>
-        </div>
-
-        <div className="space-y-2 overflow-y-auto">
-          {dummyMessages.map((message) => (
-            <div className="bg-gray-100" key={message.message}>
-              <p>{message.message}</p>
-            </div>
-          ))}
-        </div>
-      </div> */}
-
       <div className="flex space-x-2 mb-4">
         <Input
           type="text"
@@ -138,9 +110,9 @@ export function Tasks() {
               </Card>
             </Link>
             <Button
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2"
+              variant="outline"
+              size="sm"
+              className="absolute top-2 right-2 p-1"
               onClick={(e) => deleteTask(task.id, e)}
             >
               <Trash2 className="h-4 w-4" />
