@@ -9,6 +9,7 @@
         "url": "https://github.com/YourUsername/melty.git"
     },
     "license": "MIT",
+    "icon": "icon.png",
     "galleryBanner": {
         "color": "#C80000",
         "theme": "dark"
