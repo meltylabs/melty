@@ -40,7 +40,7 @@
       }
     ],
     "viewsContainers": {
-      "activitybar": [
+      "sidebar": [
         {
           "id": "meltyViewContainer",
           "title": "Melty",
