@@ -10,3 +10,7 @@ vsc-extension-quickstart.md
 **/*.ts
 **/.vscode-test.*
 esbuild.js
+aider
+.env
+.melty
+__pycache__
