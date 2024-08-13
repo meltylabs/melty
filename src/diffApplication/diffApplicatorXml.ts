@@ -48,8 +48,6 @@ export async function applyByHaiku(
         // Apply changes serially for each file
         for (const searchReplace of searchReplaces) {
           fileContent = await applySearchReplaceHaiku(
-            gitRepo,
-            filePath,
             fileContent,
             searchReplace
           );
@@ -74,8 +72,6 @@ export async function applyByHaiku(
 }
 
 async function applySearchReplaceHaiku(
-  gitRepo: GitRepo,
-  fileName: string,
   fileContent: string,
   searchReplace: SearchReplace
 ): Promise<string> {
@@ -100,11 +96,18 @@ ${parser.DIFF_CLOSE}
     ],
   };
 
+  console.log(
+    "APPLYBYHAIKU prompt",
+    `SYSTEM: ${claudeConversation.system}
+    MESSAGES: ${claudeConversation.messages}`
+  );
+
   const response = await claudeAPI.streamClaude(
     claudeConversation,
     () => {},
     claudeAPI.Models.Claude3Haiku
   );
+  console.log("APPLYBYHAIKU response", response);
 
   // remove the closing </Updated> tag
   return response.split("</Updated>")[0];
