@@ -181,7 +181,6 @@ export class RepoMapSpec {
       return (sourceFile) => {
         function visitor(node: ts.Node): ts.Node | undefined {
           return visit(node);
-          // return ts.visitEachChild(node, visitor, context);
         }
         return ts.visitEachChild(sourceFile, visitor, context);
       };

@@ -1,15 +1,5 @@
-import {
-  PseudoCommit,
-  GitRepo,
-  SearchReplace,
-  ClaudeConversation,
-  ClaudeMessage,
-} from "../types";
-import * as pseudoCommits from "./pseudoCommits";
-import * as searchReplaces from "./searchReplace";
-import * as claudeAPI from "./claudeAPI";
-import * as prompts from "./prompts";
-import * as vscode from "vscode";
+import { SearchReplace } from "../types";
+import * as searchReplaces from "../backend/searchReplace";
 
 const CODE_FENCE = ["<CodeChange>", "</CodeChange>"];
 const DIFF_OPEN = "<<<<<<< SEARCH";
@@ -17,34 +7,6 @@ const DIFF_DIVIDER = "=======";
 const DIFF_CLOSE = ">>>>>>> REPLACE";
 
 type Section = "search" | "replace" | "codeChange" | "topLevel";
-
-export const testExports = {
-  applySearchReplace,
-};
-
-export function applySearchReplaceBlocks(
-  gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
-  searchReplaceBlocks: SearchReplace[]
-): PseudoCommit {
-  return searchReplaceBlocks.reduce((pseudoCommit, searchReplace) => {
-    return applySearchReplace(gitRepo, pseudoCommit, searchReplace);
-  }, pseudoCommit);
-}
-
-export async function applyByHaiku(
-  gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
-  searchReplaceBlocks: SearchReplace[]
-): Promise<PseudoCommit> {
-  return searchReplaceBlocks.reduce(
-    async (pseudoCommitPromise, searchReplace) => {
-      const pseudoCommit = await pseudoCommitPromise;
-      return applySearchReplaceHaiku(gitRepo, pseudoCommit, searchReplace);
-    },
-    Promise.resolve(pseudoCommit)
-  );
-}
 
 function stripFilename(filename: string): string | undefined {
   filename = filename.trim();
@@ -145,7 +107,7 @@ export function splitResponse(
         // messageChunksList.push("");
 
         // ENABLED -- raw message strategy (each CC is a chunk)
-        messageChunksList.push("```\n");
+        messageChunksList.push("```codechange \n");
 
         try {
           currentFile = extractFileName(line);
@@ -226,95 +188,4 @@ function extractFileName(line: string): string | undefined {
     throw new Error(`Unable to get filename from: ${line}`); // TODO: relax this to undefined
   }
   return stripFilename(match[1]);
-}
-
-async function applySearchReplaceHaiku(
-  gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
-  searchReplace: SearchReplace
-): Promise<PseudoCommit> {
-  const originalContents = pseudoCommits.hasFile(
-    gitRepo,
-    pseudoCommit,
-    searchReplace.filePath
-  )
-    ? pseudoCommits.getFileContents(
-        gitRepo,
-        pseudoCommit,
-        searchReplace.filePath
-      )
-    : "\n\n"; // so that it has something to search for
-
-  const claudeConversation: ClaudeConversation = {
-    system: prompts.diffApplicationSystemPrompt(),
-    messages: [
-      {
-        role: "user",
-        content: `<Original>${originalContents}</Original>
-<Diff>
-<<<<<<< SEARCH
-${searchReplace.search}
-======
-${searchReplace.replace}
->>>>>>> REPLACE
-</Diff>`,
-      },
-      {
-        role: "assistant",
-        content: `<Updated>`,
-      },
-    ],
-  };
-
-  const response = await claudeAPI.streamClaude(claudeConversation, () => {});
-
-  // remove the closing </Updated> tag
-  const updatedContent = response.split("</Updated>")[0];
-
-  return pseudoCommits.upsertFileContents(
-    pseudoCommit,
-    searchReplace.filePath,
-    updatedContent
-  );
-}
-
-function applySearchReplace(
-  gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
-  searchReplace: SearchReplace
-): PseudoCommit {
-  const originalContents = pseudoCommits.hasFile(
-    gitRepo,
-    pseudoCommit,
-    searchReplace.filePath
-  )
-    ? pseudoCommits.getFileContents(
-        gitRepo,
-        pseudoCommit,
-        searchReplace.filePath
-      )
-    : "\n\n"; // so that it has something to search for
-
-  if (!originalContents.includes(searchReplace.search)) {
-    console.error("failed to apply diff");
-    console.error("search string:");
-    console.error(searchReplace.search);
-    console.error("search string trimmed:");
-    console.error(searchReplace.search.trim());
-    console.error("replace string:");
-    console.error(searchReplace.replace);
-    vscode.window.showErrorMessage(
-      `Failed to apply diff: search text not found`
-    );
-    return pseudoCommit;
-  }
-  const updatedContent = originalContents.replace(
-    searchReplace.search,
-    searchReplace.replace
-  );
-  return pseudoCommits.upsertFileContents(
-    pseudoCommit,
-    searchReplace.filePath,
-    updatedContent
-  );
 }

@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { ClaudeMessage } from "@/types/claude";
 
 export function architectModeSystemPrompt(): string {
   return `You are Melty, an expert software engineer the user has hired to get an outside perspective on their systems.
@@ -123,4 +124,51 @@ ${fs.readFileSync(
 </Updated>
 </Example
 `;
+}
+
+export function fileSuggestionsIntroAndExamples(): ClaudeMessage[] {
+  return [
+    {
+      role: "user",
+      content: `<CodebaseSummary> will contain a summary of some of the files in the user's codebase.
+  <Message> will contain a message from the user containing a question or instruction about editing their code.
+
+Please respond with <FileSuggestions>, a list of *existing* files whose contents it would be necessary to see in
+order to accurately respond to the user. If a file might be helpful but not necessary, don't include it.
+
+<CodebaseSummary>
+${fs.readFileSync(
+  path.join(__dirname, "..", "static", "repo_map_example.txt"),
+  "utf8"
+)}
+</CodebaseSummary>
+<Message>
+Can you add a sheep class?
+</Message>`,
+    },
+    {
+      role: "assistant",
+      content: `<FileSuggestions>
+<FileSuggestion filePath="animal.py" />
+</FileSuggestions>`,
+    },
+    {
+      role: "user",
+      content: `<CodebaseSummary>
+${fs.readFileSync(
+  path.join(__dirname, "..", "static", "repo_map_example.txt"),
+  "utf8"
+)}
+</CodebaseSummary>
+<Message>
+Can you add docstrings to pig.py?
+</Message>`,
+    },
+    {
+      role: "assistant",
+      content: `<FileSuggestions>
+<FileSuggestion filePath="pig.py" />
+</FileSuggestions>`,
+    },
+  ];
 }

@@ -9,11 +9,13 @@ import * as pseudoCommits from "../backend/pseudoCommits";
 import * as joules from "../backend/joules";
 import * as prompts from "../backend/prompts";
 import * as claudeAPI from "../backend/claudeAPI";
-import * as diffApplicatorXml from "../backend/diffApplicatorXml";
+import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
 import { RepoMapSpec } from "../backend/repoMapSpec";
 import * as utils from "../util/utils";
 import * as conversations from "../backend/conversations";
 import { BaseAssistant } from "./baseAssistant";
+import * as parser from "../diffApplication/parser";
+import * as contextSuggester from "../backend/contextSuggester";
 
 export class Coder extends BaseAssistant {
   async respond(
@@ -22,6 +24,27 @@ export class Coder extends BaseAssistant {
     contextPaths: string[],
     processPartial: (partialConversation: Conversation) => void
   ) {
+    const repoMap = new RepoMapSpec(gitRepo);
+    const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
+    const repoMapString = await repoMap.getRepoMap(workspaceFilePaths);
+
+    const contextSuggestions = await contextSuggester.suggestContext(
+      conversations.lastJoule(conversation)!.message,
+      repoMap
+    );
+
+    // remove stuff that's already in contextUris
+    const newContextSuggestions = contextSuggestions?.filter(
+      (suggestion) => !contextPaths.includes(suggestion)
+    );
+
+    console.log(
+      "SUGGESTED CONTEXT: ",
+      contextSuggestions?.join(","),
+      " ... ",
+      newContextSuggestions?.join(",")
+    );
+
     const currentPseudoCommit =
       conversations.lastJoule(conversation)!.pseudoCommit;
 
@@ -35,7 +58,7 @@ export class Coder extends BaseAssistant {
       system: systemPrompt,
       messages: [
         // TODOV2 user system info
-        ...(await this.encodeRepoMap(gitRepo, currentPseudoCommit)),
+        ...(await this.encodeRepoMap(repoMapString)),
         ...this.encodeContext(gitRepo, currentPseudoCommit, contextPaths),
         ...this.encodeMessages(conversation),
       ],
@@ -81,18 +104,11 @@ export class Coder extends BaseAssistant {
     );
   }
 
-  private async encodeRepoMap(
-    gitRepo: GitRepo,
-    pseudoCommit: PseudoCommit
-  ): Promise<ClaudeMessage[]> {
-    const repoMap = new RepoMapSpec(gitRepo);
-    const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
+  private async encodeRepoMap(repoMap: string): Promise<ClaudeMessage[]> {
     return [
       {
         role: "user",
-        content: `${prompts.repoMapIntro()}\n\n${await repoMap.getRepoMap(
-          workspaceFilePaths
-        )}`,
+        content: `${prompts.repoMapIntro()}\n\n${repoMap}`,
       },
       { role: "assistant", content: prompts.repoMapAsstAck() },
     ];
@@ -106,8 +122,10 @@ export class Coder extends BaseAssistant {
     contextPaths: string[],
     gitRepo: GitRepo
   ): Conversation {
-    const { messageChunksList, searchReplaceList } =
-      diffApplicatorXml.splitResponse(response, partialMode);
+    const { messageChunksList, searchReplaceList } = parser.splitResponse(
+      response,
+      partialMode
+    );
     const newPseudoCommit = this.getNewPseudoCommit(
       gitRepo,
       currentPseudoCommit,
@@ -131,8 +149,10 @@ export class Coder extends BaseAssistant {
     contextPaths: string[],
     gitRepo: GitRepo
   ): Promise<Conversation> {
-    const { messageChunksList, searchReplaceList } =
-      diffApplicatorXml.splitResponse(response, partialMode);
+    const { messageChunksList, searchReplaceList } = parser.splitResponse(
+      response,
+      partialMode
+    );
     const newPseudoCommit = await this.getNewPseudoCommitApplyChanges(
       gitRepo,
       currentPseudoCommit,

@@ -56,6 +56,21 @@ function JouleComponent({
             components={{
               code({ node, className, children, ...props }) {
                 const match = /language-(\w+)/.exec(className || "");
+                if (match && match[1] === "codechange") {
+                  return (
+                    <details>
+                      <summary>Writing code...</summary>
+                      <pre
+                        {...(props as React.DetailedHTMLProps<
+                          React.HTMLAttributes<HTMLPreElement>,
+                          HTMLPreElement
+                        >)}
+                      >
+                        <code className={className}>{children}</code>
+                      </pre>
+                    </details>
+                  );
+                }
                 return match ? (
                   <div className="relative p-0 max-h-[300px] overflow-y-auto">
                     {!isPartial && (

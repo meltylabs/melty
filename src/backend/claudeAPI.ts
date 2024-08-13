@@ -3,9 +3,15 @@ import * as vscode from "vscode";
 
 import { ClaudeMessage, ClaudeConversation } from "../types";
 
+export enum Models {
+  Claude35Sonnet = "claude-3-5-sonnet-20240620",
+  Claude3Haiku = "claude-3-haiku-20240307",
+}
+
 export async function streamClaude(
   claudeConversation: ClaudeConversation,
-  processPartial: (text: string) => void
+  processPartial: (text: string) => void,
+  model: Models = Models.Claude35Sonnet
 ): Promise<string> {
   const config = vscode.workspace.getConfiguration("spectacle");
   const apiKey = config.get<string>("anthropicApiKey");
@@ -25,7 +31,7 @@ export async function streamClaude(
     const stream = await anthropic.messages
       .stream(
         {
-          model: "claude-3-5-sonnet-20240620",
+          model: model,
           max_tokens: 4096,
           messages: claudeConversation.messages as any,
           system: claudeConversation.system,
