@@ -106,7 +106,7 @@ export function Tasks() {
         />
         <Button type="submit">+ New task</Button>
       </form>
-      <div className="grid grid-cols-2 gap-6 mt-4">
+      <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
         {tasks.map((task) => (
           <div key={task.id} className="mr-4 relative">

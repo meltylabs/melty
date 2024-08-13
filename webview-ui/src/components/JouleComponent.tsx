@@ -25,7 +25,11 @@ export function JouleComponent({
         joule.author === "human" ? "bg-gray-50" : "bg-white"
       }`}
     >
-      <div className="w-[40%] pr-4 overflow-auto h-full">
+      <div
+        className={`${
+          diffHtml ? "w-[40%]" : "w-full"
+        } pr-4 overflow-auto h-full`}
+      >
         <div className="text-xs prose">
           <ReactMarkdown
             components={{
@@ -71,7 +75,9 @@ export function JouleComponent({
           {isPartial && <span className="animate-pulse">▋</span>}
         </div>
       </div>
-      <div className="w-[60%] overflow-auto h-full">
+      <div
+        className={`${diffHtml ? "w-[60%]" : "hidden"} overflow-auto h-full`}
+      >
         {diffHtml && !isPartial && <DiffViewer diff={diffHtml} />}
       </div>
     </div>

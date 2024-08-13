@@ -207,7 +207,7 @@ export function ConversationView() {
           ))}
         </div>
       </div>
-      <div className="">
+      <div className="mb-16">
         <form onSubmit={handleSubmit}>
           <RadioGroup name="assistantType" defaultValue="coder">
             <div className="flex items-center space-x-2">
