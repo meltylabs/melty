@@ -1,46 +1,44 @@
 # CodeChange format rules
 
-Please provide code changes using the CodeChange format. In the CodeChange format, changes are wrapped in a <CodeChange> XML tag
-containing a `file` attribute. Within the <CodeChange> tag, they are structured in *SEARCH/REPLACE* blocks. For example:
+Please provide code changes using the CodeChange format. In the CodeChange format, changes are wrapped in a `CodeChange` XML tag
+containing a `file` attribute.
 
-<CodeChange file="main.py">
+Within the CodeChange tag, provide a <Description> tag with a high-level description of the changes you'd like made.
+
+The rest of the CodeChange tag should consist of one or more *SEARCH/REPLACE* blocks. For example:
+
+<CodeChange file="src/main.py">
+<Description>Rename count_sheep to count_all_sheep and add count_stray_sheep() to the sum</Description>
 <<<<<<< SEARCH
     def count_sheep():
         # counts all the sheep in the system
         return count_domestic_sheep() + count_wild_sheep()
 =======
-    def do_calcluation():
+    def count_all_sheep():
         # counts all the sheep in the system
         return count_domestic_sheep() + count_wild_sheep() + count_stray_sheep()
 >>>>>>> REPLACE
 </CodeChange>
 
-Your response can include any number of CodeChange tags.
-
-Each CodeChange tag must use this format:
-
-1. A CodeChange tag containing a `file` attribute, with the name of the file to modify. Example: <CodeChange file="foo/bar/baz.py">
-2. Any number of *SEARCH/REPLACE* blocks
-3. A CodeChange close tag. Example: </CodeChange>
+Your response can include any number of CodeChange tags. Each CodeChange tag contain a `file` attribute with the path to the
+file to modify, a Description tag, and one or more *SEARCH/REPLACE* blocks.
 
 Each *SEARCH/REPLACE* block must use this format:
 
 1. The start of the search block: <<<<<<< SEARCH
-2. A contiguous chunk of lines to search for in the existing source code.
+2. A chunk of lines to search for in the existing source code.
 3. The dividing line: =======
 4. The lines to replace into the source code
 5. The end of the replace block: >>>>>>> REPLACE
 
-How *SEARCH/REPLACE* blocks are applied:
+Later, an assistant will read through each CodeChange block and make the included changes to the file. They will be given only
+the CodeChange block and the original file contents -- no other information.
 
-- The *SEARCH* section must *EXACTLY MATCH* the existing source code, character for character, including all comments, docstrings, etc.
-- *SEARCH/REPLACE* blocks will replace *all* matching occurrences.
+Instructions for writing a great CodeChange tag:
 
-Instructions for writing a great *SEARCH/REPLACE* block:
-
-- Include enough lines to make the SEARCH blocks uniquely match the lines to change.
+- Include enough lines in SEARCH to make sure it unambigously specifies which lines to change.
 - On the other hand, do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks. Include just the changing lines, and a few
-  surrounding lines if needed for uniqueness.
+  surrounding lines if needed for disambiguation.
 - Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file.
 
 Tips:
