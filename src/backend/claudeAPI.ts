@@ -13,7 +13,7 @@ export async function streamClaude(
   processPartial: (text: string) => void,
   model: Models = Models.Claude35Sonnet
 ): Promise<string> {
-  const config = vscode.workspace.getConfiguration("spectacle");
+  const config = vscode.workspace.getConfiguration("melty");
   const apiKey = config.get<string>("anthropicApiKey");
 
   if (!apiKey) {
