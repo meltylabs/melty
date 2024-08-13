@@ -313,7 +313,7 @@ function ConversationView() {
 
           <div className="mt-4 flex">
             <Textarea
-              placeholder="Tell me what to do (⌘m)"
+              placeholder="Tell me what to do"
               id="message"
               autoFocus
               required

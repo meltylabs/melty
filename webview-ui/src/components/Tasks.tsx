@@ -46,30 +46,39 @@ export function Tasks() {
     };
   }, [fetchTasks, extensionRPC]);
 
-  const deleteTask = useCallback(async (taskId: string, e: MouseEvent) => {
-    e.preventDefault(); // Prevent link navigation
-    e.stopPropagation(); // Prevent event bubbling
-    try {
-      await extensionRPC.run("deleteTask", { taskId });
-      await fetchTasks();
-      console.log("Task deleted successfully");
-    } catch (error) {
-      console.error("Failed to delete task:", error);
-    }
-  }, [fetchTasks, extensionRPC]);
+  const deleteTask = useCallback(
+    async (taskId: string, e: MouseEvent) => {
+      e.preventDefault(); // Prevent link navigation
+      e.stopPropagation(); // Prevent event bubbling
+      try {
+        await extensionRPC.run("deleteTask", { taskId });
+        await fetchTasks();
+        console.log("Task deleted successfully");
+      } catch (error) {
+        console.error("Failed to delete task:", error);
+      }
+    },
+    [fetchTasks, extensionRPC]
+  );
 
-  const createNewTask = useCallback(async () => {
-    if (newTaskName.trim()) {
-      const newTask = (await extensionRPC.run("createNewTask", {
-        name: newTaskName.trim(),
-      })) as Task;
+  const createNewTask = async (taskName: string) => {
+    console.log(`[Tasks] creating new task ${taskName}`);
+    const newTask = (await extensionRPC.run("createNewTask", {
+      name: taskName.trim(),
+    })) as Task;
+    console.log(`[Tasks] created new task ${newTask.id}`);
+    await fetchTasks();
+    navigate(`/task/${newTask.id}`);
+  };
 
-      console.log(`resolved new task ${newTask.id}`);
-      setNewTaskName(""); // Clear the input after creating the task
-      await fetchTasks(); // Refetch tasks to include the new one
-      navigate(`/task/${newTask.id}`);
-    }
-  }, [newTaskName, extensionRPC, navigate, fetchTasks]);
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("[Tasks] form submitted");
+    const form = e.target as HTMLFormElement;
+    const taskName = form.taskName.value;
+    console.log(form);
+    createNewTask(taskName);
+  };
 
   const dummyDiff =
     "diff --git a/src/main.py b/src/main.py\nindex 3333333..4444444 100644\n--- a/main.py\n+++ b/main.py\n@@ -1,7 +1,7 @@\n def main():\n     print('Hello, world!')\n\nif __name__ == '__main__':\n    main()\n\ndiff --git a/utils.py b/utils.py\nindex 5555555..6666666 100644\n--- a/utils.py\n+++ b/utils.py\n@@ -1,5 +1,6 @@\n def helper_function():\n     return 'I am a helper'\n+\ndef another_helper():\n+    return 'I am another helper'\n\ndiff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n--- a/README.md\n+++ b/README.md\n@@ -1,3 +1,4 @@\n # My Project\n\n This is a sample project.\n+It now has more files and functionality.";
@@ -84,18 +93,19 @@ export function Tasks() {
       message: "coooool",
     },
   ];
+
   return (
     <div>
-      <div className="flex space-x-2 mb-4">
+      <form className="flex space-x-2 mb-4" onSubmit={handleSubmit}>
         <Input
           type="text"
-          value={newTaskName}
-          onChange={(e) => setNewTaskName(e.target.value)}
+          id="taskName"
           placeholder="Enter task name"
           className="flex-grow"
+          required
         />
-        <Button onClick={createNewTask}>+ New task</Button>
-      </div>
+        <Button type="submit">+ New task</Button>
+      </form>
       <div className="grid grid-cols-2 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
         {tasks.map((task) => (
