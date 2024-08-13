@@ -8,6 +8,7 @@ import * as pseudoCommits from "../backend/pseudoCommits";
 import * as claudeAPI from "../backend/claudeAPI";
 import * as prompts from "../backend/prompts";
 import * as vscode from "vscode";
+import * as parser from "../diffApplication/parser";
 
 export function applySearchReplaceBlocks(
   gitRepo: GitRepo,
@@ -24,44 +25,72 @@ export async function applyByHaiku(
   pseudoCommit: PseudoCommit,
   searchReplaceBlocks: SearchReplace[]
 ): Promise<PseudoCommit> {
-  return searchReplaceBlocks.reduce(
-    async (pseudoCommitPromise, searchReplace) => {
-      const pseudoCommit = await pseudoCommitPromise;
-      return applySearchReplaceHaiku(gitRepo, pseudoCommit, searchReplace);
+  // Group SearchReplace objects by file name
+  const groupedSearchReplaceBlocks = searchReplaceBlocks.reduce(
+    (acc, searchReplace) => {
+      if (!acc[searchReplace.filePath]) {
+        acc[searchReplace.filePath] = [];
+      }
+      acc[searchReplace.filePath].push(searchReplace);
+      return acc;
     },
-    Promise.resolve(pseudoCommit)
+    {} as { [filePath: string]: SearchReplace[] }
+  );
+
+  // Apply changes in parallel across files
+  const updatedContents = await Promise.all(
+    Object.entries(groupedSearchReplaceBlocks).map(
+      async ([filePath, searchReplaces]) => {
+        let fileContent = pseudoCommits.hasFile(gitRepo, pseudoCommit, filePath)
+          ? pseudoCommits.getFileContents(gitRepo, pseudoCommit, filePath)
+          : "\n\n";
+
+        // Apply changes serially for each file
+        for (const searchReplace of searchReplaces) {
+          fileContent = await applySearchReplaceHaiku(
+            gitRepo,
+            filePath,
+            fileContent,
+            searchReplace
+          );
+        }
+
+        return { filePath, content: fileContent };
+      }
+    )
+  );
+
+  // Update pseudoCommit with new file contents
+  return updatedContents.reduce(
+    (updatedPseudoCommit, { filePath, content }) => {
+      return pseudoCommits.upsertFileContents(
+        updatedPseudoCommit,
+        filePath,
+        content
+      );
+    },
+    pseudoCommit
   );
 }
 
 async function applySearchReplaceHaiku(
   gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
+  fileName: string,
+  fileContent: string,
   searchReplace: SearchReplace
-): Promise<PseudoCommit> {
-  const originalContents = pseudoCommits.hasFile(
-    gitRepo,
-    pseudoCommit,
-    searchReplace.filePath
-  )
-    ? pseudoCommits.getFileContents(
-        gitRepo,
-        pseudoCommit,
-        searchReplace.filePath
-      )
-    : "\n\n"; // so that it has something to search for
-
+): Promise<string> {
   const claudeConversation: ClaudeConversation = {
     system: prompts.diffApplicationSystemPrompt(),
     messages: [
       {
         role: "user",
-        content: `<Original>${originalContents}</Original>
+        content: `<Original>${fileContent}</Original>
 <Diff>
-<<<<<<< SEARCH
+${parser.DIFF_OPEN}
 ${searchReplace.search}
-======
+${parser.DIFF_DIVIDER}
 ${searchReplace.replace}
->>>>>>> REPLACE
+${parser.DIFF_CLOSE}
 </Diff>`,
       },
       {
@@ -78,13 +107,7 @@ ${searchReplace.replace}
   );
 
   // remove the closing </Updated> tag
-  const updatedContent = response.split("</Updated>")[0];
-
-  return pseudoCommits.upsertFileContents(
-    pseudoCommit,
-    searchReplace.filePath,
-    updatedContent
-  );
+  return response.split("</Updated>")[0];
 }
 
 function applySearchReplace(

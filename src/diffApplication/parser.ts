@@ -1,10 +1,10 @@
 import { SearchReplace } from "../types";
 import * as searchReplaces from "../backend/searchReplace";
 
-const CODE_FENCE = ["<CodeChange>", "</CodeChange>"];
-const DIFF_OPEN = "<<<<<<< SEARCH";
-const DIFF_DIVIDER = "=======";
-const DIFF_CLOSE = ">>>>>>> REPLACE";
+export const CODE_FENCE = ["<CodeChange>", "</CodeChange>"];
+export const DIFF_OPEN = "<<<<<<< SEARCH";
+export const DIFF_DIVIDER = "=======";
+export const DIFF_CLOSE = ">>>>>>> REPLACE";
 
 type Section = "search" | "replace" | "codeChange" | "topLevel";
 
