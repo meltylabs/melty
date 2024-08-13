@@ -17,3 +17,13 @@ aider
 .melty
 __pycache__
 node_modules/**
+out/test/**
+webview-ui/src/**
+webview-ui/public/**
+webview-ui/node_modules/**
+**/*.test.js
+**/*.spec.js
+**/*.test.ts
+**/*.spec.ts
+**/*.md
+.github/**
