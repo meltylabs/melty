@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 src/**
+!src/lib/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -8,9 +9,11 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+!src/lib/**/*.ts
 **/.vscode-test.*
 esbuild.js
 aider
 .env
 .melty
 __pycache__
+node_modules/**
