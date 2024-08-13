@@ -31,12 +31,7 @@
     "onStartupFinished"
   ],
   "contributes": {
-    "commands": [
-      {
-        "command": "melty.checkForUpdates",
-        "title": "Check for Updates"
-      }
-    ],
+    "commands": [],
     "keybindings": [
       {
         "command": "melty.chatView.focus",
@@ -74,11 +69,6 @@
           "type": "string",
           "default": "",
           "description": "GitHub token"
-        },
-        "melty.updateCheckInterval": {
-          "type": "number",
-          "default": 86400000,
-          "description": "Interval (in milliseconds) to check for updates. Default is 24 hours."
         }
       }
     }
