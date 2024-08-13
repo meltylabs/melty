@@ -57,6 +57,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "melty.chatView",
+        "contents": "Welcome to Melty! Start a conversation to begin pair programming."
+      }
+    ],
     "configuration": {
       "title": "Melty Settings",
       "properties": {
