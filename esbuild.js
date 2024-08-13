@@ -24,6 +24,7 @@ const extensionConfig = {
   entryPoints: ["./src/extension.ts"],
   outfile: "./out/extension.js",
   external: ["vscode"],
+  treeShaking: true,
 };
 
 const testConfig = {
