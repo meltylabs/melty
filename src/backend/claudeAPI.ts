@@ -59,14 +59,3 @@ export async function streamClaude(
     throw error;
   }
 }
-
-// // example
-// const stream = streamClaude(messages, system
-//   (partialText) => { partialText + "hi!" },
-// )
-//   .on('text', (text) => {
-//     console.log(text);
-//   });
-
-// const message = await stream.finalMessage();
-// console.log(message);

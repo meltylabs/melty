@@ -13,23 +13,23 @@ import * as utils from "../util/utils";
 import { Architect } from "../assistants/architect";
 import { Coder } from "../assistants/coder";
 import * as config from "../util/config";
+import { FileManager } from "../fileManager";
 
 /**
  * A Task manages the interaction between a conversation and a git repository
  */
 export class Task implements Task {
-  id: string;
-  name: string;
-  branch: string;
   conversation: Conversation;
   gitRepo: GitRepo | null;
+  fileManager: FileManager | undefined;
 
-  constructor(id: string, name: string, branch: string) {
-    this.id = id;
-    this.name = name;
-    this.branch = branch;
+  constructor(public id: string, public name: string, public branch: string) {
     this.conversation = conversations.create();
     this.gitRepo = null;
+  }
+
+  public setFileManager(fileManager: FileManager) {
+    this.fileManager = fileManager;
   }
 
   /**
@@ -171,10 +171,9 @@ export class Task implements Task {
    * @param processPartial - a function to process the partial joule
    */
   public async respondBot(
-    contextPaths: string[],
     assistantType: AssistantType,
     processPartial: (partialConversation: Conversation) => void
-  ): Promise<Joule> {
+  ): Promise<void> {
     try {
       await this.gitRepo!.repository.status();
       this.ensureInSync();
@@ -192,19 +191,25 @@ export class Task implements Task {
           throw new Error(`Unknown assistant type: ${assistantType}`);
       }
 
+      const meltyMindFiles =
+        await this.fileManager!.getMeltyMindFilesRelative();
       this.conversation = await assistant.respond(
         this.conversation,
         this.gitRepo!,
-        contextPaths,
+        meltyMindFiles,
         processPartial
       );
       const lastJoule = conversations.lastJoule(this.conversation)!;
 
+      // add any edited files to melty's mind
+      const editedFiles = pseudoCommits.getEditedFiles(lastJoule.pseudoCommit);
+      editedFiles.forEach((editedFile) => {
+        this.fileManager!.addMeltyMindFile(editedFile, true);
+      });
+
       // actualize does the commit and updates the pseudoCommit in-place
       await pseudoCommits.actualize(lastJoule.pseudoCommit, this.gitRepo!);
       await this.gitRepo!.repository.status();
-
-      return lastJoule;
     } catch (e) {
       if (config.DEV_MODE) {
         throw e;
@@ -216,11 +221,10 @@ export class Task implements Task {
           pseudoCommits.createFromPrevious(
             conversations.lastJoule(this.conversation)!.pseudoCommit
           ),
-          contextPaths,
+          [],
           "system"
         );
         this.conversation = conversations.addJoule(this.conversation, joule);
-        return joule;
       }
     }
   }

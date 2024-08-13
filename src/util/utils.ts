@@ -50,6 +50,7 @@ export function serializableTask(task: Task) {
       ...task.gitRepo,
       repository: null,
     },
+    workspaceFiles: null,
   };
 }
 

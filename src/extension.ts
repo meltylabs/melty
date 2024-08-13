@@ -99,7 +99,8 @@ export class MeltyExtension {
       throw new Error(`Task with id ${taskId} not found`);
     }
 
-    await task.switchTo();
+    // switch the branch
+    // await task.switchTo();
 
     this.currentTask = task;
     // TODO hopefully files will be refreshed automatically?

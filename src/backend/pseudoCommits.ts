@@ -246,3 +246,11 @@ export function upsertFileContents(
     },
   };
 }
+
+export function getEditedFiles(pseudoCommit: PseudoCommit): string[] {
+  if (pseudoCommit.impl.status === "inMemory") {
+    return Object.keys(pseudoCommit.impl.filesChanged);
+  } else {
+    throw new Error("not implemented: getEditedFiles from committed repostate");
+  }
+}
