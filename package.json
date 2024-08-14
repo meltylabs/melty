@@ -82,6 +82,7 @@
             "type": "string"
           },
           "default": [
+            "**/.*/**",
             "**/node_modules/**",
             "**/.melty/**",
             "**/venv/**",
