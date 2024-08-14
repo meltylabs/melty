@@ -221,4 +221,72 @@ export function FilePicker({
   meltyMindFilePaths: string[];
   workspaceFilePaths: string[];
   handleAddFile: (filePath: string) => void;
-  handleDropFile: (filePath
+  handleDropFile: (filePath: string) => void;
+}) {
+  React.useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Check for Cmd+Shift+m on Mac or Ctrl+Shift+m on Windows/Linux
+      console.log("event.key", event.key);
+      if (event.key === "\\") {
+        event.preventDefault(); // Prevent default browser behavior
+        setOpen(!open);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [open, setOpen]);
+
+  return (
+    <>
+      <CommandDialog open={open} onOpenChange={setOpen} key="file-picker">
+        <CommandInput id="file" placeholder="Type a filename" />
+        <CommandList>
+          <CommandEmpty>All files in workspace are in context.</CommandEmpty>
+          {/* todo - would be nice to show recent or suggested here */}
+          {meltyMindFilePaths.length > 0 && (
+            <CommandGroup heading="Current">
+              {meltyMindFilePaths.map((filePath) => (
+                <CommandItem
+                  onSelect={() => handleDropFile(filePath)}
+                  key={filePath}
+                >
+                  <span className="mr-2">{getFileIcon(filePath)}</span>
+                  <span>{filePath}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          <CommandGroup heading="Add to context">
+            {workspaceFilePaths
+              .filter((filePath) => !meltyMindFilePaths.includes(filePath))
+              .map((filePath: string) => (
+                <CommandItem
+                  onSelect={() => handleAddFile(filePath)}
+                  className="data-[disabled]:text-gray-500"
+                  key={filePath}
+                >
+                  <span className="mr-2">{getFileIcon(filePath)}</span>
+                  <span>{filePath}</span>
+                  <CommandShortcut>+</CommandShortcut>
+                </CommandItem>
+              ))}
+          </CommandGroup>
+          <CommandSeparator />
+        </CommandList>
+
+        <div className="flex justify-between items-center my-3 px-4">
+          <p className="text-xs text-muted-foreground">
+            {meltyMindFilePaths.length} file
+            {meltyMindFilePaths.length !== 1 ? "s" : ""} in context
+          </p>
+          <p className="flex items-center text-xs">
+            Add/Drop
+            <span className="ml-1">⏎</span>
+          </p>
+        </div>
+      </CommandDialog>
+    </>
+  );
+}
