@@ -262,10 +262,23 @@ export class HelloWorldPanel implements WebviewViewProvider {
     task.setFileManager(this.fileManager!);
 
     // human response
-    await task.respondHuman(assistantType, text);
-    this.bridgeToWebview?.sendNotification("updateTask", {
-      task: utils.serializableTask(task),
-    });
+
+    try {
+      await task.respondHuman(assistantType, text);
+      this.bridgeToWebview?.sendNotification("updateTask", {
+        task: utils.serializableTask(task),
+      });
+    } catch (error) {
+      console.error("Error in respondHuman:", error);
+      if (
+        (error as Error).message ==
+        "Cannot read properties of null (reading 'repository')"
+      ) {
+        vscode.window.showErrorMessage("Melty does not see a git repository.");
+      } else {
+        vscode.window.showErrorMessage(error as string);
+      }
+    }
 
     // bot response
     const processPartial = (partialConversation: Conversation) => {
@@ -306,13 +319,15 @@ export class HelloWorldPanel implements WebviewViewProvider {
       }
 
       // Fetch the latest changes from the remote
-      await task.gitRepo.fetch('origin');
+      await task.gitRepo.fetch("origin");
 
       // Reset the local branch to origin/main
-      await task.gitRepo.reset('origin/main', true);
+      await task.gitRepo.reset("origin/main", true);
 
       // Refresh the file system
-      await vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+      await vscode.commands.executeCommand(
+        "workbench.files.action.refreshFilesExplorer"
+      );
 
       return "Successfully reset to origin/main";
     } catch (error) {
@@ -342,4 +357,3 @@ export class HelloWorldPanel implements WebviewViewProvider {
     }
   }
 }
-
