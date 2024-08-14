@@ -278,8 +278,8 @@ export function FilePicker({
 
         <div className="flex justify-between items-center my-3 px-4">
           <p className="text-xs text-muted-foreground">
-            {meltyMindFilePaths.length} file
-            {meltyMindFilePaths.length !== 1 ? "s" : ""} in context
+            {workspaceFilePaths.length} file
+            {workspaceFilePaths.length !== 1 ? "s" : ""} in workspace
           </p>
           <p className="flex items-center text-xs">
             Add/Drop
