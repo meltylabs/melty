@@ -74,7 +74,23 @@
         "melty.githubToken": {
           "type": "string",
           "default": "",
-          "description": "GitHub token"
+          "description": "GitHub token for creating pull requests"
+        },
+        "melty.excludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/.melty/**",
+            "**/venv/**",
+            "**/.venv/**",
+            "**/out/**",
+            "**/build/**",
+            "**/.vscode-test/**"
+          ],
+          "description": "Glob patterns to exclude from Melty's file watching and processing. Users can modify this list to customize exclusions."
         }
       }
     }

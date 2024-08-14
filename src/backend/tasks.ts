@@ -160,7 +160,7 @@ export class Task implements Task {
     }
 
     await this.gitRepo!.repository.status();
-    return changes.length;
+    return indexChanges.length;
   }
 
   /**

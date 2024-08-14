@@ -25,7 +25,7 @@ export class FileManager {
   private async initializeFileList(): Promise<void> {
     this.workspaceFiles = await vscode.workspace.findFiles(
       "**/*",
-      config.EXCLUDES_GLOB
+      config.getExcludesGlob()
     );
   }
 

@@ -62,7 +62,7 @@ export function serializableTask(task: Task) {
 export async function getWorkspaceFilePaths(gitRepo: GitRepo) {
   const workspaceFileUris = await vscode.workspace.findFiles(
     "**/*",
-    config.EXCLUDES_GLOB
+    config.getExcludesGlob()
   );
   return workspaceFileUris.map((file) => {
     return path.relative(gitRepo.rootPath, file.fsPath);
