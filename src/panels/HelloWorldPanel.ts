@@ -251,6 +251,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
       case "deleteTask":
         this.MeltyExtension.deleteTask(params.taskId);
         return Promise.resolve(null);
+
+      case "resetToOriginMain":
+        return this.resetToOriginMain();
     }
   }
 
@@ -293,6 +296,32 @@ export class HelloWorldPanel implements WebviewViewProvider {
   }
 
   /**
+   * Reset the current task to the origin/main branch.
+   */
+  private async resetToOriginMain(): Promise<string> {
+    try {
+      const task = await this.MeltyExtension.getCurrentTask();
+      if (!task.gitRepo) {
+        throw new Error("No Git repository associated with the current task.");
+      }
+
+      // Fetch the latest changes from the remote
+      await task.gitRepo.fetch('origin');
+
+      // Reset the local branch to origin/main
+      await task.gitRepo.reset('origin/main', true);
+
+      // Refresh the file system
+      await vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+
+      return "Successfully reset to origin/main";
+    } catch (error) {
+      console.error("Error resetting to origin/main:", error);
+      throw new Error(`Failed to reset to origin/main: ${error.message}`);
+    }
+  }
+
+  /**
    * Run a terminal command
    * @param command The command to run
    */
@@ -313,3 +342,4 @@ export class HelloWorldPanel implements WebviewViewProvider {
     }
   }
 }
+
