@@ -53,7 +53,21 @@ export class Task implements Task {
       console.log("Could not initialize task: no git repository found");
       return false;
     }
-    const repo = repositories[0];
+
+    // Get the VSCode workspace root path
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspaceRoot) {
+      console.log("Could not initialize task: no workspace folder found");
+      return false;
+    }
+
+    // Find the repository that matches the workspace root
+    const repo = repositories.find(r => r.rootUri.fsPath === workspaceRoot);
+    if (!repo) {
+      console.log("Could not initialize task: no matching git repository found for workspace root");
+      return false;
+    }
+
     await repo.status();
 
     this.gitRepo = { repository: repo, rootPath: repo.rootUri.fsPath };
