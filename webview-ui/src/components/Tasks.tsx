@@ -10,23 +10,26 @@ import {
 import { ExtensionRPC } from "../extensionRPC";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Trash2 } from "lucide-react";
-import { MouseEvent } from "react";
-import * as Diff2Html from "diff2html";
+import { ArrowUp, Trash2 } from "lucide-react";
+import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
-import Diff2HtmlComponent from "./DiffViewer";
 import { Link, useNavigate } from "react-router-dom";
-
-interface Task {
-  id: string;
-  name: string;
-  branch: string;
-  description: string;
-}
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Task, AssistantType } from "../types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTaskName, setNewTaskName] = useState("");
+  const [messageText, setMessageText] = useState("");
   const navigate = useNavigate();
   const [extensionRPC] = useState(() => new ExtensionRPC());
 
@@ -35,16 +38,6 @@ export function Tasks() {
     console.log(`[Tasks] fetched ${fetchedTasks.length} tasks`);
     setTasks(fetchedTasks.reverse());
   }, [extensionRPC]);
-
-  useEffect(() => {
-    fetchTasks();
-
-    window.addEventListener("message", extensionRPC.handleMessage);
-
-    return () => {
-      window.removeEventListener("message", extensionRPC.handleMessage);
-    };
-  }, [fetchTasks, extensionRPC]);
 
   const deleteTask = useCallback(
     async (taskId: string, e: MouseEvent) => {
@@ -67,45 +60,97 @@ export function Tasks() {
       name: taskName.trim(),
     })) as Task;
     console.log(`[Tasks] created new task ${newTask.id}`);
-    await fetchTasks();
     navigate(`/task/${newTask.id}`);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("[Tasks] form submitted");
-    const form = e.target as HTMLFormElement;
-    const taskName = form.taskName.value;
-    console.log(form);
+  function handleSendMessage(assistantType: AssistantType, text: string) {
+    extensionRPC.run("chatMessage", { assistantType, text });
+  }
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const message = messageText;
+    const assistantType = form.assistantType.value as AssistantType;
+    console.log(`[Tasks] to ${assistantType}`);
+    let taskName = message.substring(0, 40);
+    if (message.length > 40) {
+      taskName = taskName + "...";
+    }
     createNewTask(taskName);
+    handleSendMessage(assistantType, message);
+    setMessageText("");
   };
 
-  const dummyDiff =
-    "diff --git a/src/main.py b/src/main.py\nindex 3333333..4444444 100644\n--- a/main.py\n+++ b/main.py\n@@ -1,7 +1,7 @@\n def main():\n     print('Hello, world!')\n\nif __name__ == '__main__':\n    main()\n\ndiff --git a/utils.py b/utils.py\nindex 5555555..6666666 100644\n--- a/utils.py\n+++ b/utils.py\n@@ -1,5 +1,6 @@\n def helper_function():\n     return 'I am a helper'\n+\ndef another_helper():\n+    return 'I am another helper'\n\ndiff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n--- a/README.md\n+++ b/README.md\n@@ -1,3 +1,4 @@\n # My Project\n\n This is a sample project.\n+It now has more files and functionality.";
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
 
-  const dummyMessages = [
-    {
-      sender: "bot",
-      message: "hello",
-    },
-    {
-      sender: "human",
-      message: "coooool",
-    },
-  ];
+      if (event.currentTarget && event.currentTarget.value !== undefined) {
+        const form = event.currentTarget.form;
+        if (form) {
+          handleSubmit(event as unknown as React.FormEvent);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+
+    window.addEventListener("message", extensionRPC.handleMessage);
+
+    return () => {
+      window.removeEventListener("message", extensionRPC.handleMessage);
+    };
+  }, [fetchTasks, extensionRPC]);
 
   return (
     <div>
-      <form className="flex space-x-2 mb-4" onSubmit={handleSubmit}>
-        <Input
-          type="text"
-          id="taskName"
-          placeholder="Enter task name"
-          className="flex-grow"
-          required
-        />
-        <Button type="submit">+ New task</Button>
+      <form onSubmit={handleSubmit}>
+        <div className="mt-4 relative">
+          <Textarea
+            placeholder="Talk to Melty"
+            id="message"
+            className="p-3 pr-12"
+            autoFocus
+            required
+            rows={4}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+
+          {messageText.trim() !== "" && (
+            <div
+              className={`absolute right-2 top-2 transition-opacity duration-300 ${
+                messageText.trim() !== "" ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <button
+                className="bg-black p-2 rounded-lg text-white"
+                name="ask"
+                type="submit"
+              >
+                <ArrowUp className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+
+          <div className="absolute left-2 bottom-2">
+            <Select name="assistantType" defaultValue="coder">
+              <SelectTrigger>
+                <SelectValue placeholder="Select an assistant" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="coder">Coder</SelectItem>
+                <SelectItem value="architect">Architect</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </form>
+
       <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
         {tasks.map((task) => (

@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { XIcon, GitPullRequestIcon } from "lucide-react";
+import { XIcon, GitPullRequestIcon, ArrowUp } from "lucide-react";
 import { FilePicker } from "./FilePicker";
-import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { Label } from "./ui/label";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Task, AssistantType } from "../types";
 import { ExtensionRPC } from "../extensionRPC";
 import { JouleComponent } from "./JouleComponent";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export function ConversationView() {
   const [extensionRPC] = useState(() => new ExtensionRPC());
@@ -18,6 +23,7 @@ export function ConversationView() {
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
+  const [messageText, setMessageText] = useState("");
   const conversationRef = useRef<HTMLDivElement>(null);
 
   async function handleAddFile(file: string) {
@@ -130,6 +136,7 @@ export function ConversationView() {
     const message = form.message.value;
     const assistantType = form.assistantType.value as AssistantType;
     handleSendMessage(assistantType, message);
+    setMessageText("");
     form.reset();
   };
 
@@ -141,6 +148,7 @@ export function ConversationView() {
         if (form) {
           const assistantType = form.assistantType.value as AssistantType;
           handleSendMessage(assistantType, event.currentTarget.value);
+          setMessageText("");
           event.currentTarget.value = "";
         }
       }
@@ -209,47 +217,45 @@ export function ConversationView() {
       </div>
       <div className="mb-16">
         <form onSubmit={handleSubmit}>
-          <RadioGroup name="assistantType" defaultValue="coder">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="coder" id="coder" />
-              <Label htmlFor="coder">Coder</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="architect" id="architect" />
-              <Label htmlFor="architect">Architect</Label>
-            </div>
-          </RadioGroup>
-
-          <div className="mt-4 flex">
+          <div className="mt-4 relative">
             <Textarea
-              placeholder="Tell me what to do"
+              placeholder="Talk to Melty"
               id="message"
+              className="p-3 pr-12"
               autoFocus
               required
-              rows={1}
-              ref={inputRef}
+              rows={4}
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-          </div>
-          <div className="flex justify-between space-x-2 mt-2">
-            <Button
-              name="createPR"
-              size="sm"
-              type="button"
-              onClick={handleCreatePR}
-              variant="outline"
-            >
-              <GitPullRequestIcon className="h-4 w-4 mr-2" />
-              Create PR
-            </Button>
 
-            <div className="space-x-2">
-              <Button name="ask" size="sm" type="submit" variant="outline">
-                Go{" "}
-                <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium text-black opacity-100">
-                  <span className="text-xs">↵</span>
-                </kbd>
-              </Button>
+            {messageText.trim() !== "" && (
+              <div
+                className={`absolute right-2 top-2 transition-opacity duration-300 ${
+                  messageText.trim() !== "" ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <button
+                  className="bg-black p-2 rounded-lg text-white"
+                  name="ask"
+                  type="submit"
+                >
+                  <ArrowUp className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            <div className="absolute left-2 bottom-2">
+              <Select name="assistantType" defaultValue="coder">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an assistant" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="coder">Coder</SelectItem>
+                  <SelectItem value="architect">Architect</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </form>
