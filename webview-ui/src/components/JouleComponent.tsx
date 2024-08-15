@@ -5,6 +5,7 @@ import CopyButton from "./CopyButton";
 import DiffViewer from "./DiffViewer";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { LoaderCircle } from "lucide-react";
 
 export function JouleComponent({
   joule,
@@ -72,7 +73,11 @@ export function JouleComponent({
           >
             {joule.message}
           </ReactMarkdown>
-          {isPartial && <span className="animate-pulse">▋</span>}
+          {isPartial && (
+            <div role="status">
+              <LoaderCircle className="w-4 h-4 animate-spin" />
+            </div>
+          )}
         </div>
       </div>
       <div
