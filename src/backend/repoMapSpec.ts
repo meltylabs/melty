@@ -30,6 +30,11 @@ export class RepoMapSpec {
   }
 
   private mapFile(relativeFilePath: string): string {
+    if (path.basename(relativeFilePath) === "package.json") {
+      const absoluteFilePath = path.join(this.gitRepo.rootPath, relativeFilePath);
+      return fs.readFileSync(absoluteFilePath, "utf-8");
+    }
+
     if (
       !relativeFilePath.endsWith(".ts") &&
       !relativeFilePath.endsWith(".tsx")
@@ -42,6 +47,7 @@ export class RepoMapSpec {
     // split lines into chunks that belong to the same non-block comment (//)
     const filteredLines = [];
     let commentChunk = [];
+
     for (const line of lines) {
       if (!line.startsWith("//")) {
         // possibly push comment chunk
