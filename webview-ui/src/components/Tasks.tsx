@@ -32,6 +32,7 @@ export function Tasks() {
   const [messageText, setMessageText] = useState("");
   const navigate = useNavigate();
   const [extensionRPC] = useState(() => new ExtensionRPC());
+  const [message, setMessage] = useState("");
 
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await extensionRPC.run("listTasks")) as Task[];
@@ -67,45 +68,20 @@ export function Tasks() {
     extensionRPC.run("chatMessage", { assistantType, text });
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
-    event.preventDefault();
-    let message: string;
-    
-    if (event.currentTarget instanceof HTMLFormElement) {
-      const formData = new FormData(event.currentTarget);
-      message = formData.get("message") as string;
-    } else if (event.currentTarget instanceof HTMLTextAreaElement) {
-      message = event.currentTarget.value;
-    } else {
-      return; // Exit if we can't get the message
-    }
-
-    if (!message.trim()) return; // Don't submit empty messages
-
-    const assistantType = (event.currentTarget.querySelector('[name="assistantType"]') as HTMLSelectElement).value as AssistantType;
-    console.log(`[Tasks] to ${assistantType}`);
-    let taskName = message.substring(0, 40);
-    if (message.length > 40) {
-      taskName = taskName + "...";
-    }
-    createNewTask(taskName);
-    handleSendMessage(assistantType, message);
-    
-    if (event.currentTarget instanceof HTMLFormElement) {
-      event.currentTarget.reset();
-    } else if (event.currentTarget instanceof HTMLTextAreaElement) {
-      event.currentTarget.value = '';
-    }
-  };
-
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      const textarea = event.currentTarget;
-      if (textarea.value.trim()) {
-        handleSubmit(event);
-      }
+      handleSubmit();
     }
+  };
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!message.trim()) return; // Don't submit empty messages
+
+    createTask(message);
+    sendMessage(message, assistantType);
+    setMessage(""); // Clear the input
   };
 
   useEffect(() => {
@@ -123,15 +99,14 @@ export function Tasks() {
       <form onSubmit={handleSubmit}>
         <div className="mt-4 relative">
           <Textarea
-            placeholder="Talk to Melty"
-            id="message"
-            className="p-3 pr-12"
+            placeholder="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-grow p-3 pr-12"
             autoFocus
             required
             rows={4}
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={handleKeyDown}
           />
 
           {messageText.trim() !== "" && (
