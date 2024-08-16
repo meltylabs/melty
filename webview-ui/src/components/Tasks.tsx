@@ -83,13 +83,21 @@ export function Tasks() {
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
 
       if (event.currentTarget && event.currentTarget.value !== undefined) {
         const form = event.currentTarget.form;
         if (form) {
-          handleSubmit(event as unknown as React.FormEvent);
+          const assistantType = form.assistantType.value as AssistantType;
+          console.log(`[Tasks] to ${assistantType}`);
+          let taskName = messageText.substring(0, 40);
+          if (messageText.length > 40) {
+            taskName = taskName + "...";
+          }
+          createNewTask(taskName);
+          handleSendMessage(assistantType, messageText);
+          setMessageText("");
         }
       }
     }
@@ -115,7 +123,7 @@ export function Tasks() {
             className="p-3 pr-12"
             autoFocus
             required
-            rows={4}
+            rows={6}
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -147,6 +155,12 @@ export function Tasks() {
                 <SelectItem value="architect">Architect</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="absolute right-2 bottom-2">
+            <span className="text-[10px] text-muted-foreground">
+              ⇧⏎ for new line
+            </span>
           </div>
         </div>
       </form>
