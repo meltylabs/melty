@@ -5,6 +5,8 @@ export interface Task {
   branch: string;
   conversation: Conversation;
   gitRepo: GitRepo | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type GitRepo = {

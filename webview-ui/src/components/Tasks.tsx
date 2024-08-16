@@ -33,6 +33,19 @@ import {
   SelectValue,
 } from "./ui/select";
 
+// Utility function to format the date
+function formatDate(date: Date): string {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+  return date.toLocaleDateString();
+}
+
 export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [messageText, setMessageText] = useState("");
@@ -43,7 +56,10 @@ export function Tasks() {
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await extensionRPC.run("listTasks")) as Task[];
     console.log(`[Tasks] fetched ${fetchedTasks.length} tasks`);
-    setTasks(fetchedTasks.reverse());
+    const sortedTasks = fetchedTasks.sort((a, b) => 
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+    setTasks(sortedTasks);
   }, [extensionRPC]);
 
   const checkGitConfig = useCallback(async () => {
@@ -190,6 +206,9 @@ export function Tasks() {
                 <CardContent>
                   <p>{task.description}</p>
                   <p>{task.branch}</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Updated {formatDate(new Date(task.updatedAt))}
+                  </p>
                 </CardContent>
               </Card>
             </Link>

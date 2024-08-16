@@ -15,6 +15,7 @@ import { Coder } from "../assistants/coder";
 import * as config from "../util/config";
 import { FileManager } from "../fileManager";
 import { getRepoAtWorkspaceRoot } from "../util/gitUtils";
+import * as datastores from "./datastores";
 
 /**
  * A Task manages the interaction between a conversation and a git repository
@@ -23,10 +24,18 @@ export class Task implements Task {
   conversation: Conversation;
   gitRepo: GitRepo | null;
   fileManager: FileManager | undefined;
+  createdAt: Date;
+  updatedAt: Date;
 
   constructor(public id: string, public name: string, public branch: string) {
     this.conversation = conversations.create();
     this.gitRepo = null;
+    this.createdAt = new Date();
+    this.updatedAt = new Date();
+  }
+
+  updateLastModified() {
+    this.updatedAt = new Date();
   }
 
   public setFileManager(fileManager: FileManager) {
@@ -206,6 +215,9 @@ export class Task implements Task {
         assistantType !== "architect"
       );
       await this.gitRepo!.repository.status();
+
+      this.updateLastModified();
+      await datastores.writeTaskToDisk(this);
     } catch (e) {
       if (config.DEV_MODE) {
         throw e;
@@ -254,6 +266,9 @@ export class Task implements Task {
       message,
       newPseudoCommit
     );
+
+    this.updateLastModified();
+    await datastores.writeTaskToDisk(this);
 
     return conversations.lastJoule(this.conversation)!;
   }

@@ -31,13 +31,14 @@ own independent opinions and conclusions.
 # Files
 
 The user will first give you a <CodebaseSummary>, containing a summary of some of the files in their codebase. These are NOT
-the full contents. Later, the user may present you with the full contents of some of those files. You can always suggest to the
-user that they might want to provide the contents of certain files.
+the full contents. Later, the user may present you with the full contents of some of those files, using the <FileContents> tag.
+Feel free to ask the user to provide contents of any file.
 
 Rules for files:
 
-1. When the discussion touches on a particular file, ask the user to provide the contents of that file.
-2. Before making a code change, ensure you've seen the full contents of the file. If you haven't, ask the user to provide it.
+1. When the discussion touches on a particular file, ask the user to provide the contents of that file using a <FileContents> tag.
+2. Before making a code change, ensure you've seen a <FileContents> tag for that file. If you haven't, ask the user to provide the
+   file's contents.
 
 # Responding to User Requests
 
@@ -50,7 +51,7 @@ Rules for files:
 If the user asks for code changes, follow these steps:
 
 1. First, consider whether you're missing any information needed to answer the user's request. Which files will you need to
-   change? Have you been provided with their contents in <File> tags? If not, ask the user to provide those files.
+   change? Have you been provided with their contents in <FileContents> tags? If not, ask the user to provide those files.
 2. Next, think through how much work it will take to implement the user's request. Is there more information you need?
    Is there anything you don't understand? It's always okay to ask.
 3. If the user's request is straightforward, unambiguous, and you can satisfy it right away, go ahead and implement it
@@ -103,7 +104,10 @@ export function messageDecoderPrompt() {
 // }
 
 export function filesUserIntro(): string {
-  return `These are the files I want you to work with. Other messages in the chat may contain outdated versions of the files' contents. Trust this message as the true contents of the files!`;
+  return `These are the files I want you to work with.
+Other messages in the chat may contain outdated versions of the files' contents. Trust this message as the true contents of the files.
+Do not make changes to any files besides these.
+You can always ask me to provide the contents of another file.`;
 }
 
 export function filesAsstAck(): string {

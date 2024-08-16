@@ -33,10 +33,10 @@ export abstract class BaseAssistant {
       path
     );
 
-    // TODO we should use | indentation here
-    return `<File filePath=${path}>
+    // TODO should we use | indentation here?
+    return `<FileContents filePath=${path}>
 ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
-</File>`;
+</FileContents>`;
   }
 
   protected encodeContext(
