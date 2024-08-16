@@ -1,0 +1,17 @@
+
+
+.d2h-file-wrapper {
+  margin-bottom: 1em;
+}
+.d2h-file-name-wrapper {
+    font-size: 13px;
+}
+
+.d2h-code-line-ctn {
+  font-size: inherit;
+}
+
+.d2h-changed-tag {
+    border-radius: 5px;
+    padding: 2px 4px;
+}

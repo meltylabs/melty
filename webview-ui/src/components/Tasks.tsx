@@ -34,9 +34,12 @@ function formatDate(date: Date): string {
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  if (diffInSeconds < 3600)
+    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
 
   return date.toLocaleDateString();
 }
@@ -51,8 +54,9 @@ export function Tasks() {
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await extensionRPC.run("listTasks")) as Task[];
     console.log(`[Tasks] fetched ${fetchedTasks.length} tasks`);
-    const sortedTasks = fetchedTasks.sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    const sortedTasks = fetchedTasks.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
     setTasks(sortedTasks);
   }, [extensionRPC]);

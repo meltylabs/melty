@@ -4,6 +4,8 @@ import {
   Diff2HtmlUIConfig,
 } from "diff2html/lib/ui/js/diff2html-ui-slim";
 import "diff2html/bundles/css/diff2html.min.css";
+import * as Diff2Html from "diff2html";
+import "./DiffViewer.css";
 import { Toggle } from "./ui/toggle";
 import { Columns2 } from "lucide-react";
 
@@ -11,29 +13,8 @@ interface Diff2HtmlProps {
   diff: string;
 }
 
-// Custom CSS to override Diff2Html styles and hide scrollbars
-const customStyles = `
-  .d2h-wrapper {
-    font-size: 0.8rem;
-  }
-  .d2h-file-header {
-    font-size: 0.9rem;
-  }
-  .d2h-code-line {
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .d2h-code-side-line {
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .d2h-code-line-ctn {
-    line-height: 1.2;
-  }
-`;
-
-const dummyDiff =
-  "diff --git a/src/main.py b/src/main.py\nindex 3333333..4444444 100644\n--- a/main.py\n+++ b/main.py\n@@ -1,7 +1,7 @@\n def main():\n     print('Hello, world!')\n\nif __name__ == '__main__':\n    main()\n\ndiff --git a/utils.py b/utils.py\nindex 5555555..6666666 100644\n--- a/utils.py\n+++ b/utils.py\n@@ -1,5 +1,6 @@\n def helper_function():\n     return 'I am a helper'\n+\ndef another_helper():\n+    return 'I am another helper'\n\ndiff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n--- a/README.md\n+++ b/README.md\n@@ -1,3 +1,4 @@\n # My Project\n\n This is a sample project.\n+It now has more files and functionality.";
+// const dummyDiff =
+//   "diff --git a/src/main.py b/src/main.py\nindex 3333333..4444444 100644\n--- a/main.py\n+++ b/main.py\n@@ -1,7 +1,7 @@\n def main():\n     print('Hello, world!')\n\nif __name__ == '__main__':\n    main()\n\ndiff --git a/utils.py b/utils.py\nindex 5555555..6666666 100644\n--- a/utils.py\n+++ b/utils.py\n@@ -1,5 +1,6 @@\n def helper_function():\n     return 'I am a helper'\n+\ndef another_helper():\n+    return 'I am another helper'\n\ndiff --git a/README.md b/README.md\nindex 7777777..8888888 100644\n--- a/README.md\n+++ b/README.md\n@@ -1,3 +1,4 @@\n # My Project\n\n This is a sample project.\n+It now has more files and functionality.";
 
 // const renderDiff2HTML = (diff: string) => {
 //   const lines = diff.split("\n");
@@ -58,7 +39,7 @@ const dummyDiff =
 //         className="text-xs font-mono"
 //         dangerouslySetInnerHTML={{
 //           __html: Diff2Html.html(diff, {
-//             drawFileList: false,
+//             drawFileList: true,
 //             matching: "lines",
 //             outputFormat: "line-by-line",
 //           }),
@@ -99,8 +80,7 @@ const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
   }, [diff, outputFormat]);
 
   return (
-    <div className="sticky top-0 overflow-y-auto max-h-[calc(100vh-200px)] no-scrollbar">
-      <style>{customStyles}</style>
+    <div className="sticky text-xs top-0 overflow-y-auto max-h-[calc(100vh-200px)] no-scrollbar">
       <div className="absolute right-0 top-0">
         <Toggle
           pressed={outputFormat === "side-by-side"}
@@ -113,8 +93,8 @@ const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
       </div>
       <div
         ref={containerRef}
-        className="overflow-x-auto d2h-wrapper no-scrollbar"
-      />
+        className="diff-container custom-diff-viewer"
+      ></div>
     </div>
   );
 };
