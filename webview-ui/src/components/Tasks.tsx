@@ -32,7 +32,6 @@ export function Tasks() {
   const [messageText, setMessageText] = useState("");
   const navigate = useNavigate();
   const [extensionRPC] = useState(() => new ExtensionRPC());
-  const [message, setMessage] = useState("");
 
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await extensionRPC.run("listTasks")) as Task[];
@@ -120,8 +119,8 @@ export function Tasks() {
         <div className="mt-4 relative">
           <Textarea
             placeholder="Type a message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
             className="flex-grow p-3 pr-12"
             autoFocus
