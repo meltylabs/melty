@@ -67,11 +67,22 @@ export function Tasks() {
     extensionRPC.run("chatMessage", { assistantType, text });
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
     event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const message = messageText;
-    const assistantType = form.assistantType.value as AssistantType;
+    let message: string;
+    
+    if (event.currentTarget instanceof HTMLFormElement) {
+      const formData = new FormData(event.currentTarget);
+      message = formData.get("message") as string;
+    } else if (event.currentTarget instanceof HTMLTextAreaElement) {
+      message = event.currentTarget.value;
+    } else {
+      return; // Exit if we can't get the message
+    }
+
+    if (!message.trim()) return; // Don't submit empty messages
+
+    const assistantType = (event.currentTarget.querySelector('[name="assistantType"]') as HTMLSelectElement).value as AssistantType;
     console.log(`[Tasks] to ${assistantType}`);
     let taskName = message.substring(0, 40);
     if (message.length > 40) {
@@ -79,18 +90,20 @@ export function Tasks() {
     }
     createNewTask(taskName);
     handleSendMessage(assistantType, message);
-    setMessageText("");
+    
+    if (event.currentTarget instanceof HTMLFormElement) {
+      event.currentTarget.reset();
+    } else if (event.currentTarget instanceof HTMLTextAreaElement) {
+      event.currentTarget.value = '';
+    }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-
-      if (event.currentTarget && event.currentTarget.value !== undefined) {
-        const form = event.currentTarget.form;
-        if (form) {
-          handleSubmit(event as unknown as React.FormEvent);
-        }
+      const textarea = event.currentTarget;
+      if (textarea.value.trim()) {
+        handleSubmit(event);
       }
     }
   };
