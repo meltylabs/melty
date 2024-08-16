@@ -25,6 +25,7 @@ export function ConversationView() {
   const [task, setTask] = useState<Task | null>(null);
   const [messageText, setMessageText] = useState("");
   const conversationRef = useRef<HTMLDivElement>(null);
+  const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
 
   async function handleAddFile(file: string) {
     const meltyFiles = await extensionRPC.run("addMeltyFile", {
@@ -130,6 +131,15 @@ export function ConversationView() {
     };
   }, []);
 
+  useEffect(() => {
+    const checkIfLatestCommit = async () => {
+      const result = await extensionRPC.run("getLatestCommit", {});
+      setLatestCommitHash(result);
+    };
+
+    checkIfLatestCommit();
+  }, [task]);
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
@@ -209,6 +219,7 @@ export function ConversationView() {
             <JouleComponent
               key={index}
               joule={joule}
+              latestCommitHash={latestCommitHash!}
               isPartial={
                 index === task.conversation.joules.length - 1 &&
                 joule.author === "bot" &&
