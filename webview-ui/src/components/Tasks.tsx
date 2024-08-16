@@ -68,20 +68,40 @@ export function Tasks() {
     extensionRPC.run("chatMessage", { assistantType, text });
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      handleSubmit();
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const message = messageText;
+    const assistantType = form.assistantType.value as AssistantType;
+    console.log(`[Tasks] to ${assistantType}`);
+    let taskName = message.substring(0, 40);
+    if (message.length > 40) {
+      taskName = taskName + "...";
     }
+    createNewTask(taskName);
+    handleSendMessage(assistantType, message);
+    setMessageText("");
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!message.trim()) return; // Don't submit empty messages
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
 
-    createTask(message);
-    sendMessage(message, assistantType);
-    setMessage(""); // Clear the input
+      if (event.currentTarget && event.currentTarget.value !== undefined) {
+        const form = event.currentTarget.form;
+        if (form) {
+          const assistantType = form.assistantType.value as AssistantType;
+          console.log(`[Tasks] to ${assistantType}`);
+          let taskName = messageText.substring(0, 40);
+          if (messageText.length > 40) {
+            taskName = taskName + "...";
+          }
+          createNewTask(taskName);
+          handleSendMessage(assistantType, messageText);
+          setMessageText("");
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -106,7 +126,10 @@ export function Tasks() {
             className="flex-grow p-3 pr-12"
             autoFocus
             required
-            rows={4}
+            rows={6}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
 
           {messageText.trim() !== "" && (
@@ -135,6 +158,12 @@ export function Tasks() {
                 <SelectItem value="architect">Architect</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="absolute right-2 bottom-2">
+            <span className="text-[10px] text-muted-foreground">
+              ⇧⏎ for new line
+            </span>
           </div>
         </div>
       </form>

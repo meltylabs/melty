@@ -97,7 +97,7 @@ export function JouleComponent({
             {joule.message}
           </ReactMarkdown>
           {isPartial && (
-            <div role="status">
+            <div className="flex mt-4" role="status">
               <LoaderCircle className="w-4 h-4 animate-spin" />
             </div>
           )}
