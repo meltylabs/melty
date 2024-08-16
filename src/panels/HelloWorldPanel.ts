@@ -216,6 +216,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
           `Removed ${params.filePath} from Melty's Mind`
         );
         return Promise.resolve(this.fileManager!.getMeltyMindFilesRelative());
+      case "undoLatestCommit":
+        this.MeltyExtension.undoLastCommit(params.commitId);
+        return Promise.resolve(null);
+      case "getLatestCommit":
+        const latestCommit = this.MeltyExtension.getLatestCommitHash();
+        return Promise.resolve(latestCommit);
       case "undo":
         // todo update implementation
 

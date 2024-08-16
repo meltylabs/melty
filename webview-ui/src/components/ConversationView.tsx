@@ -25,6 +25,7 @@ export function ConversationView() {
   const [task, setTask] = useState<Task | null>(null);
   const [messageText, setMessageText] = useState("");
   const conversationRef = useRef<HTMLDivElement>(null);
+  const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
 
   async function handleAddFile(file: string) {
     const meltyFiles = await extensionRPC.run("addMeltyFile", {
@@ -130,6 +131,15 @@ export function ConversationView() {
     };
   }, []);
 
+  useEffect(() => {
+    const checkIfLatestCommit = async () => {
+      const result = await extensionRPC.run("getLatestCommit", {});
+      setLatestCommitHash(result);
+    };
+
+    checkIfLatestCommit();
+  }, [task]);
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
@@ -157,9 +167,9 @@ export function ConversationView() {
 
   return (
     <div className="p-4 flex flex-col h-screen">
-      <div className="mt-2 justify-between">
+      <div className="mt-2 flex flex-col">
         {task && (
-          <div className="p-2">
+          <div className="mb-4">
             <p className="text-sm font-semibold">{task.name}</p>
           </div>
         )}
@@ -173,28 +183,31 @@ export function ConversationView() {
           handleDropFile={handleDropFile}
         />
 
-        <div className="mt-2">
-          <p className="text-xs text-muted-foreground mb-2">
-            Melty's Mind{"  "}
+        <div className="mt-4">
+          <p className="text-xs text-muted-foreground mb-2 flex items-center">
+            Melty's Mind
             <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
               <span className="text-xs">\</span>
-            </kbd>{" "}
+            </kbd>
           </p>
-          {meltyFiles.length === 0 && (
+          {meltyFiles.length === 0 ? (
             <p className="text-xs text-muted-foreground mb-2 italic">
               Melty can't see any files yet
             </p>
+          ) : (
+            <div className="flex flex-wrap">
+              {meltyFiles.map((file, i) => (
+                <button
+                  onClick={() => handleDropFile(file)}
+                  className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-gray-100 px-2 py-1 inline-flex items-center rounded"
+                  key={`file-${i}`}
+                >
+                  <XIcon className="h-3 w-3 mr-2" />
+                  {file}
+                </button>
+              ))}
+            </div>
           )}
-          {meltyFiles.map((file, i) => (
-            <button
-              onClick={() => handleDropFile(file)}
-              className="mt-1 text-xs text-muted-foreground mr-2 bg-gray-100 px-2 py-1 inline-flex items-center"
-              key={`file-${i}`}
-            >
-              <XIcon className="h-3 w-3 mr-2" />
-              {file}
-            </button>
-          ))}
         </div>
       </div>
       <div
@@ -206,6 +219,7 @@ export function ConversationView() {
             <JouleComponent
               key={index}
               joule={joule}
+              latestCommitHash={latestCommitHash!}
               isPartial={
                 index === task.conversation.joules.length - 1 &&
                 joule.author === "bot" &&

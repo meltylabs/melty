@@ -1,5 +1,0 @@
-Hello there!
-
-This is a simple greeting file created as requested. 
-
-Have a great day!

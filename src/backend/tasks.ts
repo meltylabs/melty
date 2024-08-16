@@ -62,9 +62,13 @@ export class Task implements Task {
     }
 
     // Find the repository that matches the workspace root
-    const repo = repositories.find(r => r.rootUri.fsPath === workspaceRoot);
+    const repo = repositories.find(
+      (r: any) => r.rootUri.fsPath === workspaceRoot
+    );
     if (!repo) {
-      console.log("Could not initialize task: no matching git repository found for workspace root");
+      console.log(
+        "Could not initialize task: no matching git repository found for workspace root"
+      );
       return false;
     }
 

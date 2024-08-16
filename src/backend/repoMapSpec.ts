@@ -19,17 +19,27 @@ export class RepoMapSpec {
       return fs.existsSync(absPath) && fs.statSync(absPath).size < 100000;
     });
 
-    let fullMap = "";
+    let fullMap = "<CodebaseSummary>";
     for (const file of eligibleFiles) {
-      fullMap += `<FileMap file="${file}">\n`;
+      fullMap += `<FileSummary filePath="${file}">\n`;
       fullMap += this.mapFile(file);
-      fullMap += `</FileMap>\n`;
+      fullMap += `</FileSummary>\n`;
     }
+    fullMap += "</CodebaseSummary>";
+
     console.log("repo map complete");
     return fullMap;
   }
 
   private mapFile(relativeFilePath: string): string {
+    if (path.basename(relativeFilePath) === "package.json") {
+      const absoluteFilePath = path.join(
+        this.gitRepo.rootPath,
+        relativeFilePath
+      );
+      return fs.readFileSync(absoluteFilePath, "utf-8");
+    }
+
     if (
       !relativeFilePath.endsWith(".ts") &&
       !relativeFilePath.endsWith(".tsx")
@@ -42,6 +52,7 @@ export class RepoMapSpec {
     // split lines into chunks that belong to the same non-block comment (//)
     const filteredLines = [];
     let commentChunk = [];
+
     for (const line of lines) {
       if (!line.startsWith("//")) {
         // possibly push comment chunk

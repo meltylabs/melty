@@ -1,4 +1,4 @@
-# CodeChange format rules
+# CodeChange format
 
 Please provide code changes using the CodeChange format. In the CodeChange format, changes are wrapped in a `CodeChange` XML tag
 containing a `file` attribute.
@@ -7,7 +7,7 @@ Within the CodeChange tag, provide a <Description> tag with a high-level descrip
 
 The rest of the CodeChange tag should consist of one or more *SEARCH/REPLACE* blocks. For example:
 
-<CodeChange file="src/main.py">
+<CodeChange filePath="src/main.py">
 <Description>Rename count_sheep to count_all_sheep and add count_stray_sheep() to the sum</Description>
 <<<<<<< SEARCH
     def count_sheep():
@@ -20,7 +20,7 @@ The rest of the CodeChange tag should consist of one or more *SEARCH/REPLACE* bl
 >>>>>>> REPLACE
 </CodeChange>
 
-Your response can include any number of CodeChange tags. Each CodeChange tag contain a `file` attribute with the path to the
+Your response can include any number of CodeChange tags. Each CodeChange tag should contain a `file` attribute with the path to the
 file to modify, a Description tag, and one or more *SEARCH/REPLACE* blocks.
 
 Each *SEARCH/REPLACE* block must use this format:
@@ -28,21 +28,21 @@ Each *SEARCH/REPLACE* block must use this format:
 1. The start of the search block: <<<<<<< SEARCH
 2. A chunk of lines to search for in the existing source code.
 3. The dividing line: =======
-4. The lines to replace into the source code
+4. Lines to insert into the source
 5. The end of the replace block: >>>>>>> REPLACE
 
-Later, an assistant will read through each CodeChange block and make the included changes to the file. They will be given only
-the CodeChange block and the original file contents -- no other information.
+*SEARCH/REPLACE* blocks will be applied automatically by exact string match, so make sure to write out the full source in the SEARCH and
+REPLACE blocks. Don't use comments like `// Existing code here`; they'll cause errors.
 
 Instructions for writing a great CodeChange tag:
 
-- Include enough lines in SEARCH to make sure it unambigously specifies which lines to change.
-- On the other hand, do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks. Include just the changing lines, and a few
+- Include enough lines in SEARCH so that it unambigously specifies which lines to change.
+- On the other hand, do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks. Include just the changing lines and a few
   surrounding lines if needed for disambiguation.
-- Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file.
 
 Tips:
 
+- Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file.
 - To move code within a file, use two *SEARCH/REPLACE* blocks: one to delete it from its current location and one to insert it in the new location.
 - To create a new file, use a CodeChange command with a new file path (including dir name if needed), an empty `SEARCH` section, and the
   new file's contents in the `REPLACE` section

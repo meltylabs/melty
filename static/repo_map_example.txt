@@ -1,4 +1,4 @@
-<FileMap file="pig.py">
+<FileSummary filePath="pig.py">
 /**
  * Represents a pig
  */
@@ -6,8 +6,8 @@ class Pig extends Animal:
     def __init__(self, name: str)
     
     def make_noise(self)
-</FileMap>
-<FileMap file="cow.py">
+</FileSummary>
+<FileSummary filePath="cow.py">
 /**
  * Represents a cow
  */
@@ -15,8 +15,8 @@ class Cow extends Animal:
     def __init__(self, name: str)
     
     def make_noise(self)
-</FileMap>
-<FileMap file="animal.py">
+</FileSummary>
+<FileSummary filePath="animal.py">
 /**
  * Represents an animal
  */
@@ -24,4 +24,4 @@ class Animal:
     def __init__(self, name: str)
     
     def make_noise(self)
-</FileMap>
+</FileSummary>

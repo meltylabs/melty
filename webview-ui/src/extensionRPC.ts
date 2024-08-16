@@ -66,4 +66,6 @@ type rpcMethod =
   | "dropMeltyFile"
   | "chatMessage"
   | "createPullRequest"
-  | "deleteTask";
+  | "deleteTask"
+  | "undoLatestCommit"
+  | "getLatestCommit";

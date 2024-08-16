@@ -1,24 +1,47 @@
-import React from "react";
+import { LoaderCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { Joule } from "../types";
-import CopyButton from "./CopyButton";
-import DiffViewer from "./DiffViewer";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { LoaderCircle } from "lucide-react";
+import { ExtensionRPC } from "../extensionRPC";
+import { Joule, PseudoCommitInGit } from "../types";
+import CopyButton from "./CopyButton";
+import DiffViewer from "./DiffViewer";
+import { Button } from "./ui/button";
 
 export function JouleComponent({
   joule,
   isPartial = false,
+  latestCommitHash,
 }: {
   joule: Joule;
   isPartial?: boolean;
+  showUndo?: boolean;
+  latestCommitHash?: string;
 }) {
+  const [extensionRPC] = useState(() => new ExtensionRPC());
+  const [undoClicked, setUndoClicked] = useState(false);
+
   const diffHtml =
     joule.pseudoCommit.impl.status === "committed" &&
     joule.pseudoCommit.impl.udiffPreview
       ? joule.pseudoCommit.impl.udiffPreview
       : null;
+
+  const isLatestCommit =
+    latestCommitHash === (joule.pseudoCommit.impl as PseudoCommitInGit).commit;
+
+  const handleUndo = async () => {
+    setUndoClicked(true);
+    try {
+      const result = await extensionRPC.run("undoLatestCommit", {
+        commitId: (joule.pseudoCommit.impl as PseudoCommitInGit).commit,
+      });
+      console.log("Result:", result);
+    } catch (error) {
+      console.error("Failed to undo commit:", error);
+    }
+  };
 
   return (
     <div
@@ -83,7 +106,30 @@ export function JouleComponent({
       <div
         className={`${diffHtml ? "w-[60%]" : "hidden"} overflow-auto h-full`}
       >
-        {diffHtml && !isPartial && <DiffViewer diff={diffHtml} />}
+        {diffHtml && !isPartial && (
+          <>
+            <DiffViewer diff={diffHtml} />
+            <span className="font-mono text-muted-foreground text-xs">
+              {(joule.pseudoCommit.impl as PseudoCommitInGit).commit}
+            </span>
+            <div className="flex justify-end">
+              {joule.author === "bot" &&
+                !isPartial &&
+                isLatestCommit &&
+                !undoClicked && (
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => {
+                      handleUndo();
+                    }}
+                  >
+                    Undo
+                  </Button>
+                )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

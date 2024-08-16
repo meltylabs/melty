@@ -145,9 +145,6 @@ export class MeltyExtension {
     }
   }
 
-  /**
-   * Creates a pull request for the current branch.
-   */
   public async deleteTask(taskId: string): Promise<void> {
     const task = this.tasks.get(taskId);
     if (!task) {
@@ -168,6 +165,67 @@ export class MeltyExtension {
     // TODO: Consider cleaning up any associated Git branches or other resources
   }
 
+  /**
+   * Undoes the last commit if it matches the given commit ID and is the latest commit.
+   * @param commitId The ID of the commit to undo
+   */
+  public async undoLastCommit(commitId: string): Promise<void> {
+    try {
+      const isLatest = (await this.getLatestCommitHash()) === commitId;
+
+      if (!isLatest) {
+        vscode.window.showErrorMessage(
+          "The specified commit is not the latest commit. Cannot undo."
+        );
+        return;
+      }
+
+      const gitExtension =
+        vscode.extensions.getExtension("vscode.git")?.exports;
+      const git = gitExtension.getAPI(1);
+
+      const repo = git.repositories[0];
+
+      // Undo the last commit by resetting to the previous commit
+      await repo.repository.reset("HEAD~1", true);
+
+      vscode.window.showInformationMessage(
+        "Last commit has been undone. Changes are now in your working directory."
+      );
+    } catch (error) {
+      this.outputChannel.appendLine(`Error undoing last commit: ${error}`);
+      vscode.window.showErrorMessage(`Failed to undo last commit: ${error}`);
+    }
+  }
+
+  /**
+   * Creates a pull request for the current branch.
+   */
+  /**
+   * Gets the hash of the latest commit in the current repository.
+   * @returns A promise that resolves to the hash of the latest commit, or null if not found.
+   */
+  public async getLatestCommitHash(): Promise<string | null> {
+    try {
+      const gitExtension =
+        vscode.extensions.getExtension("vscode.git")?.exports;
+      const git = gitExtension.getAPI(1);
+      const repository = git.repositories[0];
+
+      if (!repository) {
+        throw new Error("No Git repository found");
+      }
+
+      const latestCommit = await repository.getCommit("HEAD");
+      return latestCommit.hash;
+    } catch (error) {
+      this.outputChannel.appendLine(
+        `Error getting latest commit hash: ${error}`
+      );
+      return null;
+    }
+  }
+
   public async createPullRequest() {
     try {
       const gitExtension =
@@ -186,8 +244,11 @@ export class MeltyExtension {
         return;
       }
 
-      const latestCommit = await repository.getCommit("HEAD");
-      const commitSha = latestCommit.hash;
+      const commitSha = await this.getLatestCommitHash();
+      if (!commitSha) {
+        vscode.window.showErrorMessage("Failed to get latest commit hash");
+        return;
+      }
 
       console.log("Current branch:", currentBranch);
       console.log("Latest commit SHA:", commitSha);
