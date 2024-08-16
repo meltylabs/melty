@@ -1,5 +1,5 @@
 import { LoaderCircle } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -13,16 +13,19 @@ export function JouleComponent({
   joule,
   isPartial = false,
   latestCommitHash,
+  showDiff = true,
 }: {
   joule: Joule;
   isPartial?: boolean;
   showUndo?: boolean;
   latestCommitHash?: string;
+  showDiff?: boolean;
 }) {
   const [extensionRPC] = useState(() => new ExtensionRPC());
   const [undoClicked, setUndoClicked] = useState(false);
 
   const diffHtml =
+    showDiff &&
     joule.pseudoCommit.impl.status === "committed" &&
     joule.pseudoCommit.impl.udiffPreview
       ? joule.pseudoCommit.impl.udiffPreview
@@ -45,8 +48,10 @@ export function JouleComponent({
 
   return (
     <div
-      className={`flex mb-2 p-3 rounded ${
-        joule.author === "human" ? "bg-gray-50" : "bg-white"
+      className={`flex mb-2 p-2 rounded-md ${
+        joule.author === "human"
+          ? "bg-gray-50 border border-gray-200"
+          : "bg-white"
       }`}
     >
       <div
@@ -75,7 +80,7 @@ export function JouleComponent({
                   );
                 }
                 return match ? (
-                  <div className="relative p-0 max-h-[300px] overflow-y-auto">
+                  <div className="relative p-0 max-h-[300px] overflow-y-auto no-scrollbar">
                     {!isPartial && (
                       <CopyButton code={String(children).replace(/\n$/, "")} />
                     )}
@@ -97,40 +102,42 @@ export function JouleComponent({
             {joule.message}
           </ReactMarkdown>
           {isPartial && (
-            <div className="flex mt-4" role="status">
+            <div className="flex my-3" role="status">
               <LoaderCircle className="w-4 h-4 animate-spin" />
             </div>
           )}
         </div>
       </div>
-      <div
-        className={`${diffHtml ? "w-[60%]" : "hidden"} overflow-auto h-full`}
-      >
-        {diffHtml && !isPartial && (
-          <>
-            <DiffViewer diff={diffHtml} />
-            <span className="font-mono text-muted-foreground text-xs">
-              {(joule.pseudoCommit.impl as PseudoCommitInGit).commit}
-            </span>
-            <div className="flex justify-end">
-              {joule.author === "bot" &&
-                !isPartial &&
-                isLatestCommit &&
-                !undoClicked && (
-                  <Button
-                    variant="outline"
-                    className="mt-2"
-                    onClick={() => {
-                      handleUndo();
-                    }}
-                  >
-                    Undo
-                  </Button>
-                )}
-            </div>
-          </>
-        )}
-      </div>
+      {showDiff && (
+        <div
+          className={`${diffHtml ? "w-[60%]" : "hidden"} overflow-auto h-full`}
+        >
+          {diffHtml && !isPartial && (
+            <>
+              <DiffViewer diff={diffHtml} />
+              <div className="flex justify-between items-center mt-1">
+                <span className="font-mono text-muted-foreground text-xs">
+                  {(joule.pseudoCommit.impl as PseudoCommitInGit).commit}
+                </span>
+                {joule.author === "bot" &&
+                  !isPartial &&
+                  isLatestCommit &&
+                  !undoClicked && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        handleUndo();
+                      }}
+                    >
+                      Undo commit
+                    </Button>
+                  )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

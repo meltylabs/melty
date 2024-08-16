@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { XIcon, GitPullRequestIcon, ArrowUp } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import {
+  XIcon,
+  GitPullRequestIcon,
+  ArrowUp,
+  ArrowLeft,
+  ArrowDown,
+} from "lucide-react";
 import { FilePicker } from "./FilePicker";
 import { Textarea } from "./ui/textarea";
 import { Task, AssistantType } from "../types";
@@ -26,6 +32,7 @@ export function ConversationView() {
   const [messageText, setMessageText] = useState("");
   const conversationRef = useRef<HTMLDivElement>(null);
   const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
 
   async function handleAddFile(file: string) {
     const meltyFiles = await extensionRPC.run("addMeltyFile", {
@@ -65,16 +72,40 @@ export function ConversationView() {
     console.log("PR created", result);
   }
 
-  useEffect(() => {
+  const checkScrollPosition = () => {
     if (conversationRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-
-      if (isNearBottom) {
-        conversationRef.current.scrollTop = scrollHeight;
-      }
+      setIsAtBottom(isNearBottom);
     }
+  };
+
+  useEffect(() => {
+    if (conversationRef.current) {
+      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+    }
+    checkScrollPosition();
   }, [task]);
+
+  // Add a new effect to scroll to bottom when component mounts
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+
+  useEffect(() => {
+    const conversationElement = conversationRef.current;
+    if (conversationElement) {
+      conversationElement.addEventListener("scroll", checkScrollPosition);
+      return () =>
+        conversationElement.removeEventListener("scroll", checkScrollPosition);
+    }
+  }, []);
+
+  const scrollToBottom = () => {
+    if (conversationRef.current) {
+      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -166,11 +197,25 @@ export function ConversationView() {
   };
 
   return (
-    <div className="p-4 flex flex-col h-screen">
+    <div className="flex flex-col h-screen">
       <div className="mt-2 flex flex-col">
+        {!isAtBottom && (
+          <button
+            onClick={scrollToBottom}
+            className="fixed bottom-36 right-4 bg-black text-white p-2 rounded-full shadow-lg z-10"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        )}
         {task && (
-          <div className="mb-4">
-            <p className="text-sm font-semibold">{task.name}</p>
+          <div className="mb-2 flex items-center">
+            <Link className="flex items-center" to={"/"}>
+              <ArrowLeft className="h-4 w-4" />
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                ⌘<span className="text-[8px]">[</span>
+              </kbd>
+            </Link>
+            <p className="text-sm font-semibold ml-2">{task.name}</p>
           </div>
         )}
 
@@ -182,36 +227,9 @@ export function ConversationView() {
           handleAddFile={handleAddFile}
           handleDropFile={handleDropFile}
         />
-
-        <div className="mt-4">
-          <p className="text-xs text-muted-foreground mb-2 flex items-center">
-            Melty's Mind
-            <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              <span className="text-xs">\</span>
-            </kbd>
-          </p>
-          {meltyFiles.length === 0 ? (
-            <p className="text-xs text-muted-foreground mb-2 italic">
-              Melty can't see any files yet
-            </p>
-          ) : (
-            <div className="flex flex-wrap">
-              {meltyFiles.map((file, i) => (
-                <button
-                  onClick={() => handleDropFile(file)}
-                  className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-gray-100 px-2 py-1 inline-flex items-center rounded"
-                  key={`file-${i}`}
-                >
-                  <XIcon className="h-3 w-3 mr-2" />
-                  {file}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
       <div
-        className="flex-grow mb-20 rounded p-2 overflow-y-auto"
+        className="flex-grow mb-20 rounded overflow-y-auto"
         ref={conversationRef}
       >
         <div className="flex flex-col h-full">
@@ -225,11 +243,12 @@ export function ConversationView() {
                 joule.author === "bot" &&
                 joule.pseudoCommit.impl.status !== "committed"
               }
+              showDiff={index !== 0} // Hide diff view for the first message
             />
           ))}
         </div>
       </div>
-      <div className="mb-16">
+      <div className="mb-1.5">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 relative">
             <Textarea
@@ -271,8 +290,31 @@ export function ConversationView() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="absolute right-2 bottom-2">
+              <span className="text-xs text-muted-foreground">
+                <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                  <span className="text-xs">\</span>
+                </kbd>{" "}
+                to add a file
+              </span>
+            </div>
           </div>
         </form>
+        <div className="mt-1">
+          <div className="flex overflow-x-auto">
+            {meltyFiles.map((file, i) => (
+              <button
+                onClick={() => handleDropFile(file)}
+                className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-gray-100 px-2 py-1 inline-flex items-center rounded"
+                key={`file-${i}`}
+              >
+                <XIcon className="h-3 w-3 mr-2" />
+                {file}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

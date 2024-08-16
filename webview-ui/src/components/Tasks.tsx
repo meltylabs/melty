@@ -5,11 +5,9 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "./ui/card";
 import { ExtensionRPC } from "../extensionRPC";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import {
   ArrowUp,
   Trash2,
@@ -20,15 +18,12 @@ import {
 import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Task, AssistantType } from "../types";
 import {
   Select,
   SelectContent,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
@@ -196,7 +191,7 @@ export function Tasks() {
       <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}
         {tasks.map((task) => (
-          <div key={task.id} className="mr-4 relative">
+          <div key={task.id} className="relative">
             <Link to={`/task/${task.id}`}>
               <Card>
                 <CardHeader>
@@ -213,7 +208,7 @@ export function Tasks() {
               </Card>
             </Link>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               className="absolute top-2 right-2 p-1"
               onClick={(e) => deleteTask(task.id, e)}
