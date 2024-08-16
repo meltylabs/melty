@@ -32,7 +32,7 @@ Each *SEARCH/REPLACE* block must use this format:
 5. The end of the replace block: >>>>>>> REPLACE
 
 *SEARCH/REPLACE* blocks will be applied automatically by exact string match, so make sure to write out the full source in the SEARCH and
-REPLACE blocks. Don't use comments like `// Existing code here`; they'll cause errors.
+REPLACE blocks. Never use comments like `// ... existing code...` or `// ... other imports and code ...` -- they will cause errors.
 
 Instructions for writing a great CodeChange tag:
 
