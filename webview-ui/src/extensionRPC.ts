@@ -68,4 +68,5 @@ type rpcMethod =
   | "createPullRequest"
   | "deleteTask"
   | "undoLatestCommit"
-  | "getLatestCommit";
+  | "getLatestCommit"
+  | "getGitConfigErrors";
