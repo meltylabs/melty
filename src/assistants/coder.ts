@@ -28,22 +28,22 @@ export class Coder extends BaseAssistant {
     const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
     const repoMapString = await repoMap.getRepoMap(workspaceFilePaths);
 
-    const contextSuggestions = await contextSuggester.suggestContext(
-      conversations.lastJoule(conversation)!.message,
-      repoMap
-    );
+    // const contextSuggestions = await contextSuggester.suggestContext(
+    //   conversations.lastJoule(conversation)!.message,
+    //   repoMap
+    // );
 
-    // remove stuff that's already in contextUris
-    const newContextSuggestions = contextSuggestions?.filter(
-      (suggestion) => !contextPaths.includes(suggestion)
-    );
+    // // remove stuff that's already in contextUris
+    // const newContextSuggestions = contextSuggestions?.filter(
+    //   (suggestion) => !contextPaths.includes(suggestion)
+    // );
 
-    console.log(
-      "SUGGESTED CONTEXT: ",
-      contextSuggestions?.join(","),
-      " ... ",
-      newContextSuggestions?.join(",")
-    );
+    // console.log(
+    //   "SUGGESTED CONTEXT: ",
+    //   contextSuggestions?.join(","),
+    //   " ... ",
+    //   newContextSuggestions?.join(",")
+    // );
 
     const currentPseudoCommit =
       conversations.lastJoule(conversation)!.pseudoCommit;
@@ -63,6 +63,8 @@ export class Coder extends BaseAssistant {
         ...this.encodeMessages(conversation),
       ],
     };
+
+    console.log("CLAUDE CONVERSATION: ", claudeConversation);
 
     // TODO 200: get five responses, pick the best one with pickResponse
     // TODO 400: write a claudePlus
@@ -96,11 +98,11 @@ export class Coder extends BaseAssistant {
   }
 
   private getSystemPrompt(): string {
-    return (
-      prompts.codeModeSystemPrompt() +
-      prompts.codeChangeCommandRulesPrompt() +
-      prompts.exampleConversationsPrompt()
-    );
+    return [
+      prompts.codeModeSystemPrompt(),
+      prompts.codeChangeCommandRulesPrompt(),
+      prompts.exampleConversationsPrompt(),
+    ].join("\n");
   }
 
   private async encodeRepoMap(repoMap: string): Promise<ClaudeMessage[]> {

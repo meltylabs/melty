@@ -1,6 +1,6 @@
-# CodeChange format
+## Rules for making code changes
 
-Please provide code changes using the CodeChange format. In the CodeChange format, changes are wrapped in a `CodeChange` XML tag
+When you're ready to make code changes, use the CodeChange format. In the CodeChange format, changes are wrapped in a `CodeChange` XML tag
 containing a `file` attribute.
 
 Within the CodeChange tag, provide a <Description> tag with a high-level description of the changes you'd like made.
