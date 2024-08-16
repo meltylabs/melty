@@ -13,7 +13,7 @@
 //     const edit = `
 // Here's the change:
 
-// <CodeChange file="foo.txt">
+// <CodeChange filePath="foo.txt">
 // <<<<<<< SEARCH
 // Two
 // =======
@@ -34,7 +34,7 @@
 //   test("should find block at end of file", () => {
 //     const edit = `Certainly! I'll add a comment saying "goodbye" at the end of the \`sloth.py\` file. Here's the CodeChange command to make this modification:
 
-// <CodeChange file="sloth.py">
+// <CodeChange filePath="sloth.py">
 // <<<<<<< SEARCH
 // if __name__ == "__main__":
 //     print_sloth()
@@ -63,7 +63,7 @@
 //     const edit = `
 // Here's the change:
 
-// <CodeChange file="foo.txt">
+// <CodeChange filePath="foo.txt">
 // <<<<<<< SEARCH
 // Two
 // =======
@@ -93,7 +93,7 @@
 //     const edit = `
 // Here's the change:
 
-// <CodeChange file="foo.txt">
+// <CodeChange filePath="foo.txt">
 // <<<<<<< SEARCH
 // Two
 // =======
@@ -130,7 +130,7 @@
 
 //   test("should handle blocks with no final newline", () => {
 //     const edit = `
-// <CodeChange file="aider/coder.py">
+// <CodeChange filePath="aider/coder.py">
 // <<<<<<< SEARCH
 //             self.console.print("[red]^C again to quit")
 // =======
@@ -138,7 +138,7 @@
 // >>>>>>> REPLACE
 // </CodeChange>
 
-// <CodeChange file="aider/coder.py">
+// <CodeChange filePath="aider/coder.py">
 // <<<<<<< SEARCH
 //             self.io.tool_error("Malformed ORIGINAL/UPDATE blocks, retrying...")
 //             self.io.tool_error(err)
@@ -148,7 +148,7 @@
 // >>>>>>> REPLACE
 // </CodeChange>
 
-// <CodeChange file="aider/coder.py">
+// <CodeChange filePath="aider/coder.py">
 // <<<<<<< SEARCH
 //             self.console.print("[red]Unable to get commit message from gpt-3.5-turbo. Use /commit to try again.\\n")
 // =======
@@ -156,7 +156,7 @@
 // >>>>>>> REPLACE
 // </CodeChange>
 
-// <CodeChange file="aider/coder.py">
+// <CodeChange filePath="aider/coder.py">
 // <<<<<<< SEARCH
 //             self.console.print("[red]Skipped commmit.")
 // =======

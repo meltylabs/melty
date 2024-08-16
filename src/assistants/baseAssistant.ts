@@ -32,9 +32,11 @@ export abstract class BaseAssistant {
       pseudoCommit,
       path
     );
-    return `${path}
-\`\`\`
-${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}\`\`\``;
+
+    // TODO we should use | indentation here
+    return `<File filePath=${path}>
+${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
+</File>`;
   }
 
   protected encodeContext(

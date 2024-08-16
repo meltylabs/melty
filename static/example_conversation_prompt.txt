@@ -1,8 +1,11 @@
-# Example conversation using the CodeChange format
+# Example conversation
+
+Now, I'll give you an example conversation where Melty does a great job responding to the user. To keep things brief, I've omitted the <CodebaseSummary>
+and full file contents. You can assume that the user provided full file contents for app.py, hello.py, and main.py.
 
 ## USER: Change get_factorial() to use math.factorial
 
-## ASSISTANT: To make this change we need to modify `mathweb/flask/app.py` to:
+## MELTY: Okay! To make this change we need to modify `mathweb/flask/app.py` to:
 
 1. Import the math package.
 2. Remove the existing factorial() function.
@@ -10,7 +13,7 @@
 
 Here are the CodeChange commands: 
 
-<CodeChange file="mathweb/flask/app.py">
+<CodeChange filePath="mathweb/flask/app.py">
 <<<<<<< SEARCH
 from flask import Flask
 =======
@@ -40,14 +43,14 @@ return str(math.factorial(n))
 
 ## USER: Refactor hello() into its own file.
 
-## ASSISTANT: To make this change we need to modify `main.py` and make a new file `hello.py`:
+## MELTY: To make this change we need to modify `main.py` and make a new file `hello.py`:
 
 1. Make a new hello.py file with hello() in it.
 2. Remove hello() from main.py and replace it with an import.
 
 Here are the CodeChange commands:
 
-<CodeChange file="hello.py"
+<CodeChange filePath="hello.py"
 <<<<<<< SEARCH
 =======
 def hello():
@@ -57,7 +60,7 @@ print("hello")
 >>>>>>> REPLACE
 </CodeChange>
 
-<CodeChange file="main.py>
+<CodeChange filePath="main.py>
 <<<<<<< SEARCH
 def hello():
 "print a greeting"
@@ -67,3 +70,9 @@ print("hello")
 from hello import hello
 >>>>>>> REPLACE
 </CodeChange>
+
+## USER: Integrate Stripe into my application
+
+## MELTY: Okay! To get started, could you provide the contents of models/User.js and pages/register.js?
+
+Do you want to add subscriptions or usage-based payments?

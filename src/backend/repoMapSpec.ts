@@ -19,19 +19,24 @@ export class RepoMapSpec {
       return fs.existsSync(absPath) && fs.statSync(absPath).size < 100000;
     });
 
-    let fullMap = "";
+    let fullMap = "<CodebaseSummary>";
     for (const file of eligibleFiles) {
-      fullMap += `<FileMap file="${file}">\n`;
+      fullMap += `<FileSummary filePath="${file}">\n`;
       fullMap += this.mapFile(file);
-      fullMap += `</FileMap>\n`;
+      fullMap += `</FileSummary>\n`;
     }
+    fullMap += "</CodebaseSummary>";
+
     console.log("repo map complete");
     return fullMap;
   }
 
   private mapFile(relativeFilePath: string): string {
     if (path.basename(relativeFilePath) === "package.json") {
-      const absoluteFilePath = path.join(this.gitRepo.rootPath, relativeFilePath);
+      const absoluteFilePath = path.join(
+        this.gitRepo.rootPath,
+        relativeFilePath
+      );
       return fs.readFileSync(absoluteFilePath, "utf-8");
     }
 

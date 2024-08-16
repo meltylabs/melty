@@ -10,17 +10,7 @@ import * as prompts from "../backend/prompts";
 import * as vscode from "vscode";
 import * as parser from "../diffApplication/parser";
 
-export function applySearchReplaceBlocks(
-  gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
-  searchReplaceBlocks: SearchReplace[]
-): PseudoCommit {
-  return searchReplaceBlocks.reduce((pseudoCommit, searchReplace) => {
-    return applySearchReplace(gitRepo, pseudoCommit, searchReplace);
-  }, pseudoCommit);
-}
-
-export async function applyByHaiku(
+export async function applyByAnyMeansNecessary(
   gitRepo: GitRepo,
   pseudoCommit: PseudoCommit,
   searchReplaceBlocks: SearchReplace[]
@@ -45,13 +35,32 @@ export async function applyByHaiku(
           ? pseudoCommits.getFileContents(gitRepo, pseudoCommit, filePath)
           : "\n\n";
 
-        // Apply changes serially for each file
-        for (const searchReplace of searchReplaces) {
-          fileContent = await applySearchReplaceHaiku(
-            fileContent,
-            searchReplace
-          );
+        const newContent = searchReplaces.reduce(
+          (content: string | undefined, searchReplace: SearchReplace) => {
+            if (content) {
+              return applyByExactMatch(content, searchReplace);
+            }
+            return undefined;
+          },
+          fileContent
+        );
+
+        if (newContent) {
+          return { filePath, content: newContent };
         }
+
+        // fall back to haiku
+        console.log(
+          `Falling back to haiku diff application for ${filePath}...`
+        );
+        vscode.window.showInformationMessage(
+          `Falling back to haiku diff application for ${filePath}...`
+        );
+
+        fileContent = await applySearchReplaceHaiku(
+          fileContent,
+          searchReplaces
+        );
 
         return { filePath, content: fileContent };
       }
@@ -73,8 +82,15 @@ export async function applyByHaiku(
 
 async function applySearchReplaceHaiku(
   fileContent: string,
-  searchReplace: SearchReplace
+  searchReplaces: SearchReplace[]
 ): Promise<string> {
+  const formatDiff = (searchReplace: SearchReplace) => {
+    return `${parser.DIFF_OPEN}
+${searchReplace.search}
+${parser.DIFF_DIVIDER}
+${searchReplace.replace}
+${parser.DIFF_CLOSE}`;
+  };
   const claudeConversation: ClaudeConversation = {
     system: prompts.diffApplicationSystemPrompt(),
     messages: [
@@ -82,12 +98,9 @@ async function applySearchReplaceHaiku(
         role: "user",
         content: `<Original>${fileContent}</Original>
 <Diff>
-${parser.DIFF_OPEN}
-${searchReplace.search}
-${parser.DIFF_DIVIDER}
-${searchReplace.replace}
-${parser.DIFF_CLOSE}
-</Diff>`,
+${searchReplaces.map(formatDiff).join("\n")}
+</Diff>
+`,
       },
       {
         role: "assistant",
@@ -113,23 +126,10 @@ ${parser.DIFF_CLOSE}
   return response.split("</Updated>")[0];
 }
 
-function applySearchReplace(
-  gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
+function applyByExactMatch(
+  originalContents: string,
   searchReplace: SearchReplace
-): PseudoCommit {
-  const originalContents = pseudoCommits.hasFile(
-    gitRepo,
-    pseudoCommit,
-    searchReplace.filePath
-  )
-    ? pseudoCommits.getFileContents(
-        gitRepo,
-        pseudoCommit,
-        searchReplace.filePath
-      )
-    : "\n\n"; // so that it has something to search for
-
+): string | undefined {
   if (!originalContents.includes(searchReplace.search)) {
     console.error("failed to apply diff");
     console.error("search string:");
@@ -138,18 +138,11 @@ function applySearchReplace(
     console.error(searchReplace.search.trim());
     console.error("replace string:");
     console.error(searchReplace.replace);
-    vscode.window.showErrorMessage(
-      `Failed to apply diff: search text not found`
-    );
-    return pseudoCommit;
+    return undefined;
   }
   const updatedContent = originalContents.replace(
     searchReplace.search,
     searchReplace.replace
   );
-  return pseudoCommits.upsertFileContents(
-    pseudoCommit,
-    searchReplace.filePath,
-    updatedContent
-  );
+  return updatedContent;
 }

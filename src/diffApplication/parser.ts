@@ -183,7 +183,7 @@ export function splitResponse(
 }
 
 function extractFileName(line: string): string | undefined {
-  const match = line.match(/file="([^"]*)"/);
+  const match = line.match(/filePath="([^"]*)"/);
   if (!match || match.length !== 2) {
     throw new Error(`Unable to get filename from: ${line}`); // TODO: relax this to undefined
   }

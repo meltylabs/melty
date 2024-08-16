@@ -1,0 +1,13 @@
+class Cow:
+    def __init__(self, name, age, breed):
+        self.name = name
+        self.age = age
+        self.breed = breed
+        self.milk_produced = 0
+
+    def produce_milk(self, gallons):
+        self.milk_produced += gallons
+        return f"{self.name} produced {gallons} gallons of milk."
+
+    def summarize(self):
+        return f"Name: {self.name}, Age: {self.age}, Breed: {self.breed}, Total Milk Produced: {self.milk_produced} gallons"

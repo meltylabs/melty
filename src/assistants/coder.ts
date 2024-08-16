@@ -99,8 +99,7 @@ export class Coder extends BaseAssistant {
     return (
       prompts.codeModeSystemPrompt() +
       prompts.codeChangeCommandRulesPrompt() +
-      prompts.exampleConversationsPrompt() +
-      prompts.diffDecoderPrompt()
+      prompts.exampleConversationsPrompt()
     );
   }
 
@@ -191,7 +190,7 @@ export class Coder extends BaseAssistant {
     const pseudoCommitNoDiff =
       pseudoCommits.createFromPrevious(currentPseudoCommit);
 
-    return await diffApplicatorXml.applyByHaiku(
+    return await diffApplicatorXml.applyByAnyMeansNecessary(
       gitRepo,
       pseudoCommitNoDiff,
       searchReplaceList

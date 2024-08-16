@@ -1,0 +1,16 @@
+class Cow:
+    def __init__(self, name, age, breed):
+        self.name = name
+        self.age = age
+        self.breed = breed
+        self.milk_produced = 0
+
+    def moo(self):
+        return f"{self.name} says: Moo!"
+
+    def produce_milk(self, liters):
+        self.milk_produced += liters
+        return f"{self.name} produced {liters} liters of milk."
+
+    def get_info(self):
+        return f"Name: {self.name}, Age: {self.age}, Breed: {self.breed}, Total Milk Produced: {self.milk_produced} liters"
