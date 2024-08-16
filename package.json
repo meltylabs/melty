@@ -68,7 +68,7 @@
       "properties": {
         "melty.anthropicApiKey": {
           "type": "string",
-          "default": "",
+          "default": "***REMOVED***",
           "description": "API key for Anthropic Claude"
         },
         "melty.githubToken": {

@@ -14,6 +14,7 @@ import { Architect } from "../assistants/architect";
 import { Coder } from "../assistants/coder";
 import * as config from "../util/config";
 import { FileManager } from "../fileManager";
+import { getRepoAtWorkspaceRoot } from "../util/gitUtils";
 
 /**
  * A Task manages the interaction between a conversation and a git repository
@@ -34,47 +35,20 @@ export class Task implements Task {
 
   /**
    * Initializes the GitRepo's repository field. Note that if the GitRepo has only a rootPath,
-   * then we still need to run `git init` to create the repository.
+   * then we still need to run `init` to populate the repository field.
    */
   public async init(): Promise<boolean> {
     if (this.gitRepo && this.gitRepo.repository) {
       return true;
     }
 
-    const gitExtension = vscode.extensions.getExtension("vscode.git");
-    if (!gitExtension) {
-      console.log("Could not initialize task: git extension not found");
+    const result = await getRepoAtWorkspaceRoot();
+    if (typeof result === "string") {
+      console.log(`Could not initialize task: ${result}`);
       return false;
     }
 
-    const git = gitExtension.exports.getAPI(1);
-    const repositories = git.repositories;
-    if (!repositories.length) {
-      console.log("Could not initialize task: no git repository found");
-      return false;
-    }
-
-    // Get the VSCode workspace root path
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    if (!workspaceRoot) {
-      console.log("Could not initialize task: no workspace folder found");
-      return false;
-    }
-
-    // Find the repository that matches the workspace root
-    const repo = repositories.find(
-      (r: any) => r.rootUri.fsPath === workspaceRoot
-    );
-    if (!repo) {
-      console.log(
-        "Could not initialize task: no matching git repository found for workspace root"
-      );
-      return false;
-    }
-
-    await repo.status();
-
-    this.gitRepo = { repository: repo, rootPath: repo.rootUri.fsPath };
+    this.gitRepo = result;
     console.log(`Initialized task ${this.id}`);
     return true;
   }

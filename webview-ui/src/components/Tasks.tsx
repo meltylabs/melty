@@ -10,7 +10,13 @@ import {
 import { ExtensionRPC } from "../extensionRPC";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { ArrowUp, Trash2 } from "lucide-react";
+import {
+  ArrowUp,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  LoaderCircle,
+} from "lucide-react";
 import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -30,6 +36,7 @@ import {
 export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [messageText, setMessageText] = useState("");
+  const [gitConfigError, setGitConfigError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [extensionRPC] = useState(() => new ExtensionRPC());
   const [message, setMessage] = useState("");
@@ -38,6 +45,11 @@ export function Tasks() {
     const fetchedTasks = (await extensionRPC.run("listTasks")) as Task[];
     console.log(`[Tasks] fetched ${fetchedTasks.length} tasks`);
     setTasks(fetchedTasks.reverse());
+  }, [extensionRPC]);
+
+  const checkGitConfig = useCallback(async () => {
+    const possibleError = await extensionRPC.run("getGitConfigErrors");
+    setGitConfigError(possibleError);
   }, [extensionRPC]);
 
   const deleteTask = useCallback(
@@ -106,13 +118,14 @@ export function Tasks() {
 
   useEffect(() => {
     fetchTasks();
+    checkGitConfig();
 
     window.addEventListener("message", extensionRPC.handleMessage);
 
     return () => {
       window.removeEventListener("message", extensionRPC.handleMessage);
     };
-  }, [fetchTasks, extensionRPC]);
+  }, [fetchTasks, checkGitConfig, extensionRPC]);
 
   return (
     <div>
@@ -191,6 +204,25 @@ export function Tasks() {
             </Button>
           </div>
         ))}
+      </div>
+
+      <div className="mt-4 flex items-center">
+        {gitConfigError === null ? (
+          <>
+            <LoaderCircle className="animate-spin text-gray-500 mr-2" />
+            <span>Checking Git configuration...</span>
+          </>
+        ) : gitConfigError === "" ? (
+          <>
+            <CheckCircle className="text-green-500 mr-2" />
+            <span>Git configured</span>
+          </>
+        ) : (
+          <>
+            <XCircle className="text-red-500 mr-2" />
+            <span>Git configuration error: {gitConfigError}</span>
+          </>
+        )}
       </div>
     </div>
   );

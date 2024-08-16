@@ -22,11 +22,11 @@ function App() {
               Home
             </Button>
           </Link>
-          <Link to="/onboarding">
+          {/* <Link to="/onboarding">
             <Button variant="ghost" size="sm">
               Setup
             </Button>
-          </Link>
+          </Link> */}
         </nav>
 
         <Routes>

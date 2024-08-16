@@ -270,6 +270,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
       case "resetToOriginMain":
         return this.resetToOriginMain();
+
+      case "getGitConfigErrors":
+        return this.MeltyExtension.getGitConfigErrors();
     }
   }
 

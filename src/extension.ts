@@ -7,6 +7,7 @@ import * as datastores from "./backend/datastores";
 import * as utils from "./util/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Octokit } from "@octokit/rest";
+import { getRepoAtWorkspaceRoot } from "./util/gitUtils";
 
 export class MeltyExtension {
   private outputChannel: vscode.OutputChannel;
@@ -48,6 +49,11 @@ export class MeltyExtension {
     // Set the first task as current
     this.currentTask = this.tasks.values().next().value;
     // don't bother kicking off task.init() here; the git repo isn't ready.
+  }
+
+  public async getGitConfigErrors(): Promise<string> {
+    const result = await getRepoAtWorkspaceRoot();
+    return typeof result === "string" ? result : "";
   }
 
   async deactivate(): Promise<void> {
