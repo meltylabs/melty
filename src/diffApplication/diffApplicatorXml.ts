@@ -92,15 +92,14 @@ ${searchReplace.replace}
 ${parser.DIFF_CLOSE}`;
   };
   const claudeConversation: ClaudeConversation = {
-    system: prompts.diffApplicationSystemPrompt(),
+    system: "",
     messages: [
       {
         role: "user",
-        content: `<Original>${fileContent}</Original>
-<Diff>
-${searchReplaces.map(formatDiff).join("\n")}
-</Diff>
-`,
+        content: `${prompts.diffApplicationSystemPrompt(
+          fileContent,
+          searchReplaces.map(formatDiff).join("\n\n")
+        )}`,
       },
       {
         role: "assistant",

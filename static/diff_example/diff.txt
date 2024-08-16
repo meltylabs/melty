@@ -1,4 +1,3 @@
-<Description>Remove the moo method, rename get_info to summarize, and make produce_milk work with gallons instead of liters</Description>
 <<<<<<< SEARCH
     def moo(self):
         return f"{self.name} says: Moo!"

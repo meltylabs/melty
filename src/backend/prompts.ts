@@ -118,33 +118,45 @@ export function repoMapAsstAck(): string {
   return `Thanks. I'll pay close attention to this.`;
 }
 
-export function diffApplicationSystemPrompt(): string {
-  return `Your task is to take a Diff and apply it to an Original file to produce an Updated file.
+// ================================================================
+// ISOLATED AGENTS
+// ================================================================
 
-The Updated file should be exactly the same as the Original file except for the changes described in the diff.
-Preserve all comments and formatting from the Original file except when they're explicitly, intentionally changed in the diff.
+export function diffApplicationSystemPrompt(
+  original: string,
+  diff: string
+): string {
+  return `You are tasked with applying a Diff to an Original file to produce an Updated file. Follow these instructions carefully:
 
-<Example>
+1. Here is the content of the Original file:
 <Original>
-${fs.readFileSync(
-  path.join(__dirname, "..", "static", "diff_example", "original.txt"),
-  "utf8"
-)}
+${original}
 </Original>
+
+2. Here is the content of the Diff:
 <Diff>
-<Description>Rename count_sheep to count_all_sheep and add count_stray_sheep() to the sum</Description>
-${fs.readFileSync(
-  path.join(__dirname, "..", "static", "diff_example", "diff.txt"),
-  "utf8"
-)}
+${diff}
 </Diff>
-<Updated>
-${fs.readFileSync(
-  path.join(__dirname, "..", "static", "diff_example", "output.txt"),
-  "utf8"
-)}
-</Updated>
-</Example
+
+3. Your task is to apply the changes described in the Diff to the Original file to produce an Updated file. The Diff uses a specific format:
+   - Lines between "<<<<<<< SEARCH" and "=======" indicate content to be replaced or removed.
+   - Lines between "=======" and ">>>>>>> REPLACE" indicate new content to be added.
+   - If there's no content between "=======" and ">>>>>>> REPLACE", it means the content should be removed entirely.
+
+4. Follow these steps to apply the Diff:
+   a. Start with the Original file content.
+   b. For each section in the Diff:
+      - Locate the content between "<<<<<<< SEARCH" and "=======" in the Original file.
+      - Replace it with the content between "=======" and ">>>>>>> REPLACE" (if any).
+   c. If you can't find an exact match for the SEARCH content, look for the closest match and apply the changes there.
+
+5. Preserve all comments and formatting from the Original file, except when they're explicitly changed in the Diff.
+
+6. If you encounter a line in the Diff like "// ... existing code ...", keep the existing code from the Original file in that location, unless it's being modified by other parts of the Diff.
+
+7. After applying all changes, provide the content of the Updated file inside <Updated> tags. Ensure that the Updated file contains all unmodified parts of the Original file along with the changes specified in the Diff.
+
+Remember to double-check your work to ensure all changes have been applied correctly and no unintended modifications have been made.
 `;
 }
 
