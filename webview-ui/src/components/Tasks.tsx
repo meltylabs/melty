@@ -208,17 +208,17 @@ export function Tasks() {
       <div className="mt-4 flex items-center">
         {gitConfigError === null ? (
           <>
-            <LoaderCircle className="animate-spin text-gray-500 mr-2" />
+            <LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
             <span>Checking Git configuration...</span>
           </>
         ) : gitConfigError === "" ? (
           <>
-            <CheckCircle className="text-green-500 mr-2" />
+            <CheckCircle className="text-green-500 mr-2 h-4 w-4" />
             <span>Git configured</span>
           </>
         ) : (
           <>
-            <XCircle className="text-red-500 mr-2" />
+            <XCircle className="text-red-500 mr-2 h-4 w-4" />
             <span>Git configuration error: {gitConfigError}</span>
           </>
         )}
