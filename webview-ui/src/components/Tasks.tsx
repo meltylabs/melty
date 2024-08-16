@@ -127,9 +127,6 @@ export function Tasks() {
             autoFocus
             required
             rows={6}
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={handleKeyDown}
           />
 
           {messageText.trim() !== "" && (
