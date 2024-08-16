@@ -109,7 +109,7 @@ ${parser.DIFF_CLOSE}`;
   };
 
   console.log(
-    "APPLYBYHAIKU prompt",
+    "APPLYBYSONNET prompt",
     `SYSTEM: ${claudeConversation.system}
     MESSAGES: ${claudeConversation.messages}`
   );
@@ -117,9 +117,9 @@ ${parser.DIFF_CLOSE}`;
   const response = await claudeAPI.streamClaude(
     claudeConversation,
     () => {},
-    claudeAPI.Models.Claude3Haiku
+    claudeAPI.Models.Claude35Sonnet
   );
-  console.log("APPLYBYHAIKU response", response);
+  console.log("APPLYBYSONNET response", response);
 
   // remove the closing </Updated> tag
   return response.split("</Updated>")[0];
