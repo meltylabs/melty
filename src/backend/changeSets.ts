@@ -5,6 +5,16 @@ import path from "path";
 import * as files from "./meltyFiles";
 import { generateCommitMessage } from "./commitMessageGenerator";
 
+export function createEmpty(): ChangeSet {
+  return {
+    filesChanged: {},
+  };
+}
+
+export function isEmpty(changeSet: ChangeSet) {
+  return Object.keys(changeSet.filesChanged).length === 0;
+}
+
 /**
  * Commits changes in a changeset
  * @param changeSet The change set to apply

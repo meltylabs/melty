@@ -18,20 +18,33 @@ export function lastJoule(conversation: Conversation): Joule | undefined {
     : undefined;
 }
 
+/**
+ * removes any human joules at the end of the conversation
+ */
 export function forceRemoveHumanJoules(
   conversation: Conversation
 ): Conversation {
-  vscode.window.showInformationMessage(
-    "Melty is force-removing failed messages to recover from an issue"
-  );
-  // remove any human joules at the end of the conversation
+  // first, check if there are any bot joules at all
+  if (!conversation.joules.some((joule) => joule.author === "bot")) {
+    return conversation;
+  }
+
   const indexOfLastBotJoule =
     conversation.joules.length -
     1 -
     Array.from(conversation.joules)
       .reverse()
       .findIndex((joule) => joule.author === "bot");
-  return {
-    joules: conversation.joules.slice(0, indexOfLastBotJoule + 1),
-  };
+
+  if (indexOfLastBotJoule === conversation.joules.length - 1) {
+    // no changes needed!
+    return conversation;
+  } else {
+    vscode.window.showInformationMessage(
+      "Melty is force-removing failed messages to recover from an issue"
+    );
+    return {
+      joules: conversation.joules.slice(0, indexOfLastBotJoule + 1),
+    };
+  }
 }

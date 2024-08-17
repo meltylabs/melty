@@ -4,6 +4,8 @@ import {
   ClaudeConversation,
   ClaudeMessage,
   ChangeSet,
+  BotExecInfo,
+  Joule,
 } from "../types";
 import * as joules from "../backend/joules";
 import * as prompts from "../backend/prompts";
@@ -69,25 +71,28 @@ export class Coder extends BaseAssistant {
     let partialMessage = "";
     const finalResponse = await claudeAPI.streamClaude(
       claudeConversation,
-      (responseFragment: string) => {
+      async (responseFragment: string) => {
         partialMessage += responseFragment;
-        const newConversation = this.claudeOutputToConversationNoChanges(
+        const newConversation = await this.claudeOutputToConversation(
           conversation,
           partialMessage,
           true,
-          contextPaths
+          contextPaths,
+          gitRepo,
+          true // ignore changes
         );
         processPartial(newConversation);
       }
     );
     console.log(finalResponse);
 
-    return await this.claudeOutputToConversationApplyChanges(
+    return await this.claudeOutputToConversation(
       conversation,
       finalResponse,
       false,
       contextPaths,
-      gitRepo
+      gitRepo,
+      false // apply changes
     );
   }
 
@@ -109,53 +114,35 @@ export class Coder extends BaseAssistant {
     ];
   }
 
-  private claudeOutputToConversationNoChanges(
-    prevConversation: Conversation,
-    response: string,
-    partialMode: boolean,
-    contextPaths: string[]
-  ): Conversation {
-    const { messageChunksList, searchReplaceList } = parser.splitResponse(
-      response,
-      partialMode
-    );
-    const newJoule = joules.createJouleBot(messageChunksList.join("\n"), {
-      rawOutput: response,
-      contextPaths: contextPaths,
-      assistantType: "coder",
-    });
-    return conversations.addJoule(prevConversation, newJoule);
-  }
-
-  private async claudeOutputToConversationApplyChanges(
+  private async claudeOutputToConversation(
     prevConversation: Conversation,
     response: string,
     partialMode: boolean,
     contextPaths: string[],
-    gitRepo: GitRepo
+    gitRepo: GitRepo,
+    ignoreChanges: boolean
   ): Promise<Conversation> {
     const { messageChunksList, searchReplaceList } = parser.splitResponse(
       response,
       partialMode
     );
-    const changeSet = await this.applyChanges(gitRepo, searchReplaceList);
-    const newCommit = await changeSets.commitChangeSet(changeSet, gitRepo);
-    const diffInfo = {
-      diffPreview: await utils.getUdiffPreviewFromCommit(gitRepo, newCommit),
-      filePathsChanged: Array.from(Object.keys(changeSet.filesChanged)),
-    };
-    const newJoule = joules.createJouleBotWithChanges(
+    const changeSet = ignoreChanges
+      ? changeSets.createEmpty()
+      : await this.applyChanges(gitRepo, searchReplaceList);
+
+    const nextJoule = await this.nextJoule(
+      changeSet,
+      gitRepo,
       messageChunksList.join("\n"),
       {
         rawOutput: response,
         contextPaths: contextPaths,
         assistantType: "coder",
       },
-      newCommit,
-      diffInfo,
-      partialMode ? "partial" : "complete"
+      partialMode
     );
-    return conversations.addJoule(prevConversation, newJoule);
+
+    return conversations.addJoule(prevConversation, nextJoule);
   }
 
   /**
@@ -169,5 +156,30 @@ export class Coder extends BaseAssistant {
       gitRepo,
       searchReplaceList
     );
+  }
+
+  private async nextJoule(
+    changeSet: ChangeSet,
+    gitRepo: GitRepo,
+    message: string,
+    botExecInfo: BotExecInfo,
+    partialMode: boolean
+  ): Promise<Joule> {
+    if (changeSets.isEmpty(changeSet)) {
+      return joules.createJouleBot(message, botExecInfo);
+    } else {
+      const newCommit = await changeSets.commitChangeSet(changeSet, gitRepo);
+      const diffInfo = {
+        diffPreview: await utils.getUdiffPreviewFromCommit(gitRepo, newCommit),
+        filePathsChanged: Array.from(Object.keys(changeSet.filesChanged)),
+      };
+      return joules.createJouleBotWithChanges(
+        message,
+        botExecInfo,
+        newCommit,
+        diffInfo,
+        partialMode ? "partial" : "complete"
+      );
+    }
   }
 }
