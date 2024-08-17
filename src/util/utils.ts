@@ -43,7 +43,7 @@ export function ensureRepoIsOnCommit(repo: any, commit: string) {
   }
 }
 
-export function serializableTask(task: Task) {
+export function serialize(task: Task) {
   return {
     ...task,
     gitRepo: {
