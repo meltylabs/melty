@@ -9,7 +9,7 @@ import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
 import * as utils from "../util/utils";
-import { generateCommitMessage } from "../ai/commitMessageGenerator"; // Add this import
+import { generateCommitMessage } from "./commitMessageGenerator";
 
 function createFromCommitWithUdiffPreview(
   commit: string,

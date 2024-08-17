@@ -55,8 +55,8 @@ export class MeltyExtension {
     }
   }
 
-  public listTasks(): { id: string; branch: string }[] {
-    return Array.from(this.tasks.values()).map(utils.serialize);
+  public listTasks(): Task[] {
+    return Array.from(this.tasks.values()).map((task) => task.serialize());
   }
 
   public getConversation(taskId: string): Conversation {
@@ -82,10 +82,6 @@ export class MeltyExtension {
     const newTask = new Task(taskId, taskName, branchName);
     this.tasks.set(taskId, newTask);
     return taskId;
-  }
-
-  public resetTask() {
-    throw new Error("Not implemented");
   }
 
   public async switchToTask(taskId: string): Promise<void> {

@@ -10,7 +10,7 @@ import {
 import { FilePicker } from "./FilePicker";
 import { Textarea } from "./ui/textarea";
 import { Task, AssistantType } from "../types";
-import { ExtensionRPC } from "../extensionRPC";
+import { RpcClient } from "../rpcClient";
 import { JouleComponent } from "./JouleComponent";
 import {
   Select,
@@ -22,7 +22,7 @@ import {
 } from "./ui/select";
 
 export function ConversationView() {
-  const [extensionRPC] = useState(() => new ExtensionRPC());
+  const [extensionRPC] = useState(() => new RpcClient());
   const { taskId } = useParams<{ taskId: string }>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);

@@ -1,6 +1,7 @@
 import { vscode } from "./utilities/vscode";
+import { RpcMethod } from "./types";
 
-export class ExtensionRPC {
+export class RpcClient {
   private messageId = 0;
   private pendingMessages = new Map<
     number,
@@ -12,7 +13,7 @@ export class ExtensionRPC {
     this.handleMessage = this.handleMessage.bind(this);
   }
 
-  public run(method: rpcMethod, params: any = {}): Promise<any> {
+  public run(method: RpcMethod, params: any = {}): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = ++this.messageId;
       this.pendingMessages.set(id, { resolve, reject });
@@ -54,19 +55,3 @@ export class ExtensionRPC {
     }
   }
 }
-
-type rpcMethod =
-  | "listMeltyFiles"
-  | "listWorkspaceFiles"
-  | "loadTask"
-  | "listTasks"
-  | "createAndSwitchToTask"
-  | "switchTask"
-  | "addMeltyFile"
-  | "dropMeltyFile"
-  | "chatMessage"
-  | "createPullRequest"
-  | "deleteTask"
-  | "undoLatestCommit"
-  | "getLatestCommit"
-  | "getGitConfigErrors";

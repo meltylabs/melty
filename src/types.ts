@@ -110,3 +110,18 @@ export type MeltyFile = {
   readonly contents: string;
 };
 
+export type RpcMethod =
+  | "listMeltyFiles"
+  | "listWorkspaceFiles"
+  | "loadTask"
+  | "listTasks"
+  | "createAndSwitchToTask"
+  | "switchTask"
+  | "addMeltyFile"
+  | "dropMeltyFile"
+  | "chatMessage"
+  | "createPullRequest"
+  | "deleteTask"
+  | "undoLatestCommit"
+  | "getLatestCommit"
+  | "getGitConfigErrors";

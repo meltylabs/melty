@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ExtensionRPC } from "../extensionRPC";
+import { RpcClient } from "../rpcClient";
 import { Joule, PseudoCommitInGit } from "../types";
 import CopyButton from "./CopyButton";
 import DiffViewer from "./DiffViewer";
@@ -21,7 +21,7 @@ export function JouleComponent({
   latestCommitHash?: string;
   showDiff?: boolean;
 }) {
-  const [extensionRPC] = useState(() => new ExtensionRPC());
+  const [extensionRPC] = useState(() => new RpcClient());
   const [undoClicked, setUndoClicked] = useState(false);
 
   const diffHtml =

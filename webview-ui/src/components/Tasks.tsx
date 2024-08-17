@@ -6,7 +6,7 @@ import {
   CardDescription,
   CardContent,
 } from "./ui/card";
-import { ExtensionRPC } from "../extensionRPC";
+import { RpcClient } from "../rpcClient";
 import { Button } from "./ui/button";
 import {
   ArrowUp,
@@ -49,7 +49,7 @@ export function Tasks() {
   const [messageText, setMessageText] = useState("");
   const [gitConfigError, setGitConfigError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [extensionRPC] = useState(() => new ExtensionRPC());
+  const [extensionRPC] = useState(() => new RpcClient());
 
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await extensionRPC.run("listTasks")) as Task[];
