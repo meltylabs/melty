@@ -533,7 +533,7 @@ const registry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Con
 			},
 			'workbench.statusBar.visible': {
 				'type': 'boolean',
-				'default': true,
+				'default': false,
 				'description': localize('statusBarVisibility', "Controls the visibility of the status bar at the bottom of the workbench.")
 			},
 			[LayoutSettings.ACTIVITY_BAR_LOCATION]: {
