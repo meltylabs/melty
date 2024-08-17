@@ -146,7 +146,7 @@ export function Tasks() {
       <form onSubmit={handleSubmit}>
         <div className="mt-4 relative">
           <Textarea
-            placeholder="Type a message..."
+            placeholder="What are you trying to do?"
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
