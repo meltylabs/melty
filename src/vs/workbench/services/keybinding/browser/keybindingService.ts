@@ -432,22 +432,21 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		if (!this._cachedResolver) {
 			const defaults = this._resolveKeybindingItems(KeybindingsRegistry.getDefaultKeybindings(), true);
 			const overrides = this._resolveUserKeybindingItems(this.userKeybindings.keybindings, false);
-			
+
 			// Add custom default keybindings here
 			const customDefaults = this._resolveKeybindingItems([
 				{
 					command: 'workbench.action.toggleSidebarVisibility',
 					keybinding: new Keybinding([new KeyCodeChord(KeyMod.CtrlCmd | KeyCode.KeyB)]),
-					when: undefined
-				},
-				{
-					command: 'workbench.action.togglePanel',
-					keybinding: new Keybinding([new KeyCodeChord(KeyMod.CtrlCmd | KeyCode.KeyJ)]),
-					when: undefined
+					when: undefined,
+					weight1: 100,
+					weight2: 100,
+					extensionId: 'workbench.action.togglePanel',
+					isBuiltinExtension: true,
 				},
 				// Add more default keybindings as needed
 			], true);
-			
+
 			this._cachedResolver = new KeybindingResolver([...defaults, ...customDefaults], overrides, (str) => this._log(str));
 		}
 		return this._cachedResolver;
