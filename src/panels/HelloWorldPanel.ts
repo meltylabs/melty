@@ -149,7 +149,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
             message.method
           } with params ${JSON.stringify(message.params)}`
         );
-        this.handleRPCCall(message.method, message.params)
+        this.handleRPCCall(message.method as RpcMethod, message.params)
           .then((result) => {
             console.log(
               `[RPC Server] sending RPC response for ${message.id} with result ${result}`
@@ -178,7 +178,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     });
   }
 
-  private async handleRPCCall(method: string, params: any): Promise<any> {
+  private async handleRPCCall(method: RpcMethod, params: any): Promise<any> {
     switch (method) {
       case "loadTask":
         return await this.rpcLoadTask(params.taskId);
