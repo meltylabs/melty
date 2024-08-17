@@ -436,14 +436,14 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 			// Add custom default keybindings here
 			const customDefaults = this._resolveKeybindingItems([
 				{
-					command: 'workbench.action.toggleSidebarVisibility',
-					keybinding: new Keybinding([new KeyCodeChord(KeyMod.CtrlCmd | KeyCode.KeyB)]),
+					command: 'workbench.action.terminal.toggleTerminal',
+					keybinding: new Keybinding([new KeyCodeChord(false, false, false, true, KeyCode.KeyT)]),
 					when: undefined,
 					weight1: 100,
 					weight2: 100,
-					extensionId: 'workbench.action.togglePanel',
+					extensionId: 'workbench.action.toggleTerminal',
 					isBuiltinExtension: true,
-				},
+				}
 				// Add more default keybindings as needed
 			], true);
 
