@@ -49,41 +49,41 @@ export function Tasks() {
   const [messageText, setMessageText] = useState("");
   const [gitConfigError, setGitConfigError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [extensionRPC] = useState(() => new RpcClient());
+  const [rpcClient] = useState(() => new RpcClient());
 
   const fetchTasks = useCallback(async () => {
-    const fetchedTasks = (await extensionRPC.run("listTasks")) as Task[];
+    const fetchedTasks = (await rpcClient.run("listTasks")) as Task[];
     console.log(`[Tasks] fetched ${fetchedTasks.length} tasks`);
     const sortedTasks = fetchedTasks.sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
     setTasks(sortedTasks);
-  }, [extensionRPC]);
+  }, [rpcClient]);
 
   const checkGitConfig = useCallback(async () => {
-    const possibleError = await extensionRPC.run("getGitConfigErrors");
+    const possibleError = await rpcClient.run("getGitConfigErrors");
     setGitConfigError(possibleError);
-  }, [extensionRPC]);
+  }, [rpcClient]);
 
   const deleteTask = useCallback(
     async (taskId: string, e: MouseEvent) => {
       e.preventDefault(); // Prevent link navigation
       e.stopPropagation(); // Prevent event bubbling
       try {
-        await extensionRPC.run("deleteTask", { taskId });
+        await rpcClient.run("deleteTask", { taskId });
         await fetchTasks();
         console.log("Task deleted successfully");
       } catch (error) {
         console.error("Failed to delete task:", error);
       }
     },
-    [fetchTasks, extensionRPC]
+    [fetchTasks, rpcClient]
   );
 
   const createNewTask = async (taskName: string) => {
     console.log(`[Tasks] creating new task ${taskName}`);
-    const newTaskId = (await extensionRPC.run("createAndSwitchToTask", {
+    const newTaskId = (await rpcClient.run("createAndSwitchToTask", {
       name: taskName.trim(),
     })) as string;
     console.log(`[Tasks] created new task ${newTaskId}`);
@@ -91,7 +91,7 @@ export function Tasks() {
   };
 
   function handleSendMessage(assistantType: AssistantType, text: string) {
-    extensionRPC.run("chatMessage", { assistantType, text });
+    rpcClient.run("chatMessage", { assistantType, text });
   }
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -134,12 +134,12 @@ export function Tasks() {
     fetchTasks();
     checkGitConfig();
 
-    window.addEventListener("message", extensionRPC.handleMessage);
+    window.addEventListener("message", rpcClient.handleMessage);
 
     return () => {
-      window.removeEventListener("message", extensionRPC.handleMessage);
+      window.removeEventListener("message", rpcClient.handleMessage);
     };
-  }, [fetchTasks, checkGitConfig, extensionRPC]);
+  }, [fetchTasks, checkGitConfig, rpcClient]);
 
   return (
     <div>

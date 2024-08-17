@@ -17,7 +17,7 @@ import { MeltyExtension } from "../extension";
 import * as utils from "../util/utils";
 import { Task } from "../backend/tasks";
 import * as config from "../util/config";
-import { BridgeToWebview } from "../bridgeToWebview";
+import { WebviewNotifier } from "../webviewNotifier";
 import { FileManager } from "../fileManager";
 import { RpcMethod } from "../types";
 
@@ -35,7 +35,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
   public static currentView: HelloWorldPanel | undefined;
   private _view?: WebviewView;
   private _disposables: Disposable[] = [];
-  private bridgeToWebview?: BridgeToWebview;
+  private webviewNotifier?: WebviewNotifier;
   private fileManager?: FileManager;
 
   private MeltyExtension: MeltyExtension;
@@ -63,9 +63,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
     this._setWebviewMessageListener(webviewView.webview);
 
-    this.bridgeToWebview = new BridgeToWebview(this._view);
+    this.webviewNotifier = new WebviewNotifier(this._view);
     this.fileManager = new FileManager(
-      this.bridgeToWebview,
+      this.webviewNotifier,
       this.MeltyExtension.meltyRoot!
     );
     this.MeltyExtension.pushSubscription(this.fileManager);
@@ -144,10 +144,15 @@ export class HelloWorldPanel implements WebviewViewProvider {
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage((message) => {
       if (message.type === "rpc") {
+        console.log(
+          `[RPC Server] RPC call for ${
+            message.method
+          } with params ${JSON.stringify(message.params)}`
+        );
         this.handleRPCCall(message.method, message.params)
           .then((result) => {
             console.log(
-              `[HelloWorldPanel] sending RPC response for ${message.id} with result ${result}`
+              `[RPC Server] sending RPC response for ${message.id} with result ${result}`
             );
             webview.postMessage({
               type: "rpcResponse",
@@ -161,7 +166,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
             }
 
             console.log(
-              `[HelloWorldPanel] sending RPCresponse for ${message.id} with error ${error.message}`
+              `[RPC Server] sending RPCresponse for ${message.id} with error ${error.message}`
             );
             webview.postMessage({
               type: "rpcResponse",
@@ -174,11 +179,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
   }
 
   private async handleRPCCall(method: string, params: any): Promise<any> {
-    console.log(
-      `[HelloWorldPanel] RPC call for ${method} with params ${JSON.stringify(
-        params
-      )}`
-    );
     switch (method) {
       case "loadTask":
         return await this.rpcLoadTask(params.taskId);
@@ -287,7 +287,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
     try {
       await task.respondHuman(assistantType, text);
-      this.bridgeToWebview?.sendNotification("updateTask", {
+      this.webviewNotifier?.sendNotification("updateTask", {
         task: task.serialize(),
       });
     } catch (error) {
@@ -307,13 +307,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
       // copy task
       const serialTask = task.serialize();
       serialTask.conversation = partialConversation;
-      this.bridgeToWebview?.sendNotification("updateTask", {
+      this.webviewNotifier?.sendNotification("updateTask", {
         task: serialTask,
       });
     };
 
     await task.respondBot(assistantType, processPartial);
-    this.bridgeToWebview?.sendNotification("updateTask", {
+    this.webviewNotifier?.sendNotification("updateTask", {
       task: task.serialize(),
     });
   }

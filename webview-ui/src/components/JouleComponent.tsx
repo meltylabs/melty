@@ -21,7 +21,7 @@ export function JouleComponent({
   latestCommitHash?: string;
   showDiff?: boolean;
 }) {
-  const [extensionRPC] = useState(() => new RpcClient());
+  const [rpcClient] = useState(() => new RpcClient());
   const [undoClicked, setUndoClicked] = useState(false);
 
   const diffHtml =
@@ -37,7 +37,7 @@ export function JouleComponent({
   const handleUndo = async () => {
     setUndoClicked(true);
     try {
-      const result = await extensionRPC.run("undoLatestCommit", {
+      const result = await rpcClient.run("undoLatestCommit", {
         commitId: (joule.pseudoCommit.impl as PseudoCommitInGit).commit,
       });
       console.log("Result:", result);

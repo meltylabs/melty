@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as config from "./util/config";
 import * as path from "path";
-import { BridgeToWebview } from "./bridgeToWebview";
+import { WebviewNotifier } from "./webviewNotifier";
 
 /**
  * Handles both workspace files and meltyMind files
@@ -9,16 +9,16 @@ import { BridgeToWebview } from "./bridgeToWebview";
 export class FileManager {
   private disposables: vscode.Disposable[] = [];
   private initializationPromise: Promise<void> | null = null;
-  private bridgeToWebview: BridgeToWebview;
+  private webviewNotifier: WebviewNotifier;
   private meltyRoot: string;
 
   private workspaceFiles: vscode.Uri[] = [];
   private meltyMindFiles: vscode.Uri[] = [];
 
-  constructor(bridgeToWebview: BridgeToWebview, meltyRoot: string) {
+  constructor(bridgeToWebview: WebviewNotifier, meltyRoot: string) {
     this.initializationPromise = this.initializeFileList();
     this.registerEventListeners();
-    this.bridgeToWebview = bridgeToWebview;
+    this.webviewNotifier = bridgeToWebview;
     this.meltyRoot = meltyRoot;
   }
 
@@ -26,7 +26,7 @@ export class FileManager {
     this.meltyMindFiles = relPaths.map((relPath) =>
       vscode.Uri.file(path.join(this.meltyRoot, relPath))
     );
-    this.bridgeToWebview.sendNotification("updateMeltyMindFiles", {
+    this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: relPaths,
     });
   }
@@ -56,7 +56,7 @@ export class FileManager {
     // add workspace files
     this.workspaceFiles = this.workspaceFiles.concat(event.files);
 
-    this.bridgeToWebview.sendNotification("updateWorkspaceFiles", {
+    this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: await this.getWorkspaceFilesRelative(),
     });
   }
@@ -74,10 +74,10 @@ export class FileManager {
         !event.files.some((deletedFile) => deletedFile.fsPath === file.fsPath)
     );
 
-    this.bridgeToWebview.sendNotification("updateWorkspaceFiles", {
+    this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: await this.getWorkspaceFilesRelative(),
     });
-    this.bridgeToWebview.sendNotification("updateMeltyMindFiles", {
+    this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: await this.getMeltyMindFilesRelative(),
     });
   }
@@ -102,10 +102,10 @@ export class FileManager {
         this.meltyMindFiles[index] = newUri;
       }
     });
-    this.bridgeToWebview.sendNotification("updateWorkspaceFiles", {
+    this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: await this.getWorkspaceFilesRelative(),
     });
-    this.bridgeToWebview.sendNotification("updateMeltyMindFiles", {
+    this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: await this.getMeltyMindFilesRelative(),
     });
   }
@@ -135,7 +135,7 @@ export class FileManager {
     const uri = vscode.Uri.file(path.join(this.meltyRoot, relPath));
     this.meltyMindFiles.push(uri);
     if (notify) {
-      this.bridgeToWebview.sendNotification("updateMeltyMindFiles", {
+      this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
         files: await this.getMeltyMindFilesRelative(),
       });
     }
