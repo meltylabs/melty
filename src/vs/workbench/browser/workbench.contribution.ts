@@ -45,17 +45,6 @@ const registry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Con
 				description: localize('tabScrollbarHeight', "Controls the height of the scrollbars used for tabs and breadcrumbs in the editor title area."),
 				default: 'default',
 			},
-			[LayoutSettings.EDITOR_TABS_MODE]: {
-				'type': 'string',
-				'enum': [EditorTabsMode.MULTIPLE, EditorTabsMode.SINGLE, EditorTabsMode.NONE],
-				'enumDescriptions': [
-					localize('workbench.editor.showTabs.multiple', "Each editor is displayed as a tab in the editor title area."),
-					localize('workbench.editor.showTabs.single', "The active editor is displayed as a single large tab in the editor title area."),
-					localize('workbench.editor.showTabs.none', "The editor title area is not displayed."),
-				],
-				'description': localize('showEditorTabs', "Controls whether opened editors should show as individual tabs, one single large tab or if the title area should not be shown."),
-				'default': 'multiple'
-			},
 			[LayoutSettings.EDITOR_ACTIONS_LOCATION]: {
 				'type': 'string',
 				'enum': [EditorActionsLocation.DEFAULT, EditorActionsLocation.TITLEBAR, EditorActionsLocation.HIDDEN],
@@ -511,8 +500,19 @@ const registry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Con
 			'workbench.sideBar.location': {
 				'type': 'string',
 				'enum': ['left', 'right'],
-				'default': 'left',
+				'default': 'right',
 				'description': localize('sideBarLocation', "Controls the location of the primary side bar and activity bar. They can either show on the left or right of the workbench. The secondary side bar will show on the opposite side of the workbench.")
+			},
+			'workbench.editor.showTabs': {
+				'type': 'string',
+				'enum': ['multiple', 'single', 'none'],
+				'default': 'single',
+				'description': localize('showEditorTabs', "Controls whether opened editors should show as individual tabs, one single tab, or none at all."),
+				'enumDescriptions': [
+					localize('showEditorTabs.multiple', "Each editor is displayed as a tab in the editor title area."),
+					localize('showEditorTabs.single', "The active editor is displayed as a single large tab in the editor title area."),
+					localize('showEditorTabs.none', "The editor title area is not displayed.")
+				]
 			},
 			'workbench.panel.defaultLocation': {
 				'type': 'string',
@@ -536,17 +536,10 @@ const registry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Con
 				'default': false,
 				'description': localize('statusBarVisibility', "Controls the visibility of the status bar at the bottom of the workbench.")
 			},
-			[LayoutSettings.ACTIVITY_BAR_LOCATION]: {
-				'type': 'string',
-				'enum': ['default', 'top', 'bottom', 'hidden'],
-				'default': 'hidden',
-				'markdownDescription': localize({ comment: ['This is the description for a setting'], key: 'activityBarLocation' }, "Controls the location of the Activity Bar relative to the Primary and Secondary Side Bars."),
-				'enumDescriptions': [
-					localize('workbench.activityBar.location.default', "Show the Activity Bar on the side of the Primary Side Bar and on top of the Secondary Side Bar."),
-					localize('workbench.activityBar.location.top', "Show the Activity Bar on top of the Primary and Secondary Side Bars."),
-					localize('workbench.activityBar.location.bottom', "Show the Activity Bar at the bottom of the Primary and Secondary Side Bars."),
-					localize('workbench.activityBar.location.hide', "Hide the Activity Bar in the Primary and Secondary Side Bars.")
-				],
+			'editor.minimap.enabled': {
+				'type': 'boolean',
+				'default': false,
+				'description': localize('minimap.enabled', "Controls whether the minimap is shown in the editor.")
 			},
 			'workbench.activityBar.iconClickBehavior': {
 				'type': 'string',
