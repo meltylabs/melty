@@ -16,6 +16,8 @@ import * as config from "../util/config";
 import { FileManager } from "../fileManager";
 import { getRepoAtWorkspaceRoot } from "../util/gitUtils";
 import * as datastores from "./datastores";
+import { generateCommitMessage } from "./commitMessageGenerator";
+import * as fs from "fs";
 
 /**
  * A Task manages the interaction between a conversation and a git repository
@@ -126,7 +128,13 @@ export class Task implements Task {
     const indexChanges = this.gitRepo!.repository.state.indexChanges;
 
     if (indexChanges.length > 0) {
-      await this.gitRepo!.repository.commit("human changes");
+      const filesChanged = indexChanges.map((change: any) => change.uri.fsPath);
+      const message = await generateCommitMessage(
+        filesChanged,
+        this.gitRepo!.rootPath
+      );
+
+      await this.gitRepo!.repository.commit(`[via melty] ${message}`);
     }
 
     await this.gitRepo!.repository.status();

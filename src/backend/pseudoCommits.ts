@@ -170,7 +170,7 @@ export async function actualize(
         changedFiles,
         gitRepo.rootPath
       );
-      await repository.commit(commitMessage, { empty: true });
+      await repository.commit(`[by melty] ${commitMessage}`, { empty: true });
 
       await repository.status();
       const newCommit = repository.state.HEAD!.commit;

@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
+import { commit } from "./pseudoCommits";
 
 export async function generateCommitMessage(
   changedFiles: string[],
@@ -20,10 +21,14 @@ export async function generateCommitMessage(
     apiKey: apiKey,
   });
 
-  const fileContents = changedFiles.map(file => {
-    const filePath = path.join(rootPath, file);
-    return `${file}:\n${fs.readFileSync(filePath, 'utf-8')}`;
-  }).join('\n\n');
+  // const fileContents = changedFiles
+  //   .map((file) => {
+  //     const filePath = path.join(rootPath, file);
+  //     return `${file}:\n${fs.readFileSync(filePath, "utf-8")}`;
+  //   })
+  //   .join("\n\n");
+
+  const fileContents = "";
 
   const prompt = `You are an expert software engineer.
 Review the provided context and diffs which are about to be committed to a git repo.
@@ -47,10 +52,9 @@ ${fileContents}`;
     });
 
     const commitMessage = response.content[0].text.trim();
-    return commitMessage || "chore: update code";
+    return commitMessage;
   } catch (error) {
     console.error("Error generating commit message:", error);
-    return "Update code";
+    return "bot changes";
   }
 }
-
