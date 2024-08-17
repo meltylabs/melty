@@ -9,6 +9,7 @@ import * as files from "./meltyFiles";
 import * as fs from "fs";
 import * as path from "path";
 import * as utils from "../util/utils";
+import { generateCommitMessage } from "../ai/commitMessageGenerator"; // Add this import
 
 function createFromCommitWithUdiffPreview(
   commit: string,
@@ -164,7 +165,12 @@ export async function actualize(
         )
       );
 
-      await repository.commit("bot changes", { empty: true });
+      const changedFiles = Object.keys(filesChanged);
+      const commitMessage = await generateCommitMessage(
+        changedFiles,
+        gitRepo.rootPath
+      );
+      await repository.commit(commitMessage, { empty: true });
 
       await repository.status();
       const newCommit = repository.state.HEAD!.commit;
