@@ -5,18 +5,6 @@ import path from "path";
 import * as files from "./meltyFiles";
 import { generateCommitMessage } from "./commitMessageGenerator";
 
-export async function getChangeSet(gitRepo: GitRepo, commit: string) {
-  const repository = gitRepo.repository;
-  await repository.status();
-
-  const changeSet = await meltyFiles.getChangeSet(
-    gitRepo,
-    commit,
-    parentCommit
-  );
-  return changeSet;
-}
-
 /**
  * Commits changes in a changeset
  * @param changeSet The change set to apply
