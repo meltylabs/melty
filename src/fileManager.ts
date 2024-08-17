@@ -22,21 +22,6 @@ export class FileManager {
     this.meltyRoot = meltyRoot;
   }
 
-  public loadMeltyMindFiles(relPaths: string[]) {
-    this.meltyMindFiles = relPaths.map((relPath) =>
-      vscode.Uri.file(path.join(this.meltyRoot, relPath))
-    );
-    this.bridgeToWebview.sendNotification("updateMeltyMindFiles", {
-      files: relPaths,
-    });
-  }
-
-  public dumpMeltyMindFiles(): string[] {
-    return this.meltyMindFiles.map((file) =>
-      path.relative(this.meltyRoot, file.fsPath)
-    );
-  }
-
   private async initializeFileList(): Promise<void> {
     this.workspaceFiles = await vscode.workspace.findFiles(
       "**/*",

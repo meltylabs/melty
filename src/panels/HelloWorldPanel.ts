@@ -183,7 +183,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
         console.log(`loadTask`);
         let taskId = params.taskId;
         const task = this.MeltyExtension.getTask(taskId);
-        return Promise.resolve(task.serialize());
+        return Promise.resolve(utils.serializableTask(task));
       case "listMeltyFiles":
         const meltyMindFilePaths =
           this.fileManager!.getMeltyMindFilesRelative();
@@ -255,24 +255,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
         return Promise.resolve(tasks);
 
       case "switchTask":
-        // save meltyMindFiles into old task
-        const oldTask = await this.MeltyExtension.getCurrentTask();
-        if (oldTask) {
-          const meltyMindFiles =
-            await this.fileManager?.getMeltyMindFilesRelative();
-          if (meltyMindFiles) {
-            oldTask.savedMeltyMindFiles = meltyMindFiles;
-          }
-        }
-
         await this.MeltyExtension.switchToTask(params.taskId);
-        const newTask = (await this.MeltyExtension.getCurrentTask())!;
+        const newTask = await this.MeltyExtension.getCurrentTask();
         await newTask.init();
-        newTask.setFileManager(this.fileManager!);
-
-        // load meltyMindFiles into new task
-        this.fileManager?.loadMeltyMindFiles(newTask.savedMeltyMindFiles);
-        return Promise.resolve(newTask.serialize());
+        return Promise.resolve(utils.serializableTask(newTask));
 
       case "createPullRequest":
         this.MeltyExtension.createPullRequest();
@@ -282,8 +268,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
         this.MeltyExtension.deleteTask(params.taskId);
         return Promise.resolve(null);
 
-      // case "resetToOriginMain":
-      //   return this.resetToOriginMain();
+      case "resetToOriginMain":
+        return this.resetToOriginMain();
 
       case "getGitConfigErrors":
         return this.MeltyExtension.getGitConfigErrors();
@@ -291,14 +277,15 @@ export class HelloWorldPanel implements WebviewViewProvider {
   }
 
   private async handleAskCode(text: string, assistantType: AssistantType) {
-    const task = (await this.MeltyExtension.getCurrentTask())!;
+    const task = await this.MeltyExtension.getCurrentTask();
+    task.setFileManager(this.fileManager!);
 
     // human response
 
     try {
       await task.respondHuman(assistantType, text);
       this.bridgeToWebview?.sendNotification("updateTask", {
-        task: task.serialize(),
+        task: utils.serializableTask(task),
       });
     } catch (error) {
       console.error("Error in respondHuman:", error);
@@ -318,13 +305,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
       const partialTask = { ...task } as Task;
       partialTask.conversation = partialConversation;
       this.bridgeToWebview?.sendNotification("updateTask", {
-        task: partialTask.serialize(),
+        task: utils.serializableTask(partialTask),
       });
     };
 
     await task.respondBot(assistantType, processPartial);
     this.bridgeToWebview?.sendNotification("updateTask", {
-      task: task.serialize(),
+      task: utils.serializableTask(task),
     });
   }
 
@@ -340,33 +327,33 @@ export class HelloWorldPanel implements WebviewViewProvider {
     // await repo.reset("HEAD~1", false);
   }
 
-  // /**
-  //  * Reset the current task to the origin/main branch.
-  //  */
-  // private async resetToOriginMain(): Promise<string> {
-  //   try {
-  //     const task = (await this.MeltyExtension.getCurrentTask())!;
-  //     if (!task.gitRepo) {
-  //       throw new Error("No Git repository associated with the current task.");
-  //     }
+  /**
+   * Reset the current task to the origin/main branch.
+   */
+  private async resetToOriginMain(): Promise<string> {
+    try {
+      const task = await this.MeltyExtension.getCurrentTask();
+      if (!task.gitRepo) {
+        throw new Error("No Git repository associated with the current task.");
+      }
 
-  //     // Fetch the latest changes from the remote
-  //     await task.gitRepo.fetch("origin");
+      // Fetch the latest changes from the remote
+      await task.gitRepo.fetch("origin");
 
-  //     // Reset the local branch to origin/main
-  //     await task.gitRepo.reset("origin/main", true);
+      // Reset the local branch to origin/main
+      await task.gitRepo.reset("origin/main", true);
 
-  //     // Refresh the file system
-  //     await vscode.commands.executeCommand(
-  //       "workbench.files.action.refreshFilesExplorer"
-  //     );
+      // Refresh the file system
+      await vscode.commands.executeCommand(
+        "workbench.files.action.refreshFilesExplorer"
+      );
 
-  //     return "Successfully reset to origin/main";
-  //   } catch (error) {
-  //     console.error("Error resetting to origin/main:", error);
-  //     throw new Error(`Failed to reset to origin/main: ${error.message}`);
-  //   }
-  // }
+      return "Successfully reset to origin/main";
+    } catch (error) {
+      console.error("Error resetting to origin/main:", error);
+      throw new Error(`Failed to reset to origin/main: ${error.message}`);
+    }
+  }
 
   /**
    * Run a terminal command
