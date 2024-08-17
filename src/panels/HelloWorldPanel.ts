@@ -338,8 +338,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
     this.fileManager?.loadMeltyMindFiles(newTask.savedMeltyMindFiles);
   }
 
-  private async handleAskCode(text: string, assistantType: AssistantType) {}
-
   /**
    * Run a terminal command
    * @param command The command to run

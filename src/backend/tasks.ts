@@ -65,40 +65,6 @@ export class Task implements Task {
     return true;
   }
 
-  // public async switchTo(): Promise<void> {
-  //   await this.init();
-  //   await this.gitRepo!.repository.status();
-
-  //   if (!utils.repoIsClean(this.gitRepo!.repository)) {
-  //     utils.handleGitError(
-  //       "Working directory is not clean. Cannot proceed activating task."
-  //     );
-  //   } else {
-  //     try {
-  //       await this.gitRepo!.repository.checkout(this.branch);
-  //       utils.info(`Switched to branch ${this.branch}`);
-  //     } catch (error: any) {
-  //       if (
-  //         error.stderr &&
-  //         error.stderr.includes("did not match any file(s) known to git")
-  //       ) {
-  //         // we need to create the branch
-  //         if (!utils.repoIsOnMain(this.gitRepo!.repository)) {
-  //           utils.handleGitError(
-  //             "Cannot activate task: working directory is not on main branch"
-  //           );
-  //         }
-  //         console.log(`Branch ${this.branch} does not exist. Creating it.`);
-  //         await this.gitRepo!.repository.createBranch(this.branch, true);
-  //         utils.info(`Created and checked out branch ${this.branch}`);
-  //       } else {
-  //         // Re-throw other errors
-  //         throw error;
-  //       }
-  //     }
-  //   }
-  // }
-
   private getConversationState(): PseudoCommit | undefined {
     return conversations.lastJoule(this.conversation)?.pseudoCommit;
   }
