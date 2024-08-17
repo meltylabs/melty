@@ -19,25 +19,28 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === '[') {
-      event.preventDefault();
-      if (location.pathname !== '/') {
-        navigate('/');
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "[") {
+        event.preventDefault();
+        if (location.pathname !== "/") {
+          navigate("/");
+        }
       }
-    }
-  }, [navigate, location]);
+    },
+    [navigate, location]
+  );
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
 
   return (
     <main className="">
-        {/* <nav className="mb-4 flex justify-between">
+      {/* <nav className="mb-4 flex justify-between">
           <Link to="/">
             <Button variant="ghost" size="sm">
               Melty
