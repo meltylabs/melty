@@ -2,10 +2,9 @@ import {
   Conversation,
   GitRepo,
   ClaudeConversation,
-  PseudoCommit,
   ClaudeMessage,
+  ChangeSet,
 } from "../types";
-import * as pseudoCommits from "../backend/pseudoCommits";
 import * as joules from "../backend/joules";
 import * as prompts from "../backend/prompts";
 import * as claudeAPI from "../backend/claudeAPI";
@@ -16,6 +15,7 @@ import * as conversations from "../backend/conversations";
 import { BaseAssistant } from "./baseAssistant";
 import * as parser from "../diffApplication/parser";
 import * as contextSuggester from "../backend/contextSuggester";
+import * as changeSets from "../backend/changeSets";
 
 export class Coder extends BaseAssistant {
   async respond(
@@ -45,9 +45,6 @@ export class Coder extends BaseAssistant {
     //   newContextSuggestions?.join(",")
     // );
 
-    const currentPseudoCommit =
-      conversations.lastJoule(conversation)!.pseudoCommit;
-
     // TODO 100: Add a loop here to try to correct the response if it's not good yet
     // TODO 300: (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
     // We can try each step multiple times. All attempts should be represented by a tree. We pick one leaf to respond with.
@@ -59,7 +56,7 @@ export class Coder extends BaseAssistant {
       messages: [
         // TODOV2 user system info
         ...(await this.encodeRepoMap(repoMapString)),
-        ...this.encodeContext(gitRepo, currentPseudoCommit, contextPaths),
+        ...this.encodeContext(gitRepo, contextPaths),
         ...this.encodeMessages(conversation),
       ],
     };
@@ -78,9 +75,7 @@ export class Coder extends BaseAssistant {
           conversation,
           partialMessage,
           true,
-          currentPseudoCommit,
-          contextPaths,
-          gitRepo
+          contextPaths
         );
         processPartial(newConversation);
       }
@@ -90,8 +85,7 @@ export class Coder extends BaseAssistant {
     return await this.claudeOutputToConversationApplyChanges(
       conversation,
       finalResponse,
-      true,
-      currentPseudoCommit,
+      false,
       contextPaths,
       gitRepo
     );
@@ -119,26 +113,18 @@ export class Coder extends BaseAssistant {
     prevConversation: Conversation,
     response: string,
     partialMode: boolean,
-    currentPseudoCommit: PseudoCommit,
-    contextPaths: string[],
-    gitRepo: GitRepo
+    contextPaths: string[]
   ): Conversation {
     const { messageChunksList, searchReplaceList } = parser.splitResponse(
       response,
       partialMode
     );
-    const newPseudoCommit = this.getNewPseudoCommit(
-      gitRepo,
-      currentPseudoCommit,
-      searchReplaceList
-    );
-    const newJoule = joules.createJouleBot(
-      messageChunksList.join("\n"),
-      response,
-      newPseudoCommit,
-      contextPaths,
-      "coder"
-    );
+    const newJoule = joules.createJouleBot(messageChunksList.join("\n"), {
+      rawOutput: response,
+      contextPaths: contextPaths,
+      assistantType: "coder",
+      filePathsChanged: [],
+    });
     return conversations.addJoule(prevConversation, newJoule);
   }
 
@@ -146,7 +132,6 @@ export class Coder extends BaseAssistant {
     prevConversation: Conversation,
     response: string,
     partialMode: boolean,
-    currentPseudoCommit: PseudoCommit,
     contextPaths: string[],
     gitRepo: GitRepo
   ): Promise<Conversation> {
@@ -154,47 +139,35 @@ export class Coder extends BaseAssistant {
       response,
       partialMode
     );
-    const newPseudoCommit = await this.getNewPseudoCommitApplyChanges(
-      gitRepo,
-      currentPseudoCommit,
-      searchReplaceList
-    );
-    const newJoule = joules.createJouleBot(
+    const changeSet = await this.applyChanges(gitRepo, searchReplaceList);
+    const newCommit = await changeSets.commitChangeSet(changeSet, gitRepo);
+    const diffInfo = {
+      diffPreview: await utils.getUdiffPreview(gitRepo, newCommit),
+      filePathsChanged: Array.from(Object.keys(changeSet.filesChanged)),
+    };
+    const newJoule = joules.createJouleBotWithChanges(
       messageChunksList.join("\n"),
-      response,
-      newPseudoCommit,
-      contextPaths,
-      "coder"
+      {
+        rawOutput: response,
+        contextPaths: contextPaths,
+        assistantType: "coder",
+      },
+      newCommit,
+      diffInfo,
+      partialMode ? "partial" : "complete"
     );
     return conversations.addJoule(prevConversation, newJoule);
   }
 
   /**
-   * Creates a new pseudo commit representing changes (if there are any) on top of currentPseudoCommit.
+   * Applies changes into ChangeSet
    */
-  private getNewPseudoCommit(
+  private async applyChanges(
     gitRepo: GitRepo,
-    currentPseudoCommit: PseudoCommit,
     searchReplaceList: any[]
-  ): PseudoCommit {
-    // Reset the diff preview
-    const pseudoCommitNoDiff =
-      pseudoCommits.createFromPrevious(currentPseudoCommit);
-    return pseudoCommitNoDiff;
-  }
-
-  private async getNewPseudoCommitApplyChanges(
-    gitRepo: GitRepo,
-    currentPseudoCommit: PseudoCommit,
-    searchReplaceList: any[]
-  ): Promise<PseudoCommit> {
-    // Reset the diff preview
-    const pseudoCommitNoDiff =
-      pseudoCommits.createFromPrevious(currentPseudoCommit);
-
+  ): Promise<ChangeSet> {
     return await diffApplicatorXml.applyByAnyMeansNecessary(
       gitRepo,
-      pseudoCommitNoDiff,
       searchReplaceList
     );
   }

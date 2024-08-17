@@ -11,9 +11,9 @@ const baseConfig = {
   minify: process.env.NODE_ENV === "production",
   sourcemap: process.env.NODE_ENV !== "production",
   loader: {
-    '.wasm': 'file'
+    ".wasm": "file",
   },
-  outbase: 'src'
+  outbase: "src",
 };
 
 const extensionConfig = {
@@ -59,31 +59,34 @@ const copyLibFolder = async () => {
 };
 
 const watchWebview = () => {
-  const watcher = chokidar.watch('./webview-ui/src', {
+  const watcher = chokidar.watch("./webview-ui/src", {
     ignored: /(^|[\/\\])\../, // ignore dotfiles
-    persistent: true
+    persistent: true,
   });
 
-  watcher
-    .on('change', async (path) => {
-      console.log(`File ${path} has been changed. Rebuilding webview...`);
-      try {
-        await fs.remove('./webview-ui/build');
-        await new Promise((resolve, reject) => {
-          const child = require('child_process').spawn('npm', ['run', 'build:webview'], { stdio: 'inherit' });
-          child.on('close', (code) => {
-            if (code !== 0) {
-              reject(new Error(`Webview build process exited with code ${code}`));
-            } else {
-              resolve();
-            }
-          });
+  watcher.on("change", async (path) => {
+    console.log(`File ${path} has been changed. Rebuilding webview...`);
+    try {
+      await fs.remove("./webview-ui/build");
+      await new Promise((resolve, reject) => {
+        const child = require("child_process").spawn(
+          "npm",
+          ["run", "build:webview"],
+          { stdio: "inherit" }
+        );
+        child.on("close", (code) => {
+          if (code !== 0) {
+            reject(new Error(`Webview build process exited with code ${code}`));
+          } else {
+            resolve();
+          }
         });
-        console.log('Webview rebuilt successfully');
-      } catch (error) {
-        console.error('Error rebuilding webview:', error);
-      }
-    });
+      });
+      console.log("Webview rebuilt successfully");
+    } catch (error) {
+      console.error("Error rebuilding webview:", error);
+    }
+  });
 };
 
 (async () => {
@@ -102,7 +105,7 @@ const watchWebview = () => {
       });
       await copyLibFolder();
       console.log("[watch] build finished");
-      
+
       // Start watching webview
       watchWebview();
     } else {

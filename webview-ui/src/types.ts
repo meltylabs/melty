@@ -14,56 +14,43 @@ export type GitRepo = {
   rootPath: string;
 };
 
-export type PseudoCommit = {
-  // most operations supported regardless of implementation.
-  // implementation can be swapped in place.
-  impl: PseudoCommitInMemory | PseudoCommitInGit;
-};
-
-export type PseudoCommitInGit = {
-  readonly status: "committed";
-  readonly commit: string;
-  readonly udiffPreview: string; // not guaranteed to be available. may be truncated.
-};
-
-export type PseudoCommitInMemory = {
-  readonly status: "inMemory";
-  readonly parentCommit: string;
-  readonly filesChanged: { [relativePath: string]: MeltyFile };
-};
-
-// From src/backend/joules.ts
 export type AssistantType = "architect" | "coder" | "system";
 
-export type JouleHuman = {
-  readonly author: "human";
+export type Joule = {
   readonly id: string;
-  readonly mode: null;
+  readonly author: "human" | "bot";
+  readonly state: "complete" | "partial";
   readonly message: string;
-  readonly pseudoCommit: PseudoCommit;
-  readonly contextPaths: null;
+  readonly commit: string | null;
+  readonly diffInfo: DiffInfo | null;
 };
 
-export type JouleBot = {
+export type JouleHuman = Joule & {
+  readonly author: "human";
+};
+
+export type JouleBot = Joule & {
   readonly author: "bot";
-  readonly id: string;
+  readonly botExecInfo: BotExecInfo;
+};
+
+export type DiffInfo = {
+  readonly filePathsChanged: ReadonlyArray<string> | null;
+  readonly diffPreview: string;
+};
+
+export type BotExecInfo = {
   readonly assistantType: AssistantType;
-  readonly message: string;
   readonly rawOutput: string;
-  readonly pseudoCommit: PseudoCommit;
   readonly contextPaths: ReadonlyArray<string>;
 };
 
-export type Joule = JouleHuman | JouleBot;
-
-// From src/backend/searchReplace.ts
 export type SearchReplace = {
   readonly filePath: string;
   readonly search: string;
   readonly replace: string;
 };
 
-// From src/backend/repoMap.ts
 export interface Tag {
   relFname: string;
   fname: string;
@@ -72,14 +59,12 @@ export interface Tag {
   line: number;
 }
 
-// From src/extension.ts
 export interface Message {
   text: string;
   sender: "user" | "bot";
   diff?: string;
 }
 
-// From src/lib/claudeAPI.ts
 export type ClaudeMessage = {
   readonly role: "user" | "assistant";
   readonly content: string;
@@ -90,7 +75,6 @@ export type ClaudeConversation = {
   readonly system: string;
 };
 
-// From webview-ui/src/components/Tasks.tsx
 export interface Task {
   id: string;
   title: string;
@@ -99,15 +83,17 @@ export interface Task {
   github_link: string;
 }
 
-// From src/backend/conversations.ts
 export type Conversation = {
   readonly joules: ReadonlyArray<Joule>;
 };
 
-// From src/backend/meltyFiles.ts
 export type MeltyFile = {
-  readonly path: string;
+  readonly relPath: string;
   readonly contents: string;
+};
+
+export type ChangeSet = {
+  readonly filesChanged: { [relPath: string]: MeltyFile };
 };
 
 export type RpcMethod =

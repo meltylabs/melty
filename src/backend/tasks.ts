@@ -1,14 +1,7 @@
 import * as vscode from "vscode";
-import {
-  Joule,
-  Conversation,
-  PseudoCommit,
-  GitRepo,
-  AssistantType,
-} from "../types";
+import { Joule, Conversation, GitRepo, AssistantType } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
-import * as pseudoCommits from "./pseudoCommits";
 import * as utils from "../util/utils";
 import { Architect } from "../assistants/architect";
 import { Coder } from "../assistants/coder";
@@ -67,33 +60,11 @@ export class Task implements Task {
     return true;
   }
 
-  private getConversationState(): PseudoCommit | undefined {
-    return conversations.lastJoule(this.conversation)?.pseudoCommit;
-  }
-
   /**
    * Lists Joules in a Task.
    */
   public listJoules(): readonly Joule[] {
     return this.conversation.joules;
-  }
-
-  /**
-   * Ensures that the last message in the conversation has the same commit id as the latest commit
-   * on disk. Allows for local changes.
-   */
-  private ensureInSync(): void {
-    const conversationState = this.getConversationState();
-    if (!conversationState) {
-      return; // if the conversation is empty, we're in sync
-    }
-    const conversationTailCommit = pseudoCommits.commit(conversationState);
-    const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    if (latestCommit !== conversationTailCommit) {
-      utils.handleGitError(
-        `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
-      );
-    }
   }
 
   private ensureWorkingDirectoryClean(): void {
@@ -109,9 +80,7 @@ export class Task implements Task {
    * Commits any local changes (or empty commit if none).
    * @returns the number of changes committed
    */
-  private async commitChanges(): Promise<number> {
-    this.ensureInSync();
-
+  private async commitLocalChanges(): Promise<number> {
     // Get all changes, including untracked files
     const changes = await this.gitRepo!.repository.diffWithHEAD();
 
@@ -154,7 +123,6 @@ export class Task implements Task {
   ): Promise<void> {
     try {
       await this.gitRepo!.repository.status();
-      this.ensureInSync();
       this.ensureWorkingDirectoryClean();
 
       let assistant;
@@ -179,18 +147,12 @@ export class Task implements Task {
       );
       const lastJoule = conversations.lastJoule(this.conversation)!;
 
-      // add any edited files to melty's mind
-      const editedFiles = pseudoCommits.getEditedFiles(lastJoule.pseudoCommit);
-      editedFiles.forEach((editedFile) => {
-        this.fileManager!.addMeltyMindFile(editedFile, true);
-      });
-
-      // actualize does the commit and updates the pseudoCommit in-place
-      await pseudoCommits.actualize(
-        lastJoule.pseudoCommit,
-        this.gitRepo!,
-        assistantType !== "architect"
-      );
+      if (lastJoule.diffInfo?.filePathsChanged) {
+        // add any edited files to melty's mind
+        lastJoule.diffInfo.filePathsChanged.forEach((editedFile) => {
+          this.fileManager!.addMeltyMindFile(editedFile, true);
+        });
+      }
       await this.gitRepo!.repository.status();
 
       this.updateLastModified();
@@ -200,15 +162,13 @@ export class Task implements Task {
         throw e;
       } else {
         vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
-        const joule = joules.createJouleBot(
-          "[  Error :(  ]",
-          "[ There was an error communicating with the bot. ]",
-          pseudoCommits.createFromPrevious(
-            conversations.lastJoule(this.conversation)!.pseudoCommit
-          ),
-          [],
-          "system"
-        );
+        const message = "[  Error :(  ]";
+        const joule = joules.createJouleBot(message, {
+          rawOutput: message,
+          contextPaths: [],
+          assistantType: "system",
+          filePathsChanged: [],
+        });
         this.conversation = conversations.addJoule(this.conversation, joule);
       }
     }
@@ -221,32 +181,26 @@ export class Task implements Task {
     assistantType: AssistantType,
     message: string
   ): Promise<Joule> {
-    let associateDiffWithPseudoCommit = false;
+    let didCommit = false;
 
     if (assistantType !== "architect") {
       await this.gitRepo!.repository.status();
-      const didCommit = (await this.commitChanges()) > 0;
-      associateDiffWithPseudoCommit = didCommit;
+      didCommit = (await this.commitLocalChanges()) > 0;
     }
 
-    // if using the architect, this commit will be old, but it
-    // shouldn't matter because we never read from it anyway
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    const newPseudoCommit = await pseudoCommits.createFromCommit(
-      latestCommit,
-      this.gitRepo!,
-      associateDiffWithPseudoCommit
-    );
+    const diffInfo = {
+      filePathsChanged: null,
+      diffPreview: await utils.getUdiffPreview(this.gitRepo!, latestCommit),
+    };
 
-    this.conversation = conversations.respondHuman(
-      this.conversation,
-      message,
-      newPseudoCommit
-    );
+    const newJoule: Joule = didCommit
+      ? joules.createJouleHumanWithChanges(message, latestCommit, diffInfo)
+      : joules.createJouleHuman(message);
 
+    this.conversation = conversations.addJoule(this.conversation, newJoule);
     this.updateLastModified();
     await datastores.dumpTaskToDisk(this);
-
     return conversations.lastJoule(this.conversation)!;
   }
 

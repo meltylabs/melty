@@ -1,6 +1,5 @@
-import { Joule, PseudoCommit, Conversation, GitRepo } from "../types";
+import { Joule, Conversation } from "../types";
 import * as joules from "./joules";
-import * as pseudoCommits from "./pseudoCommits";
 
 export function create(): Conversation {
   return { joules: [] };
@@ -16,9 +15,9 @@ export function addJoule(
 export function respondHuman(
   conversation: Conversation,
   message: string,
-  pseudoCommit: PseudoCommit
+  commit: string | null
 ): Conversation {
-  const newJoule = joules.createJouleHuman(message, pseudoCommit);
+  const newJoule = joules.createJouleHuman(message, commit);
   return addJoule(conversation, newJoule);
 }
 
@@ -26,13 +25,4 @@ export function lastJoule(conversation: Conversation): Joule | undefined {
   return conversation.joules.length
     ? conversation.joules[conversation.joules.length - 1]
     : undefined;
-}
-
-/**
- * Returns a pseudo commit that is a copy of the last joule's pseudo commit.
- */
-export function commitUnchanged(conversation: Conversation): PseudoCommit {
-  return pseudoCommits.createFromPrevious(
-    lastJoule(conversation)!.pseudoCommit
-  );
 }

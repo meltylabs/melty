@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
-import { commit } from "./pseudoCommits";
 
 export async function generateCommitMessage(
   changedFiles: string[],

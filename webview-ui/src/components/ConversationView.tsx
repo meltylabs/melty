@@ -239,11 +239,7 @@ export function ConversationView() {
               key={index}
               joule={joule}
               latestCommitHash={latestCommitHash!}
-              isPartial={
-                index === task.conversation.joules.length - 1 &&
-                joule.author === "bot" &&
-                joule.pseudoCommit.impl.status !== "committed"
-              }
+              isPartial={joule.state === "partial"}
               showDiff={index !== 0} // Hide diff view for the first message
             />
           ))}

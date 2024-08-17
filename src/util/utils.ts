@@ -86,3 +86,21 @@ export function getNonce() {
   }
   return text;
 }
+
+export async function getUdiffPreview(
+  gitRepo: GitRepo,
+  commit: string
+): Promise<string> {
+  const repository = gitRepo.repository;
+  const diff = await repository.diffBetween(commit + "^", commit);
+  const udiffs = await Promise.all(
+    diff.map(async (change: any) => {
+      return await repository.diffBetween(
+        commit + "^",
+        commit,
+        change.uri.fsPath
+      );
+    })
+  );
+  return udiffs.join("\n");
+}

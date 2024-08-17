@@ -1,7 +1,8 @@
-import { Conversation, GitRepo, ClaudeMessage, PseudoCommit } from "../types";
+import { Conversation, GitRepo, ClaudeMessage } from "../types";
 import * as prompts from "../backend/prompts";
-import * as pseudoCommits from "../backend/pseudoCommits";
 import * as joules from "../backend/joules";
+import fs from "fs";
+import path from "path";
 
 export abstract class BaseAssistant {
   abstract respond(
@@ -22,31 +23,25 @@ export abstract class BaseAssistant {
    * Encodes files for Claude. Note that we're being loose with the newlines.
    * @returns string encoding the files
    */
-  protected encodeFile(
-    gitRepo: GitRepo,
-    pseudoCommit: PseudoCommit,
-    path: string
-  ) {
-    const fileContents = pseudoCommits.getFileContents(
-      gitRepo,
-      pseudoCommit,
-      path
+  protected encodeFile(gitRepo: GitRepo, filePath: string) {
+    const fileContents = fs.readFileSync(
+      path.join(gitRepo.rootPath, filePath),
+      "utf8"
     );
 
     // TODO should we use | indentation here?
-    return `<FileContents filePath=${path}>
+    return `<FileContents filePath=${filePath}>
 ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 </FileContents>`;
   }
 
   protected encodeContext(
     gitRepo: GitRepo,
-    pseudoCommit: PseudoCommit,
     contextPaths: string[]
   ): ClaudeMessage[] {
     // in the future, this could handle other types of context, like web urls
     const fileEncodings = contextPaths
-      .map((path) => this.encodeFile(gitRepo, pseudoCommit, path))
+      .map((path) => this.encodeFile(gitRepo, path))
       .join("\n");
 
     return fileEncodings.length
