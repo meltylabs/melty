@@ -13,6 +13,16 @@ export async function streamClaude(
   processPartial: (text: string) => void,
   model: Models = Models.Claude35Sonnet
 ): Promise<string> {
+  if (claudeConversation.messages.length === 0) {
+    throw new Error("No messages to stream");
+  }
+  if (
+    claudeConversation.messages[claudeConversation.messages.length - 1].role ===
+    "assistant"
+  ) {
+    throw new Error("Last message is an assistant message");
+  }
+
   const config = vscode.workspace.getConfiguration("melty");
   const apiKey = config.get<string>("anthropicApiKey");
 

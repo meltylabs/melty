@@ -4,6 +4,7 @@ import * as config from "./config";
 import * as path from "path";
 import { GitRepo } from "../types";
 import { Task } from "../backend/tasks";
+import { ChangeSet } from "../types";
 
 export function handleGitError(message: string) {
   if (config.STRICT_GIT) {
@@ -87,7 +88,20 @@ export function getNonce() {
   return text;
 }
 
-export async function getUdiffPreview(
+/**
+ * Gets the diff of working changes against HEAD
+ */
+export async function getUdiffPreviewFromWorking(
+  gitRepo: GitRepo
+): Promise<string> {
+  const repository = gitRepo.repository;
+  return await repository.diff("HEAD");
+}
+
+/**
+ * Gets the diff from a commit to its parent
+ */
+export async function getUdiffPreviewFromCommit(
   gitRepo: GitRepo,
   commit: string
 ): Promise<string> {
@@ -103,4 +117,17 @@ export async function getUdiffPreview(
     })
   );
   return udiffs.join("\n");
+}
+
+/**
+ * Gets diff preview for a change set (NOT a udiff bc this is easier)
+ */
+export function getDiffPreviewFromChangeSet(changeSet: ChangeSet): string {
+  return Object.values(changeSet.filesChanged)
+    .map((file) => {
+      return `<FileContents filePath="${file.relPath}">
+${file.contents}
+</FileContents>`;
+    })
+    .join("\n\n");
 }

@@ -97,11 +97,10 @@ export class Task implements Task {
     const indexChanges = this.gitRepo!.repository.state.indexChanges;
 
     if (indexChanges.length > 0) {
-      const filesChanged = indexChanges.map((change: any) => change.uri.fsPath);
-      const message = await generateCommitMessage(
-        filesChanged,
-        this.gitRepo!.rootPath
+      const udiffPreview = await utils.getUdiffPreviewFromWorking(
+        this.gitRepo!
       );
+      const message = await generateCommitMessage(udiffPreview);
 
       await this.gitRepo!.repository.commit(`[via melty] ${message}`);
     }
@@ -191,8 +190,14 @@ export class Task implements Task {
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
     const diffInfo = {
       filePathsChanged: null,
-      diffPreview: await utils.getUdiffPreview(this.gitRepo!, latestCommit),
+      diffPreview: await utils.getUdiffPreviewFromCommit(
+        this.gitRepo!,
+        latestCommit
+      ),
     };
+
+    // hacky!
+    this.conversation = conversations.forceRemoveHumanJoules(this.conversation);
 
     const newJoule: Joule = didCommit
       ? joules.createJouleHumanWithChanges(message, latestCommit, diffInfo)

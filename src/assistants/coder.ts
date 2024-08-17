@@ -123,7 +123,6 @@ export class Coder extends BaseAssistant {
       rawOutput: response,
       contextPaths: contextPaths,
       assistantType: "coder",
-      filePathsChanged: [],
     });
     return conversations.addJoule(prevConversation, newJoule);
   }
@@ -142,7 +141,7 @@ export class Coder extends BaseAssistant {
     const changeSet = await this.applyChanges(gitRepo, searchReplaceList);
     const newCommit = await changeSets.commitChangeSet(changeSet, gitRepo);
     const diffInfo = {
-      diffPreview: await utils.getUdiffPreview(gitRepo, newCommit),
+      diffPreview: await utils.getUdiffPreviewFromCommit(gitRepo, newCommit),
       filePathsChanged: Array.from(Object.keys(changeSet.filesChanged)),
     };
     const newJoule = joules.createJouleBotWithChanges(
