@@ -432,7 +432,22 @@ export class WorkbenchKeybindingService extends AbstractKeybindingService {
 		if (!this._cachedResolver) {
 			const defaults = this._resolveKeybindingItems(KeybindingsRegistry.getDefaultKeybindings(), true);
 			const overrides = this._resolveUserKeybindingItems(this.userKeybindings.keybindings, false);
-			this._cachedResolver = new KeybindingResolver(defaults, overrides, (str) => this._log(str));
+
+			// Add custom default keybindings here
+			const customDefaults = this._resolveKeybindingItems([
+				{
+					command: 'workbench.action.terminal.toggleTerminal',
+					keybinding: new Keybinding([new KeyCodeChord(false, false, false, true, KeyCode.KeyT)]),
+					when: undefined,
+					weight1: 100,
+					weight2: 100,
+					extensionId: 'workbench.action.toggleTerminal',
+					isBuiltinExtension: true,
+				}
+				// Add more default keybindings as needed
+			], true);
+
+			this._cachedResolver = new KeybindingResolver([...defaults, ...customDefaults], overrides, (str) => this._log(str));
 		}
 		return this._cachedResolver;
 	}
