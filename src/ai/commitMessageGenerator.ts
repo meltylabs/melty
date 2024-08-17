@@ -25,7 +25,18 @@ export async function generateCommitMessage(
     return `${file}:\n${fs.readFileSync(filePath, 'utf-8')}`;
   }).join('\n\n');
 
-  const prompt = `Generate a concise and descriptive Git commit message for the following changes. The message should be in the present tense, imperative mood, and not exceed 50 characters for the summary line. Do not include any explanatory text, just the commit message itself:\n\n${fileContents}`;
+  const prompt = `You are an expert software engineer.
+Review the provided context and diffs which are about to be committed to a git repo.
+Review the diffs carefully.
+Generate a commit message for those changes.
+The commit message MUST use the imperative tense.
+The commit message should be structured as follows: <type>: <description>
+Use these for <type>: fix, feat, build, chore, ci, docs, style, refactor, perf, test
+Reply with JUST the commit message, without quotes, comments, questions, etc!
+
+Changes to be committed:
+
+${fileContents}`;
 
   try {
     const response = await anthropic.messages.create({
@@ -35,10 +46,8 @@ export async function generateCommitMessage(
       messages: [{ role: "user", content: prompt }],
     });
 
-    const textContent = response.content[0].text;
-    // Extract the first line of the response as the commit message
-    const commitMessage = textContent.split('\n')[0].trim();
-    return commitMessage || "Update code";
+    const commitMessage = response.content[0].text.trim();
+    return commitMessage || "chore: update code";
   } catch (error) {
     console.error("Error generating commit message:", error);
     return "Update code";
