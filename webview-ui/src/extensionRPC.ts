@@ -60,7 +60,7 @@ type rpcMethod =
   | "listWorkspaceFiles"
   | "loadTask"
   | "listTasks"
-  | "createNewTask"
+  | "createAndSwitchToTask"
   | "switchTask"
   | "addMeltyFile"
   | "dropMeltyFile"

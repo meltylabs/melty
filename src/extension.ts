@@ -40,14 +40,6 @@ export class MeltyExtension {
       );
     }
 
-    // create a new task if there aren't any
-    if (!this.tasks.size) {
-      const taskId = await this.createNewTask("First task");
-      this.currentTask = (this.tasks as Map<string, Task>).get(taskId);
-    }
-
-    // Set the first task as current
-    this.currentTask = this.tasks.values().next().value;
     // don't bother kicking off task.init() here; the git repo isn't ready.
   }
 
@@ -59,12 +51,12 @@ export class MeltyExtension {
   async deactivate(): Promise<void> {
     // The extension instance will be garbage collected, so we don't need to call deactivate explicitly
     for (const task of this.tasks.values()) {
-      await datastores.writeTaskToDisk(task);
+      await datastores.dumpTaskToDisk(task);
     }
   }
 
   public listTasks(): { id: string; branch: string }[] {
-    return Array.from(this.tasks.values()).map(utils.serializableTask);
+    return Array.from(this.tasks.values()).map(utils.serialize);
   }
 
   public getConversation(taskId: string): Conversation {
@@ -88,10 +80,7 @@ export class MeltyExtension {
     const branchName = `melty/${taskName.replace(/\s+/g, "-")}`;
 
     const newTask = new Task(taskId, taskName, branchName);
-
     this.tasks.set(taskId, newTask);
-    this.currentTask = newTask;
-
     return taskId;
   }
 
@@ -105,11 +94,7 @@ export class MeltyExtension {
       throw new Error(`Task with id ${taskId} not found`);
     }
 
-    // switch the branch
-    // await task.switchTo();
-
     this.currentTask = task;
-    // TODO hopefully files will be refreshed automatically?
   }
 
   public openFileInEditor(filePath: string) {
@@ -122,20 +107,13 @@ export class MeltyExtension {
     vscode.window.showTextDocument(fileUri);
   }
 
-  public async initRepository() {
+  public async getCurrentTask(fileManager: any): Promise<Task | undefined> {
     if (!this.currentTask) {
-      throw new Error("No current task");
-    }
-    await this.currentTask.init();
-  }
-
-  public async getCurrentTask(): Promise<Task> {
-    if (!this.currentTask) {
-      throw new Error("No current task");
+      return undefined;
     }
     if (!this.currentTask.gitRepo) {
       console.log(`initializing task ${this.currentTask.id} repo`);
-      await this.currentTask.init();
+      await this.currentTask.init(fileManager);
     }
     return this.currentTask;
   }

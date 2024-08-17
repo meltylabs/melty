@@ -51,6 +51,7 @@ export function ConversationView() {
   }
 
   async function loadTask(taskId: string) {
+    console.log("loading task ", taskId);
     const task = await extensionRPC.run("loadTask", { taskId });
     setTask(task);
     await extensionRPC.run("switchTask", { taskId });

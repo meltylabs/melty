@@ -83,11 +83,11 @@ export function Tasks() {
 
   const createNewTask = async (taskName: string) => {
     console.log(`[Tasks] creating new task ${taskName}`);
-    const newTask = (await extensionRPC.run("createNewTask", {
+    const newTaskId = (await extensionRPC.run("createAndSwitchToTask", {
       name: taskName.trim(),
-    })) as Task;
-    console.log(`[Tasks] created new task ${newTask.id}`);
-    navigate(`/task/${newTask.id}`);
+    })) as string;
+    console.log(`[Tasks] created new task ${newTaskId}`);
+    navigate(`/task/${newTaskId}`);
   };
 
   function handleSendMessage(assistantType: AssistantType, text: string) {

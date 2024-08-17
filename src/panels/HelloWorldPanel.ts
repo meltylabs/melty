@@ -183,7 +183,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
         console.log(`loadTask`);
         let taskId = params.taskId;
         const task = this.MeltyExtension.getTask(taskId);
-        return Promise.resolve(utils.serializableTask(task));
+        return Promise.resolve(task.serialize());
       case "listMeltyFiles":
         const meltyMindFilePaths =
           this.fileManager!.getMeltyMindFilesRelative();
@@ -246,8 +246,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
       case "chatMessage":
         this.handleAskCode(params.text, params.assistantType);
         return Promise.resolve(null);
-      case "createNewTask":
+      case "createAndSwitchToTask":
         const newTaskId = await this.MeltyExtension.createNewTask(params.name);
+        this.switchTask(newTaskId);
         return Promise.resolve(newTaskId);
 
       case "listTasks":
@@ -255,10 +256,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
         return Promise.resolve(tasks);
 
       case "switchTask":
-        await this.MeltyExtension.switchToTask(params.taskId);
-        const newTask = await this.MeltyExtension.getCurrentTask();
-        await newTask.init();
-        return Promise.resolve(utils.serializableTask(newTask));
+        // save meltyMindFiles into old task
+        this.switchTask(params.taskId);
+        return Promise.resolve(null);
 
       case "createPullRequest":
         this.MeltyExtension.createPullRequest();
@@ -268,29 +268,49 @@ export class HelloWorldPanel implements WebviewViewProvider {
         this.MeltyExtension.deleteTask(params.taskId);
         return Promise.resolve(null);
 
-      case "resetToOriginMain":
-        return this.resetToOriginMain();
-
       case "getGitConfigErrors":
         return this.MeltyExtension.getGitConfigErrors();
+
+      default:
+        throw new Error(`Unknown RPC method: ${method}`);
     }
   }
 
+  private async switchTask(taskId: string) {
+    const oldTask = await this.MeltyExtension.getCurrentTask(this.fileManager);
+    if (oldTask && this.fileManager) {
+      const meltyMindFiles =
+        await this.fileManager!.getMeltyMindFilesRelative();
+      if (meltyMindFiles) {
+        oldTask.savedMeltyMindFiles = meltyMindFiles;
+      }
+    }
+
+    await this.MeltyExtension.switchToTask(taskId);
+    const newTask = (await this.MeltyExtension.getCurrentTask(
+      this.fileManager
+    ))!;
+    await newTask.init(this.fileManager!);
+
+    // load meltyMindFiles into new task
+    this.fileManager?.loadMeltyMindFiles(newTask.savedMeltyMindFiles);
+    return Promise.resolve(newTask.serialize());
+  }
+
   private async handleAskCode(text: string, assistantType: AssistantType) {
-    const task = await this.MeltyExtension.getCurrentTask();
-    task.setFileManager(this.fileManager!);
+    const task = (await this.MeltyExtension.getCurrentTask(this.fileManager))!;
 
     // human response
 
     try {
       await task.respondHuman(assistantType, text);
       this.bridgeToWebview?.sendNotification("updateTask", {
-        task: utils.serializableTask(task),
+        task: task.serialize(),
       });
     } catch (error) {
       console.error("Error in respondHuman:", error);
       if (
-        (error as Error).message ==
+        (error as Error).message ===
         "Cannot read properties of null (reading 'repository')"
       ) {
         vscode.window.showErrorMessage("Melty does not see a git repository.");
@@ -302,16 +322,16 @@ export class HelloWorldPanel implements WebviewViewProvider {
     // bot response
     const processPartial = (partialConversation: Conversation) => {
       // copy task
-      const partialTask = { ...task } as Task;
-      partialTask.conversation = partialConversation;
+      const serialTask = task.serialize();
+      serialTask.conversation = partialConversation;
       this.bridgeToWebview?.sendNotification("updateTask", {
-        task: utils.serializableTask(partialTask),
+        task: serialTask,
       });
     };
 
     await task.respondBot(assistantType, processPartial);
     this.bridgeToWebview?.sendNotification("updateTask", {
-      task: utils.serializableTask(task),
+      task: task.serialize(),
     });
   }
 
@@ -327,33 +347,33 @@ export class HelloWorldPanel implements WebviewViewProvider {
     // await repo.reset("HEAD~1", false);
   }
 
-  /**
-   * Reset the current task to the origin/main branch.
-   */
-  private async resetToOriginMain(): Promise<string> {
-    try {
-      const task = await this.MeltyExtension.getCurrentTask();
-      if (!task.gitRepo) {
-        throw new Error("No Git repository associated with the current task.");
-      }
+  // /**
+  //  * Reset the current task to the origin/main branch.
+  //  */
+  // private async resetToOriginMain(): Promise<string> {
+  //   try {
+  //     const task = (await this.MeltyExtension.getCurrentTask())!;
+  //     if (!task.gitRepo) {
+  //       throw new Error("No Git repository associated with the current task.");
+  //     }
 
-      // Fetch the latest changes from the remote
-      await task.gitRepo.fetch("origin");
+  //     // Fetch the latest changes from the remote
+  //     await task.gitRepo.fetch("origin");
 
-      // Reset the local branch to origin/main
-      await task.gitRepo.reset("origin/main", true);
+  //     // Reset the local branch to origin/main
+  //     await task.gitRepo.reset("origin/main", true);
 
-      // Refresh the file system
-      await vscode.commands.executeCommand(
-        "workbench.files.action.refreshFilesExplorer"
-      );
+  //     // Refresh the file system
+  //     await vscode.commands.executeCommand(
+  //       "workbench.files.action.refreshFilesExplorer"
+  //     );
 
-      return "Successfully reset to origin/main";
-    } catch (error) {
-      console.error("Error resetting to origin/main:", error);
-      throw new Error(`Failed to reset to origin/main: ${error.message}`);
-    }
-  }
+  //     return "Successfully reset to origin/main";
+  //   } catch (error) {
+  //     console.error("Error resetting to origin/main:", error);
+  //     throw new Error(`Failed to reset to origin/main: ${error.message}`);
+  //   }
+  // }
 
   /**
    * Run a terminal command
