@@ -266,7 +266,7 @@ export function Tasks({
                 </CardHeader>
                 <CardContent>
                   <p className="text-xs text-gray-500 mt-2">
-                    Updated {formatDate(new Date(task.updatedAt))}
+                    {formatDate(new Date(task.updatedAt))}
                   </p>
                 </CardContent>
               </Card>
