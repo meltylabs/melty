@@ -179,7 +179,7 @@ export function Tasks() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="coder">Coder</SelectItem>
-                <SelectItem value="architect">Architect</SelectItem>
+                <SelectItem value="vanilla">Vanilla Claude</SelectItem>
               </SelectContent>
             </Select>
           </div>

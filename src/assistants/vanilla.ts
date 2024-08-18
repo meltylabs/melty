@@ -5,14 +5,14 @@ import * as claudeAPI from "../backend/claudeAPI";
 import * as conversations from "../backend/conversations";
 import { BaseAssistant } from "./baseAssistant";
 
-export class Architect extends BaseAssistant {
+export class Vanilla extends BaseAssistant {
   async respond(
     conversation: Conversation,
     gitRepo: GitRepo,
     contextPaths: string[],
     processPartial: (partialConversation: Conversation) => void
   ) {
-    const systemPrompt = prompts.architectModeSystemPrompt();
+    const systemPrompt = prompts.vanillaModeSystemPrompt();
 
     const claudeConversation: ClaudeConversation = {
       system: systemPrompt,
@@ -55,7 +55,7 @@ export class Architect extends BaseAssistant {
     const newJoule = joules.createJouleBot(response, {
       rawOutput: response,
       contextPaths: contextPaths,
-      assistantType: "architect",
+      assistantType: "vanilla",
     });
     return conversations.addJoule(conversation, newJoule);
   }
