@@ -14,11 +14,17 @@ import {
   SelectValue,
 } from "./ui/select";
 
-export function ConversationView({ initialMeltyMindFiles }: { initialMeltyMindFiles?: string[] }) {
+export function ConversationView({
+  initialMeltyMindFiles,
+}: {
+  initialMeltyMindFiles?: string[];
+}) {
   const [rpcClient] = useState(() => new RpcClient());
   const { taskId } = useParams<{ taskId: string }>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [meltyFiles, setMeltyFiles] = useState<string[]>(initialMeltyMindFiles || []);
+  const [meltyFiles, setMeltyFiles] = useState<string[]>(
+    initialMeltyMindFiles || []
+  );
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
@@ -278,7 +284,7 @@ export function ConversationView({ initialMeltyMindFiles }: { initialMeltyMindFi
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="coder">Coder</SelectItem>
-                  <SelectItem value="architect">Architect</SelectItem>
+                  <SelectItem value="vanilla">Vanilla Claude</SelectItem>
                 </SelectContent>
               </Select>
             </div>

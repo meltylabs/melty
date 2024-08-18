@@ -263,11 +263,8 @@ export function Tasks({
               <Card>
                 <CardHeader>
                   <CardTitle>{task.name}</CardTitle>
-                  <CardDescription>{task.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{task.description}</p>
-                  <p>{task.branch}</p>
                   <p className="text-xs text-gray-500 mt-2">
                     Updated {formatDate(new Date(task.updatedAt))}
                   </p>
