@@ -14,7 +14,7 @@ export type GitRepo = {
   rootPath: string;
 };
 
-export type AssistantType = "architect" | "coder" | "system";
+export type AssistantType = "vanilla" | "coder" | "system";
 
 export type Joule = {
   readonly id: string;

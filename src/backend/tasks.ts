@@ -3,7 +3,7 @@ import { Joule, Conversation, GitRepo, AssistantType } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
-import { Architect } from "../assistants/architect";
+import { Vanilla } from "../assistants/vanilla";
 import { Coder } from "../assistants/coder";
 import * as config from "../util/config";
 import { FileManager } from "../fileManager";
@@ -129,8 +129,8 @@ export class Task implements Task {
         case "coder":
           assistant = new Coder();
           break;
-        case "architect":
-          assistant = new Architect();
+        case "vanilla":
+          assistant = new Vanilla();
           break;
         default:
           throw new Error(`Unknown assistant type: ${assistantType}`);
@@ -182,7 +182,7 @@ export class Task implements Task {
   ): Promise<Joule> {
     let didCommit = false;
 
-    if (assistantType !== "architect") {
+    if (assistantType !== "vanilla") {
       await this.gitRepo!.repository.status();
       didCommit = (await this.commitLocalChanges()) > 0;
     }
