@@ -7,7 +7,6 @@ import {
   CardContent,
 } from "./ui/card";
 import { RpcClient } from "../rpcClient";
-import meltyLogo from "./logo.webp";
 import { Button } from "./ui/button";
 import {
   ArrowUp,
@@ -144,9 +143,6 @@ export function Tasks() {
 
   return (
     <div>
-      <div className="flex justify-center mb-6">
-        <img src={meltyLogo} alt="Melty Logo" className="w-32 mt-2" />
-      </div>
       <form onSubmit={handleSubmit}>
         <div className="mt-4 relative">
           <Textarea
