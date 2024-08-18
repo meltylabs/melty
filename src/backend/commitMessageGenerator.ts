@@ -27,10 +27,13 @@ Review the diff carefully.
 Generate a commit message for those changes.
 The commit message MUST use the imperative tense.
 If the diff contains no files changed, you can just reply with "empty commit".
+The commit message should be structured as follows: <type>: <description>
+Use these for <type>: fix, feat, build, chore, ci, docs, style, refactor, perf, test
+Reply with JUST the commit message, without quotes, comments, questions, etc!
 
 Example:
 
-<CommitMessage>Add logging to foo/bar/baz.py</CommitMessage>
+<CommitMessage>fix: Add logging to foo/bar/baz.py</CommitMessage>
 
 Here is the diff:
 
