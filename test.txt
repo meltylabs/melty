@@ -1,6 +1,2 @@
-This is a test file.
 
-It has been added back to the project.
-
-Feel free to modify or use this file as needed.
 
