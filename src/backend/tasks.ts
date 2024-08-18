@@ -102,10 +102,14 @@ export class Task implements Task {
       );
       const message = await generateCommitMessage(udiffPreview);
 
+      const originalConfig = await this.gitRepo!.repository.getConfig();
+      const originalName = await originalConfig.get('user.name');
+      const originalEmail = await originalConfig.get('user.email');
+
       await this.gitRepo!.repository.commit(`[via melty] ${message}`, {
         author: {
-          name: "melty",
-          email: "melty@example.com"
+          name: `${originalName} (melty)`,
+          email: originalEmail
         }
       });
     }
