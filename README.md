@@ -1,3 +1,3 @@
-# Melty - AI Pair Programmer
+# Melty
 
 Melty helps you code with AI.
