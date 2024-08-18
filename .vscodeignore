@@ -27,3 +27,4 @@ webview-ui/node_modules/**
 **/*.spec.ts
 **/*.md
 .github/**
+.aider.tags.cache
