@@ -54,21 +54,10 @@ export async function commitChangeSet(changeSet: ChangeSet, gitRepo: GitRepo) {
     utils.getDiffPreviewFromChangeSet(changeSet)
   );
 
-  const originalConfig = await repository.getConfig();
-  const originalName = await originalConfig.get('user.name');
-  const originalEmail = await originalConfig.get('user.email');
-
-  // Temporarily change the Git configuration
-  await repository.setConfig('user.name', `${originalName} (melty)`);
-
-  try {
-    await repository.commit(`${commitMessage}`, {
-      empty: true,
-    });
-  } finally {
-    // Restore the original Git configuration
-    await repository.setConfig('user.name', originalName);
-  }
+  await repository.commit(`${commitMessage}`, {
+    author: { name: `Melty` },
+    empty: true,
+  });
 
   await repository.status();
   const newCommit = repository.state.HEAD!.commit;
