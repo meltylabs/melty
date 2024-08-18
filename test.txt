@@ -1,8 +1,2 @@
-This is a test file.
 
-It contains some sample text to demonstrate file creation.
-
-Feel free to modify this content as needed.
-
-Have a great day!
 
