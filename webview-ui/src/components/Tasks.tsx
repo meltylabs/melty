@@ -7,6 +7,7 @@ import {
   CardContent,
 } from "./ui/card";
 import { RpcClient } from "../rpcClient";
+import meltyLogo from "../assets/melty.webp";
 import { Button } from "./ui/button";
 import {
   ArrowUp,
@@ -50,6 +51,12 @@ export function Tasks() {
   const [gitConfigError, setGitConfigError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [rpcClient] = useState(() => new RpcClient());
+
+  return (
+    <div>
+      <div className="flex justify-center mb-6">
+        <img src={meltyLogo} alt="Melty Logo" className="w-32 h-32" />
+      </div>
 
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await rpcClient.run("listTasks")) as Task[];
