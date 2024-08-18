@@ -54,15 +54,8 @@ export async function commitChangeSet(changeSet: ChangeSet, gitRepo: GitRepo) {
     utils.getDiffPreviewFromChangeSet(changeSet)
   );
 
-  const originalConfig = await repository.getConfig();
-  const originalName = await originalConfig.get('user.name');
-  const originalEmail = await originalConfig.get('user.email');
-
-  await repository.commit(`[by melty] ${commitMessage}`, {
-    author: {
-      name: `${originalName} (melty)`,
-      email: originalEmail
-    },
+  await repository.commit(`${commitMessage}`, {
+    author: { name: `Melty` },
     empty: true,
   });
 
