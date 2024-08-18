@@ -205,7 +205,7 @@ export function Tasks() {
                 <CardContent>
                   <p>{task.description}</p>
                   <p>{task.branch}</p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 mt-2">
                     Updated {formatDate(new Date(task.updatedAt))}
                   </p>
                 </CardContent>
