@@ -1,0 +1,3 @@
+[submodule "extensions/spectacular"]
+	path = extensions/spectacular
+	url = https://github.com/meltylabs/spectacular
