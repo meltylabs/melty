@@ -2,7 +2,7 @@
 
 # pull the latest
 cd extensions/spectacular
-git pull
+git pull origin main
 
 # install dependencies
 npm i && cd webview-ui && npm i && cd ..
