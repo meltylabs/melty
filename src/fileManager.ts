@@ -13,7 +13,7 @@ export class FileManager {
   private meltyRoot: string;
 
   private workspaceFiles: vscode.Uri[] = [];
-  private meltyMindFiles: vscode.Uri[] = [];
+  private meltyMindFiles: Set<vscode.Uri> = new Set();
 
   constructor(bridgeToWebview: WebviewNotifier, meltyRoot: string) {
     this.initializationPromise = this.initializeFileList();
@@ -23,8 +23,10 @@ export class FileManager {
   }
 
   public loadMeltyMindFiles(relPaths: string[]) {
-    this.meltyMindFiles = relPaths.map((relPath) =>
-      vscode.Uri.file(path.join(this.meltyRoot, relPath))
+    this.meltyMindFiles = new Set(
+      relPaths.map((relPath) =>
+        vscode.Uri.file(path.join(this.meltyRoot, relPath))
+      )
     );
     this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: relPaths,
@@ -32,7 +34,7 @@ export class FileManager {
   }
 
   public dumpMeltyMindFiles(): string[] {
-    return this.meltyMindFiles.map((file) =>
+    return Array.from(this.meltyMindFiles).map((file) =>
       path.relative(this.meltyRoot, file.fsPath)
     );
   }
@@ -69,10 +71,13 @@ export class FileManager {
     );
 
     // delete meltymind files
-    this.meltyMindFiles = this.meltyMindFiles.filter(
-      (file) =>
-        !event.files.some((deletedFile) => deletedFile.fsPath === file.fsPath)
-    );
+    event.files.forEach((deletedFile) => {
+      this.meltyMindFiles.forEach((file) => {
+        if (file.fsPath === deletedFile.fsPath) {
+          this.meltyMindFiles.delete(file);
+        }
+      });
+    });
 
     this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: await this.getWorkspaceFilesRelative(),
@@ -95,11 +100,9 @@ export class FileManager {
 
     // rename meltymind files
     event.files.forEach(({ oldUri, newUri }) => {
-      const index = this.meltyMindFiles.findIndex(
-        (file) => file.fsPath === oldUri.fsPath
-      );
-      if (index !== -1) {
-        this.meltyMindFiles[index] = newUri;
+      if (this.meltyMindFiles.has(oldUri)) {
+        this.meltyMindFiles.delete(oldUri);
+        this.meltyMindFiles.add(newUri);
       }
     });
     this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
@@ -124,7 +127,7 @@ export class FileManager {
 
   public async getMeltyMindFilesRelative(): Promise<string[]> {
     await this.ensureInitialized();
-    return this.meltyMindFiles.map((file) =>
+    return Array.from(this.meltyMindFiles).map((file) =>
       path.relative(this.meltyRoot, file.fsPath)
     );
   }
@@ -133,20 +136,31 @@ export class FileManager {
     // TODO: we should probably get rid of the synchronous return and always rely on the
     // notifier?
     const uri = vscode.Uri.file(path.join(this.meltyRoot, relPath));
-    this.meltyMindFiles.push(uri);
+
+    // first, add to workspace files if needed
+    // (we call this method on file creation)
+    if (!this.workspaceFiles.find((file) => file.fsPath === uri.fsPath)) {
+      this.workspaceFiles.push(uri);
+      this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
+        files: await this.getWorkspaceFilesRelative(),
+      });
+    }
+
+    this.meltyMindFiles.add(uri);
     if (notify) {
       this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
         files: await this.getMeltyMindFilesRelative(),
       });
     }
-    // this.outputChannel.appendLine(`Added file: ${filePath}`);
   }
 
   public dropMeltyMindFile(relPath: string) {
     const absPath = path.join(this.meltyRoot, relPath);
-    this.meltyMindFiles = this.meltyMindFiles.filter(
-      (file) => file.fsPath !== absPath
-    );
+    this.meltyMindFiles.forEach((file) => {
+      if (file.fsPath === absPath) {
+        this.meltyMindFiles.delete(file);
+      }
+    });
     // this.outputChannel.appendLine(`Dropped file: ${filePat}`);
   }
 

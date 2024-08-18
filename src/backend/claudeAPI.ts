@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
 
-import { ClaudeMessage, ClaudeConversation } from "../types";
+import { ClaudeConversation } from "../types";
 
 export enum Models {
   Claude35Sonnet = "claude-3-5-sonnet-20240620",
