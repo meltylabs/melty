@@ -14,13 +14,7 @@ export async function streamClaude(
   model: Models = Models.Claude35Sonnet
 ): Promise<string> {
   if (claudeConversation.messages.length === 0) {
-    throw new Error("No messages to stream");
-  }
-  if (
-    claudeConversation.messages[claudeConversation.messages.length - 1].role ===
-    "assistant"
-  ) {
-    throw new Error("Last message is an assistant message");
+    throw new Error("No messages in prompt");
   }
 
   const config = vscode.workspace.getConfiguration("melty");
