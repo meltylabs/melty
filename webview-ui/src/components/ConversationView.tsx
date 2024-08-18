@@ -10,7 +10,7 @@ import {
 import { FilePicker } from "./FilePicker";
 import { Textarea } from "./ui/textarea";
 import { Task, AssistantType } from "../types";
-import { ExtensionRPC } from "../extensionRPC";
+import { RpcClient } from "../rpcClient";
 import { JouleComponent } from "./JouleComponent";
 import {
   Select,
@@ -22,7 +22,7 @@ import {
 } from "./ui/select";
 
 export function ConversationView() {
-  const [extensionRPC] = useState(() => new ExtensionRPC());
+  const [rpcClient] = useState(() => new RpcClient());
   const { taskId } = useParams<{ taskId: string }>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
@@ -35,7 +35,7 @@ export function ConversationView() {
   const [isAtBottom, setIsAtBottom] = useState(true);
 
   async function handleAddFile(file: string) {
-    const meltyFiles = await extensionRPC.run("addMeltyFile", {
+    const meltyFiles = await rpcClient.run("addMeltyFile", {
       filePath: file,
     });
     setMeltyFiles(meltyFiles);
@@ -43,7 +43,7 @@ export function ConversationView() {
   }
 
   async function handleDropFile(file: string) {
-    const meltyFiles = await extensionRPC.run("dropMeltyFile", {
+    const meltyFiles = await rpcClient.run("dropMeltyFile", {
       filePath: file,
     });
     setMeltyFiles(meltyFiles);
@@ -51,24 +51,25 @@ export function ConversationView() {
   }
 
   async function loadTask(taskId: string) {
-    const task = await extensionRPC.run("loadTask", { taskId });
+    console.log("loading task ", taskId);
+    const task = await rpcClient.run("loadTask", { taskId });
     setTask(task);
-    await extensionRPC.run("switchTask", { taskId });
+    await rpcClient.run("switchTask", { taskId });
   }
 
   async function loadFiles() {
-    const meltyFiles = await extensionRPC.run("listMeltyFiles");
+    const meltyFiles = await rpcClient.run("listMeltyFiles");
     setMeltyFiles(meltyFiles);
-    const workspaceFiles = await extensionRPC.run("listWorkspaceFiles");
+    const workspaceFiles = await rpcClient.run("listWorkspaceFiles");
     setWorkspaceFiles(workspaceFiles);
   }
 
   function handleSendMessage(assistantType: AssistantType, text: string) {
-    extensionRPC.run("chatMessage", { assistantType, text });
+    rpcClient.run("chatMessage", { assistantType, text });
   }
 
   async function handleCreatePR() {
-    const result = await extensionRPC.run("createPullRequest");
+    const result = await rpcClient.run("createPullRequest");
     console.log("PR created", result);
   }
 
@@ -153,18 +154,18 @@ export function ConversationView() {
       }
     };
 
-    window.addEventListener("message", extensionRPC.handleMessage);
+    window.addEventListener("message", rpcClient.handleMessage);
     window.addEventListener("message", handleNotification);
 
     return () => {
-      window.removeEventListener("message", extensionRPC.handleMessage);
+      window.removeEventListener("message", rpcClient.handleMessage);
       window.removeEventListener("message", handleNotification);
     };
   }, []);
 
   useEffect(() => {
     const checkIfLatestCommit = async () => {
-      const result = await extensionRPC.run("getLatestCommit", {});
+      const result = await rpcClient.run("getLatestCommit", {});
       setLatestCommitHash(result);
     };
 
@@ -238,11 +239,7 @@ export function ConversationView() {
               key={index}
               joule={joule}
               latestCommitHash={latestCommitHash!}
-              isPartial={
-                index === task.conversation.joules.length - 1 &&
-                joule.author === "bot" &&
-                joule.pseudoCommit.impl.status !== "committed"
-              }
+              isPartial={joule.state === "partial"}
               showDiff={index !== 0} // Hide diff view for the first message
             />
           ))}

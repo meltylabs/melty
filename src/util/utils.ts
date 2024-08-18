@@ -4,6 +4,7 @@ import * as config from "./config";
 import * as path from "path";
 import { GitRepo } from "../types";
 import { Task } from "../backend/tasks";
+import { ChangeSet } from "../types";
 
 export function handleGitError(message: string) {
   if (config.STRICT_GIT) {
@@ -43,7 +44,7 @@ export function ensureRepoIsOnCommit(repo: any, commit: string) {
   }
 }
 
-export function serializableTask(task: Task) {
+export function serialize(task: Task) {
   return {
     ...task,
     gitRepo: {
@@ -85,4 +86,48 @@ export function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+/**
+ * Gets the diff of working changes against HEAD
+ */
+export async function getUdiffPreviewFromWorking(
+  gitRepo: GitRepo
+): Promise<string> {
+  const repository = gitRepo.repository;
+  return await repository.diff("HEAD");
+}
+
+/**
+ * Gets the diff from a commit to its parent
+ */
+export async function getUdiffPreviewFromCommit(
+  gitRepo: GitRepo,
+  commit: string
+): Promise<string> {
+  const repository = gitRepo.repository;
+  const diff = await repository.diffBetween(commit + "^", commit);
+  const udiffs = await Promise.all(
+    diff.map(async (change: any) => {
+      return await repository.diffBetween(
+        commit + "^",
+        commit,
+        change.uri.fsPath
+      );
+    })
+  );
+  return udiffs.join("\n");
+}
+
+/**
+ * Gets diff preview for a change set (NOT a udiff bc this is easier)
+ */
+export function getDiffPreviewFromChangeSet(changeSet: ChangeSet): string {
+  return Object.values(changeSet.filesChanged)
+    .map((file) => {
+      return `<FileContents filePath="${file.relPath}">
+${file.contents}
+</FileContents>`;
+    })
+    .join("\n\n");
 }

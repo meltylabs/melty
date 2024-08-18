@@ -17,8 +17,9 @@ import { MeltyExtension } from "../extension";
 import * as utils from "../util/utils";
 import { Task } from "../backend/tasks";
 import * as config from "../util/config";
-import { BridgeToWebview } from "../bridgeToWebview";
+import { WebviewNotifier } from "../webviewNotifier";
 import { FileManager } from "../fileManager";
+import { RpcMethod } from "../types";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -34,7 +35,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
   public static currentView: HelloWorldPanel | undefined;
   private _view?: WebviewView;
   private _disposables: Disposable[] = [];
-  private bridgeToWebview?: BridgeToWebview;
+  private webviewNotifier?: WebviewNotifier;
   private fileManager?: FileManager;
 
   private MeltyExtension: MeltyExtension;
@@ -62,9 +63,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
     this._setWebviewMessageListener(webviewView.webview);
 
-    this.bridgeToWebview = new BridgeToWebview(this._view);
+    this.webviewNotifier = new WebviewNotifier(this._view);
     this.fileManager = new FileManager(
-      this.bridgeToWebview,
+      this.webviewNotifier,
       this.MeltyExtension.meltyRoot!
     );
     this.MeltyExtension.pushSubscription(this.fileManager);
@@ -143,10 +144,15 @@ export class HelloWorldPanel implements WebviewViewProvider {
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage((message) => {
       if (message.type === "rpc") {
-        this.handleRPCCall(message.method, message.params)
+        console.log(
+          `[RPC Server] RPC call for ${
+            message.method
+          } with params ${JSON.stringify(message.params)}`
+        );
+        this.handleRPCCall(message.method as RpcMethod, message.params)
           .then((result) => {
             console.log(
-              `[HelloWorldPanel] sending RPC response for ${message.id} with result ${result}`
+              `[RPC Server] sending RPC response for ${message.id} with result ${result}`
             );
             webview.postMessage({
               type: "rpcResponse",
@@ -160,7 +166,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
             }
 
             console.log(
-              `[HelloWorldPanel] sending RPCresponse for ${message.id} with error ${error.message}`
+              `[RPC Server] sending RPCresponse for ${message.id} with error ${error.message}`
             );
             webview.postMessage({
               type: "rpcResponse",
@@ -172,125 +178,122 @@ export class HelloWorldPanel implements WebviewViewProvider {
     });
   }
 
-  private async handleRPCCall(method: string, params: any): Promise<any> {
-    console.log(
-      `[HelloWorldPanel] RPC call for ${method} with params ${JSON.stringify(
-        params
-      )}`
-    );
+  private async handleRPCCall(method: RpcMethod, params: any): Promise<any> {
     switch (method) {
       case "loadTask":
-        console.log(`loadTask`);
-        let taskId = params.taskId;
-        const task = this.MeltyExtension.getTask(taskId);
-        return Promise.resolve(utils.serializableTask(task));
+        return await this.rpcLoadTask(params.taskId);
       case "listMeltyFiles":
-        const meltyMindFilePaths =
-          this.fileManager!.getMeltyMindFilesRelative();
-        return Promise.resolve(meltyMindFilePaths);
+        return await this.rpcListMeltyFiles();
       case "listWorkspaceFiles":
-        const workspaceFilePaths =
-          await this.fileManager!.getWorkspaceFilesRelative();
-        return Promise.resolve(workspaceFilePaths);
-      case "resetTask":
-        // this.MeltyExtension.resetTask();
-        // this._panel.webview.postMessage({
-        //   command: "loadConversation",
-        //   conversation: this.MeltyExtension.getConversation(),
-        // });
-        // return;
-        throw new Error("Not implemented");
-        return;
-      case "openFileInEditor":
-        this.MeltyExtension.openFileInEditor(params.filePath);
-        return Promise.resolve(null);
+        return await this.rpcListWorkspaceFiles();
       case "addMeltyFile":
-        this.fileManager!.addMeltyMindFile(params.filePath, false);
-        vscode.window.showInformationMessage(
-          `Added ${params.filePath} to Melty's Mind`
-        );
-        return Promise.resolve(this.fileManager!.getMeltyMindFilesRelative());
+        return await this.rpcAddMeltyFile(params.filePath);
       case "dropMeltyFile":
-        this.fileManager!.dropMeltyMindFile(params.filePath);
-        vscode.window.showInformationMessage(
-          `Removed ${params.filePath} from Melty's Mind`
-        );
-        return Promise.resolve(this.fileManager!.getMeltyMindFilesRelative());
+        return await this.rpcDropMeltyFile(params.filePath);
       case "undoLatestCommit":
-        this.MeltyExtension.undoLastCommit(params.commitId);
-        return Promise.resolve(null);
+        return await this.rpcUndoLatestCommit(params.commitId);
       case "getLatestCommit":
-        const latestCommit = this.MeltyExtension.getLatestCommitHash();
-        return Promise.resolve(latestCommit);
-      case "undo":
-        // todo update implementation
-
-        // await this.undoLatestCommit();
-        // const repo = this.MeltyExtension.getRepository();
-        // await repo.status();
-
-        // const latestCommit = repo.state.HEAD?.commit;
-        // const latestCommitMessage = await repo.getCommit(latestCommit);
-        // const message = `Undone commit: ${latestCommit}\nMessage: ${latestCommitMessage.message}`;
-        // vscode.window.showInformationMessage(message);
-        // this._panel.webview.postMessage({
-        //   command: "confirmedUndo",
-        //   text: {
-        //     sender: "user",
-        //     message: message,
-        //   },
-        // });
-        // return;
-        throw new Error("Not implemented");
-        return;
+        return await this.rpcGetLatestCommit();
       case "chatMessage":
-        this.handleAskCode(params.text, params.assistantType);
-        return Promise.resolve(null);
-      case "createNewTask":
-        const newTaskId = await this.MeltyExtension.createNewTask(params.name);
-        return Promise.resolve(newTaskId);
-
+        return await this.rpcChatMessage(params.text, params.assistantType);
+      case "createAndSwitchToTask":
+        return await this.rpcCreateAndSwitchToTask(params.name);
       case "listTasks":
-        const tasks = this.MeltyExtension.listTasks();
-        return Promise.resolve(tasks);
-
+        return this.rpcListTasks();
       case "switchTask":
-        await this.MeltyExtension.switchToTask(params.taskId);
-        const newTask = await this.MeltyExtension.getCurrentTask();
-        await newTask.init();
-        return Promise.resolve(utils.serializableTask(newTask));
-
+        return await this.rpcSwitchTask(params.taskId);
       case "createPullRequest":
-        this.MeltyExtension.createPullRequest();
-        return Promise.resolve(null);
-
+        return await this.rpcCreatePullRequest();
       case "deleteTask":
-        this.MeltyExtension.deleteTask(params.taskId);
-        return Promise.resolve(null);
-
-      case "resetToOriginMain":
-        return this.resetToOriginMain();
-
+        return await this.rpcDeleteTask(params.taskId);
       case "getGitConfigErrors":
-        return this.MeltyExtension.getGitConfigErrors();
+        return await this.rpcGetGitConfigErrors();
+      default:
+        throw new Error(`Unknown RPC method: ${method}`);
     }
   }
 
-  private async handleAskCode(text: string, assistantType: AssistantType) {
-    const task = await this.MeltyExtension.getCurrentTask();
-    task.setFileManager(this.fileManager!);
+  private async rpcLoadTask(taskId: string): Promise<Task> {
+    const task = this.MeltyExtension.getTask(taskId);
+    return Promise.resolve(task.serialize());
+  }
+
+  private async rpcListMeltyFiles(): Promise<string[]> {
+    const meltyMindFilePaths = this.fileManager!.getMeltyMindFilesRelative();
+    return Promise.resolve(meltyMindFilePaths);
+  }
+
+  private async rpcListWorkspaceFiles(): Promise<string[]> {
+    const workspaceFilePaths =
+      await this.fileManager!.getWorkspaceFilesRelative();
+    return workspaceFilePaths;
+  }
+
+  private async rpcAddMeltyFile(filePath: string): Promise<string[]> {
+    await this.fileManager!.addMeltyMindFile(filePath, false);
+    vscode.window.showInformationMessage(`Added ${filePath} to Melty's Mind`);
+    return this.fileManager!.getMeltyMindFilesRelative();
+  }
+
+  private async rpcDropMeltyFile(filePath: string): Promise<string[]> {
+    this.fileManager!.dropMeltyMindFile(filePath);
+    vscode.window.showInformationMessage(
+      `Removed ${filePath} from Melty's Mind`
+    );
+    return await this.fileManager!.getMeltyMindFilesRelative();
+  }
+
+  private async rpcCreateAndSwitchToTask(name: string): Promise<string> {
+    const newTaskId = await this.MeltyExtension.createNewTask(name);
+    await this.switchTask(newTaskId);
+    return newTaskId;
+  }
+
+  private rpcListTasks(): Task[] {
+    return this.MeltyExtension.listTasks();
+  }
+
+  private async rpcCreatePullRequest(): Promise<void> {
+    await this.MeltyExtension.createPullRequest();
+  }
+
+  private async rpcDeleteTask(taskId: string): Promise<void> {
+    await this.MeltyExtension.deleteTask(taskId);
+  }
+
+  private async rpcGetGitConfigErrors(): Promise<string> {
+    return this.MeltyExtension.getGitConfigErrors();
+  }
+
+  private async rpcGetLatestCommit(): Promise<string | null> {
+    return await this.MeltyExtension.getLatestCommitHash();
+  }
+
+  private async rpcUndoLatestCommit(commitId: string): Promise<void> {
+    await this.MeltyExtension.undoLastCommit(commitId);
+  }
+
+  private async rpcSwitchTask(taskId: string): Promise<void> {
+    await this.switchTask(taskId);
+  }
+
+  private async rpcChatMessage(
+    text: string,
+    assistantType: AssistantType
+  ): Promise<void> {
+    const task = (await this.MeltyExtension.getCurrentTask(this.fileManager))!;
 
     // human response
 
     try {
       await task.respondHuman(assistantType, text);
-      this.bridgeToWebview?.sendNotification("updateTask", {
-        task: utils.serializableTask(task),
+      this.webviewNotifier?.sendNotification("updateTask", {
+        task: task.serialize(),
       });
     } catch (error) {
       console.error("Error in respondHuman:", error);
       if (
-        (error as Error).message ==
+        (error as Error).message ===
         "Cannot read properties of null (reading 'repository')"
       ) {
         vscode.window.showErrorMessage("Melty does not see a git repository.");
@@ -302,57 +305,37 @@ export class HelloWorldPanel implements WebviewViewProvider {
     // bot response
     const processPartial = (partialConversation: Conversation) => {
       // copy task
-      const partialTask = { ...task } as Task;
-      partialTask.conversation = partialConversation;
-      this.bridgeToWebview?.sendNotification("updateTask", {
-        task: utils.serializableTask(partialTask),
+      const serialTask = task.serialize();
+      serialTask.conversation = partialConversation;
+      this.webviewNotifier?.sendNotification("updateTask", {
+        task: serialTask,
       });
     };
 
     await task.respondBot(assistantType, processPartial);
-    this.bridgeToWebview?.sendNotification("updateTask", {
-      task: utils.serializableTask(task),
+    this.webviewNotifier?.sendNotification("updateTask", {
+      task: task.serialize(),
     });
   }
 
-  /**
-   * Undo the latest commit.
-   *
-   * TODO: confirm with dice we want to do this
-   */
-  private async undoLatestCommit(): Promise<void> {
-    // todo update implementation
-    // const repo = this.MeltyExtension.getRepository();
-    // await repo.status();
-    // await repo.reset("HEAD~1", false);
-  }
-
-  /**
-   * Reset the current task to the origin/main branch.
-   */
-  private async resetToOriginMain(): Promise<string> {
-    try {
-      const task = await this.MeltyExtension.getCurrentTask();
-      if (!task.gitRepo) {
-        throw new Error("No Git repository associated with the current task.");
+  private async switchTask(taskId: string): Promise<void> {
+    const oldTask = await this.MeltyExtension.getCurrentTask(this.fileManager);
+    if (oldTask && this.fileManager) {
+      const meltyMindFiles =
+        await this.fileManager!.getMeltyMindFilesRelative();
+      if (meltyMindFiles) {
+        oldTask.savedMeltyMindFiles = meltyMindFiles;
       }
-
-      // Fetch the latest changes from the remote
-      await task.gitRepo.fetch("origin");
-
-      // Reset the local branch to origin/main
-      await task.gitRepo.reset("origin/main", true);
-
-      // Refresh the file system
-      await vscode.commands.executeCommand(
-        "workbench.files.action.refreshFilesExplorer"
-      );
-
-      return "Successfully reset to origin/main";
-    } catch (error) {
-      console.error("Error resetting to origin/main:", error);
-      throw new Error(`Failed to reset to origin/main: ${error.message}`);
     }
+
+    await this.MeltyExtension.switchToTask(taskId);
+    const newTask = (await this.MeltyExtension.getCurrentTask(
+      this.fileManager
+    ))!;
+    await newTask.init(this.fileManager!);
+
+    // load meltyMindFiles into new task
+    this.fileManager?.loadMeltyMindFiles(newTask.savedMeltyMindFiles);
   }
 
   /**

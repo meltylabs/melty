@@ -1,20 +1,20 @@
 import {
-  PseudoCommit,
   GitRepo,
   SearchReplace,
   ClaudeConversation,
+  ChangeSet,
 } from "../types";
-import * as pseudoCommits from "../backend/pseudoCommits";
 import * as claudeAPI from "../backend/claudeAPI";
 import * as prompts from "../backend/prompts";
 import * as vscode from "vscode";
 import * as parser from "../diffApplication/parser";
+import fs from "fs";
+import path from "path";
 
 export async function applyByAnyMeansNecessary(
   gitRepo: GitRepo,
-  pseudoCommit: PseudoCommit,
   searchReplaceBlocks: SearchReplace[]
-): Promise<PseudoCommit> {
+): Promise<ChangeSet> {
   // Group SearchReplace objects by file name
   const groupedSearchReplaceBlocks = searchReplaceBlocks.reduce(
     (acc, searchReplace) => {
@@ -31,8 +31,8 @@ export async function applyByAnyMeansNecessary(
   const updatedContents = await Promise.all(
     Object.entries(groupedSearchReplaceBlocks).map(
       async ([filePath, searchReplaces]) => {
-        let fileContent = pseudoCommits.hasFile(gitRepo, pseudoCommit, filePath)
-          ? pseudoCommits.getFileContents(gitRepo, pseudoCommit, filePath)
+        let fileContent = fs.existsSync(path.join(gitRepo.rootPath, filePath))
+          ? fs.readFileSync(path.join(gitRepo.rootPath, filePath), "utf8")
           : "\n\n";
 
         const newContent = searchReplaces.reduce(
@@ -67,17 +67,17 @@ export async function applyByAnyMeansNecessary(
     )
   );
 
-  // Update pseudoCommit with new file contents
-  return updatedContents.reduce(
-    (updatedPseudoCommit, { filePath, content }) => {
-      return pseudoCommits.upsertFileContents(
-        updatedPseudoCommit,
+  return {
+    filesChanged: Object.fromEntries(
+      updatedContents.map(({ filePath, content }) => [
         filePath,
-        content
-      );
-    },
-    pseudoCommit
-  );
+        {
+          relPath: filePath,
+          contents: content,
+        },
+      ])
+    ),
+  };
 }
 
 async function applySearchReplaceHaiku(

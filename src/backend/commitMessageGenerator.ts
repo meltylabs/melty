@@ -2,10 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
+import * as files from "./meltyFiles";
+import { GitRepo, ChangeSet } from "../types";
 
 export async function generateCommitMessage(
-  changedFiles: string[],
-  rootPath: string
+  udiffPreview: string
 ): Promise<string> {
   const config = vscode.workspace.getConfiguration("melty");
   const apiKey = config.get<string>("anthropicApiKey");
@@ -20,37 +21,39 @@ export async function generateCommitMessage(
     apiKey: apiKey,
   });
 
-  const fileContents = changedFiles.map(file => {
-    const filePath = path.join(rootPath, file);
-    return `${file}:\n${fs.readFileSync(filePath, 'utf-8')}`;
-  }).join('\n\n');
-
   const prompt = `You are an expert software engineer.
-Review the provided context and diffs which are about to be committed to a git repo.
-Review the diffs carefully.
+Review the provided diff which is about to be committed to a git repo.
+Review the diff carefully.
 Generate a commit message for those changes.
 The commit message MUST use the imperative tense.
-The commit message should be structured as follows: <type>: <description>
-Use these for <type>: fix, feat, build, chore, ci, docs, style, refactor, perf, test
-Reply with JUST the commit message, without quotes, comments, questions, etc!
+If the diff contains no files changed, you can just reply with "empty commit".
 
-Changes to be committed:
+Example:
 
-${fileContents}`;
+<CommitMessage>Add logging to foo/bar/baz.py</CommitMessage>
+
+Here is the diff:
+
+<Diff>
+${udiffPreview}
+</Diff>`;
 
   try {
     const response = await anthropic.messages.create({
       model: "claude-3-sonnet-20240229",
       max_tokens: 100,
       temperature: 0.7,
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "user", content: prompt },
+        { role: "assistant", content: "<CommitMessage>" },
+      ],
     });
 
-    const commitMessage = response.content[0].text.trim();
-    return commitMessage || "chore: update code";
+    const responseText = response.content[0].text.trim();
+    const commitMessage = responseText.split("</CommitMessage>")[0].trim();
+    return commitMessage;
   } catch (error) {
     console.error("Error generating commit message:", error);
-    return "Update code";
+    return "bot changes";
   }
 }
-

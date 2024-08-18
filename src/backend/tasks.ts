@@ -1,14 +1,7 @@
 import * as vscode from "vscode";
-import {
-  Joule,
-  Conversation,
-  PseudoCommit,
-  GitRepo,
-  AssistantType,
-} from "../types";
+import { Joule, Conversation, GitRepo, AssistantType } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
-import * as pseudoCommits from "./pseudoCommits";
 import * as utils from "../util/utils";
 import { Architect } from "../assistants/architect";
 import { Coder } from "../assistants/coder";
@@ -16,6 +9,8 @@ import * as config from "../util/config";
 import { FileManager } from "../fileManager";
 import { getRepoAtWorkspaceRoot } from "../util/gitUtils";
 import * as datastores from "./datastores";
+import { generateCommitMessage } from "./commitMessageGenerator";
+import * as fs from "fs";
 
 /**
  * A Task manages the interaction between a conversation and a git repository
@@ -26,6 +21,7 @@ export class Task implements Task {
   fileManager: FileManager | undefined;
   createdAt: Date;
   updatedAt: Date;
+  savedMeltyMindFiles: string[] = [];
 
   constructor(public id: string, public name: string, public branch: string) {
     this.conversation = conversations.create();
@@ -46,7 +42,7 @@ export class Task implements Task {
    * Initializes the GitRepo's repository field. Note that if the GitRepo has only a rootPath,
    * then we still need to run `init` to populate the repository field.
    */
-  public async init(): Promise<boolean> {
+  public async init(fileManager: FileManager): Promise<boolean> {
     if (this.gitRepo && this.gitRepo.repository) {
       return true;
     }
@@ -59,45 +55,9 @@ export class Task implements Task {
 
     this.gitRepo = result;
     console.log(`Initialized task ${this.id}`);
+
+    this.setFileManager(fileManager);
     return true;
-  }
-
-  public async switchTo(): Promise<void> {
-    await this.init();
-    await this.gitRepo!.repository.status();
-
-    if (!utils.repoIsClean(this.gitRepo!.repository)) {
-      utils.handleGitError(
-        "Working directory is not clean. Cannot proceed activating task."
-      );
-    } else {
-      try {
-        await this.gitRepo!.repository.checkout(this.branch);
-        utils.info(`Switched to branch ${this.branch}`);
-      } catch (error: any) {
-        if (
-          error.stderr &&
-          error.stderr.includes("did not match any file(s) known to git")
-        ) {
-          // we need to create the branch
-          if (!utils.repoIsOnMain(this.gitRepo!.repository)) {
-            utils.handleGitError(
-              "Cannot activate task: working directory is not on main branch"
-            );
-          }
-          console.log(`Branch ${this.branch} does not exist. Creating it.`);
-          await this.gitRepo!.repository.createBranch(this.branch, true);
-          utils.info(`Created and checked out branch ${this.branch}`);
-        } else {
-          // Re-throw other errors
-          throw error;
-        }
-      }
-    }
-  }
-
-  private getConversationState(): PseudoCommit | undefined {
-    return conversations.lastJoule(this.conversation)?.pseudoCommit;
   }
 
   /**
@@ -105,24 +65,6 @@ export class Task implements Task {
    */
   public listJoules(): readonly Joule[] {
     return this.conversation.joules;
-  }
-
-  /**
-   * Ensures that the last message in the conversation has the same commit id as the latest commit
-   * on disk. Allows for local changes.
-   */
-  private ensureInSync(): void {
-    const conversationState = this.getConversationState();
-    if (!conversationState) {
-      return; // if the conversation is empty, we're in sync
-    }
-    const conversationTailCommit = pseudoCommits.commit(conversationState);
-    const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    if (latestCommit !== conversationTailCommit) {
-      utils.handleGitError(
-        `disk is at ${latestCommit} but conversation is at ${conversationTailCommit}`
-      );
-    }
   }
 
   private ensureWorkingDirectoryClean(): void {
@@ -138,9 +80,7 @@ export class Task implements Task {
    * Commits any local changes (or empty commit if none).
    * @returns the number of changes committed
    */
-  private async commitChanges(): Promise<number> {
-    this.ensureInSync();
-
+  private async commitLocalChanges(): Promise<number> {
     // Get all changes, including untracked files
     const changes = await this.gitRepo!.repository.diffWithHEAD();
 
@@ -157,7 +97,12 @@ export class Task implements Task {
     const indexChanges = this.gitRepo!.repository.state.indexChanges;
 
     if (indexChanges.length > 0) {
-      await this.gitRepo!.repository.commit("human changes");
+      const udiffPreview = await utils.getUdiffPreviewFromWorking(
+        this.gitRepo!
+      );
+      const message = await generateCommitMessage(udiffPreview);
+
+      await this.gitRepo!.repository.commit(`[via melty] ${message}`);
     }
 
     await this.gitRepo!.repository.status();
@@ -177,7 +122,6 @@ export class Task implements Task {
   ): Promise<void> {
     try {
       await this.gitRepo!.repository.status();
-      this.ensureInSync();
       this.ensureWorkingDirectoryClean();
 
       let assistant;
@@ -202,36 +146,28 @@ export class Task implements Task {
       );
       const lastJoule = conversations.lastJoule(this.conversation)!;
 
-      // add any edited files to melty's mind
-      const editedFiles = pseudoCommits.getEditedFiles(lastJoule.pseudoCommit);
-      editedFiles.forEach((editedFile) => {
-        this.fileManager!.addMeltyMindFile(editedFile, true);
-      });
-
-      // actualize does the commit and updates the pseudoCommit in-place
-      await pseudoCommits.actualize(
-        lastJoule.pseudoCommit,
-        this.gitRepo!,
-        assistantType !== "architect"
-      );
+      if (lastJoule.diffInfo?.filePathsChanged) {
+        // add any edited files to melty's mind
+        lastJoule.diffInfo.filePathsChanged.forEach((editedFile) => {
+          this.fileManager!.addMeltyMindFile(editedFile, true);
+        });
+      }
       await this.gitRepo!.repository.status();
 
       this.updateLastModified();
-      await datastores.writeTaskToDisk(this);
+      await datastores.dumpTaskToDisk(this);
     } catch (e) {
       if (config.DEV_MODE) {
         throw e;
       } else {
         vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
-        const joule = joules.createJouleBot(
-          "[  Error :(  ]",
-          "[ There was an error communicating with the bot. ]",
-          pseudoCommits.createFromPrevious(
-            conversations.lastJoule(this.conversation)!.pseudoCommit
-          ),
-          [],
-          "system"
-        );
+        const message = "[  Error :(  ]";
+        const joule = joules.createJouleBot(message, {
+          rawOutput: message,
+          contextPaths: [],
+          assistantType: "system",
+          filePathsChanged: [],
+        });
         this.conversation = conversations.addJoule(this.conversation, joule);
       }
     }
@@ -244,32 +180,60 @@ export class Task implements Task {
     assistantType: AssistantType,
     message: string
   ): Promise<Joule> {
-    let associateDiffWithPseudoCommit = false;
+    let didCommit = false;
 
     if (assistantType !== "architect") {
       await this.gitRepo!.repository.status();
-      const didCommit = (await this.commitChanges()) > 0;
-      associateDiffWithPseudoCommit = didCommit;
+      didCommit = (await this.commitLocalChanges()) > 0;
     }
 
-    // if using the architect, this commit will be old, but it
-    // shouldn't matter because we never read from it anyway
     const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    const newPseudoCommit = await pseudoCommits.createFromCommit(
-      latestCommit,
-      this.gitRepo!,
-      associateDiffWithPseudoCommit
-    );
+    const diffInfo = {
+      filePathsChanged: null,
+      diffPreview: await utils.getUdiffPreviewFromCommit(
+        this.gitRepo!,
+        latestCommit
+      ),
+    };
 
-    this.conversation = conversations.respondHuman(
-      this.conversation,
-      message,
-      newPseudoCommit
-    );
+    // hacky!
+    this.conversation = conversations.forceRemoveHumanJoules(this.conversation);
 
+    const newJoule: Joule = didCommit
+      ? joules.createJouleHumanWithChanges(message, latestCommit, diffInfo)
+      : joules.createJouleHuman(message);
+
+    this.conversation = conversations.addJoule(this.conversation, newJoule);
     this.updateLastModified();
-    await datastores.writeTaskToDisk(this);
-
+    await datastores.dumpTaskToDisk(this);
     return conversations.lastJoule(this.conversation)!;
+  }
+
+  /**
+   * goes to a plain JSON object that can be passed to JSON.stringify
+   */
+  public serialize(): any {
+    return {
+      ...this,
+      gitRepo: {
+        ...this.gitRepo,
+        repository: null,
+      },
+      fileManager: null,
+      savedMeltyMindFiles: this.fileManager
+        ? this.fileManager.dumpMeltyMindFiles()
+        : undefined,
+    };
+  }
+
+  public static deserialize(serializedTask: any): Task {
+    const task = Object.assign(
+      new Task(serializedTask.id, "", ""),
+      serializedTask
+    ) as Task;
+
+    task.fileManager = undefined;
+
+    return task;
   }
 }

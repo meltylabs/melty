@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ExtensionRPC } from "../extensionRPC";
-import { Joule, PseudoCommitInGit } from "../types";
+import { RpcClient } from "../rpcClient";
+import { Joule } from "../types";
 import CopyButton from "./CopyButton";
 import DiffViewer from "./DiffViewer";
 import { Button } from "./ui/button";
@@ -21,24 +21,19 @@ export function JouleComponent({
   latestCommitHash?: string;
   showDiff?: boolean;
 }) {
-  const [extensionRPC] = useState(() => new ExtensionRPC());
+  const [rpcClient] = useState(() => new RpcClient());
   const [undoClicked, setUndoClicked] = useState(false);
 
   const diffHtml =
-    showDiff &&
-    joule.pseudoCommit.impl.status === "committed" &&
-    joule.pseudoCommit.impl.udiffPreview
-      ? joule.pseudoCommit.impl.udiffPreview
-      : null;
+    showDiff && joule.diffInfo?.diffPreview ? joule.diffInfo.diffPreview : null;
 
-  const isLatestCommit =
-    latestCommitHash === (joule.pseudoCommit.impl as PseudoCommitInGit).commit;
+  const isLatestCommit = latestCommitHash === joule.commit;
 
   const handleUndo = async () => {
     setUndoClicked(true);
     try {
-      const result = await extensionRPC.run("undoLatestCommit", {
-        commitId: (joule.pseudoCommit.impl as PseudoCommitInGit).commit,
+      const result = await rpcClient.run("undoLatestCommit", {
+        commitId: joule.commit,
       });
       console.log("Result:", result);
     } catch (error) {
@@ -117,7 +112,7 @@ export function JouleComponent({
               <DiffViewer diff={diffHtml} />
               <div className="flex justify-between items-center mt-1">
                 <span className="font-mono text-muted-foreground text-xs">
-                  {(joule.pseudoCommit.impl as PseudoCommitInGit).commit}
+                  {joule.commit?.substring(0, 7)}
                 </span>
                 {joule.author === "bot" &&
                   !isPartial &&

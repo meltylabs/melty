@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-export class BridgeToWebview {
+export class WebviewNotifier {
   private view: vscode.WebviewView;
 
   constructor(view: vscode.WebviewView) {

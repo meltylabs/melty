@@ -13,6 +13,10 @@ export async function streamClaude(
   processPartial: (text: string) => void,
   model: Models = Models.Claude35Sonnet
 ): Promise<string> {
+  if (claudeConversation.messages.length === 0) {
+    throw new Error("No messages in prompt");
+  }
+
   const config = vscode.workspace.getConfiguration("melty");
   const apiKey = config.get<string>("anthropicApiKey");
 
