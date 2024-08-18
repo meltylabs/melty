@@ -40,11 +40,10 @@ export class RepoMapSpec {
       return fs.readFileSync(absoluteFilePath, "utf-8");
     }
 
-    if (
-      !relativeFilePath.endsWith(".ts") &&
-      !relativeFilePath.endsWith(".tsx")
-    ) {
-      return "";
+    const supportedExtensions = [".ts", ".tsx", ".js", ".jsx", ".json"];
+
+    if (!supportedExtensions.includes(path.extname(relativeFilePath))) {
+      return "[Summarization is not yet implemented for this file type]";
     }
     const spec = this.extractSpec(relativeFilePath);
 
