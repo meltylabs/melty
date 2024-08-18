@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import {
-  XIcon,
-  GitPullRequestIcon,
-  ArrowUp,
-  ArrowLeft,
-  ArrowDown,
-} from "lucide-react";
+import { XIcon, ArrowUp, ArrowLeft, ArrowDown } from "lucide-react";
 import { FilePicker } from "./FilePicker";
 import { Textarea } from "./ui/textarea";
 import { Task, AssistantType } from "../types";
@@ -16,16 +10,15 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
 
-export function ConversationView() {
+export function ConversationView({ initialMeltyMindFiles }: { initialMeltyMindFiles?: string[] }) {
   const [rpcClient] = useState(() => new RpcClient());
   const { taskId } = useParams<{ taskId: string }>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
+  const [meltyFiles, setMeltyFiles] = useState<string[]>(initialMeltyMindFiles || []);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
@@ -58,8 +51,10 @@ export function ConversationView() {
   }
 
   async function loadFiles() {
-    const meltyFiles = await rpcClient.run("listMeltyFiles");
-    setMeltyFiles(meltyFiles);
+    if (!initialMeltyMindFiles) {
+      const meltyFiles = await rpcClient.run("listMeltyFiles");
+      setMeltyFiles(meltyFiles);
+    }
     const workspaceFiles = await rpcClient.run("listWorkspaceFiles");
     setWorkspaceFiles(workspaceFiles);
   }

@@ -3,16 +3,13 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Link,
   Navigate,
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { Button } from "./components/ui/button";
 import { Tasks } from "./components/Tasks";
 import { ConversationView } from "./components/ConversationView";
 import { Onboarding } from "./components/Onboarding";
-import { HomeIcon } from "lucide-react";
 import "./App.css";
 
 function AppContent() {

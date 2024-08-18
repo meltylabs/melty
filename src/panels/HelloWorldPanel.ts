@@ -197,7 +197,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
       case "chatMessage":
         return await this.rpcChatMessage(params.text, params.assistantType);
       case "createAndSwitchToTask":
-        return await this.rpcCreateAndSwitchToTask(params.name);
+        return await this.rpcCreateAndSwitchToTask(params.name, params.files);
       case "listTasks":
         return this.rpcListTasks();
       case "switchTask":
@@ -243,8 +243,11 @@ export class HelloWorldPanel implements WebviewViewProvider {
     return await this.fileManager!.getMeltyMindFilesRelative();
   }
 
-  private async rpcCreateAndSwitchToTask(name: string): Promise<string> {
-    const newTaskId = await this.MeltyExtension.createNewTask(name);
+  private async rpcCreateAndSwitchToTask(
+    name: string,
+    files: string[]
+  ): Promise<string> {
+    const newTaskId = await this.MeltyExtension.createNewTask(name, files);
     await this.switchTask(newTaskId);
     return newTaskId;
   }

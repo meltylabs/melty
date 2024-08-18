@@ -14,7 +14,9 @@ import {
   CheckCircle,
   XCircle,
   LoaderCircle,
+  XIcon,
 } from "lucide-react";
+import { FilePicker } from "./FilePicker";
 import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -44,12 +46,21 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString();
 }
 
-export function Tasks() {
+export function Tasks({
+  initialMeltyMindFiles,
+}: {
+  initialMeltyMindFiles?: string[];
+}) {
+  const [rpcClient] = useState(() => new RpcClient());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [messageText, setMessageText] = useState("");
   const [gitConfigError, setGitConfigError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [rpcClient] = useState(() => new RpcClient());
+  const [workspaceFilePaths, setWorkspaceFilePaths] = useState<string[]>([]);
+  const [meltyMindFilePaths, setMeltyMindFilePaths] = useState<string[]>(
+    initialMeltyMindFiles || []
+  );
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await rpcClient.run("listTasks")) as Task[];
@@ -85,6 +96,7 @@ export function Tasks() {
     console.log(`[Tasks] creating new task ${taskName}`);
     const newTaskId = (await rpcClient.run("createAndSwitchToTask", {
       name: taskName.trim(),
+      files: meltyMindFilePaths,
     })) as string;
     console.log(`[Tasks] created new task ${newTaskId}`);
     navigate(`/task/${newTaskId}`);
@@ -130,19 +142,57 @@ export function Tasks() {
     }
   };
 
+  const fetchFilePaths = useCallback(async () => {
+    const workspacePaths = await rpcClient.run("listWorkspaceFiles");
+    setWorkspaceFilePaths(workspacePaths);
+
+    if (!initialMeltyMindFiles) {
+      const meltyMindPaths = await rpcClient.run("listMeltyFiles");
+      setMeltyMindFilePaths(meltyMindPaths);
+    }
+  }, [rpcClient, initialMeltyMindFiles]);
+
+  const handleAddFile = useCallback(
+    async (filePath: string) => {
+      const updatedMeltyFiles = await rpcClient.run("addMeltyFile", {
+        filePath,
+      });
+      setMeltyMindFilePaths(updatedMeltyFiles);
+      setPickerOpen(false);
+    },
+    [rpcClient]
+  );
+
+  async function handleDropFile(file: string) {
+    const meltyFiles = await rpcClient.run("dropMeltyFile", {
+      filePath: file,
+    });
+    setMeltyMindFilePaths(meltyFiles);
+    setPickerOpen(false);
+  }
+
   useEffect(() => {
     fetchTasks();
     checkGitConfig();
+    fetchFilePaths();
 
     window.addEventListener("message", rpcClient.handleMessage);
 
     return () => {
       window.removeEventListener("message", rpcClient.handleMessage);
     };
-  }, [fetchTasks, checkGitConfig, rpcClient]);
+  }, [fetchTasks, fetchFilePaths, checkGitConfig, rpcClient]);
 
   return (
     <div>
+      <FilePicker
+        open={pickerOpen}
+        setOpen={setPickerOpen}
+        meltyMindFilePaths={meltyMindFilePaths}
+        workspaceFilePaths={workspaceFilePaths}
+        handleAddFile={handleAddFile}
+        handleDropFile={handleDropFile}
+      />
       <form onSubmit={handleSubmit}>
         <div className="mt-4 relative">
           <Textarea
@@ -156,12 +206,8 @@ export function Tasks() {
             rows={6}
           />
 
-          {messageText.trim() !== "" && (
-            <div
-              className={`absolute right-2 top-2 transition-opacity duration-300 ${
-                messageText.trim() !== "" ? "opacity-100" : "opacity-0"
-              }`}
-            >
+          <div className="absolute right-2 top-2 flex gap-2">
+            {messageText.trim() !== "" && (
               <button
                 className="bg-black p-2 rounded-lg text-white"
                 name="ask"
@@ -169,8 +215,8 @@ export function Tasks() {
               >
                 <ArrowUp className="h-3 w-3" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="absolute left-2 bottom-2">
             <Select name="assistantType" defaultValue="coder">
@@ -185,12 +231,29 @@ export function Tasks() {
           </div>
 
           <div className="absolute right-2 bottom-2">
-            <span className="text-[10px] text-muted-foreground">
-              ⇧⏎ for new line
+            <span className="text-xs text-muted-foreground">
+              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">\</span>
+              </kbd>{" "}
+              to add a file
             </span>
           </div>
         </div>
       </form>
+      <div className="mt-1">
+        <div className="flex overflow-x-auto">
+          {meltyMindFilePaths.map((file, i) => (
+            <button
+              onClick={() => handleDropFile(file)}
+              className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-gray-100 px-2 py-1 inline-flex items-center rounded"
+              key={`file-${i}`}
+            >
+              <XIcon className="h-3 w-3 mr-2" />
+              {file}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-2 grid-cols-1 gap-6 mt-4">
         {tasks.length === 0 && <p>No tasks</p>}

@@ -23,9 +23,15 @@ export class Task implements Task {
   updatedAt: Date;
   savedMeltyMindFiles: string[] = [];
 
-  constructor(public id: string, public name: string, public branch: string) {
+  constructor(
+    public id: string,
+    public name: string,
+    public branch: string,
+    public files?: string[]
+  ) {
     this.conversation = conversations.create();
     this.gitRepo = null;
+    this.savedMeltyMindFiles = files || [];
     this.createdAt = new Date();
     this.updatedAt = new Date();
   }

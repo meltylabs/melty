@@ -75,11 +75,14 @@ export class MeltyExtension {
     return task;
   }
 
-  public async createNewTask(taskName: string): Promise<string> {
+  public async createNewTask(
+    taskName: string,
+    files?: string[]
+  ): Promise<string> {
     const taskId = uuidv4();
     const branchName = `melty/${taskName.replace(/\s+/g, "-")}`;
 
-    const newTask = new Task(taskId, taskName, branchName);
+    const newTask = new Task(taskId, taskName, branchName, files);
     this.tasks.set(taskId, newTask);
     return taskId;
   }
