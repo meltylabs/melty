@@ -12,6 +12,14 @@ export class RepoMapSpec {
   }
 
   public async getRepoMap(relativeFilePaths: string[]): Promise<string> {
+    // if the repo is too big, disable repoMap entirely
+    if (relativeFilePaths.length > 250) {
+      console.log(
+        `Repo is too large to summarize (${relativeFilePaths.length} files). Disabling summary.`
+      );
+      return "<CodebaseSummary>[Repo is too large to summarize]</CodebaseSummary>";
+    }
+
     console.log("building repomap");
     // Filter out files that don't exist and files that are >100kb
     const eligibleFiles = relativeFilePaths.filter((file) => {
