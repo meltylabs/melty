@@ -14,17 +14,11 @@ import {
   SelectValue,
 } from "./ui/select";
 
-export function ConversationView({
-  initialMeltyMindFiles,
-}: {
-  initialMeltyMindFiles?: string[];
-}) {
+export function ConversationView() {
   const [rpcClient] = useState(() => new RpcClient());
   const { taskId } = useParams<{ taskId: string }>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [meltyFiles, setMeltyFiles] = useState<string[]>(
-    initialMeltyMindFiles || []
-  );
+  const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
@@ -57,10 +51,8 @@ export function ConversationView({
   }
 
   async function loadFiles() {
-    if (!initialMeltyMindFiles) {
-      const meltyFiles = await rpcClient.run("listMeltyFiles");
-      setMeltyFiles(meltyFiles);
-    }
+    const meltyFiles = await rpcClient.run("listMeltyFiles");
+    setMeltyFiles(meltyFiles);
     const workspaceFiles = await rpcClient.run("listWorkspaceFiles");
     setWorkspaceFiles(workspaceFiles);
   }
