@@ -33,7 +33,7 @@ export function Onboarding() {
   return (
     <Card className="w-[400px]">
       <CardHeader>
-        <CardTitle>Welcome to Melty!</CardTitle>
+        <CardTitle>🫠 Welcome to Melty!</CardTitle>
       </CardHeader>
       <CardContent>
         <ul className="space-y-8">
