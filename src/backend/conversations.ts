@@ -24,15 +24,17 @@ export function lastJoule(conversation: Conversation): Joule | undefined {
 export function forceRemoveHumanJoules(
   conversation: Conversation
 ): Conversation {
-  const indexOfLastBotJoule = conversation.joules.some(
-    (joule) => joule.author === "bot"
-  )
-    ? conversation.joules.length -
-      1 -
-      Array.from(conversation.joules)
-        .reverse()
-        .findIndex((joule) => joule.author === "bot")
-    : -1; // no bot joules
+  // first, check if there are any bot joules at all
+  if (!conversation.joules.some((joule) => joule.author === "bot")) {
+    return conversation;
+  }
+
+  const indexOfLastBotJoule =
+    conversation.joules.length -
+    1 -
+    Array.from(conversation.joules)
+      .reverse()
+      .findIndex((joule) => joule.author === "bot");
 
   if (indexOfLastBotJoule === conversation.joules.length - 1) {
     // no changes needed!

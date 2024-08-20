@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import posthog from "posthog-js";
 
 export function ConversationView() {
   const [rpcClient] = useState(() => new RpcClient());
@@ -71,12 +70,6 @@ export function ConversationView() {
     taskId: string
   ) {
     rpcClient.run("chatMessage", { assistantType, text, taskId });
-    const result = posthog.capture("chatmessage_sent", {
-      assistant_type: assistantType,
-      message: text,
-      task_id: taskId,
-    });
-    console.log("posthog event captured!", result);
   }
 
   async function handleCreatePR() {
