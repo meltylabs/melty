@@ -22,10 +22,10 @@ export class FileManager {
     this.meltyRoot = meltyRoot;
   }
 
-  public loadMeltyMindFiles(relPaths: string[]) {
+  public async loadMeltyMindFiles(relPaths: string[]) {
     this.meltyMindFiles = new Set(relPaths);
     this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
-      files: relPaths,
+      files: await this.getMeltyMindFilesRelative(),
     });
   }
 

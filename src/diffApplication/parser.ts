@@ -1,12 +1,12 @@
 import { SearchReplace } from "../types";
 import * as searchReplaces from "../backend/searchReplace";
 
-export const CODE_FENCE = ["<CodeChange>", "</CodeChange>"];
+export const CODE_FENCE = ["<change_code>", "</change_code>"];
 export const DIFF_OPEN = "<<<<<<< SEARCH";
 export const DIFF_DIVIDER = "=======";
 export const DIFF_CLOSE = ">>>>>>> REPLACE";
 
-type Section = "search" | "replace" | "codeChange" | "topLevel";
+type Section = "search" | "replace" | "codeChange" | "topLevel" | "melthinking";
 
 function stripFilename(filename: string): string | undefined {
   filename = filename.trim();
@@ -32,15 +32,25 @@ function stripFilename(filename: string): string | undefined {
 
 function categorizeLine(
   rawLine: string
-): "srOpen" | "srDivider" | "srClose" | "ccOpen" | "ccClose" | "other" {
+):
+  | "srOpen"
+  | "srDivider"
+  | "srClose"
+  | "ccOpen"
+  | "ccClose"
+  | "other"
+  | "melthinkingOpen"
+  | "melthinkingClose" {
   const line = rawLine.trim();
 
   const commandPieces = [
     DIFF_OPEN,
     DIFF_DIVIDER,
     DIFF_CLOSE,
-    "<CodeChange",
-    "</CodeChange>",
+    "<change_code",
+    "</change_code>",
+    "<melthinking>",
+    "</melthinking>",
   ];
   const commandMatches = commandPieces.filter((piece) => line.includes(piece));
   if (!commandMatches.length) {
@@ -57,10 +67,14 @@ function categorizeLine(
         return "srDivider";
       case DIFF_CLOSE:
         return "srClose";
-      case "<CodeChange":
+      case "<change_code":
         return "ccOpen";
-      case "</CodeChange>":
+      case "</change_code>":
         return "ccClose";
+      case "<melthinking>":
+        return "melthinkingOpen";
+      case "</melthinking>":
+        return "melthinkingClose";
       default:
         throw new Error(`Unexpected command piece: ${commandMatches[0]}`);
     }
@@ -72,10 +86,13 @@ function nextSection(currentSection: Section, nextSection: Section): Section {
     search: ["replace"],
     replace: ["codeChange"],
     codeChange: ["topLevel", "search"],
-    topLevel: ["codeChange"],
+    topLevel: ["melthinking", "codeChange"],
+    melthinking: ["topLevel"],
   };
   if (!allowedTransitions[currentSection].includes(nextSection)) {
-    throw new Error(`Unexpected next section: ${nextSection}`);
+    throw new Error(
+      `Unexpected next section ${nextSection} from ${currentSection}`
+    );
   }
   return nextSection;
 }
@@ -102,6 +119,12 @@ export function splitResponse(
 
   for (const line of lines) {
     switch (categorizeLine(line)) {
+      case "melthinkingOpen":
+        currentSection = nextSection(currentSection, "melthinking");
+        break;
+      case "melthinkingClose":
+        currentSection = nextSection(currentSection, "topLevel");
+        break;
       case "ccOpen":
         // // DISABLED -- parsed message strategy
         // messageChunksList.push("");
@@ -168,8 +191,14 @@ export function splitResponse(
         }
         break;
     }
-    // ENABLED -- raw message strategy (all lines included in chunks)
-    messageChunksList[messageChunksList.length - 1] += line + "\n";
+    // ENABLED -- raw message strategy: all lines included except for melthinking
+    // but CCs get their own chunks (can't remember why)
+    if (
+      currentSection !== "melthinking" &&
+      categorizeLine(line) !== "melthinkingClose"
+    ) {
+      messageChunksList[messageChunksList.length - 1] += line + "\n";
+    }
     if (categorizeLine(line) === "ccClose") {
       messageChunksList[messageChunksList.length - 1] += "```\n";
       messageChunksList.push("\n");
@@ -183,7 +212,7 @@ export function splitResponse(
 }
 
 function extractFileName(line: string): string | undefined {
-  const match = line.match(/filePath="([^"]*)"/);
+  const match = line.match(/file="([^"]*)"/);
   if (!match || match.length !== 2) {
     throw new Error(`Unable to get filename from: ${line}`); // TODO: relax this to undefined
   }

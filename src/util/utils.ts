@@ -5,6 +5,7 @@ import * as path from "path";
 import { GitRepo } from "../types";
 import { Task } from "../backend/tasks";
 import { ChangeSet } from "../types";
+import * as os from "os";
 
 export function handleGitError(message: string) {
   if (config.STRICT_GIT) {
@@ -86,6 +87,13 @@ export function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+export function resolveTildePath(path: string): string {
+  if (path.startsWith("~/") || path === "~") {
+    return path.replace("~", os.homedir());
+  }
+  return path;
 }
 
 /**

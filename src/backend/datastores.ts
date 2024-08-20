@@ -1,10 +1,18 @@
 import { Task } from "./tasks";
 import * as fs from "fs";
 import * as path from "path";
-import * as utils from "../util/utils";
+import * as vscode from "vscode";
+import { resolveTildePath } from "../util/utils";
 
-export function loadTasksFromDisk(gitRepoRoot: string): Map<string, Task> {
-  const meltyDir = path.join(gitRepoRoot, ".melty");
+function getMeltyDir(): string {
+  const config = vscode.workspace.getConfiguration('melty');
+  const configuredPath = config.get<string>('storageDirectory') || "~/.melty";
+  const resolvedPath = resolveTildePath(configuredPath);
+  return resolvedPath;
+}
+
+export function loadTasksFromDisk(): Map<string, Task> {
+  const meltyDir = getMeltyDir();
   if (!fs.existsSync(meltyDir)) {
     return new Map();
   }
@@ -23,14 +31,9 @@ export function loadTasksFromDisk(gitRepoRoot: string): Map<string, Task> {
 }
 
 export async function dumpTaskToDisk(task: Task): Promise<void> {
-  if (!task.gitRepo) {
-    console.log(`Not saving task ${task.id} to disk, no git repo found`);
-    return;
-  }
-
-  const meltyDir = path.join(task.gitRepo.rootPath, ".melty");
+  const meltyDir = getMeltyDir();
   if (!fs.existsSync(meltyDir)) {
-    fs.mkdirSync(meltyDir);
+    fs.mkdirSync(meltyDir, { recursive: true });
   }
 
   const serializableTask = task.serialize();
@@ -40,12 +43,7 @@ export async function dumpTaskToDisk(task: Task): Promise<void> {
 }
 
 export async function deleteTaskFromDisk(task: Task): Promise<void> {
-  if (!task.gitRepo) {
-    console.log(`Cannot delete task ${task.id} from disk, no git repo found`);
-    return;
-  }
-
-  const meltyDir = path.join(task.gitRepo.rootPath, ".melty");
+  const meltyDir = getMeltyDir();
   const taskPath = path.join(meltyDir, `${task.id}.json`);
 
   if (fs.existsSync(taskPath)) {

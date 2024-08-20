@@ -292,27 +292,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
     const task = (await this.MeltyExtension.getCurrentTask(this.fileManager))!;
 
     // human response
-
-    try {
-      await task.respondHuman(assistantType, text);
-      this.webviewNotifier?.sendNotification("updateTask", {
-        task: task.serialize(),
-      });
-    } catch (error) {
-      console.error("Error in respondHuman:", error);
-      if (
-        (error as Error).message ===
-        "Cannot read properties of null (reading 'repository')"
-      ) {
-        vscode.window.showErrorMessage("Melty does not see a git repository.");
-      } else {
-        vscode.window.showErrorMessage(error as string);
-      }
-    }
+    await task.respondHuman(assistantType, text);
+    this.webviewNotifier?.sendNotification("updateTask", {
+      task: task.serialize(),
+    });
 
     // bot response
     const processPartial = (partialConversation: Conversation) => {
-      // copy task
       const serialTask = task.serialize();
       serialTask.conversation = partialConversation;
       this.webviewNotifier?.sendNotification("updateTask", {
@@ -343,7 +329,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     await newTask.init(this.fileManager!);
 
     // load meltyMindFiles into new task
-    this.fileManager?.loadMeltyMindFiles(newTask.savedMeltyMindFiles);
+    await this.fileManager?.loadMeltyMindFiles(newTask.savedMeltyMindFiles);
   }
 
   /**

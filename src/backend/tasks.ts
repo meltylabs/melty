@@ -180,7 +180,7 @@ export class Task implements Task {
   }
 
   /**
-   * Responds to a human message.
+   * Adds a human message (and changes) to the conversation.
    */
   public async respondHuman(
     assistantType: AssistantType,

@@ -26,6 +26,12 @@ export class Coder extends BaseAssistant {
     contextPaths: string[],
     processPartial: (partialConversation: Conversation) => void
   ) {
+    if (
+      !conversation.joules ||
+      conversation.joules[conversation.joules.length - 1].author !== "human"
+    ) {
+      throw new Error("Cannot respond to non-human message");
+    }
     const repoMap = new RepoMapSpec(gitRepo);
     const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
     const repoMapString = await repoMap.getRepoMap(workspaceFilePaths);
@@ -51,14 +57,13 @@ export class Coder extends BaseAssistant {
     // TODO 300: (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
     // We can try each step multiple times. All attempts should be represented by a tree. We pick one leaf to respond with.
 
-    const systemPrompt = this.getSystemPrompt();
+    const systemPrompt = prompts.codeModeSystemPrompt();
 
     const claudeConversation: ClaudeConversation = {
       system: systemPrompt,
       messages: [
         // TODOV2 user system info
-        ...(await this.encodeRepoMap(repoMapString)),
-        ...this.encodeContext(gitRepo, contextPaths),
+        ...this.codebaseView(gitRepo, contextPaths, repoMapString),
         ...this.encodeMessages(conversation),
       ],
     };
@@ -94,24 +99,6 @@ export class Coder extends BaseAssistant {
       gitRepo,
       false // apply changes
     );
-  }
-
-  private getSystemPrompt(): string {
-    return [
-      prompts.codeModeSystemPrompt(),
-      prompts.codeChangeCommandRulesPrompt(),
-      prompts.exampleConversationsPrompt(),
-    ].join("\n");
-  }
-
-  private async encodeRepoMap(repoMap: string): Promise<ClaudeMessage[]> {
-    return [
-      {
-        role: "user",
-        content: `${prompts.repoMapIntro()}\n\n${repoMap}`,
-      },
-      { role: "assistant", content: prompts.repoMapAsstAck() },
-    ];
   }
 
   private async claudeOutputToConversation(
