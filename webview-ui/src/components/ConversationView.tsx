@@ -192,7 +192,6 @@ export function ConversationView() {
 
   return (
     <div className="flex flex-col h-screen">
-      <h1>{taskId}</h1>
       <div className="mt-2 flex flex-col">
         {!isAtBottom && (
           <button
@@ -228,6 +227,9 @@ export function ConversationView() {
         ref={conversationRef}
       >
         <div className="flex flex-col h-full">
+          <h1 className="text-2xl font-bold mb-4">
+            {taskId ? taskId : "Loading..."}
+          </h1>
           {task?.conversation.joules.map((joule, index) => (
             <JouleComponent
               key={index}
