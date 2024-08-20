@@ -57,8 +57,12 @@ export function ConversationView() {
     setWorkspaceFiles(workspaceFiles);
   }
 
-  function handleSendMessage(assistantType: AssistantType, text: string) {
-    rpcClient.run("chatMessage", { assistantType, text });
+  function handleSendMessage(
+    assistantType: AssistantType,
+    text: string,
+    taskId: string
+  ) {
+    rpcClient.run("chatMessage", { assistantType, text, taskId });
   }
 
   async function handleCreatePR() {
@@ -170,7 +174,7 @@ export function ConversationView() {
     const form = event.target as HTMLFormElement;
     const message = form.message.value;
     const assistantType = form.assistantType.value as AssistantType;
-    handleSendMessage(assistantType, message);
+    handleSendMessage(assistantType, message, taskId!);
     setMessageText("");
     form.reset();
   };
@@ -182,7 +186,7 @@ export function ConversationView() {
         const form = event.currentTarget.form;
         if (form) {
           const assistantType = form.assistantType.value as AssistantType;
-          handleSendMessage(assistantType, event.currentTarget.value);
+          handleSendMessage(assistantType, event.currentTarget.value, taskId!);
           setMessageText("");
           event.currentTarget.value = "";
         }

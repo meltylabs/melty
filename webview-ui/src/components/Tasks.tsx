@@ -121,12 +121,9 @@ export function Tasks({
       taskName = taskName + "...";
     }
     const newTaskId = await createNewTask(taskName);
-    console.log(`[Created new task ${newTaskId}`);
     handleSendMessage(assistantType, message, newTaskId);
-    console.log(`[Sent message to ${newTaskId}`);
-    navigate(`/task/${newTaskId}`);
-    console.log(`[Tasks] navigate to /task/${newTaskId}`);
     setMessageText("");
+    navigate(`/task/${newTaskId}`);
   };
 
   const handleKeyDown = async (event: KeyboardEvent<HTMLTextAreaElement>) => {
