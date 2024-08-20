@@ -99,14 +99,19 @@ export function Tasks({
       files: meltyMindFilePaths,
     })) as string;
     console.log(`[Tasks] created new task ${newTaskId}`);
-    navigate(`/task/${newTaskId}`);
+    console.log("BABADOOK!");
+    return newTaskId;
   };
 
-  function handleSendMessage(assistantType: AssistantType, text: string) {
-    rpcClient.run("chatMessage", { assistantType, text });
+  function handleSendMessage(
+    assistantType: AssistantType,
+    text: string,
+    taskId: string
+  ) {
+    rpcClient.run("chatMessage", { assistantType, text, taskId });
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const message = messageText;
@@ -116,12 +121,13 @@ export function Tasks({
     if (message.length > 40) {
       taskName = taskName + "...";
     }
-    createNewTask(taskName);
-    handleSendMessage(assistantType, message);
+    const newTaskId = await createNewTask(taskName);
+    handleSendMessage(assistantType, message, newTaskId);
     setMessageText("");
+    navigate(`/task/${newTaskId}`);
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = async (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
 
@@ -134,9 +140,10 @@ export function Tasks({
           if (messageText.length > 40) {
             taskName = taskName + "...";
           }
-          createNewTask(taskName);
-          handleSendMessage(assistantType, messageText);
+          const newTaskId = await createNewTask(taskName);
+          handleSendMessage(assistantType, messageText, newTaskId);
           setMessageText("");
+          navigate(`/task/${newTaskId}`);
         }
       }
     }
