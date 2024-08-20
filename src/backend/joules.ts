@@ -24,9 +24,10 @@ export function createJouleHumanWithChanges(
 
 export function createJouleBot(
   message: string,
-  botExecInfo: BotExecInfo
+  botExecInfo: BotExecInfo,
+  state: "complete" | "partial" = "complete"
 ): JouleBot {
-  return createJouleBotWithChanges(message, botExecInfo, null, null);
+  return createJouleBotWithChanges(message, botExecInfo, null, null, state);
 }
 
 export function createJouleBotWithChanges(

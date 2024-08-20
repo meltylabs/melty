@@ -149,10 +149,7 @@ export function ConversationView() {
             if (lastJoule) {
               if (lastJoule.author === "human") {
                 setIsLoading(true);
-              } else if (
-                lastJoule.author === "bot" &&
-                lastJoule.state === "complete"
-              ) {
+              } else if (lastJoule.author === "bot") {
                 setIsLoading(false);
               }
             }
@@ -258,7 +255,7 @@ export function ConversationView() {
             />
           ))}
           {isLoading ? (
-            <div className="flex items-center justify-center">
+            <div>
               <span>Loading...</span>
             </div>
           ) : (

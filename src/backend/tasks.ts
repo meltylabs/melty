@@ -168,12 +168,15 @@ export class Task implements Task {
       } else {
         vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
         const message = "[  Error :(  ]";
-        const joule = joules.createJouleBot(message, {
-          rawOutput: message,
-          contextPaths: [],
-          assistantType: "system",
-          filePathsChanged: [],
-        });
+        const joule = joules.createJouleBot(
+          message,
+          {
+            rawOutput: message,
+            contextPaths: [],
+            assistantType: "system",
+          },
+          "complete"
+        );
         this.conversation = conversations.addJoule(this.conversation, joule);
       }
     }

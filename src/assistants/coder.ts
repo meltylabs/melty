@@ -153,7 +153,11 @@ export class Coder extends BaseAssistant {
     partialMode: boolean
   ): Promise<Joule> {
     if (changeSets.isEmpty(changeSet)) {
-      return joules.createJouleBot(message, botExecInfo);
+      return joules.createJouleBot(
+        message,
+        botExecInfo,
+        partialMode ? "partial" : "complete"
+      );
     } else {
       const newCommit = await changeSets.commitChangeSet(changeSet, gitRepo);
       const diffInfo = {

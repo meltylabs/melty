@@ -52,11 +52,15 @@ export class Vanilla extends BaseAssistant {
     partialMode: boolean,
     contextPaths: string[]
   ): Conversation {
-    const newJoule = joules.createJouleBot(response, {
-      rawOutput: response,
-      contextPaths: contextPaths,
-      assistantType: "vanilla",
-    });
+    const newJoule = joules.createJouleBot(
+      response,
+      {
+        rawOutput: response,
+        contextPaths: contextPaths,
+        assistantType: "vanilla",
+      },
+      partialMode ? "partial" : "complete"
+    );
     return conversations.addJoule(conversation, newJoule);
   }
 }
