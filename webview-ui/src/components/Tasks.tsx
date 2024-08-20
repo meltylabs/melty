@@ -109,7 +109,6 @@ export function Tasks({
     taskId: string
   ) {
     rpcClient.run("chatMessage", { assistantType, text, taskId });
-    navigate(`/task/${taskId}`);
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -124,6 +123,7 @@ export function Tasks({
     }
     const newTaskId = await createNewTask(taskName);
     handleSendMessage(assistantType, message, newTaskId);
+    navigate(`/task/${taskId}`);
     console.log(`[Tasks] navigate to /task/${newTaskId}`);
     // setMessageText("");
   };
