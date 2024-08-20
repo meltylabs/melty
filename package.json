@@ -95,6 +95,11 @@
             "**/lib/**"
           ],
           "description": "Glob patterns to exclude from Melty's file watching and processing. Users can modify this list to customize exclusions."
+        },
+        "melty.storageDirectory": {
+          "type": "string",
+          "default": "~/.melty",
+          "description": "The directory where Melty will store its data. Use '~' for the home directory. Default is '~/.melty'."
         }
       }
     }

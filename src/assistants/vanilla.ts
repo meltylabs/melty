@@ -17,7 +17,7 @@ export class Vanilla extends BaseAssistant {
     const claudeConversation: ClaudeConversation = {
       system: systemPrompt,
       messages: [
-        ...this.encodeContext(gitRepo, contextPaths),
+        ...this.codebaseView(gitRepo, contextPaths, ""),
         ...this.encodeMessages(conversation),
       ],
     };

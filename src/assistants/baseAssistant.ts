@@ -30,29 +30,33 @@ export abstract class BaseAssistant {
     );
 
     // TODO should we use | indentation here?
-    return `<FileContents filePath=${filePath}>
+    return `<file_contents file=${filePath}>
 ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
-</FileContents>`;
+</file_contents>`;
   }
 
-  protected encodeContext(
+  protected codebaseView(
     gitRepo: GitRepo,
-    contextPaths: string[]
+    contextPaths: string[],
+    repoMapString: string
   ): ClaudeMessage[] {
-    // in the future, this could handle other types of context, like web urls
-    const fileEncodings = contextPaths
+    const codebaseSummary = `<codebase_summary>
+${repoMapString ? repoMapString : "[No summary provided.]"}
+</codebase_summary>`;
+
+    const fileContents = contextPaths
       .map((path) => this.encodeFile(gitRepo, path))
       .join("\n");
 
-    return fileEncodings.length
-      ? [
-          {
-            role: "user",
-            content: `${prompts.filesUserIntro()}
-${fileEncodings}`,
-          },
-          { role: "assistant", content: prompts.filesAsstAck() },
-        ]
-      : [];
+    return [
+      {
+        role: "user",
+        content: `<codebase_view>
+${codebaseSummary}
+${fileContents}
+</codebase_view>`,
+      },
+      { role: "assistant", content: "Thanks, I'll review this carefully." },
+    ];
   }
 }

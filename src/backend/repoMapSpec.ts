@@ -27,13 +27,12 @@ export class RepoMapSpec {
       return fs.existsSync(absPath) && fs.statSync(absPath).size < 100000;
     });
 
-    let fullMap = "<CodebaseSummary>";
+    let fullMap = "";
     for (const file of eligibleFiles) {
-      fullMap += `<FileSummary filePath="${file}">\n`;
+      fullMap += `<file_summary file="${file}">\n`;
       fullMap += this.mapFile(file);
-      fullMap += `</FileSummary>\n`;
+      fullMap += `</file_summary>\n`;
     }
-    fullMap += "</CodebaseSummary>";
 
     console.log("repo map complete");
     return fullMap;
@@ -51,7 +50,7 @@ export class RepoMapSpec {
     const supportedExtensions = [".ts", ".tsx", ".js", ".jsx", ".json"];
 
     if (!supportedExtensions.includes(path.extname(relativeFilePath))) {
-      return "[Summarization is not yet implemented for this file type]";
+      return ""; // don't print an explanation because it's too many tokens
     }
     const spec = this.extractSpec(relativeFilePath);
 
