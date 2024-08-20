@@ -151,6 +151,7 @@
     "axios": "^1.7.3",
     "dotenv": "^16.4.5",
     "node-tree-sitter": "^0.0.1",
+    "posthog-js": "^1.157.2",
     "python-ast": "^0.1.0",
     "tree-sitter-wasms": "^0.1.11",
     "uuid": "^10.0.0"
