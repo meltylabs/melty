@@ -106,6 +106,20 @@ export class MeltyExtension {
     vscode.window.showTextDocument(fileUri);
   }
 
+  public async getOrInitTask(taskId: string, fileManager: any) {
+    const task = this.tasks.get(taskId);
+    if (!task) {
+      throw new Error(`Task with id ${taskId} not found`);
+    }
+    if (!task.gitRepo) {
+      console.log(`initializing task ${task.id} repo`);
+      await task.init(fileManager);
+    }
+
+    this.currentTask = task;
+    return task;
+  }
+
   public async getCurrentTask(fileManager: any): Promise<Task | undefined> {
     if (!this.currentTask) {
       return undefined;
