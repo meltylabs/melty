@@ -145,6 +145,7 @@ export function ConversationView() {
               message.task.conversation.joules[
                 message.task.conversation.joules.length - 1
               ];
+            console.log(lastJoule);
             if (lastJoule) {
               if (lastJoule.author === "human") {
                 setIsLoading(true);
