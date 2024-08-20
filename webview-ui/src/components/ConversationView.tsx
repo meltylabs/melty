@@ -246,16 +246,6 @@ export function ConversationView() {
         className="flex-grow mb-20 rounded overflow-y-auto"
         ref={conversationRef}
       >
-        LOADING!~!!!!
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <span>Loading...</span>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            "NOT LOADING"
-          </div>
-        )}
         <div className="flex flex-col h-full">
           {task?.conversation.joules.map((joule, index) => (
             <JouleComponent
@@ -266,6 +256,15 @@ export function ConversationView() {
               showDiff={index !== 0} // Hide diff view for the first message
             />
           ))}
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <span>Loading...</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center">
+              "NOT LOADING"
+            </div>
+          )}
         </div>
       </div>
       <div className="mb-1.5">
