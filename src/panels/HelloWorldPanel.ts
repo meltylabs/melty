@@ -179,37 +179,42 @@ export class HelloWorldPanel implements WebviewViewProvider {
   }
 
   private async handleRPCCall(method: RpcMethod, params: any): Promise<any> {
-    switch (method) {
-      case "loadTask":
-        return await this.rpcLoadTask(params.taskId);
-      case "listMeltyFiles":
-        return await this.rpcListMeltyFiles();
-      case "listWorkspaceFiles":
-        return await this.rpcListWorkspaceFiles();
-      case "addMeltyFile":
-        return await this.rpcAddMeltyFile(params.filePath);
-      case "dropMeltyFile":
-        return await this.rpcDropMeltyFile(params.filePath);
-      case "undoLatestCommit":
-        return await this.rpcUndoLatestCommit(params.commitId);
-      case "getLatestCommit":
-        return await this.rpcGetLatestCommit();
-      case "chatMessage":
-        return await this.rpcChatMessage(params.text, params.assistantType);
-      case "createAndSwitchToTask":
-        return await this.rpcCreateAndSwitchToTask(params.name, params.files);
-      case "listTasks":
-        return this.rpcListTasks();
-      case "switchTask":
-        return await this.rpcSwitchTask(params.taskId);
-      case "createPullRequest":
-        return await this.rpcCreatePullRequest();
-      case "deleteTask":
-        return await this.rpcDeleteTask(params.taskId);
-      case "getGitConfigErrors":
-        return await this.rpcGetGitConfigErrors();
-      default:
-        throw new Error(`Unknown RPC method: ${method}`);
+    try {
+      switch (method) {
+        case "loadTask":
+          return await this.rpcLoadTask(params.taskId);
+        case "listMeltyFiles":
+          return await this.rpcListMeltyFiles();
+        case "listWorkspaceFiles":
+          return await this.rpcListWorkspaceFiles();
+        case "addMeltyFile":
+          return await this.rpcAddMeltyFile(params.filePath);
+        case "dropMeltyFile":
+          return await this.rpcDropMeltyFile(params.filePath);
+        case "undoLatestCommit":
+          return await this.rpcUndoLatestCommit(params.commitId);
+        case "getLatestCommit":
+          return await this.rpcGetLatestCommit();
+        case "chatMessage":
+          return await this.rpcChatMessage(params.text, params.assistantType);
+        case "createAndSwitchToTask":
+          return await this.rpcCreateAndSwitchToTask(params.name, params.files);
+        case "listTasks":
+          return this.rpcListTasks();
+        case "switchTask":
+          return await this.rpcSwitchTask(params.taskId);
+        case "createPullRequest":
+          return await this.rpcCreatePullRequest();
+        case "deleteTask":
+          return await this.rpcDeleteTask(params.taskId);
+        case "getGitConfigErrors":
+          return await this.rpcGetGitConfigErrors();
+        default:
+          throw new Error(`Unknown RPC method: ${method}`);
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(`Melty internal error: ${error}`);
+      throw error;
     }
   }
 
