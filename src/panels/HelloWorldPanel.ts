@@ -196,11 +196,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
         case "getLatestCommit":
           return await this.rpcGetLatestCommit();
         case "chatMessage":
-          return await this.rpcChatMessage(
-            params.text,
-            params.assistantType,
-            params.taskId
-          );
+          return await this.rpcChatMessage(params.text, params.assistantType);
         case "createAndSwitchToTask":
           return await this.rpcCreateAndSwitchToTask(params.name, params.files);
         case "listTasks":
@@ -291,10 +287,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
   private async rpcChatMessage(
     text: string,
-    assistantType: AssistantType,
-    taskId: string
+    assistantType: AssistantType
   ): Promise<void> {
-    const task = (await this.MeltyExtension.getTask(taskId))!;
+    const task = (await this.MeltyExtension.getCurrentTask(this.fileManager))!;
 
     // human response
 
