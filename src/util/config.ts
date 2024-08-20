@@ -8,6 +8,19 @@ const EXCLUDES = [
   "**/out/**",
   "**/build/**",
   "**/.vscode-test/**",
+  "**/.github/**",
+  "**/.aider.tags.cache",
+  "**/.expo/**",
+  "**/.next/**",
+  "**/.vercel/**",
+  "**.env/**",
+  "**.env.local/**",
+  "**/.ruby-lsp/**",
+  "**/tmp/**",
+  "**/dist/**",
+  "**/.expo/**",
+  "**/.contentlayer/**",
+  "**/db.sql/**",
 ];
 
 export function getExcludesGlob(): string {

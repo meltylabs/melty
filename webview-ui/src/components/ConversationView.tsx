@@ -26,6 +26,7 @@ export function ConversationView() {
   const conversationRef = useRef<HTMLDivElement>(null);
   const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleAddFile(file: string) {
     const meltyFiles = await rpcClient.run("addMeltyFile", {
@@ -139,6 +140,21 @@ export function ConversationView() {
               "[ConversationView.tsx] updateTask",
               message.task === task
             );
+            const lastJoule =
+              message.task.conversation.joules.length > 0 &&
+              message.task.conversation.joules[
+                message.task.conversation.joules.length - 1
+              ];
+            if (lastJoule) {
+              if (lastJoule.author === "human") {
+                setIsLoading(true);
+              } else if (
+                lastJoule.author === "bot" &&
+                lastJoule.state === "complete"
+              ) {
+                setIsLoading(false);
+              }
+            }
             setTask(message.task);
             return;
           case "updateWorkspaceFiles":
@@ -230,6 +246,15 @@ export function ConversationView() {
         className="flex-grow mb-20 rounded overflow-y-auto"
         ref={conversationRef}
       >
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <span>Loading...</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            "NOT LOADING"
+          </div>
+        )}
         <div className="flex flex-col h-full">
           {task?.conversation.joules.map((joule, index) => (
             <JouleComponent
