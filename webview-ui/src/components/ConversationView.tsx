@@ -262,7 +262,7 @@ export function ConversationView() {
           ))}
           {isLoading && (
             <div className="flex my-3" role="status">
-              <LoaderCircle className="w-4 h-4 animate-spin" />
+              <LoaderCircle className="w-4 h-4 animate-spin text-gray-500" />
             </div>
           )}
         </div>
