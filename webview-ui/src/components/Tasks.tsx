@@ -200,7 +200,6 @@ export function Tasks({
         handleDropFile={handleDropFile}
       />
       <form onSubmit={handleSubmit}>
-        testing testing123
         <div className="mt-4 relative">
           <Textarea
             placeholder="What are you trying to do?"
