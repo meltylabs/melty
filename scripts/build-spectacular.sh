@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 # pull the latest
+git submodule update --remote
+
+# go to melty
 cd extensions/spectacular
-git pull origin main
 
 # install dependencies
 npm i && cd webview-ui && npm i && cd ..
