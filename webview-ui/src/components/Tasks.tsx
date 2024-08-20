@@ -99,7 +99,6 @@ export function Tasks({
       files: meltyMindFilePaths,
     })) as string;
     console.log(`[Tasks] created new task ${newTaskId}`);
-    console.log("BABADOOK!");
     return newTaskId;
   };
 
@@ -122,10 +121,12 @@ export function Tasks({
       taskName = taskName + "...";
     }
     const newTaskId = await createNewTask(taskName);
+    console.log(`[Created new task ${newTaskId}`);
     handleSendMessage(assistantType, message, newTaskId);
+    console.log(`[Sent message to ${newTaskId}`);
     navigate(`/task/${newTaskId}`);
     console.log(`[Tasks] navigate to /task/${newTaskId}`);
-    // setMessageText("");
+    setMessageText("");
   };
 
   const handleKeyDown = async (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -202,6 +203,7 @@ export function Tasks({
         handleDropFile={handleDropFile}
       />
       <form onSubmit={handleSubmit}>
+        testing testing123
         <div className="mt-4 relative">
           <Textarea
             placeholder="What are you trying to do?"
