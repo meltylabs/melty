@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { XIcon, ArrowUp, ArrowLeft, ArrowDown } from "lucide-react";
+import {
+  XIcon,
+  ArrowUp,
+  ArrowLeft,
+  ArrowDown,
+  LoaderCircle,
+} from "lucide-react";
 import { FilePicker } from "./FilePicker";
 import { Textarea } from "./ui/textarea";
 import { Task, AssistantType } from "../types";
@@ -254,13 +260,9 @@ export function ConversationView() {
               showDiff={index !== 0} // Hide diff view for the first message
             />
           ))}
-          {isLoading ? (
-            <div>
-              <span>Loading...</span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center">
-              "NOT LOADING"
+          {isLoading && (
+            <div className="flex my-3" role="status">
+              <LoaderCircle className="w-6 h-6 animate-spin" />
             </div>
           )}
         </div>
