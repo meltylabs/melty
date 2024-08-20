@@ -124,6 +124,7 @@ export function Tasks({
     const newTaskId = await createNewTask(taskName);
     handleSendMessage(assistantType, message, newTaskId);
     setMessageText("");
+    console.log(`[Tasks] navigate to /task/${newTaskId}`);
     navigate(`/task/${newTaskId}`);
   };
 
