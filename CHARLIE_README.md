@@ -13,6 +13,10 @@
 
 > ./scripts/build-spectacular.sh
 
-# How to contribute
+# To package
+
+> yarn gulp darwin-arm64
+
+# VSCode contribution instructions
 
 https://github.com/microsoft/vscode/wiki/How-to-Contribute
