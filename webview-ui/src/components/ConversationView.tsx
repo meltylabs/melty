@@ -246,6 +246,7 @@ export function ConversationView() {
         className="flex-grow mb-20 rounded overflow-y-auto"
         ref={conversationRef}
       >
+        LOADING!~!!!!
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <span>Loading...</span>
