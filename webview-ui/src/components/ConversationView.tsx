@@ -36,6 +36,15 @@ export function ConversationView() {
   const [nonInitialHumanMessageInFlight, setNonInitialHumanMessageInFlight] =
     useState(false);
 
+  /**
+   * Determines whether to show the loading indicator. We show it if
+   * - task itself is unset
+   * - task has no messages (indicates that the initial human message is in flight)
+   * - a non initial human message is in flight
+   * - the last message is a human message
+   * note that "non-initial human message in flight" can't be inferred from task state,
+   * so we use separate state to track it.
+   */
   function isLoading() {
     return (
       !task ||
