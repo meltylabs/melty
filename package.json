@@ -8,7 +8,8 @@
     "type": "git",
     "url": "https://github.com/YourUsername/melty.git"
   },
-  "license": "",
+  "license": "UNLICENSED",
+  "private": true,
   "icon": "resources/melty.png",
   "galleryBanner": {
     "color": "#000000",
