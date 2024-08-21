@@ -93,7 +93,9 @@ export type MeltyFile = {
 };
 
 export type ChangeSet = {
-  readonly filesChanged: { [relPath: string]: MeltyFile };
+  readonly filesChanged: {
+    [relPath: string]: { original: MeltyFile; updated: MeltyFile };
+  };
 };
 
 export type RpcMethod =

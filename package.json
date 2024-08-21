@@ -77,6 +77,11 @@
           "default": "",
           "description": "Custom prompt to be added at the beginning of every conversation"
         },
+        "melty.autocommit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically commit changes to the repository"
+        },
         "melty.githubToken": {
           "type": "string",
           "default": "",
@@ -155,6 +160,7 @@
     "@octokit/rest": "^21.0.1",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.7.3",
+    "diff": "^6.0.0-beta",
     "dotenv": "^16.4.5",
     "node-tree-sitter": "^0.0.1",
     "posthog-js": "^1.157.2",

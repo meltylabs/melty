@@ -185,9 +185,14 @@ export function splitResponse(
         } else if (currentSection === "topLevel") {
           // // DISABLED -- parsed message strategy
           //   messageChunksList[messageChunksList.length - 1] += line + "\n";
+        } else if (currentSection === "melthinking") {
+          // if we re-enable the parsed message strategy,
+          // we should probably do something here
         } else {
           // otherwise, it's in CodeChange but not in search/replace
-          console.log("ignoring stray line in CodeChange: ", line);
+          if (!partialMode) {
+            console.log("ignoring stray line in CodeChange: ", line);
+          }
         }
         break;
     }

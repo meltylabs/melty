@@ -10,8 +10,9 @@ import * as vscode from "vscode";
 import * as parser from "../diffApplication/parser";
 import fs from "fs";
 import path from "path";
+import * as meltyFiles from "../backend/meltyFiles";
 
-export async function applyByAnyMeansNecessary(
+export async function searchReplaceToChangeSet(
   gitRepo: GitRepo,
   searchReplaceBlocks: SearchReplace[]
 ): Promise<ChangeSet> {
@@ -28,59 +29,58 @@ export async function applyByAnyMeansNecessary(
   );
 
   // Apply changes in parallel across files
-  const updatedContents = await Promise.all(
+  const changeSetValues = await Promise.all(
     Object.entries(groupedSearchReplaceBlocks).map(
       async ([filePath, searchReplaces]) => {
-        let fileContent = fs.existsSync(path.join(gitRepo.rootPath, filePath))
+        const rawOriginalContent = fs.existsSync(
+          path.join(gitRepo.rootPath, filePath)
+        )
           ? fs.readFileSync(path.join(gitRepo.rootPath, filePath), "utf8")
-          : "\n\n";
+          : "";
 
-        const newContent = searchReplaces.reduce(
+        const matchableOriginalContent =
+          rawOriginalContent !== "" ? rawOriginalContent : "\n\n";
+
+        let newContent = searchReplaces.reduce(
           (content: string | undefined, searchReplace: SearchReplace) => {
             if (content) {
               return applyByExactMatch(content, searchReplace);
             }
             return undefined;
           },
-          fileContent
+          matchableOriginalContent
         );
 
-        if (newContent) {
-          return { filePath, content: newContent };
+        if (!newContent) {
+          // fall back to haiku
+          console.log(
+            `Falling back to haiku diff application for ${filePath}...`
+          );
+          vscode.window.showInformationMessage(
+            `Falling back to haiku diff application for ${filePath}...`
+          );
+
+          newContent = await searchReplaceToChangeSetByClaude(
+            matchableOriginalContent,
+            searchReplaces
+          );
         }
 
-        // fall back to haiku
-        console.log(
-          `Falling back to haiku diff application for ${filePath}...`
-        );
-        vscode.window.showInformationMessage(
-          `Falling back to haiku diff application for ${filePath}...`
-        );
-
-        fileContent = await applySearchReplaceHaiku(
-          fileContent,
-          searchReplaces
-        );
-
-        return { filePath, content: fileContent };
+        return [
+          filePath,
+          {
+            original: meltyFiles.create(filePath, rawOriginalContent),
+            updated: meltyFiles.create(filePath, newContent),
+          },
+        ];
       }
     )
   );
 
-  return {
-    filesChanged: Object.fromEntries(
-      updatedContents.map(({ filePath, content }) => [
-        filePath,
-        {
-          relPath: filePath,
-          contents: content,
-        },
-      ])
-    ),
-  };
+  return { filesChanged: Object.fromEntries(changeSetValues) };
 }
 
-async function applySearchReplaceHaiku(
+async function searchReplaceToChangeSetByClaude(
   fileContent: string,
   searchReplaces: SearchReplace[]
 ): Promise<string> {

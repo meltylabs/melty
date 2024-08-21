@@ -15,6 +15,25 @@ export function isEmpty(changeSet: ChangeSet) {
 }
 
 /**
+ * Applies a change set to disk. No git stuff.
+ * @param changeSet The change set to apply
+ * @param gitRepo The git repo to apply the change set to
+ */
+export function applyChangeSet(changeSet: ChangeSet, rootPath: string): void {
+  Object.entries(changeSet.filesChanged).forEach(
+    ([_path, { original, updated }]) => {
+      fs.mkdirSync(path.dirname(files.absolutePath(updated, rootPath)), {
+        recursive: true,
+      });
+      fs.writeFileSync(
+        files.absolutePath(updated, rootPath),
+        files.contents(updated)
+      );
+    }
+  );
+}
+
+/**
  * Commits changes in a changeset
  * @param changeSet The change set to apply
  * @param gitRepo The git repo to apply the change set to
@@ -34,22 +53,11 @@ export async function commitChangeSet(
     );
   }
 
-  Object.entries(changeSet.filesChanged).forEach(([_path, meltyFile]) => {
-    fs.mkdirSync(
-      path.dirname(files.absolutePath(meltyFile, gitRepo.rootPath)),
-      {
-        recursive: true,
-      }
-    );
-    fs.writeFileSync(
-      files.absolutePath(meltyFile, gitRepo.rootPath),
-      files.contents(meltyFile)
-    );
-  });
+  applyChangeSet(changeSet, gitRepo.rootPath);
 
   await repository.add(
-    Object.values(changeSet.filesChanged).map((file) =>
-      files.absolutePath(file, gitRepo.rootPath)
+    Object.values(changeSet.filesChanged).map(
+      ({ original, updated }) => files.absolutePath(updated, gitRepo.rootPath) // either original or updated works here
     )
   );
 

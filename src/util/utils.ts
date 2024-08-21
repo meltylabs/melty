@@ -6,6 +6,7 @@ import { GitRepo } from "../types";
 import { Task } from "../backend/tasks";
 import { ChangeSet } from "../types";
 import * as os from "os";
+import * as diff from "diff";
 
 export function handleGitError(message: string) {
   if (config.STRICT_GIT) {
@@ -99,9 +100,7 @@ export function resolveTildePath(path: string): string {
 /**
  * Gets the diff of working changes against HEAD
  */
-export async function getUdiffPreviewFromWorking(
-  gitRepo: GitRepo
-): Promise<string> {
+export async function getUdiffFromWorking(gitRepo: GitRepo): Promise<string> {
   const repository = gitRepo.repository;
   return await repository.diff("HEAD");
 }
@@ -109,7 +108,7 @@ export async function getUdiffPreviewFromWorking(
 /**
  * Gets the diff from a commit to its parent
  */
-export async function getUdiffPreviewFromCommit(
+export async function getUdiffFromCommit(
   gitRepo: GitRepo,
   commit: string
 ): Promise<string> {
@@ -130,12 +129,10 @@ export async function getUdiffPreviewFromCommit(
 /**
  * Gets diff preview for a change set (NOT a udiff bc this is easier)
  */
-export function getDiffPreviewFromChangeSet(changeSet: ChangeSet): string {
-  return Object.values(changeSet.filesChanged)
-    .map((file) => {
-      return `<FileContents filePath="${file.relPath}">
-${file.contents}
-</FileContents>`;
+export function getUdiffFromChangeSet(changeSet: ChangeSet): string {
+  return Object.entries(changeSet.filesChanged)
+    .map(([filePath, { original, updated }]) => {
+      return diff.createPatch(filePath, original.contents, updated.contents);
     })
-    .join("\n\n");
+    .join("\n");
 }

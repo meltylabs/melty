@@ -1,5 +1,11 @@
 import * as vscode from "vscode";
-import { Joule, Conversation, GitRepo, AssistantType } from "../types";
+import {
+  Joule,
+  Conversation,
+  GitRepo,
+  AssistantType,
+  DiffInfo,
+} from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
@@ -102,9 +108,7 @@ export class Task implements Task {
     const indexChanges = this.gitRepo!.repository.state.indexChanges;
 
     if (indexChanges.length > 0) {
-      const udiffPreview = await utils.getUdiffPreviewFromWorking(
-        this.gitRepo!
-      );
+      const udiffPreview = await utils.getUdiffFromWorking(this.gitRepo!);
       const message = await generateCommitMessage(udiffPreview);
 
       await this.gitRepo!.repository.commit(`[via melty] ${message}`);
@@ -188,28 +192,30 @@ export class Task implements Task {
     assistantType: AssistantType,
     message: string
   ): Promise<Joule> {
-    let didCommit = false;
-
-    if (assistantType !== "vanilla") {
-      await this.gitRepo!.repository.status();
-      didCommit = (await this.commitLocalChanges()) > 0;
-    }
-
-    const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-    const diffInfo = {
-      filePathsChanged: null,
-      diffPreview: await utils.getUdiffPreviewFromCommit(
-        this.gitRepo!,
-        latestCommit
-      ),
-    };
-
     // hacky!
     this.conversation = conversations.forceRemoveHumanJoules(this.conversation);
 
-    const newJoule: Joule = didCommit
-      ? joules.createJouleHumanWithChanges(message, latestCommit, diffInfo)
-      : joules.createJouleHuman(message);
+    let newJoule: Joule;
+
+    if (config.getIsAutocommitMode() && assistantType !== "vanilla") {
+      let didCommit = false;
+      await this.gitRepo!.repository.status();
+      didCommit = (await this.commitLocalChanges()) > 0;
+
+      const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
+      const diffInfo = {
+        filePathsChanged: null,
+        diffPreview: await utils.getUdiffFromCommit(
+          this.gitRepo!,
+          latestCommit
+        ),
+      };
+      newJoule = didCommit
+        ? joules.createJouleHumanWithChanges(message, latestCommit, diffInfo)
+        : joules.createJouleHuman(message);
+    } else {
+      newJoule = joules.createJouleHuman(message);
+    }
 
     this.conversation = conversations.addJoule(this.conversation, newJoule);
     this.updateLastModified();
