@@ -86,16 +86,10 @@ export function ConversationView() {
   };
 
   useEffect(() => {
-    if (conversationRef.current) {
-      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+    if (isAtBottom) {
+      scrollToBottom();
     }
-    checkScrollPosition();
-  }, [task]);
-
-  // Add a new effect to scroll to bottom when component mounts
-  useEffect(() => {
-    scrollToBottom();
-  }, []);
+  }, [task?.conversation.joules, isAtBottom]);
 
   useEffect(() => {
     const conversationElement = conversationRef.current;
@@ -110,6 +104,7 @@ export function ConversationView() {
     if (conversationRef.current) {
       conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
     }
+    checkScrollPosition();
   };
 
   useEffect(() => {
