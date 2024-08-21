@@ -2,7 +2,7 @@
   "name": "melty",
   "displayName": "Melty",
   "description": "AI pair programmer",
-  "version": "0.24.7",
+  "version": "0.25.0",
   "publisher": "meltylabs",
   "repository": {
     "type": "git",
