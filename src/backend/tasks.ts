@@ -10,7 +10,6 @@ import { FileManager } from "../fileManager";
 import { getRepoAtWorkspaceRoot } from "../util/gitUtils";
 import * as datastores from "./datastores";
 import { generateCommitMessage } from "./commitMessageGenerator";
-import * as fs from "fs";
 
 /**
  * A Task manages the interaction between a conversation and a git repository

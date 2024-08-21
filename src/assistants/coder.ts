@@ -16,8 +16,8 @@ import * as utils from "../util/utils";
 import * as conversations from "../backend/conversations";
 import { BaseAssistant } from "./baseAssistant";
 import * as parser from "../diffApplication/parser";
-import * as contextSuggester from "../backend/contextSuggester";
 import * as changeSets from "../backend/changeSets";
+import { generateCommitMessage } from "../backend/commitMessageGenerator";
 
 export class Coder extends BaseAssistant {
   async respond(
@@ -159,7 +159,15 @@ export class Coder extends BaseAssistant {
         partialMode ? "partial" : "complete"
       );
     } else {
-      const newCommit = await changeSets.commitChangeSet(changeSet, gitRepo);
+      const commitMessage = await generateCommitMessage(
+        utils.getDiffPreviewFromChangeSet(changeSet),
+        message
+      );
+      const newCommit = await changeSets.commitChangeSet(
+        changeSet,
+        gitRepo,
+        commitMessage
+      );
       const diffInfo = {
         diffPreview: await utils.getUdiffPreviewFromCommit(gitRepo, newCommit),
         filePathsChanged: Array.from(Object.keys(changeSet.filesChanged)),

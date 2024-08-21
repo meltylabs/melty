@@ -33,7 +33,18 @@ export function ConversationView() {
   const conversationRef = useRef<HTMLDivElement>(null);
   const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [nonInitialHumanMessageInFlight, setNonInitialHumanMessageInFlight] =
+    useState(false);
+
+  function isLoading() {
+    return (
+      !task ||
+      task.conversation.joules.length === 0 ||
+      task?.conversation.joules[task?.conversation.joules.length - 1].author ===
+        "human" ||
+      nonInitialHumanMessageInFlight
+    );
+  }
 
   async function handleAddFile(file: string) {
     const meltyFiles = await rpcClient.run("addMeltyFile", {
@@ -70,6 +81,7 @@ export function ConversationView() {
     text: string,
     taskId: string
   ) {
+    setNonInitialHumanMessageInFlight(true);
     rpcClient.run("chatMessage", { assistantType, text, taskId });
     const result = posthog.capture("chatmessage_sent", {
       assistant_type: assistantType,
@@ -153,14 +165,10 @@ export function ConversationView() {
               message.task.conversation.joules[
                 message.task.conversation.joules.length - 1
               ];
-            console.log(lastJoule);
-            if (lastJoule) {
-              if (lastJoule.author === "human") {
-                setIsLoading(true);
-              } else if (lastJoule.author === "bot") {
-                setIsLoading(false);
-              }
+            if (lastJoule.author === "human") {
+              setNonInitialHumanMessageInFlight(false);
             }
+            console.log(lastJoule);
             setTask(message.task);
             return;
           case "updateWorkspaceFiles":
@@ -262,8 +270,8 @@ export function ConversationView() {
               showDiff={index !== 0} // Hide diff view for the first message
             />
           ))}
-          {isLoading && (
-            <div className="flex my-3" role="status">
+          {isLoading() && (
+            <div className="flex my-1 p-2" role="status">
               <LoaderCircle className="w-4 h-4 animate-spin text-gray-500" />
             </div>
           )}

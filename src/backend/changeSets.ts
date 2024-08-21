@@ -3,7 +3,6 @@ import * as utils from "../util/utils";
 import fs from "fs";
 import path from "path";
 import * as files from "./meltyFiles";
-import { generateCommitMessage } from "./commitMessageGenerator";
 
 export function createEmpty(): ChangeSet {
   return {
@@ -21,7 +20,11 @@ export function isEmpty(changeSet: ChangeSet) {
  * @param gitRepo The git repo to apply the change set to
  * @returns The new commit hash
  */
-export async function commitChangeSet(changeSet: ChangeSet, gitRepo: GitRepo) {
+export async function commitChangeSet(
+  changeSet: ChangeSet,
+  gitRepo: GitRepo,
+  commitMessage: string
+) {
   const repository = gitRepo.repository;
   await repository.status();
   // check for uncommitted changes
@@ -48,10 +51,6 @@ export async function commitChangeSet(changeSet: ChangeSet, gitRepo: GitRepo) {
     Object.values(changeSet.filesChanged).map((file) =>
       files.absolutePath(file, gitRepo.rootPath)
     )
-  );
-
-  const commitMessage = await generateCommitMessage(
-    utils.getDiffPreviewFromChangeSet(changeSet)
   );
 
   await repository.commit(`[by melty] ${commitMessage}`, {

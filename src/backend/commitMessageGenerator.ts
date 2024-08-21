@@ -1,12 +1,9 @@
-import * as fs from "fs";
-import * as path from "path";
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
-import * as files from "./meltyFiles";
-import { GitRepo, ChangeSet } from "../types";
 
 export async function generateCommitMessage(
-  udiffPreview: string
+  udiffPreview: string,
+  accompanyingMessage: string = ""
 ): Promise<string> {
   const config = vscode.workspace.getConfiguration("melty");
   const apiKey = config.get<string>("anthropicApiKey");
@@ -23,23 +20,37 @@ export async function generateCommitMessage(
 
   const prompt = `You are an expert software engineer.
 Review the provided diff which is about to be committed to a git repo.
-Review the diff carefully.
-Generate a commit message for those changes.
+${
+  accompanyingMessage
+    ? `Also review the accompanying message, which was part of a larger conversation and may contain
+additional context about what's in the diff.`
+    : ""
+}
+
+Review the context carefully, then generate a commit message for the changes.
 The commit message MUST use the imperative tense.
 If the diff contains no files changed, you can just reply with "empty commit".
 The commit message should be structured as follows: <type>: <description>
 Use these for <type>: fix, feat, build, chore, ci, docs, style, refactor, perf, test
-Reply with JUST the commit message, without quotes, comments, questions, etc!
 
 Example:
 
-<CommitMessage>fix: Add logging to foo/bar/baz.py</CommitMessage>
+<commit_message>fix: Add logging to foo/bar/baz.py</commit_message>
 
-Here is the diff:
+Here is the context for the changes:
 
-<Diff>
+<diff>
 ${udiffPreview}
-</Diff>`;
+</diff>
+
+${
+  accompanyingMessage
+    ? `<accompanying_message>
+${accompanyingMessage}
+</accompanying_message>`
+    : ""
+}
+`;
 
   try {
     const response = await anthropic.messages.create({
@@ -48,12 +59,12 @@ ${udiffPreview}
       temperature: 0.7,
       messages: [
         { role: "user", content: prompt },
-        { role: "assistant", content: "<CommitMessage>" },
+        { role: "assistant", content: "<commit_message>" },
       ],
     });
 
     const responseText = response.content[0].text.trim();
-    const commitMessage = responseText.split("</CommitMessage>")[0].trim();
+    const commitMessage = responseText.split("</commit_message>")[0].trim();
     return commitMessage;
   } catch (error) {
     console.error("Error generating commit message:", error);
