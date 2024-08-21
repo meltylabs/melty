@@ -71,6 +71,11 @@
           "default": "***REMOVED***",
           "description": "API key for Anthropic Claude"
         },
+        "melty.userPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "Custom prompt to be added at the beginning of every conversation"
+        },
         "melty.githubToken": {
           "type": "string",
           "default": "",

@@ -3,6 +3,7 @@ import * as prompts from "../backend/prompts";
 import * as joules from "../backend/joules";
 import fs from "fs";
 import path from "path";
+import { getUserPrompt } from "../util/config";
 
 export abstract class BaseAssistant {
   abstract respond(
@@ -13,10 +14,26 @@ export abstract class BaseAssistant {
   ): Promise<Conversation>;
 
   protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
-    return conversation.joules.map((joule) => ({
+    const userPrompt = getUserPrompt();
+    const messages: ClaudeMessage[] = [];
+
+    if (userPrompt) {
+      messages.push({
+        role: "user",
+        content: userPrompt,
+      });
+      messages.push({
+        role: "assistant",
+        content: "Understood. I'll keep that in mind throughout our conversation.",
+      });
+    }
+
+    messages.push(...conversation.joules.map((joule) => ({
       role: joule.author === "human" ? "user" : "assistant",
       content: joules.formatMessageForClaude(joule),
-    }));
+    })));
+
+    return messages;
   }
 
   /**

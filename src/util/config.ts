@@ -1,5 +1,10 @@
 import * as vscode from "vscode";
 
+export function getUserPrompt(): string {
+  const config = vscode.workspace.getConfiguration("melty");
+  return config.get<string>("userPrompt", "");
+}
+
 const EXCLUDES = [
   "**/node_modules/**",
   "**/.melty/**",
