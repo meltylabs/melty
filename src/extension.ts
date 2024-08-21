@@ -474,7 +474,6 @@ let extension: MeltyExtension;
 export function activate(context: vscode.ExtensionContext) {
   console.log("Activating Melty extension");
   outputChannel = vscode.window.createOutputChannel("Melty");
-  outputChannel.show();
   outputChannel.appendLine("Activating Melty extension");
 
   extension = new MeltyExtension(context, outputChannel);
