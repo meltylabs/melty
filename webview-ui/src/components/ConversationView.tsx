@@ -33,7 +33,7 @@ export function ConversationView() {
   const conversationRef = useRef<HTMLDivElement>(null);
   const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   async function handleAddFile(file: string) {
     const meltyFiles = await rpcClient.run("addMeltyFile", {
