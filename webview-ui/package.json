@@ -31,6 +31,7 @@
     "cmdk": "^1.0.0",
     "diff2html": "^3.4.48",
     "lucide-react": "^0.424.0",
+    "posthog-js": "^1.157.2",
     "react": "^18.2.0",
     "react-diff-view": "^3.2.1",
     "react-dom": "^18.2.0",

@@ -11,6 +11,18 @@ import { Tasks } from "./components/Tasks";
 import { ConversationView } from "./components/ConversationView";
 import { Onboarding } from "./components/Onboarding";
 import "./App.css";
+import posthog from "posthog-js";
+import { PostHogProvider } from "posthog-js/react";
+
+if (typeof window !== "undefined") {
+  posthog.init("phc_tvdsIv2ZDXVeJfYm0GTEBFwaPtdmWRa2cNVGCg18Qt6", {
+    api_host:
+      process.env.REACT_APP_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
+    loaded: (posthog) => {
+      if (process.env.NODE_ENV === "development") posthog.debug();
+    },
+  });
+}
 
 function AppContent() {
   const navigate = useNavigate();
@@ -62,9 +74,13 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <React.StrictMode>
+      <PostHogProvider client={posthog}>
+        <Router>
+          <AppContent />
+        </Router>
+      </PostHogProvider>
+    </React.StrictMode>
   );
 }
 
