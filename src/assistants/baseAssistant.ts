@@ -24,14 +24,21 @@ export abstract class BaseAssistant {
       });
       messages.push({
         role: "assistant",
-        content: "Understood. I'll keep that in mind throughout our conversation.",
+        content:
+          "Understood. I'll keep that in mind throughout our conversation.",
       });
     }
 
-    messages.push(...conversation.joules.map((joule) => ({
-      role: joule.author === "human" ? "user" : "assistant",
-      content: joules.formatMessageForClaude(joule),
-    })));
+    function authorToRole(author: "human" | "bot"): "user" | "assistant" {
+      return author === "human" ? "user" : "assistant";
+    }
+
+    messages.push(
+      ...conversation.joules.map((joule) => ({
+        role: authorToRole(joule.author),
+        content: joules.formatMessageForClaude(joule),
+      }))
+    );
 
     return messages;
   }
