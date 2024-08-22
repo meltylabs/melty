@@ -4,10 +4,10 @@ import { HelloWorldPanel } from "./panels/HelloWorldPanel";
 import { Conversation } from "./types";
 import { Task } from "./backend/tasks";
 import * as datastores from "./backend/datastores";
-import * as utils from "./util/utils";
 import { v4 as uuidv4 } from "uuid";
 import { Octokit } from "@octokit/rest";
 import { getRepoAtWorkspaceRoot } from "./util/gitUtils";
+import posthog from "posthog-js";
 
 export class MeltyExtension {
   private outputChannel: vscode.OutputChannel;
@@ -106,7 +106,7 @@ export class MeltyExtension {
     vscode.window.showTextDocument(fileUri);
   }
 
-  public async getOrInitTask(taskId: string, fileManager: any) {
+  public async getOrInitTask(taskId: string, fileManager: any): Promise<Task> {
     const task = this.tasks.get(taskId);
     if (!task) {
       throw new Error(`Task with id ${taskId} not found`);
@@ -485,6 +485,12 @@ export function activate(context: vscode.ExtensionContext) {
       new HelloWorldPanel(context.extensionUri, extension)
     )
   );
+
+  // posthog init for backend
+  posthog.init("phc_tvdsIv2ZDXVeJfYm0GTEBFwaPtdmWRa2cNVGCg18Qt6", {
+    api_host: "https://us.i.posthog.com",
+    person_profiles: "identified_only",
+  });
 
   outputChannel.appendLine("Melty extension activated");
   console.log("Melty extension activated");

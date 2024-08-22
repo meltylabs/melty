@@ -20,6 +20,7 @@ import * as config from "../util/config";
 import { WebviewNotifier } from "../webviewNotifier";
 import { FileManager } from "../fileManager";
 import { RpcMethod } from "../types";
+import posthog from "posthog-js";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -207,7 +208,17 @@ export class HelloWorldPanel implements WebviewViewProvider {
           throw new Error(`Unknown RPC method: ${method}`);
       }
     } catch (error) {
-      vscode.window.showErrorMessage(`Melty internal error: ${error}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Melty internal error: ${errorMessage}`);
+
+      const result = posthog.capture("melty_errored", {
+        type: "rpc_error",
+        errorMessage: errorMessage,
+        context: JSON.stringify({ ...params, rpcMethod: method }),
+      });
+      console.log("posthog event captured!", result);
+
       throw error;
     }
   }
@@ -284,14 +295,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
     assistantType: AssistantType,
     taskId: string
   ): Promise<void> {
-    const task = (await this.MeltyExtension.getOrInitTask(
+    const task = await this.MeltyExtension.getOrInitTask(
       taskId,
       this.fileManager
-    ))!;
-    // const task = (await this.MeltyExtension.getCurrentTask(this.fileManager))!;
+    );
 
     // human response
-
     try {
       await task.respondHuman(assistantType, text);
       this.webviewNotifier?.sendNotification("updateTask", {

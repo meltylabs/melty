@@ -11,6 +11,7 @@ import * as parser from "../diffApplication/parser";
 import fs from "fs";
 import path from "path";
 import * as meltyFiles from "../backend/meltyFiles";
+import posthog from "posthog-js";
 
 export async function searchReplaceToChangeSet(
   gitRepo: GitRepo,
@@ -137,6 +138,16 @@ function applyByExactMatch(
     console.error(searchReplace.search.trim());
     console.error("replace string:");
     console.error(searchReplace.replace);
+
+    posthog.capture("melty_errored", {
+      type: "diff_application_failed",
+      context: JSON.stringify({
+        searchString: searchReplace.search,
+        replaceString: searchReplace.replace,
+        originalContentSnippet: originalContents.substring(0, 2500), // first 2500 characters
+      }),
+    });
+
     return undefined;
   }
   const updatedContent = originalContents.replace(

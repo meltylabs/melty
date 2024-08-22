@@ -119,7 +119,7 @@ export class Task implements Task {
   }
 
   /**
-   * Responds to a bot message
+   * Adds a bot message (and changes) to the conversation.
    *
    * @param contextPaths - the paths to the files in the context of which to respond (melty's mind)
    * @param mode - the mode of the assistant to use

@@ -91,13 +91,13 @@ export function ConversationView() {
     taskId: string
   ) {
     setNonInitialHumanMessageInFlight(true);
-    rpcClient.run("chatMessage", { assistantType, text, taskId });
     const result = posthog.capture("chatmessage_sent", {
       assistant_type: assistantType,
       message: text,
       task_id: taskId,
     });
     console.log("posthog event captured!", result);
+    rpcClient.run("chatMessage", { assistantType, text, taskId });
   }
 
   async function handleCreatePR() {

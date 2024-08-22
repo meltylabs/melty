@@ -190,7 +190,7 @@ export function splitResponse(
           // we should probably do something here
         } else {
           // otherwise, it's in CodeChange but not in search/replace
-          if (!partialMode) {
+          if (!partialMode && line !== "") {
             console.log("ignoring stray line in CodeChange: ", line);
           }
         }
