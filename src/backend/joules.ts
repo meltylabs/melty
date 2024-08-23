@@ -2,6 +2,14 @@ import { v4 as uuidv4 } from "uuid";
 
 import { Joule, JouleHuman, JouleBot, BotExecInfo, DiffInfo } from "../types";
 
+export function createJouleError(errorMessage: string): JouleBot {
+  return createJouleBot(errorMessage, {
+    rawOutput: "[error encountered]",
+    contextPaths: [],
+    assistantType: "system",
+  });
+}
+
 export function createJouleHuman(message: string): JouleHuman {
   return createJouleHumanWithChanges(message, null, null);
 }

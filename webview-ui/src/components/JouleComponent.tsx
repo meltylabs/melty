@@ -1,4 +1,3 @@
-import { LoaderCircle } from "lucide-react";
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -40,6 +39,12 @@ export function JouleComponent({
       console.error("Failed to undo commit:", error);
     }
   };
+
+  if (joule.state === "error") {
+    return (
+      <div className="text-red-800">Oops, something went wrong. Try again?</div>
+    );
+  }
 
   return (
     <div

@@ -49,6 +49,18 @@ export class Task implements Task {
     this.fileManager = fileManager;
   }
 
+  public addErrorJoule(message: string): void {
+    // first, remove any bot joules
+    this.conversation = conversations.forceConversationReadyForResponseFrom(
+      this.conversation,
+      "bot"
+    );
+    const errorJoule = joules.createJouleError(
+      `Melty encountered an error: ${message}. Try again?`
+    );
+    this.conversation = conversations.addJoule(this.conversation, errorJoule);
+  }
+
   /**
    * Initializes the GitRepo's repository field. Note that if the GitRepo has only a rootPath,
    * then we still need to run `init` to populate the repository field.
@@ -192,8 +204,10 @@ export class Task implements Task {
     assistantType: AssistantType,
     message: string
   ): Promise<Joule> {
-    // hacky!
-    this.conversation = conversations.forceRemoveHumanJoules(this.conversation);
+    this.conversation = conversations.forceConversationReadyForResponseFrom(
+      this.conversation,
+      "human"
+    );
 
     let newJoule: Joule;
 

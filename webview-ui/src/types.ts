@@ -19,7 +19,7 @@ export type AssistantType = "vanilla" | "coder" | "system";
 export type Joule = {
   readonly id: string;
   readonly author: "human" | "bot";
-  readonly state: "complete" | "partial";
+  readonly state: "complete" | "partial" | "error";
   readonly message: string;
   readonly commit: string | null;
   readonly diffInfo: DiffInfo | null;
@@ -93,7 +93,9 @@ export type MeltyFile = {
 };
 
 export type ChangeSet = {
-  readonly filesChanged: { [relPath: string]: MeltyFile };
+  readonly filesChanged: {
+    [relPath: string]: { original: MeltyFile; updated: MeltyFile };
+  };
 };
 
 export type RpcMethod =

@@ -169,6 +169,19 @@ export class HelloWorldPanel implements WebviewViewProvider {
     });
   }
 
+  private async notifyWebviewOfChatError(taskId: string, message: string) {
+    const task = await this.MeltyExtension.getOrInitTask(
+      taskId,
+      this.fileManager
+    );
+
+    task.addErrorJoule(message);
+
+    this.webviewNotifier?.sendNotification("updateTask", {
+      task: task.serialize(),
+    });
+  }
+
   private async handleRPCCall(method: RpcMethod, params: any): Promise<any> {
     try {
       switch (method) {
@@ -210,7 +223,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      vscode.window.showErrorMessage(`Melty internal error: ${errorMessage}`);
+      vscode.window.showErrorMessage(
+        `Melty internal error: ${errorMessage}. Please try again.`
+      );
+
+      if (method === "chatMessage") {
+        await this.notifyWebviewOfChatError(params.taskId, errorMessage);
+      }
 
       const result = posthog.capture("melty_errored", {
         type: "rpc_error",
