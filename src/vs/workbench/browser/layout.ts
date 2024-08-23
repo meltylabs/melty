@@ -1485,7 +1485,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		const auxiliaryBarPart = this.getPart(Parts.AUXILIARYBAR_PART);
 		const sideBar = this.getPart(Parts.SIDEBAR_PART);
 		const statusBar = this.getPart(Parts.STATUSBAR_PART);
-		const meltyPart = this.getPart(Parts.SIDEBAR_PART); // dupe for now
+		const meltyPart = this.getPart(Parts.MELTY_PART);
 
 		// View references for all parts
 		this.titleBarPartView = titleBar;
@@ -2322,6 +2322,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		const sideBarSize = this.stateModel.getInitializationValue(LayoutStateKeys.SIDEBAR_SIZE);
 		const auxiliaryBarPartSize = this.stateModel.getInitializationValue(LayoutStateKeys.AUXILIARYBAR_SIZE);
 		const panelSize = this.stateModel.getInitializationValue(LayoutStateKeys.PANEL_SIZE);
+		const meltySize = 1000;
 
 		const titleBarHeight = this.titleBarPartView.minimumHeight;
 		const bannerHeight = this.bannerPartView.minimumHeight;
@@ -2397,6 +2398,12 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 						type: 'branch',
 						data: middleSection,
 						size: middleSectionHeight
+					},
+					{
+						type: 'leaf',
+						data: { type: Parts.MELTY_PART },
+						size: meltySize,
+						visible: true
 					},
 					{
 						type: 'leaf',

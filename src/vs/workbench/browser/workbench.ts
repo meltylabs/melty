@@ -51,6 +51,7 @@ import { setProgressAcccessibilitySignalScheduler } from 'vs/base/browser/ui/pro
 import { AccessibleViewRegistry } from 'vs/platform/accessibility/browser/accessibleViewRegistry';
 import { NotificationAccessibleView } from 'vs/workbench/browser/parts/notifications/notificationAccessibleView';
 import { isESM } from 'vs/base/common/amd';
+import { IMeltyService } from 'vs/workbench/browser/parts/melty/meltyService';
 
 export interface IWorkbenchOptions {
 
@@ -372,6 +373,14 @@ export class Workbench extends Layout {
 			{ id: Parts.MELTY_PART, role: 'none', classes: ['sidebar', 'left'] }
 		]) {
 			const partContainer = this.createPart(id, role, classes);
+
+			// TODO this is probably hacky
+			if (id === Parts.MELTY_PART) {
+				// Ensure MeltyService is instantiated here
+				instantiationService.invokeFunction(accessor => {
+					accessor.get(IMeltyService);
+				});
+			}
 
 			mark(`code/willCreatePart/${id}`);
 			this.getPart(id).create(partContainer, options);

@@ -46,6 +46,7 @@ import 'vs/workbench/browser/parts/editor/editorParts';
 import 'vs/workbench/browser/parts/paneCompositePartService';
 import 'vs/workbench/browser/parts/banner/bannerPart';
 import 'vs/workbench/browser/parts/statusbar/statusbarPart';
+import 'vs/workbench/browser/parts/melty/meltyService';
 
 //#endregion
 
