@@ -15,7 +15,7 @@
 
 # To package
 
-> yarn gulp darwin-arm64
+> yarn gulp vscode-darwin-arm64
 
 # VSCode contribution instructions
 
