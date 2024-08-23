@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   XIcon,
@@ -7,6 +7,7 @@ import {
   ArrowDown,
   LoaderCircle,
 } from "lucide-react";
+import posthog from "posthog-js";
 import { FilePicker } from "./FilePicker";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { Task, AssistantType } from "../types";
@@ -19,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import posthog from "posthog-js";
+
+const MemoizedJouleComponent = memo(JouleComponent);
 
 export function ConversationView() {
   const [rpcClient] = useState(() => new RpcClient());
@@ -274,7 +276,7 @@ export function ConversationView() {
       >
         <div className="flex flex-col h-full">
           {task?.conversation.joules.map((joule, index) => (
-            <JouleComponent
+            <MemoizedJouleComponent
               key={index}
               joule={joule}
               latestCommitHash={latestCommitHash!}
