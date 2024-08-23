@@ -82,7 +82,7 @@ export class MeltyPart extends Part {
 
 	toggle(): void {
 		if (this.content) {
-			this.content.style.display = this.content.style.display === 'block' ? 'none' : 'block';
+			this.content.style.display = this.content.style.display === 'flex' ? 'none' : 'flex';
 		}
 	}
 
