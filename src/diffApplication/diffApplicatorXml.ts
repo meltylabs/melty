@@ -1,17 +1,9 @@
-import {
-  GitRepo,
-  SearchReplace,
-  ClaudeConversation,
-  ChangeSet,
-} from "../types";
-import * as claudeAPI from "../backend/claudeAPI";
-import * as prompts from "../backend/prompts";
+import { GitRepo, SearchReplace, ChangeSet } from "../types";
 import * as vscode from "vscode";
-import * as parser from "../diffApplication/parser";
 import fs from "fs";
 import path from "path";
 import * as meltyFiles from "../backend/meltyFiles";
-import posthog from "posthog-js";
+import { diffApplicationStrategies } from "./diffApplicationStrategies";
 
 export async function searchReplaceToChangeSet(
   gitRepo: GitRepo,
@@ -42,29 +34,27 @@ export async function searchReplaceToChangeSet(
         const matchableOriginalContent =
           rawOriginalContent !== "" ? rawOriginalContent : "\n\n";
 
-        let newContent = searchReplaces.reduce(
-          (content: string | undefined, searchReplace: SearchReplace) => {
-            if (content) {
-              return applyByExactMatch(content, searchReplace);
+        let newContent = matchableOriginalContent;
+
+        for (const searchReplace of searchReplaces) {
+          let applied = false;
+          for (const [index, strategy] of diffApplicationStrategies.entries()) {
+            const strategyResult = await strategy(newContent, searchReplace);
+            if (strategyResult !== null) {
+              newContent = strategyResult;
+              applied = true;
+              console.log(
+                `Applied change using strategy ${index} (${strategy.name}) for ${filePath}`
+              );
+              break;
             }
-            return undefined;
-          },
-          matchableOriginalContent
-        );
-
-        if (!newContent) {
-          // fall back to haiku
-          console.log(
-            `Falling back to haiku diff application for ${filePath}...`
-          );
-          vscode.window.showInformationMessage(
-            `Falling back to haiku diff application for ${filePath}...`
-          );
-
-          newContent = await searchReplaceToChangeSetByClaude(
-            matchableOriginalContent,
-            searchReplaces
-          );
+          }
+          if (!applied) {
+            console.error(`Failed to apply change to ${filePath}`);
+            vscode.window.showWarningMessage(
+              `Failed to apply a change to ${filePath}`
+            );
+          }
         }
 
         return [
@@ -79,80 +69,4 @@ export async function searchReplaceToChangeSet(
   );
 
   return { filesChanged: Object.fromEntries(changeSetValues) };
-}
-
-async function searchReplaceToChangeSetByClaude(
-  fileContent: string,
-  searchReplaces: SearchReplace[]
-): Promise<string> {
-  const formatDiff = (searchReplace: SearchReplace) => {
-    return `${parser.DIFF_OPEN}
-${searchReplace.search}
-${parser.DIFF_DIVIDER}
-${searchReplace.replace}
-${parser.DIFF_CLOSE}`;
-  };
-  const claudeConversation: ClaudeConversation = {
-    system: "",
-    messages: [
-      {
-        role: "user",
-        content: `${prompts.diffApplicationSystemPrompt(
-          fileContent,
-          searchReplaces.map(formatDiff).join("\n\n")
-        )}`,
-      },
-      {
-        role: "assistant",
-        content: `<Updated>`,
-      },
-    ],
-  };
-
-  console.log(
-    "APPLYBYSONNET prompt",
-    `SYSTEM: ${claudeConversation.system}
-    MESSAGES: ${claudeConversation.messages}`
-  );
-
-  const response = await claudeAPI.streamClaude(
-    claudeConversation,
-    () => {},
-    claudeAPI.Models.Claude35Sonnet
-  );
-  console.log("APPLYBYSONNET response", response);
-
-  // remove the closing </Updated> tag
-  return response.split("</Updated>")[0];
-}
-
-function applyByExactMatch(
-  originalContents: string,
-  searchReplace: SearchReplace
-): string | undefined {
-  if (!originalContents.includes(searchReplace.search)) {
-    console.error("failed to apply diff");
-    console.error("search string:");
-    console.error(searchReplace.search);
-    console.error("search string trimmed:");
-    console.error(searchReplace.search.trim());
-    console.error("replace string:");
-    console.error(searchReplace.replace);
-
-    posthog.capture("melty_errored", {
-      type: "diff_application_failed",
-      context: JSON.stringify({
-        searchString: searchReplace.search,
-        replaceString: searchReplace.replace,
-        originalContentSnippet: originalContents.substring(0, 2500), // first 2500 characters
-      }),
-    });
-
-    return undefined;
-  }
-  const updatedContent = originalContents.replace(
-    searchReplace.search,
-    searchReplace.replace
-  );
-  return updatedContent;
 }
