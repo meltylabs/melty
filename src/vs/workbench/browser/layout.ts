@@ -1498,6 +1498,20 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		this.statusBarPartView = statusBar;
 		this.meltyPartView = meltyPart;
 
+		// Create a new container for MeltyPart
+		const meltyPartContainer = document.createElement('div');
+		meltyPartContainer.style.position = 'absolute';
+		meltyPartContainer.style.top = '0';
+		meltyPartContainer.style.left = '0';
+		meltyPartContainer.style.right = '0';
+		meltyPartContainer.style.bottom = '0';
+		meltyPartContainer.style.zIndex = '10';
+		meltyPartContainer.style.display = 'absolute';
+		meltyPartContainer.classList.add('melty-part-container');
+		this.mainContainer.appendChild(meltyPartContainer);
+		// Initialize MeltyPart in this new container
+		meltyPart.create(meltyPartContainer);
+
 		const viewMap = {
 			[Parts.ACTIVITYBAR_PART]: this.activityBarPartView,
 			[Parts.BANNER_PART]: this.bannerPartView,
@@ -1507,7 +1521,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 			[Parts.SIDEBAR_PART]: this.sideBarPartView,
 			[Parts.STATUSBAR_PART]: this.statusBarPartView,
 			[Parts.AUXILIARYBAR_PART]: this.auxiliaryBarPartView,
-			[Parts.MELTY_PART]: this.meltyPartView
+			[Parts.MELTY_PART]: this.meltyPartView, // pass MeltyPart into this thing but never use it
 		};
 
 		const fromJSON = ({ type }: { type: Parts }) => viewMap[type];
@@ -2322,7 +2336,6 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		const sideBarSize = this.stateModel.getInitializationValue(LayoutStateKeys.SIDEBAR_SIZE);
 		const auxiliaryBarPartSize = this.stateModel.getInitializationValue(LayoutStateKeys.AUXILIARYBAR_SIZE);
 		const panelSize = this.stateModel.getInitializationValue(LayoutStateKeys.PANEL_SIZE);
-		const meltySize = 1000;
 
 		const titleBarHeight = this.titleBarPartView.minimumHeight;
 		const bannerHeight = this.bannerPartView.minimumHeight;
@@ -2398,12 +2411,6 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 						type: 'branch',
 						data: middleSection,
 						size: middleSectionHeight
-					},
-					{
-						type: 'leaf',
-						data: { type: Parts.MELTY_PART },
-						size: meltySize,
-						visible: true
 					},
 					{
 						type: 'leaf',

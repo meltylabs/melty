@@ -33,8 +33,10 @@ export class MeltyPart extends Part {
 		parent.appendChild(this.content);
 
 		// Add visible content and styling
-		this.content.style.backgroundColor = 'rgba(0, 0, 255, 0.5)'; // Semi-transparent blue
-		this.content.style.color = 'white';
+		this.content.style.margin = '40px';
+		this.content.style.borderRadius = '40px';
+		this.content.style.backgroundColor = 'white'; // Semi-transparent blue
+		this.content.style.color = '#333';
 		this.content.style.fontSize = '24px';
 		this.content.style.display = 'flex';
 		this.content.style.justifyContent = 'center';
@@ -44,7 +46,6 @@ export class MeltyPart extends Part {
 		this.content.style.left = '0';
 		this.content.style.right = '0';
 		this.content.style.bottom = '0';
-		this.content.style.zIndex = '9999'; // Ensure it's on top of other elements
 
 		this.content.textContent = 'Melty Fullscreen Popup';
 
