@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import 'vs/css!./media/sidebarpart';
+import 'vs/css!./media/meltypart';
 import 'vs/workbench/browser/parts/sidebar/sidebarActions';
 import { ActivityBarPosition, IWorkbenchLayoutService, LayoutSettings, Parts, Position as SideBarPosition } from 'vs/workbench/services/layout/browser/layoutService';
 import { SidebarFocusContext, ActiveViewletContext } from 'vs/workbench/common/contextkeys';
@@ -33,7 +33,7 @@ import { ToggleActivityBarVisibilityActionId } from 'vs/workbench/browser/action
 import { localize2 } from 'vs/nls';
 import { IHoverService } from 'vs/platform/hover/browser/hover';
 
-export class SidebarPart extends AbstractPaneCompositePart {
+export class MeltyPart extends AbstractPaneCompositePart {
 
 	static readonly activeViewletSettingsKey = 'workbench.sidebar.activeviewletid';
 
@@ -82,9 +82,9 @@ export class SidebarPart extends AbstractPaneCompositePart {
 		@IMenuService menuService: IMenuService,
 	) {
 		super(
-			Parts.MELTY_PART,
+			Parts.SIDEBAR_PART,
 			{ hasTitle: true, borderWidth: () => (this.getColor(SIDE_BAR_BORDER) || this.getColor(contrastBorder)) ? 1 : 0 },
-			SidebarPart.activeViewletSettingsKey,
+			MeltyPart.activeViewletSettingsKey,
 			ActiveViewletContext.bindTo(contextKeyService),
 			SidebarFocusContext.bindTo(contextKeyService),
 			'sideBar',
@@ -286,7 +286,7 @@ export class SidebarPart extends AbstractPaneCompositePart {
 
 	toJSON(): object {
 		return {
-			type: Parts.SIDEBAR_PART
+			type: Parts.MELTY_PART
 		};
 	}
 }

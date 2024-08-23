@@ -368,7 +368,8 @@ export class Workbench extends Layout {
 			{ id: Parts.EDITOR_PART, role: 'main', classes: ['editor'], options: { restorePreviousState: this.willRestoreEditors() } },
 			{ id: Parts.PANEL_PART, role: 'none', classes: ['panel', 'basepanel', positionToString(this.getPanelPosition())] },
 			{ id: Parts.AUXILIARYBAR_PART, role: 'none', classes: ['auxiliarybar', 'basepanel', this.getSideBarPosition() === Position.LEFT ? 'right' : 'left'] },
-			{ id: Parts.STATUSBAR_PART, role: 'status', classes: ['statusbar'] }
+			{ id: Parts.STATUSBAR_PART, role: 'status', classes: ['statusbar'] },
+			{ id: Parts.MELTY_PART, role: 'none', classes: ['sidebar', 'left'] }
 		]) {
 			const partContainer = this.createPart(id, role, classes);
 

@@ -35,8 +35,8 @@ export class FocusSideBarAction extends Action2 {
 		const paneCompositeService = accessor.get(IPaneCompositePartService);
 
 		// Show side bar
-		if (!layoutService.isVisible(Parts.SIDEBAR_PART)) {
-			layoutService.setPartHidden(false, Parts.SIDEBAR_PART);
+		if (!layoutService.isVisible(Parts.MELTY_PART)) {
+			layoutService.setPartHidden(false, Parts.MELTY_PART);
 		}
 
 		// Focus into active viewlet
