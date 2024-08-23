@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { forwardRef, useCallback } from "react";
 import { Textarea } from "./ui/textarea";
 
 interface AutoExpandingTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -6,25 +6,35 @@ interface AutoExpandingTextareaProps extends React.TextareaHTMLAttributes<HTMLTe
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
-const AutoExpandingTextarea: React.FC<AutoExpandingTextareaProps> = ({ value, onChange, ...props }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTextareaProps>(
+  ({ value, onChange, ...props }, ref) => {
+    const adjustHeight = useCallback((element: HTMLTextAreaElement | null) => {
+      if (element) {
+        element.style.height = "auto";
+        element.style.height = `${element.scrollHeight}px`;
+      }
+    }, []);
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [value]);
-
-  return (
-    <Textarea
-      ref={textareaRef}
-      value={value}
-      onChange={onChange}
-      {...props}
-    />
-  );
-};
+    return (
+      <Textarea
+        ref={(node) => {
+          adjustHeight(node);
+          if (typeof ref === 'function') {
+            ref(node);
+          } else if (ref) {
+            ref.current = node;
+          }
+        }}
+        value={value}
+        onChange={(e) => {
+          onChange(e);
+          adjustHeight(e.target);
+        }}
+        {...props}
+      />
+    );
+  }
+);
 
 export default AutoExpandingTextarea;
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Card,
   CardHeader,
@@ -61,6 +61,21 @@ export function Tasks({
     initialMeltyMindFiles || []
   );
   const [pickerOpen, setPickerOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [shouldFocus, setShouldFocus] = useState(false);
+
+  useEffect(() => {
+    if (shouldFocus) {
+      textareaRef.current?.focus();
+      setShouldFocus(false);
+    }
+  }, [shouldFocus]);
+
+  useEffect(() => {
+    if (!pickerOpen) {
+      setShouldFocus(true);
+    }
+  }, [pickerOpen]);
 
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await rpcClient.run("listTasks")) as Task[];
@@ -165,6 +180,7 @@ export function Tasks({
       });
       setMeltyMindFilePaths(updatedMeltyFiles);
       setPickerOpen(false);
+      setShouldFocus(true);
     },
     [rpcClient]
   );
@@ -175,6 +191,7 @@ export function Tasks({
     });
     setMeltyMindFilePaths(meltyFiles);
     setPickerOpen(false);
+    setShouldFocus(true);
   }
 
   useEffect(() => {
@@ -207,7 +224,7 @@ export function Tasks({
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
             className="flex-grow p-3 pr-12 pb-12"
-            autoFocus
+            ref={textareaRef}
             required
           />
 

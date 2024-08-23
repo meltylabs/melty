@@ -30,6 +30,7 @@ export function ConversationView() {
   const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
   const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [shouldFocus, setShouldFocus] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
   const [messageText, setMessageText] = useState("");
   const conversationRef = useRef<HTMLDivElement>(null);
@@ -66,6 +67,7 @@ export function ConversationView() {
     });
     setMeltyFiles(meltyFiles);
     setPickerOpen(false);
+    setShouldFocus(true);
   }
 
   async function handleDropFile(file: string) {
@@ -74,7 +76,21 @@ export function ConversationView() {
     });
     setMeltyFiles(meltyFiles);
     setPickerOpen(false);
+    setShouldFocus(true);
   }
+
+  useEffect(() => {
+    if (shouldFocus) {
+      inputRef.current?.focus();
+      setShouldFocus(false);
+    }
+  }, [shouldFocus]);
+
+  useEffect(() => {
+    if (!pickerOpen) {
+      setShouldFocus(true);
+    }
+  }, [pickerOpen]);
 
   async function loadTask(taskId: string) {
     console.log("loading task ", taskId);
@@ -298,7 +314,7 @@ export function ConversationView() {
               placeholder="Talk to Melty"
               id="message"
               className="p-3 pr-12 pb-12"
-              autoFocus
+              ref={inputRef}
               required
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
