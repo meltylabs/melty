@@ -42,6 +42,7 @@ export function ConversationView() {
    * - task has no messages (indicates that the initial human message is in flight)
    * - a non initial human message is in flight
    * - the last message is a human message
+   * - the last message is a partial joule bot message
    * note that "non-initial human message in flight" can't be inferred from task state,
    * so we use separate state to track it.
    */
@@ -49,9 +50,11 @@ export function ConversationView() {
     return (
       !task ||
       task.conversation.joules.length === 0 ||
+      nonInitialHumanMessageInFlight ||
       task?.conversation.joules[task?.conversation.joules.length - 1].author ===
         "human" ||
-      nonInitialHumanMessageInFlight
+      task?.conversation.joules[task?.conversation.joules.length - 1].state ===
+        "partial"
     );
   }
 
