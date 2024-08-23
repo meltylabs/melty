@@ -1,5 +1,6 @@
 import React, { forwardRef, useCallback } from "react";
 import { Textarea } from "./ui/textarea";
+import { cn } from "../lib/utils";
 
 interface AutoExpandingTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   value: string;
@@ -7,7 +8,7 @@ interface AutoExpandingTextareaProps extends React.TextareaHTMLAttributes<HTMLTe
 }
 
 const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTextareaProps>(
-  ({ value, onChange, ...props }, ref) => {
+  ({ value, onChange, className, ...props }, ref) => {
     const adjustHeight = useCallback((element: HTMLTextAreaElement | null) => {
       if (element) {
         element.style.height = "auto";
@@ -30,6 +31,7 @@ const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTexta
           onChange(e);
           adjustHeight(e.target);
         }}
+        className={cn("resize-none overflow-hidden", className)}
         {...props}
       />
     );
