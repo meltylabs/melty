@@ -20,7 +20,7 @@ import { FilePicker } from "./FilePicker";
 import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
-import { Textarea } from "./ui/textarea";
+import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { Task, AssistantType } from "../types";
 import {
   Select,
@@ -201,15 +201,14 @@ export function Tasks({
       />
       <form onSubmit={handleSubmit}>
         <div className="mt-4 relative">
-          <Textarea
+          <AutoExpandingTextarea
             placeholder="What are you trying to do?"
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-grow p-3 pr-12"
+            className="flex-grow p-3 pr-12 pb-12"
             autoFocus
             required
-            rows={6}
           />
 
           <div className="absolute right-2 top-2 flex gap-2">

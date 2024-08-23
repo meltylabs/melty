@@ -8,7 +8,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { FilePicker } from "./FilePicker";
-import { Textarea } from "./ui/textarea";
+import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { Task, AssistantType } from "../types";
 import { RpcClient } from "../rpcClient";
 import { JouleComponent } from "./JouleComponent";
@@ -289,13 +289,12 @@ export function ConversationView() {
       <div className="mb-1.5">
         <form onSubmit={handleSubmit}>
           <div className="mt-4 relative">
-            <Textarea
+            <AutoExpandingTextarea
               placeholder="Talk to Melty"
               id="message"
-              className="p-3 pr-12"
+              className="p-3 pr-12 pb-12"
               autoFocus
               required
-              rows={4}
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               onKeyDown={handleKeyDown}
