@@ -12,7 +12,7 @@ import {
 } from "vscode";
 import * as vscode from "vscode";
 import { getUri, getNonce } from "../util/utils";
-import { Conversation, AssistantType } from "../types";
+import { Conversation, TaskMode } from "../types";
 import { MeltyExtension } from "../extension";
 import * as utils from "../util/utils";
 import { Task } from "../backend/tasks";
@@ -200,13 +200,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
         case "getLatestCommit":
           return await this.rpcGetLatestCommit();
         case "chatMessage":
-          return await this.rpcChatMessage(
-            params.text,
-            params.assistantType,
-            params.taskId
-          );
+          return await this.rpcChatMessage(params.text, params.taskId);
         case "createAndSwitchToTask":
-          return await this.rpcCreateAndSwitchToTask(params.name, params.files);
+          return await this.rpcCreateAndSwitchToTask(
+            params.name,
+            params.taskMode,
+            params.files
+          );
         case "listTasks":
           return this.rpcListTasks();
         case "switchTask":
@@ -274,9 +274,14 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
   private async rpcCreateAndSwitchToTask(
     name: string,
+    taskMode: TaskMode,
     files: string[]
   ): Promise<string> {
-    const newTaskId = await this.MeltyExtension.createNewTask(name, files);
+    const newTaskId = await this.MeltyExtension.createNewTask(
+      name,
+      taskMode,
+      files
+    );
     await this.switchTask(newTaskId);
     return newTaskId;
   }
@@ -309,11 +314,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
     await this.switchTask(taskId);
   }
 
-  private async rpcChatMessage(
-    text: string,
-    assistantType: AssistantType,
-    taskId: string
-  ): Promise<void> {
+  private async rpcChatMessage(text: string, taskId: string): Promise<void> {
     const task = await this.MeltyExtension.getOrInitTask(
       taskId,
       this.fileManager
@@ -321,7 +322,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
     // human response
     try {
-      await task.respondHuman(assistantType, text);
+      await task.respondHuman(text);
       this.webviewNotifier?.sendNotification("updateTask", {
         task: task.serialize(),
       });
@@ -347,7 +348,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
       });
     };
 
-    await task.respondBot(assistantType, processPartial);
+    await task.respondBot(processPartial);
     this.webviewNotifier?.sendNotification("updateTask", {
       task: task.serialize(),
     });

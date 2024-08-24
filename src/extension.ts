@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { HelloWorldPanel } from "./panels/HelloWorldPanel";
-import { Conversation } from "./types";
+import { Conversation, TaskMode } from "./types";
 import { Task } from "./backend/tasks";
 import * as datastores from "./backend/datastores";
 import { v4 as uuidv4 } from "uuid";
@@ -33,12 +33,7 @@ export class MeltyExtension {
 
     outputChannel.appendLine("Melty activation started");
 
-    if (vscode.workspace.workspaceFolders) {
-      this.tasks = datastores.loadTasksFromDisk(
-        // TODO for now we assume gitRepo folder == workspace folder
-        vscode.workspace.workspaceFolders![0].uri.fsPath
-      );
-    }
+    this.tasks = datastores.loadTasksFromDisk();
 
     // don't bother kicking off task.init() here; the git repo isn't ready.
   }
@@ -77,12 +72,12 @@ export class MeltyExtension {
 
   public async createNewTask(
     taskName: string,
+    taskMode: TaskMode,
     files?: string[]
   ): Promise<string> {
     const taskId = uuidv4();
-    const branchName = `melty/${taskName.replace(/\s+/g, "-")}`;
 
-    const newTask = new Task(taskId, taskName, branchName, files);
+    const newTask = new Task(taskId, taskName, taskMode, files);
     this.tasks.set(taskId, newTask);
     return taskId;
   }

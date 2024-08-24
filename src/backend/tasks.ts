@@ -1,11 +1,5 @@
 import * as vscode from "vscode";
-import {
-  Joule,
-  Conversation,
-  GitRepo,
-  AssistantType,
-  DiffInfo,
-} from "../types";
+import { Joule, Conversation, GitRepo, TaskMode, DiffInfo } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
@@ -31,7 +25,7 @@ export class Task implements Task {
   constructor(
     public id: string,
     public name: string,
-    public branch: string,
+    public taskMode: TaskMode,
     public files?: string[]
   ) {
     this.conversation = conversations.create();
@@ -138,7 +132,6 @@ export class Task implements Task {
    * @param processPartial - a function to process the partial joule
    */
   public async respondBot(
-    assistantType: AssistantType,
     processPartial: (partialConversation: Conversation) => void
   ): Promise<void> {
     try {
@@ -146,7 +139,7 @@ export class Task implements Task {
       this.ensureWorkingDirectoryClean();
 
       let assistant;
-      switch (assistantType) {
+      switch (this.taskMode) {
         case "coder":
           assistant = new Coder();
           break;
@@ -154,7 +147,7 @@ export class Task implements Task {
           assistant = new Vanilla();
           break;
         default:
-          throw new Error(`Unknown assistant type: ${assistantType}`);
+          throw new Error(`Unknown assistant type: ${this.taskMode}`);
       }
 
       const meltyMindFiles =
@@ -188,7 +181,6 @@ export class Task implements Task {
           {
             rawOutput: message,
             contextPaths: [],
-            assistantType: "system",
           },
           "complete"
         );
@@ -200,10 +192,7 @@ export class Task implements Task {
   /**
    * Adds a human message (and changes) to the conversation.
    */
-  public async respondHuman(
-    assistantType: AssistantType,
-    message: string
-  ): Promise<Joule> {
+  public async respondHuman(message: string): Promise<Joule> {
     this.conversation = conversations.forceConversationReadyForResponseFrom(
       this.conversation,
       "human"
@@ -211,7 +200,7 @@ export class Task implements Task {
 
     let newJoule: Joule;
 
-    if (config.getIsAutocommitMode() && assistantType !== "vanilla") {
+    if (config.getIsAutocommitMode() && this.taskMode !== "vanilla") {
       let didCommit = false;
       await this.gitRepo!.repository.status();
       didCommit = (await this.commitLocalChanges()) > 0;
@@ -256,7 +245,7 @@ export class Task implements Task {
 
   public static deserialize(serializedTask: any): Task {
     const task = Object.assign(
-      new Task(serializedTask.id, "", ""),
+      new Task(serializedTask.id, "", "coder"), // default to coder
       serializedTask
     ) as Task;
 

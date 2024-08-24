@@ -57,7 +57,6 @@ export class Vanilla extends BaseAssistant {
       {
         rawOutput: response,
         contextPaths: contextPaths,
-        assistantType: "vanilla",
       },
       partialMode ? "partial" : "complete"
     );

@@ -128,7 +128,6 @@ export class Coder extends BaseAssistant {
       {
         rawOutput: response,
         contextPaths: contextPaths,
-        assistantType: "coder",
       },
       partialMode
     );

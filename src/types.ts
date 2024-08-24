@@ -2,11 +2,11 @@
 export interface Task {
   id: string;
   name: string;
-  branch: string;
   conversation: Conversation;
   gitRepo: GitRepo | null;
   createdAt: Date;
   updatedAt: Date;
+  taskMode: TaskMode;
 }
 
 export type GitRepo = {
@@ -14,7 +14,7 @@ export type GitRepo = {
   rootPath: string;
 };
 
-export type AssistantType = "vanilla" | "coder" | "system";
+export type TaskMode = "vanilla" | "coder";
 
 export type Joule = {
   readonly id: string;
@@ -40,7 +40,6 @@ export type DiffInfo = {
 };
 
 export type BotExecInfo = {
-  readonly assistantType: AssistantType;
   readonly rawOutput: string;
   readonly contextPaths: ReadonlyArray<string>;
 };

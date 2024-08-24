@@ -10,16 +10,10 @@ import {
 import posthog from "posthog-js";
 import { FilePicker } from "./FilePicker";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { Task, AssistantType } from "../types";
+import { Task } from "../types";
 import { RpcClient } from "../rpcClient";
 import { JouleComponent } from "./JouleComponent";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
+import * as strings from "../utilities/strings";
 
 const MemoizedJouleComponent = memo(JouleComponent);
 
@@ -106,19 +100,14 @@ export function ConversationView() {
     setWorkspaceFiles(workspaceFiles);
   }
 
-  function handleSendMessage(
-    assistantType: AssistantType,
-    text: string,
-    taskId: string
-  ) {
+  function handleSendMessage(text: string, taskId: string) {
     setNonInitialHumanMessageInFlight(true);
     const result = posthog.capture("chatmessage_sent", {
-      assistant_type: assistantType,
       message: text,
       task_id: taskId,
     });
     console.log("posthog event captured!", result);
-    rpcClient.run("chatMessage", { assistantType, text, taskId });
+    rpcClient.run("chatMessage", { text, taskId });
   }
 
   async function handleCreatePR() {
@@ -233,8 +222,7 @@ export function ConversationView() {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const message = form.message.value;
-    const assistantType = form.assistantType.value as AssistantType;
-    handleSendMessage(assistantType, message, taskId!);
+    handleSendMessage(message, taskId!);
     setMessageText("");
     form.reset();
   };
@@ -245,8 +233,7 @@ export function ConversationView() {
       if (event.currentTarget && event.currentTarget.value !== undefined) {
         const form = event.currentTarget.form;
         if (form) {
-          const assistantType = form.assistantType.value as AssistantType;
-          handleSendMessage(assistantType, event.currentTarget.value, taskId!);
+          handleSendMessage(event.currentTarget.value, taskId!);
           setMessageText("");
           event.currentTarget.value = "";
         }
@@ -337,17 +324,11 @@ export function ConversationView() {
               </div>
             )}
 
-            <div className="absolute left-2 bottom-2">
-              <Select name="assistantType" defaultValue="coder">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an assistant" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="coder">Coder</SelectItem>
-                  <SelectItem value="vanilla">Vanilla Claude</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {task && (
+              <div className="absolute left-2 bottom-2 border-gray-300 px-2 py-1 rounded">
+                {strings.getTaskModeName(task.taskMode)}
+              </div>
+            )}
 
             <div className="absolute right-2 bottom-2">
               <span className="text-xs text-muted-foreground">

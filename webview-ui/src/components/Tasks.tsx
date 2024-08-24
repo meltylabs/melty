@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "./ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { RpcClient } from "../rpcClient";
 import { Button } from "./ui/button";
 import {
@@ -21,7 +15,7 @@ import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { Task, AssistantType } from "../types";
+import { Task, TaskMode } from "../types";
 import {
   Select,
   SelectContent,
@@ -29,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import * as strings from "../utilities/strings";
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -107,36 +102,33 @@ export function Tasks({
     [fetchTasks, rpcClient]
   );
 
-  const createNewTask = async (taskName: string) => {
+  const createNewTask = async (taskName: string, taskMode: TaskMode) => {
     console.log(`[Tasks] creating new task ${taskName}`);
     const newTaskId = (await rpcClient.run("createAndSwitchToTask", {
       name: taskName.trim(),
+      taskMode: taskMode,
       files: meltyMindFilePaths,
     })) as string;
     console.log(`[Tasks] created new task ${newTaskId}`);
     return newTaskId;
   };
 
-  function handleSendMessage(
-    assistantType: AssistantType,
-    text: string,
-    taskId: string
-  ) {
-    rpcClient.run("chatMessage", { assistantType, text, taskId });
+  function handleSendMessage(text: string, taskId: string) {
+    rpcClient.run("chatMessage", { text, taskId });
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const form = event.target as HTMLFormElement;
     const message = messageText;
-    const assistantType = form.assistantType.value as AssistantType;
-    console.log(`[Tasks] to ${assistantType}`);
+    const taskMode = form.taskMode.value as TaskMode;
+    console.log(`[Tasks] to ${taskMode}`);
     let taskName = message.substring(0, 40);
     if (message.length > 40) {
       taskName = taskName + "...";
     }
-    const newTaskId = await createNewTask(taskName);
-    handleSendMessage(assistantType, message, newTaskId);
+    const newTaskId = await createNewTask(taskName, taskMode);
+    handleSendMessage(message, newTaskId);
     setMessageText("");
     navigate(`/task/${newTaskId}`);
   };
@@ -148,14 +140,14 @@ export function Tasks({
       if (event.currentTarget && event.currentTarget.value !== undefined) {
         const form = event.currentTarget.form;
         if (form) {
-          const assistantType = form.assistantType.value as AssistantType;
-          console.log(`[Tasks] to ${assistantType}`);
+          const taskMode = form.taskMode.value as TaskMode;
+          console.log(`[Tasks] to ${taskMode}`);
           let taskName = messageText.substring(0, 40);
           if (messageText.length > 40) {
             taskName = taskName + "...";
           }
-          const newTaskId = await createNewTask(taskName);
-          handleSendMessage(assistantType, messageText, newTaskId);
+          const newTaskId = await createNewTask(taskName, taskMode);
+          handleSendMessage(messageText, newTaskId);
           setMessageText("");
           navigate(`/task/${newTaskId}`);
         }
@@ -241,13 +233,17 @@ export function Tasks({
           </div>
 
           <div className="absolute left-2 bottom-2">
-            <Select name="assistantType" defaultValue="coder">
+            <Select name="taskMode" defaultValue="coder">
               <SelectTrigger>
                 <SelectValue placeholder="Select an assistant" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="coder">Coder</SelectItem>
-                <SelectItem value="vanilla">Vanilla Claude</SelectItem>
+                <SelectItem value="coder">
+                  {strings.getTaskModeName("coder")}
+                </SelectItem>
+                <SelectItem value="vanilla">
+                  {strings.getTaskModeName("vanilla")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

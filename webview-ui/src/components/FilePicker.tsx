@@ -1,13 +1,5 @@
 import * as React from "react";
-import {
-  Calculator,
-  Calendar,
-  CreditCard,
-  Settings,
-  Smile,
-  User,
-  File,
-} from "lucide-react";
+import { File } from "lucide-react";
 
 import {
   CommandDialog,
@@ -71,7 +63,7 @@ const getFileIcon = (filePath: string) => {
         />
       </svg>
     );
-  } else if (extension == "txt") {
+  } else if (extension === "txt") {
     return (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <rect
@@ -104,7 +96,7 @@ const getFileIcon = (filePath: string) => {
         </text>
       </svg>
     );
-  } else if (extension == "ex") {
+  } else if (extension === "ex") {
     return (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <defs>
@@ -136,7 +128,7 @@ const getFileIcon = (filePath: string) => {
         />
       </svg>
     );
-  } else if (extension == "md") {
+  } else if (extension === "md") {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -157,7 +149,7 @@ const getFileIcon = (filePath: string) => {
         <path d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39zm125 0l-30-33h20V30h20v35h20z" />
       </svg>
     );
-  } else if (extension == "json") {
+  } else if (extension === "json") {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
