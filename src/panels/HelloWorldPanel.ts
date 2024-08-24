@@ -20,6 +20,8 @@ import * as config from "../util/config";
 import { WebviewNotifier } from "../webviewNotifier";
 import { FileManager } from "../fileManager";
 import { RpcMethod } from "../types";
+import { Coder } from "../assistants/coder";
+import { Vanilla } from "../assistants/vanilla";
 import posthog from "posthog-js";
 
 /**
@@ -217,6 +219,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
           return await this.rpcDeleteTask(params.taskId);
         case "getGitConfigErrors":
           return await this.rpcGetGitConfigErrors();
+        case "getAssistantDescription":
+          return await this.rpcGetAssistantDescription(params.assistantType);
         default:
           throw new Error(`Unknown RPC method: ${method}`);
       }
@@ -239,6 +243,19 @@ export class HelloWorldPanel implements WebviewViewProvider {
       console.log("posthog event captured!", result);
 
       throw error;
+    }
+  }
+
+  private async rpcGetAssistantDescription(
+    assistantType: AssistantType
+  ): Promise<string> {
+    switch (assistantType) {
+      case "coder":
+        return Coder.description;
+      case "vanilla":
+        return Vanilla.description;
+      default:
+        throw new Error(`Unknown assistant type: ${assistantType}`);
     }
   }
 

@@ -9,13 +9,14 @@ import {
   XCircle,
   LoaderCircle,
   XIcon,
+  CircleHelp,
 } from "lucide-react";
 import { FilePicker } from "./FilePicker";
 import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { Task, TaskMode } from "../types";
+import { Task, TaskMode, AssistantInfo } from "../types";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { AddFileButton } from "./AddFileButton";
 import * as strings from "../utilities/strings";
 
 // Utility function to format the date
@@ -58,6 +61,10 @@ export function Tasks({
   const [pickerOpen, setPickerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [shouldFocus, setShouldFocus] = useState(false);
+  const [currentMode, setCurrentMode] = useState<AssistantInfo>({
+    type: "coder",
+    description: "",
+  });
 
   useEffect(() => {
     if (shouldFocus) {
@@ -71,6 +78,24 @@ export function Tasks({
       setShouldFocus(true);
     }
   }, [pickerOpen]);
+
+  const fetchAssistantDescription = useCallback(
+    async (assistantType: TaskMode) => {
+      try {
+        const description = await rpcClient.run("getAssistantDescription", {
+          assistantType,
+        });
+        setCurrentMode({ type: assistantType, description });
+      } catch (error) {
+        console.error("Failed to fetch assistant description:", error);
+      }
+    },
+    [rpcClient]
+  );
+
+  useEffect(() => {
+    fetchAssistantDescription("coder");
+  }, [fetchAssistantDescription]);
 
   const fetchTasks = useCallback(async () => {
     const fetchedTasks = (await rpcClient.run("listTasks")) as Task[];
@@ -119,9 +144,8 @@ export function Tasks({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const form = event.target as HTMLFormElement;
     const message = messageText;
-    const taskMode = form.taskMode.value as TaskMode;
+    const taskMode = currentMode.type;
     console.log(`[Tasks] to ${taskMode}`);
     let taskName = message.substring(0, 40);
     if (message.length > 40) {
@@ -233,7 +257,13 @@ export function Tasks({
           </div>
 
           <div className="absolute left-2 bottom-2">
-            <Select name="taskMode" defaultValue="coder">
+            <Select
+              name="taskMode"
+              defaultValue="coder"
+              onValueChange={(value: TaskMode) =>
+                fetchAssistantDescription(value)
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select an assistant" />
               </SelectTrigger>
@@ -249,16 +279,59 @@ export function Tasks({
           </div>
 
           <div className="absolute right-2 bottom-2">
-            <span className="text-xs text-muted-foreground">
-              <kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                <span className="text-xs">\</span>
-              </kbd>{" "}
-              to add a file
-            </span>
+            <AddFileButton keyboardShortcut="\" />
           </div>
         </div>
       </form>
       <div className="mt-1">
+        <div className="max-w-sm">
+          <Popover>
+            <PopoverTrigger>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+              >
+                <CircleHelp className="h-3 w-3 mr-1" />
+                What can Melty see?
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <div className="space-y-2 text-muted-foreground">
+                <p>
+                  Melty is in {currentMode.type} mode. {currentMode.description}
+                </p>
+                {currentMode.type === "coder" && (
+                  <>
+                    <p>
+                      Melty can see your codebase structure but not the full
+                      content of your files. Too much context confuses language
+                      models.
+                      <b>
+                        {" "}
+                        Only add files that are helpful to the current task.
+                      </b>
+                    </p>
+                    {meltyMindFilePaths.length === 0 ? (
+                      <p>
+                        <AddFileButton keyboardShortcut="\" />
+                      </p>
+                    ) : (
+                      <div>
+                        <p>Melty can see the full content of these files: </p>
+                        <ul>
+                          {meltyMindFilePaths.map((file, i) => (
+                            <li key={`file-${i}`}>{file}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
         <div className="flex overflow-x-auto">
           {meltyMindFilePaths.map((file, i) => (
             <button

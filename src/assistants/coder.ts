@@ -21,6 +21,10 @@ import * as config from "../util/config";
 import { generateCommitMessage } from "../backend/commitMessageGenerator";
 
 export class Coder extends BaseAssistant {
+  static get description() {
+    return "Coder can view your codebase structure, suggest edits, and write code.";
+  }
+
   async respond(
     conversation: Conversation,
     gitRepo: GitRepo,

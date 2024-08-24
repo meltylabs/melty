@@ -6,6 +6,10 @@ import path from "path";
 import { getUserPrompt } from "../util/config";
 
 export abstract class BaseAssistant {
+  static get description(): string {
+    throw new Error("Description must be implemented in subclass");
+  }
+
   abstract respond(
     conversation: Conversation,
     gitRepo: GitRepo,

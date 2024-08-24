@@ -16,6 +16,11 @@ export type GitRepo = {
 
 export type TaskMode = "vanilla" | "coder";
 
+interface AssistantInfo {
+  type: TaskMode;
+  description: string;
+}
+
 export type Joule = {
   readonly id: string;
   readonly author: "human" | "bot";
@@ -111,4 +116,5 @@ export type RpcMethod =
   | "deleteTask"
   | "undoLatestCommit"
   | "getLatestCommit"
-  | "getGitConfigErrors";
+  | "getGitConfigErrors"
+  | "getAssistantDescription";

@@ -6,6 +6,10 @@ import * as conversations from "../backend/conversations";
 import { BaseAssistant } from "./baseAssistant";
 
 export class Vanilla extends BaseAssistant {
+  static get description() {
+    return "Vanilla sends your message to Claude without messing with the prompt. It can't see your codebase.";
+  }
+
   async respond(
     conversation: Conversation,
     gitRepo: GitRepo,
