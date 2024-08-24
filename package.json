@@ -173,5 +173,8 @@
       "supported": true,
       "description": "This extension requires access to modify workspace files."
     }
-  }
+  },
+  "extensionDependencies": [
+    "vscode.git"
+  ]
 }
