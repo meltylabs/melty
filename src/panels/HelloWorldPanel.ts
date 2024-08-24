@@ -227,7 +227,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
       if (
         errorMessage === "Cannot read properties of null (reading 'repository')"
       ) {
-        vscode.window.showErrorMessage("Melty does not see a git repository.");
+        vscode.window.showErrorMessage("Melty didn't see a git repo in your root directory. Create one?");
       } else {
         vscode.window.showErrorMessage(
           `Melty internal error: ${errorMessage}. Please try again.`
@@ -251,15 +251,15 @@ export class HelloWorldPanel implements WebviewViewProvider {
   }
 
   private async rpcGetAssistantDescription(
-    assistantType: AssistantType
+    taskMode: TaskMode
   ): Promise<string> {
-    switch (assistantType) {
+    switch (taskMode) {
       case "coder":
         return Coder.description;
       case "vanilla":
         return Vanilla.description;
       default:
-        throw new Error(`Unknown assistant type: ${assistantType}`);
+        throw new Error(`Unknown assistant type: ${taskMode}`);
     }
   }
 
