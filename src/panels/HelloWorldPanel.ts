@@ -38,7 +38,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
   public static currentView: HelloWorldPanel | undefined;
   private _view?: WebviewView;
   private _disposables: Disposable[] = [];
-  private webviewNotifier?: WebviewNotifier;
   private fileManager?: FileManager;
 
   private MeltyExtension: MeltyExtension;
@@ -66,11 +65,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
     this._setWebviewMessageListener(webviewView.webview);
 
-    this.webviewNotifier = new WebviewNotifier(this._view);
-    this.fileManager = new FileManager(
-      this.webviewNotifier,
-      this.MeltyExtension.meltyRoot!
-    );
+    const webviewNotifier = WebviewNotifier.getInstance();
+    webviewNotifier.setView(this._view);
+    this.fileManager = new FileManager(this.MeltyExtension.meltyRoot!);
     this.MeltyExtension.pushSubscription(this.fileManager);
     console.log("success in resolveWebviewView!");
   }
@@ -179,7 +176,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
     task.addErrorJoule(message);
 
-    this.webviewNotifier?.sendNotification("updateTask", {
+    await WebviewNotifier.getInstance().sendNotification("updateTask", {
       task: task.serialize(),
     });
   }
@@ -227,12 +224,19 @@ export class HelloWorldPanel implements WebviewViewProvider {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      vscode.window.showErrorMessage(
-        `Melty internal error: ${errorMessage}. Please try again.`
-      );
+      if (
+        errorMessage === "Cannot read properties of null (reading 'repository')"
+      ) {
+        vscode.window.showErrorMessage("Melty does not see a git repository.");
+      } else {
+        vscode.window.showErrorMessage(
+          `Melty internal error: ${errorMessage}. Please try again.`
+        );
+      }
 
       if (method === "chatMessage") {
         await this.notifyWebviewOfChatError(params.taskId, errorMessage);
+        await WebviewNotifier.getInstance().resetStatusMessage();
       }
 
       const result = posthog.capture("melty_errored", {
@@ -332,43 +336,34 @@ export class HelloWorldPanel implements WebviewViewProvider {
   }
 
   private async rpcChatMessage(text: string, taskId: string): Promise<void> {
+    const webviewNotifier = WebviewNotifier.getInstance();
+    webviewNotifier.updateStatusMessage("Starting up");
     const task = await this.MeltyExtension.getOrInitTask(
       taskId,
       this.fileManager
     );
 
     // human response
-    try {
-      await task.respondHuman(text);
-      this.webviewNotifier?.sendNotification("updateTask", {
-        task: task.serialize(),
-      });
-    } catch (error) {
-      console.error("Error in respondHuman:", error);
-      if (
-        (error as Error).message ===
-        "Cannot read properties of null (reading 'repository')"
-      ) {
-        vscode.window.showErrorMessage("Melty does not see a git repository.");
-      } else {
-        vscode.window.showErrorMessage(error as string);
-      }
-    }
+    await task.respondHuman(text);
+    webviewNotifier.sendNotification("updateTask", {
+      task: task.serialize(),
+    });
 
     // bot response
     const processPartial = (partialConversation: Conversation) => {
       // copy task
       const serialTask = task.serialize();
       serialTask.conversation = partialConversation;
-      this.webviewNotifier?.sendNotification("updateTask", {
+      webviewNotifier.sendNotification("updateTask", {
         task: serialTask,
       });
     };
-
     await task.respondBot(processPartial);
-    this.webviewNotifier?.sendNotification("updateTask", {
+
+    webviewNotifier.sendNotification("updateTask", {
       task: task.serialize(),
     });
+    webviewNotifier.resetStatusMessage();
   }
 
   private async switchTask(taskId: string): Promise<void> {

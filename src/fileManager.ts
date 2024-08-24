@@ -4,6 +4,8 @@ import * as path from "path";
 import * as fs from "fs/promises";
 import { WebviewNotifier } from "./webviewNotifier";
 
+const webviewNotifier = WebviewNotifier.getInstance();
+
 /**
  * Handles both workspace files and meltyMind files.
  *
@@ -18,22 +20,20 @@ import { WebviewNotifier } from "./webviewNotifier";
 export class FileManager {
   private disposables: vscode.Disposable[] = [];
   private initializationPromise: Promise<void> | null = null;
-  private webviewNotifier: WebviewNotifier;
   private meltyRoot: string;
 
   private workspaceFiles: vscode.Uri[] = [];
   private meltyMindFiles: Set<string> = new Set();
 
-  constructor(bridgeToWebview: WebviewNotifier, meltyRoot: string) {
+  constructor(meltyRoot: string) {
     this.initializationPromise = this.initializeFileList();
     this.registerEventListeners();
-    this.webviewNotifier = bridgeToWebview;
     this.meltyRoot = meltyRoot;
   }
 
   public async loadMeltyMindFiles(relPaths: string[]) {
     this.meltyMindFiles = new Set(relPaths);
-    this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
+    webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: await this.getMeltyMindFilesRelative(),
     });
   }
@@ -61,7 +61,7 @@ export class FileManager {
     // add workspace files
     this.workspaceFiles = this.workspaceFiles.concat(event.files);
 
-    this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
+    webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: await this.getWorkspaceFilesRelative(),
     });
   }
@@ -79,10 +79,10 @@ export class FileManager {
       this.meltyMindFiles.delete(relPath);
     });
 
-    this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
+    webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: await this.getWorkspaceFilesRelative(),
     });
-    this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
+    webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: await this.getMeltyMindFilesRelative(),
     });
   }
@@ -107,10 +107,10 @@ export class FileManager {
         this.meltyMindFiles.add(newRelPath);
       }
     });
-    this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
+    webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: await this.getWorkspaceFilesRelative(),
     });
-    this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
+    webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: await this.getMeltyMindFilesRelative(),
     });
   }
@@ -144,14 +144,14 @@ export class FileManager {
     // (we call this method on file creation)
     if (!this.workspaceFiles.find((file) => file.fsPath === absPath)) {
       this.workspaceFiles.push(vscode.Uri.file(absPath));
-      this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
+      webviewNotifier.sendNotification("updateWorkspaceFiles", {
         files: await this.getWorkspaceFilesRelative(),
       });
     }
 
     this.meltyMindFiles.add(relPath);
     if (notify) {
-      this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
+      webviewNotifier.sendNotification("updateMeltyMindFiles", {
         files: await this.getMeltyMindFilesRelative(),
       });
     }
@@ -198,12 +198,12 @@ export class FileManager {
     this.workspaceFiles = existingWorkspaceFiles;
     this.meltyMindFiles = existingMeltyMindFiles;
 
-    this.webviewNotifier.sendNotification("updateWorkspaceFiles", {
+    webviewNotifier.sendNotification("updateWorkspaceFiles", {
       files: this.workspaceFiles.map((file) =>
         path.relative(this.meltyRoot, file.fsPath)
       ),
     });
-    this.webviewNotifier.sendNotification("updateMeltyMindFiles", {
+    webviewNotifier.sendNotification("updateMeltyMindFiles", {
       files: Array.from(this.meltyMindFiles),
     });
   }

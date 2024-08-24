@@ -10,6 +10,9 @@ import { FileManager } from "../fileManager";
 import { getRepoAtWorkspaceRoot } from "../util/gitUtils";
 import * as datastores from "./datastores";
 import { generateCommitMessage } from "./commitMessageGenerator";
+import { WebviewNotifier } from "../webviewNotifier";
+
+const webviewNotifier = WebviewNotifier.getInstance();
 
 /**
  * A Task manages the interaction between a conversation and a git repository
@@ -135,8 +138,10 @@ export class Task implements Task {
     processPartial: (partialConversation: Conversation) => void
   ): Promise<void> {
     try {
+      webviewNotifier.updateStatusMessage("Checking repo status");
       await this.gitRepo!.repository.status();
       this.ensureWorkingDirectoryClean();
+      webviewNotifier.resetStatusMessage();
 
       let assistant;
       switch (this.taskMode) {
@@ -152,22 +157,26 @@ export class Task implements Task {
 
       const meltyMindFiles =
         await this.fileManager!.getMeltyMindFilesRelative();
+
       this.conversation = await assistant.respond(
         this.conversation,
         this.gitRepo!,
         meltyMindFiles,
         processPartial
       );
-      const lastJoule = conversations.lastJoule(this.conversation)!;
 
+      webviewNotifier.updateStatusMessage(
+        "Adding edited files to Melty's Mind"
+      );
+      const lastJoule = conversations.lastJoule(this.conversation)!;
       if (lastJoule.diffInfo?.filePathsChanged) {
         // add any edited files to melty's mind
         lastJoule.diffInfo.filePathsChanged.forEach((editedFile) => {
           this.fileManager!.addMeltyMindFile(editedFile, true);
         });
       }
-      await this.gitRepo!.repository.status();
 
+      webviewNotifier.updateStatusMessage("Autosaving conversation");
       this.updateLastModified();
       await datastores.dumpTaskToDisk(this);
     } catch (e) {
@@ -201,9 +210,12 @@ export class Task implements Task {
     let newJoule: Joule;
 
     if (config.getIsAutocommitMode() && this.taskMode !== "vanilla") {
+      webviewNotifier.updateStatusMessage("Checking repo status");
       let didCommit = false;
       await this.gitRepo!.repository.status();
+      webviewNotifier.updateStatusMessage("Committing user's changes");
       didCommit = (await this.commitLocalChanges()) > 0;
+      webviewNotifier.resetStatusMessage();
 
       const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
       const diffInfo = {
@@ -213,6 +225,7 @@ export class Task implements Task {
           latestCommit
         ),
       };
+
       newJoule = didCommit
         ? joules.createJouleHumanWithChanges(message, latestCommit, diffInfo)
         : joules.createJouleHuman(message);
@@ -222,7 +235,11 @@ export class Task implements Task {
 
     this.conversation = conversations.addJoule(this.conversation, newJoule);
     this.updateLastModified();
+
+    webviewNotifier.updateStatusMessage("Autosaving conversation");
     await datastores.dumpTaskToDisk(this);
+
+    webviewNotifier.resetStatusMessage();
     return conversations.lastJoule(this.conversation)!;
   }
 

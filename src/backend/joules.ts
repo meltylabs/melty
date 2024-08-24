@@ -6,7 +6,6 @@ export function createJouleError(errorMessage: string): JouleBot {
   return createJouleBot(errorMessage, {
     rawOutput: "[error encountered]",
     contextPaths: [],
-    assistantType: "system",
   });
 }
 

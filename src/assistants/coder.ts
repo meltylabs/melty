@@ -2,7 +2,6 @@ import {
   Conversation,
   GitRepo,
   ClaudeConversation,
-  ClaudeMessage,
   ChangeSet,
   BotExecInfo,
   Joule,
@@ -19,6 +18,9 @@ import * as parser from "../diffApplication/parser";
 import * as changeSets from "../backend/changeSets";
 import * as config from "../util/config";
 import { generateCommitMessage } from "../backend/commitMessageGenerator";
+import { WebviewNotifier } from "../webviewNotifier";
+
+const webviewNotifier = WebviewNotifier.getInstance();
 
 export class Coder extends BaseAssistant {
   static get description() {
@@ -31,6 +33,7 @@ export class Coder extends BaseAssistant {
     contextPaths: string[],
     processPartial: (partialConversation: Conversation) => void
   ) {
+    webviewNotifier.updateStatusMessage("Preparing context");
     if (
       !conversation.joules ||
       conversation.joules[conversation.joules.length - 1].author !== "human"
@@ -78,6 +81,7 @@ export class Coder extends BaseAssistant {
     // TODO 200: get five responses, pick the best one with pickResponse
     // TODO 400: write a claudePlus
 
+    webviewNotifier.updateStatusMessage("Thinking");
     let partialMessage = "";
     const finalResponse = await claudeAPI.streamClaude(
       claudeConversation,
@@ -96,6 +100,7 @@ export class Coder extends BaseAssistant {
     );
     console.log(finalResponse);
 
+    webviewNotifier.updateStatusMessage("Applying changes");
     return await this.claudeOutputToConversation(
       conversation,
       finalResponse,
@@ -159,12 +164,15 @@ export class Coder extends BaseAssistant {
 
       let commit: string | null;
       if (config.getIsAutocommitMode()) {
+        webviewNotifier.updateStatusMessage("Writing a commit message");
         const commitMessage = await generateCommitMessage(udiff, message);
+        webviewNotifier.updateStatusMessage("Committing changes");
         commit = await changeSets.commitChangeSet(
           changeSet,
           gitRepo,
           commitMessage
         );
+        webviewNotifier.resetStatusMessage();
       } else {
         changeSets.applyChangeSet(changeSet, gitRepo.rootPath);
         commit = null;

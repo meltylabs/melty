@@ -2,6 +2,7 @@ import { SearchReplace, ClaudeConversation } from "../types";
 import * as claudeAPI from "../backend/claudeAPI";
 import * as prompts from "../backend/prompts";
 import * as parser from "../diffApplication/parser";
+import * as utils from "../util/utils";
 
 type DiffApplicationStrategy = (
   originalContents: string,
@@ -63,9 +64,17 @@ ${parser.DIFF_DIVIDER}
 ${sr.replace}
 ${parser.DIFF_CLOSE}`;
 
-  console.log("Falling back to applyByClaude following an issue:");
-  console.log(originalContents);
-  console.log(searchReplace);
+  console.error("Falling back to applyByClaude following an issue:");
+  // Add longest prefix match logging
+  const { match, nonMatch } = utils.findLongestPrefixMatch(
+    originalContents,
+    searchReplace.search,
+    10
+  );
+  console.error("Longest prefix match:", match);
+  console.error("Non-matching characters:", nonMatch);
+  console.error(originalContents);
+  console.error(searchReplace);
 
   const claudeConversation: ClaudeConversation = {
     system: "",

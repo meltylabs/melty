@@ -136,3 +136,20 @@ export function getUdiffFromChangeSet(changeSet: ChangeSet): string {
     })
     .join("\n");
 }
+
+export function findLongestPrefixMatch(
+  text: string,
+  search: string,
+  nonMatchLength: number = 5
+): { match: string; nonMatch: string } {
+  let prefixLength = 0;
+  while (
+    prefixLength < search.length &&
+    text.includes(search.slice(0, prefixLength + 1))
+  ) {
+    prefixLength++;
+  }
+  const match = search.slice(0, prefixLength);
+  const nonMatch = search.slice(prefixLength, prefixLength + nonMatchLength);
+  return { match, nonMatch };
+}

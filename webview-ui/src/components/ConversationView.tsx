@@ -30,8 +30,10 @@ export function ConversationView() {
   const conversationRef = useRef<HTMLDivElement>(null);
   const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+
   const [nonInitialHumanMessageInFlight, setNonInitialHumanMessageInFlight] =
     useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   /**
    * Determines whether to show the loading indicator. We show it if
@@ -196,6 +198,9 @@ export function ConversationView() {
           case "updateMeltyMindFiles":
             setMeltyFiles(message.files);
             return;
+          case "updateStatusMessage":
+            setStatusMessage(message.statusMessage);
+            return;
         }
       }
     };
@@ -290,6 +295,20 @@ export function ConversationView() {
           {isLoading() && (
             <div className="flex my-1 p-2" role="status">
               <LoaderCircle className="w-4 h-4 animate-spin text-gray-500" />
+              {statusMessage && (
+                <p className="inline ml-2">
+                  {statusMessage}
+                  <span>
+                    <span className="animate-typing-dot">.</span>
+                    <span className="animate-typing-dot animation-delay-200">
+                      .
+                    </span>
+                    <span className="animate-typing-dot animation-delay-400">
+                      .
+                    </span>
+                  </span>
+                </p>
+              )}
             </div>
           )}
         </div>

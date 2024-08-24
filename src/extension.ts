@@ -182,7 +182,7 @@ export class MeltyExtension {
       await repo.repository.reset("HEAD~1", true);
 
       vscode.window.showInformationMessage(
-        "Last commit has been undone. Changes are now in your working directory."
+        "Last commit has been undone by hard reset."
       );
     } catch (error) {
       this.outputChannel.appendLine(`Error undoing last commit: ${error}`);

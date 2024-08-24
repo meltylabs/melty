@@ -1,5 +1,4 @@
 import { Conversation, GitRepo, ClaudeMessage } from "../types";
-import * as prompts from "../backend/prompts";
 import * as joules from "../backend/joules";
 import fs from "fs";
 import path from "path";
