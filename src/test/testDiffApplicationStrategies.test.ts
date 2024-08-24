@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { applyWithReindent } from "../diffApplication/strategies";
+import { applyWithReindent } from "../diffApplication/diffApplicationStrategies";
 import { SearchReplace } from "../types";
 
 suite("applyWithReindent", () => {
@@ -141,4 +141,3 @@ function example() {
     assert.strictEqual(result, expected);
   });
 });
-
