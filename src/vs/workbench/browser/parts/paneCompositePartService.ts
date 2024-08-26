@@ -17,7 +17,7 @@ import { ViewContainerLocation, ViewContainerLocations } from 'vs/workbench/comm
 import { IPaneCompositePartService } from 'vs/workbench/services/panecomposite/browser/panecomposite';
 import { Disposable, DisposableStore } from 'vs/base/common/lifecycle';
 import { IPaneCompositePart } from 'vs/workbench/browser/parts/paneCompositePart';
-
+import { MeltyPart } from 'vs/workbench/browser/parts/melty/meltyPart';
 export class PaneCompositePartService extends Disposable implements IPaneCompositePartService {
 
 	declare readonly _serviceBrand: undefined;
@@ -35,10 +35,12 @@ export class PaneCompositePartService extends Disposable implements IPaneComposi
 		const panelPart = instantiationService.createInstance(PanelPart);
 		const sideBarPart = instantiationService.createInstance(SidebarPart);
 		const auxiliaryBarPart = instantiationService.createInstance(AuxiliaryBarPart);
+		const meltyPart = instantiationService.createInstance(MeltyPart);
 
 		this.paneCompositeParts.set(ViewContainerLocation.Panel, panelPart);
 		this.paneCompositeParts.set(ViewContainerLocation.Sidebar, sideBarPart);
 		this.paneCompositeParts.set(ViewContainerLocation.AuxiliaryBar, auxiliaryBarPart);
+		this.paneCompositeParts.set(ViewContainerLocation.Melty, meltyPart);
 
 		const eventDisposables = this._register(new DisposableStore());
 		this.onDidPaneCompositeOpen = Event.any(...ViewContainerLocations.map(loc => Event.map(this.paneCompositeParts.get(loc)!.onDidPaneCompositeOpen, composite => { return { composite, viewContainerLocation: loc }; }, eventDisposables)));
