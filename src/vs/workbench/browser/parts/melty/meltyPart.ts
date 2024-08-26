@@ -17,6 +17,7 @@ import { IViewDescriptor, IViewDescriptorService } from 'vs/workbench/common/vie
 import { IHoverService } from 'vs/platform/hover/browser/hover';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { IMenuService } from 'vs/platform/actions/common/actions';
+import { IWebview } from 'vs/workbench/browser/webview';
 
 // import { Registry } from 'vs/platform/registry/common/platform';
 // import { IViewContainersRegistry, Extensions } from 'vs/workbench/common/views';
@@ -34,11 +35,12 @@ export class MeltyPart extends Part {
 	//#endregion
 
 	private content: HTMLElement | undefined;
-	private viewDescriptor: IViewDescriptor | undefined;
+	private webview: IWebview | undefined;
+	// private viewDescriptor: IViewDescriptor | undefined;
 
-	public provideViewDescriptor(viewDescriptor: IViewDescriptor): void {
-		this.viewDescriptor = viewDescriptor;
-	}
+	// public provideViewDescriptor(viewDescriptor: IViewDescriptor): void {
+	// 	this.viewDescriptor = viewDescriptor;
+	// }
 
 	constructor(
 		// @IInstantiationService private readonly instantiationService: IInstantiationService,
@@ -47,6 +49,10 @@ export class MeltyPart extends Part {
 		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
 	) {
 		super(MeltyPart.ID, { hasTitle: false }, themeService, storageService, layoutService);
+	}
+
+	public registerWebview(webview: IWebview) {
+		this.webview = webview;
 	}
 
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
@@ -71,7 +77,7 @@ export class MeltyPart extends Part {
 
 		this.content.textContent = 'Melty Fullscreen Popup';
 
-		const view = this.viewDescriptor;
+		this.content.appendChild(this.webview.element);
 
 		// const viewContainersRegistry = Registry.as<IViewContainersRegistry>(Extensions.ViewContainersRegistry);
 
@@ -80,6 +86,30 @@ export class MeltyPart extends Part {
 		return this.content;
 	}
 
+	// private createWebview(parent: HTMLElement) {
+	// 	const meltyUri = URI.file('/Users/jdecampos/Development/code/src/vs/workbench/browser/melty/');
+
+	// 	const webview = this.webviewService.createWebviewElement({
+	// 		title: 'Melty Webview',
+	// 		options: {
+	// 			enableFindWidget: false,
+	// 			retainContextWhenHidden: true,
+	// 		},
+	// 		contentOptions: {
+	// 			allowScripts: true,
+	// 			localResourceRoots: [
+	// 				// Uri.joinPath(this._meltyUri, 'out'),
+	// 				URI.joinPath(meltyUri, 'webview/build'),
+	// 			],
+	// 		},
+	// 		extension: undefined,
+	// 	});
+
+	// 	const helloWorldPanel = new HelloWorldPanel(meltyUri);
+	// 	helloWorldPanel.resolveWebview(this.webview);
+	// 	// this.webview.setHtml(helloWorldPanel.render());
+	// 	webview.mountTo(parent, getActiveWindow());
+	// }
 
 	override layout(width: number, height: number, top: number, left: number): void {
 		super.layout(width, height, top, left);
