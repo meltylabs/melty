@@ -29,9 +29,67 @@ export function replaceLastJoule(
 }
 
 /**
+ * If there are two joules in a row from the same author, combine them into one
+ * @param conversation
+ */
+function combineDoubleJoules(conversation: Conversation): Conversation {
+  return {
+    joules: conversation.joules.reduce((acc, joule, index, array) => {
+      if (index === 0 || joule.author !== array[index - 1].author) {
+        return [...acc, joule];
+      } else {
+        console.error("Combining double joules: ", joule, array[index - 1]);
+        const lastJoule = acc[acc.length - 1];
+        return [
+          ...acc.slice(0, -1),
+          {
+            ...lastJoule, // use the info from the first joule
+            message: `${lastJoule.message}\n\n${joule.message}`,
+          },
+        ];
+      }
+    }, [] as Joule[]),
+  };
+}
+
+function removeLeadingErrorJoules(conversation: Conversation): Conversation {
+  // get rid of initial error joules
+  while (conversation.joules[0].state === "error") {
+    console.log("Removing initial error joule");
+    conversation = {
+      joules: conversation.joules.slice(1),
+    };
+  }
+  return conversation;
+}
+
+function removeLeadingBotJoules(conversation: Conversation): Conversation {
+  while (conversation.joules[0].author === "bot") {
+    console.error("Unexpected: removing initial bot joule");
+    conversation = {
+      joules: conversation.joules.slice(1),
+    };
+  }
+  return conversation;
+}
+
+/**
  * removes any joules needed to make the conversation ready for a response from the given author
  */
 export function forceConversationReadyForResponseFrom(
+  conversation: Conversation,
+  author: "human" | "bot"
+): Conversation {
+  const processors = [
+    (c: Conversation) => removeFinalJoulesFrom(c, author),
+    removeLeadingErrorJoules,
+    removeLeadingBotJoules,
+    combineDoubleJoules,
+  ];
+  return processors.reduce((c, p) => p(c), conversation);
+}
+
+function removeFinalJoulesFrom(
   conversation: Conversation,
   author: "human" | "bot"
 ): Conversation {
