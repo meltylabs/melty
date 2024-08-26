@@ -41,19 +41,19 @@
       }
     ],
     "viewsContainers": {
-      "activitybar": [
+      "meltypopup": [
         {
-          "id": "meltyViewContainer",
+          "id": "meltyPopupViewContainer",
           "title": "Melty",
           "icon": "resources/melty.svg"
         }
       ]
     },
     "views": {
-      "meltyViewContainer": [
+      "nonExistentViewContainerWillDefaultToExplorer": [
         {
           "type": "webview",
-          "id": "melty.chatView",
+          "id": "melty.magicWebview",
           "name": "Melty Chat"
         }
       ]
