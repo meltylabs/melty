@@ -197,9 +197,12 @@ export class ExtHostWebviewViews implements extHostProtocol.ExtHostWebviewViewsS
 		const webview = this._extHostWebview.createNewWebview(webviewHandle, { /* todo */ }, extension);
 		const revivedView = new ExtHostWebviewView(webviewHandle, this._proxy, viewType, title, webview, true);
 
-		if (webviewHandle === 'melty.magicWebview') {
-			this.meltyService.meltyPart.registerWebview(webview);
-		}
+		// console.log('registering webview view', webviewHandle);
+
+		// if (webviewHandle === 'melty.magicWebview') {
+		// 	console.log('registering melty.magicWebview');
+		// 	this.meltyService.meltyPart.registerWebview(webview);
+		// }
 
 		this._webviewViews.set(webviewHandle, revivedView);
 

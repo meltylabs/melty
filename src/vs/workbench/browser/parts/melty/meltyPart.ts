@@ -2,25 +2,18 @@ import { Part } from 'vs/workbench/browser/part';
 import { IWorkbenchLayoutService, Parts } from 'vs/workbench/services/layout/browser/layoutService';
 import { IThemeService } from 'vs/platform/theme/common/themeService';
 import { IStorageService } from 'vs/platform/storage/common/storage';
-import { $ } from 'vs/base/browser/dom';
-import { AbstractPaneCompositePart } from 'vs/workbench/browser/parts/paneCompositePart';
+import { $, getActiveWindow } from 'vs/base/browser/dom';
 
-import 'vs/css!./media/sidebarpart';
-import 'vs/workbench/browser/parts/sidebar/sidebarActions';
-import { IContextMenuService } from 'vs/platform/contextview/browser/contextView';
-import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
-import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
-import { INotificationService } from 'vs/platform/notification/common/notification';
-import { IContextKeyService } from 'vs/platform/contextkey/common/contextkey';
-import { IExtensionService } from 'vs/workbench/services/extensions/common/extensions';
-import { IViewDescriptor, IViewDescriptorService } from 'vs/workbench/common/views';
-import { IHoverService } from 'vs/platform/hover/browser/hover';
-import { ICommandService } from 'vs/platform/commands/common/commands';
-import { IMenuService } from 'vs/platform/actions/common/actions';
-import { IWebview } from 'vs/workbench/browser/webview';
+// import type { Webview } from 'vscode';
+import { IWebviewViewService } from 'vs/workbench/contrib/webviewView/browser/webviewViewService';
+import { URI } from 'vs/base/common/uri';
+import { IWebviewElement } from 'vs/workbench/contrib/webview/browser/webview';
+import { IWebviewService } from 'vs/workbench/contrib/webview/browser/webview';
+import { CancellationTokenSource } from 'vs/base/common/cancellation';
 
 // import { Registry } from 'vs/platform/registry/common/platform';
 // import { IViewContainersRegistry, Extensions } from 'vs/workbench/common/views';
+
 
 export class MeltyPart extends Part {
 	static readonly ID = 'workbench.parts.melty';
@@ -35,24 +28,16 @@ export class MeltyPart extends Part {
 	//#endregion
 
 	private content: HTMLElement | undefined;
-	private webview: IWebview | undefined;
-	// private viewDescriptor: IViewDescriptor | undefined;
-
-	// public provideViewDescriptor(viewDescriptor: IViewDescriptor): void {
-	// 	this.viewDescriptor = viewDescriptor;
-	// }
+	private webview: IWebviewElement | undefined;
 
 	constructor(
-		// @IInstantiationService private readonly instantiationService: IInstantiationService,
 		@IThemeService themeService: IThemeService,
 		@IStorageService storageService: IStorageService,
 		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
+		@IWebviewService private readonly _webviewService: IWebviewService,
+		// @IWebviewViewService private readonly _webviewViewService: IWebviewViewService,
 	) {
 		super(MeltyPart.ID, { hasTitle: false }, themeService, storageService, layoutService);
-	}
-
-	public registerWebview(webview: IWebview) {
-		this.webview = webview;
 	}
 
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
@@ -77,39 +62,47 @@ export class MeltyPart extends Part {
 
 		this.content.textContent = 'Melty Fullscreen Popup';
 
-		this.content.appendChild(this.webview.element);
+		const meltyMagicWebview = $('div.melty-magic-webview');
+		this.content.appendChild(meltyMagicWebview);
+		this.createWebview(meltyMagicWebview);
+
+		// const source = new CancellationTokenSource(); // todo save this somewhere
+		// this._webviewViewService.resolve('melty.magicWebview', this.webview!, source);
+
+		// this.content.innerHTML = this.meltyMagicWebview!.html;
 
 		// const viewContainersRegistry = Registry.as<IViewContainersRegistry>(Extensions.ViewContainersRegistry);
 
 		// viewContainersRegistry.registerViewContainer
 
+		// const helloWorldPanel = new HelloWorldPanel(meltyUri);
+		// helloWorldPanel.resolveWebview(this.webview);
+		// this.webview.setHtml(helloWorldPanel.render());
+
 		return this.content;
 	}
 
-	// private createWebview(parent: HTMLElement) {
-	// 	const meltyUri = URI.file('/Users/jdecampos/Development/code/src/vs/workbench/browser/melty/');
+	private createWebview(parent: HTMLElement) {
+		const meltyUri = URI.file('/Users/jdecampos/Development/code/extensions/spectacular/');
 
-	// 	const webview = this.webviewService.createWebviewElement({
-	// 		title: 'Melty Webview',
-	// 		options: {
-	// 			enableFindWidget: false,
-	// 			retainContextWhenHidden: true,
-	// 		},
-	// 		contentOptions: {
-	// 			allowScripts: true,
-	// 			localResourceRoots: [
-	// 				// Uri.joinPath(this._meltyUri, 'out'),
-	// 				URI.joinPath(meltyUri, 'webview/build'),
-	// 			],
-	// 		},
-	// 		extension: undefined,
-	// 	});
+		this.webview = this._webviewService.createWebviewElement({
+			title: 'Melty Webview',
+			options: {
+				enableFindWidget: false,
+				retainContextWhenHidden: true,
+			},
+			contentOptions: {
+				allowScripts: true,
+				localResourceRoots: [
+					// Uri.joinPath(this._meltyUri, 'out'),
+					URI.joinPath(meltyUri, 'webview-ui/build'),
+				],
+			},
+			extension: undefined,
+		});
 
-	// 	const helloWorldPanel = new HelloWorldPanel(meltyUri);
-	// 	helloWorldPanel.resolveWebview(this.webview);
-	// 	// this.webview.setHtml(helloWorldPanel.render());
-	// 	webview.mountTo(parent, getActiveWindow());
-	// }
+		this.webview.mountTo(parent, getActiveWindow());
+	}
 
 	override layout(width: number, height: number, top: number, left: number): void {
 		super.layout(width, height, top, left);
