@@ -151,7 +151,6 @@ export class ExtHostWebviewViews implements extHostProtocol.ExtHostWebviewViewsS
 	constructor(
 		mainContext: extHostProtocol.IMainContext,
 		private readonly _extHostWebview: ExtHostWebviews,
-		@IMeltyService private readonly meltyService: IMeltyService
 	) {
 		this._proxy = mainContext.getProxy(extHostProtocol.MainContext.MainThreadWebviewViews);
 	}

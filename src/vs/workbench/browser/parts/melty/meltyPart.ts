@@ -35,7 +35,7 @@ export class MeltyPart extends Part {
 		@IStorageService storageService: IStorageService,
 		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
 		@IWebviewService private readonly _webviewService: IWebviewService,
-		// @IWebviewViewService private readonly _webviewViewService: IWebviewViewService,
+		@IWebviewViewService private readonly _webviewViewService: IWebviewViewService,
 	) {
 		super(MeltyPart.ID, { hasTitle: false }, themeService, storageService, layoutService);
 	}
@@ -64,10 +64,21 @@ export class MeltyPart extends Part {
 
 		const meltyMagicWebview = $('div.melty-magic-webview');
 		this.content.appendChild(meltyMagicWebview);
-		this.createWebview(meltyMagicWebview);
+
+		// create a webview view
+		// associate webview view with the melty-magic-webview html element?
+		// get the extension to resolve it
+
+		const webviewHtml = this._extHostWebview.getWebviewHtml('melty.magicWebview');
+
+
+
+		// this.createWebview(meltyMagicWebview);
 
 		// const source = new CancellationTokenSource(); // todo save this somewhere
-		// this._webviewViewService.resolve('melty.magicWebview', this.webview!, source);
+		// ExtHostWebviewViews.resolve('melty.magicWebview', this.webview!, source);
+
+		// await this._proxy.$resolveWebviewView(handle, viewType, webviewView.title, state, cancellation);
 
 		// this.content.innerHTML = this.meltyMagicWebview!.html;
 
@@ -82,27 +93,27 @@ export class MeltyPart extends Part {
 		return this.content;
 	}
 
-	private createWebview(parent: HTMLElement) {
-		const meltyUri = URI.file('/Users/jdecampos/Development/code/extensions/spectacular/');
+	// private createWebview(parent: HTMLElement) {
+	// 	const meltyUri = URI.file('/Users/jdecampos/Development/code/extensions/spectacular/');
 
-		this.webview = this._webviewService.createWebviewElement({
-			title: 'Melty Webview',
-			options: {
-				enableFindWidget: false,
-				retainContextWhenHidden: true,
-			},
-			contentOptions: {
-				allowScripts: true,
-				localResourceRoots: [
-					// Uri.joinPath(this._meltyUri, 'out'),
-					URI.joinPath(meltyUri, 'webview-ui/build'),
-				],
-			},
-			extension: undefined,
-		});
+	// 	this.webview = this._webviewService.createWebviewElement({
+	// 		title: 'Melty Webview',
+	// 		options: {
+	// 			enableFindWidget: false,
+	// 			retainContextWhenHidden: true,
+	// 		},
+	// 		contentOptions: {
+	// 			allowScripts: true,
+	// 			localResourceRoots: [
+	// 				// Uri.joinPath(this._meltyUri, 'out'),
+	// 				URI.joinPath(meltyUri, 'webview-ui/build'),
+	// 			],
+	// 		},
+	// 		extension: undefined,
+	// 	});
 
-		this.webview.mountTo(parent, getActiveWindow());
-	}
+	// 	this.webview.mountTo(parent, getActiveWindow());
+	// }
 
 	override layout(width: number, height: number, top: number, left: number): void {
 		super.layout(width, height, top, left);
