@@ -31,6 +31,9 @@ import { IExtensionFeatureTableRenderer, IRenderedData, ITableData, IRowData, IE
 import { Disposable } from 'vs/base/common/lifecycle';
 import { MarkdownString } from 'vs/base/common/htmlContent';
 
+import { MeltyPart } from 'vs/workbench/browser/parts/melty/meltyPart';
+import { IMeltyService } from 'vs/workbench/browser/parts/melty/meltyService';
+
 export interface IUserFriendlyViewsContainerDescriptor {
 	id: string;
 	title: string;
@@ -233,6 +236,12 @@ const viewsContribution: IJSONSchema = {
 			items: remoteViewDescriptor,
 			default: []
 		},
+		'melty': {
+			description: localize('views.melty', "Contributes views to Melty popup"),
+			type: 'array',
+			items: viewDescriptor,
+			default: []
+		},
 	},
 	additionalProperties: {
 		description: localize('views.contributed', "Contributes views to contributed views container"),
@@ -277,7 +286,8 @@ class ViewsExtensionHandler implements IWorkbenchContribution {
 
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
+		@IMeltyService private readonly meltyService: IMeltyService
 	) {
 		this.viewContainersRegistry = Registry.as<IViewContainersRegistry>(ViewContainerExtensions.ViewContainersRegistry);
 		this.viewsRegistry = Registry.as<IViewsRegistry>(ViewContainerExtensions.ViewsRegistry);
@@ -521,6 +531,11 @@ class ViewsExtensionHandler implements IWorkbenchContribution {
 						accessibilityHelpContent
 					};
 
+					if (key === 'melty') {
+						// skip the registry
+						this.meltyService.meltyPart.provideViewDescriptor(viewDescriptor);
+						continue;
+					}
 
 					viewIds.add(viewDescriptor.id);
 					viewDescriptors.push(viewDescriptor);

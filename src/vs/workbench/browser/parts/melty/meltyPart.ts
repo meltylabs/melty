@@ -13,7 +13,7 @@ import { IInstantiationService } from 'vs/platform/instantiation/common/instanti
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { IContextKeyService } from 'vs/platform/contextkey/common/contextkey';
 import { IExtensionService } from 'vs/workbench/services/extensions/common/extensions';
-import { IViewDescriptorService } from 'vs/workbench/common/views';
+import { IViewDescriptor, IViewDescriptorService } from 'vs/workbench/common/views';
 import { IHoverService } from 'vs/platform/hover/browser/hover';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { IMenuService } from 'vs/platform/actions/common/actions';
@@ -21,7 +21,7 @@ import { IMenuService } from 'vs/platform/actions/common/actions';
 // import { Registry } from 'vs/platform/registry/common/platform';
 // import { IViewContainersRegistry, Extensions } from 'vs/workbench/common/views';
 
-export class MeltyPart extends AbstractPaneCompositePart {
+export class MeltyPart extends Part {
 	static readonly ID = 'workbench.parts.melty';
 
 	//#region IView
@@ -34,55 +34,20 @@ export class MeltyPart extends AbstractPaneCompositePart {
 	//#endregion
 
 	private content: HTMLElement | undefined;
+	private viewDescriptor: IViewDescriptor | undefined;
 
-	constructor(
-		@INotificationService notificationService: INotificationService,
-		@IStorageService storageService: IStorageService,
-		@IContextMenuService contextMenuService: IContextMenuService,
-		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
-		@IKeybindingService keybindingService: IKeybindingService,
-		@IHoverService hoverService: IHoverService,
-		@IInstantiationService instantiationService: IInstantiationService,
-		@IThemeService themeService: IThemeService,
-		@IViewDescriptorService viewDescriptorService: IViewDescriptorService,
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@IExtensionService extensionService: IExtensionService,
-		@ICommandService private commandService: ICommandService,
-		@IMenuService menuService: IMenuService,
-	) {
-		super(
-			Parts.MELTY_PART,
-			{ hasTitle: true },
-			MeltyPart.activePanelSettingsKey, // TODO
-			ActivePanelContext.bindTo(contextKeyService), // TODO
-			PanelFocusContext.bindTo(contextKeyService), // TODO
-			'meltypopup',
-			'meltypopup',
-			undefined,
-			notificationService,
-			storageService,
-			contextMenuService,
-			layoutService,
-			keybindingService,
-			hoverService,
-			instantiationService,
-			themeService,
-			viewDescriptorService,
-			contextKeyService,
-			extensionService,
-			menuService,
-		);
+	public provideViewDescriptor(viewDescriptor: IViewDescriptor): void {
+		this.viewDescriptor = viewDescriptor;
 	}
 
-
-	// constructor(
-	// 	// @IInstantiationService private readonly instantiationService: IInstantiationService,
-	// 	@IThemeService themeService: IThemeService,
-	// 	@IStorageService storageService: IStorageService,
-	// 	@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService
-	// ) {
-	// 	super(MeltyPart.ID, { hasTitle: false }, themeService, storageService, layoutService);
-	// }
+	constructor(
+		// @IInstantiationService private readonly instantiationService: IInstantiationService,
+		@IThemeService themeService: IThemeService,
+		@IStorageService storageService: IStorageService,
+		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
+	) {
+		super(MeltyPart.ID, { hasTitle: false }, themeService, storageService, layoutService);
+	}
 
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
 		this.element = parent;
@@ -105,6 +70,8 @@ export class MeltyPart extends AbstractPaneCompositePart {
 		this.content.style.bottom = '0';
 
 		this.content.textContent = 'Melty Fullscreen Popup';
+
+		const view = this.viewDescriptor;
 
 		// const viewContainersRegistry = Registry.as<IViewContainersRegistry>(Extensions.ViewContainersRegistry);
 
