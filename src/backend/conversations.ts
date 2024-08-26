@@ -53,6 +53,9 @@ function combineDoubleJoules(conversation: Conversation): Conversation {
 }
 
 function removeLeadingErrorJoules(conversation: Conversation): Conversation {
+  if (conversation.joules.length === 0) {
+    return conversation;
+  }
   // get rid of initial error joules
   while (conversation.joules[0].state === "error") {
     console.log("Removing initial error joule");
@@ -64,6 +67,9 @@ function removeLeadingErrorJoules(conversation: Conversation): Conversation {
 }
 
 function removeLeadingBotJoules(conversation: Conversation): Conversation {
+  if (conversation.joules.length === 0) {
+    return conversation;
+  }
   while (conversation.joules[0].author === "bot") {
     console.error("Unexpected: removing initial bot joule");
     conversation = {

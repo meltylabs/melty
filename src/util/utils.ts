@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import * as config from "./config";
 import * as path from "path";
 import { GitRepo } from "../types";
+import { Commit } from "vscode";
 import { Task } from "../backend/tasks";
 import { ChangeSet } from "../types";
 import * as os from "os";
@@ -110,20 +111,49 @@ export async function getUdiffFromWorking(gitRepo: GitRepo): Promise<string> {
  */
 export async function getUdiffFromCommit(
   gitRepo: GitRepo,
-  commit: string
+  commit: string | undefined
 ): Promise<string> {
   const repository = gitRepo.repository;
-  const diff = await repository.diffBetween(commit + "^", commit);
-  const udiffs = await Promise.all(
-    diff.map(async (change: any) => {
-      return await repository.diffBetween(
-        commit + "^",
-        commit,
-        change.uri.fsPath
-      );
-    })
-  );
-  return udiffs.join("\n");
+
+  try {
+    // Check if there are any commits in the repository
+    const headCommit = await repository.getCommit('HEAD').catch(() => null);
+    
+    if (!headCommit) {
+      // No commits in the repository yet
+      return "";
+    }
+
+    if (!commit) {
+      // If commit is undefined, use the current HEAD
+      commit = headCommit.hash;
+    }
+
+    // Check if the commit has a parent
+    const hasParent = await repository.getCommit(commit).then(
+      async (commitObj: Commit) => {
+        const parents = await commitObj.parents();
+        return parents.length > 0;
+      }
+    );
+
+    const baseCommit = hasParent ? commit + "^" : "4b825dc642cb6eb9a060e54bf8d69288fbee4904"; // empty tree
+    
+    const diff = await repository.diffBetween(baseCommit, commit);
+    const udiffs = await Promise.all(
+      diff.map(async (change: any) => {
+        return await repository.diffBetween(
+          baseCommit,
+          commit,
+          change.uri.fsPath
+        );
+      })
+    );
+    return udiffs.join("\n");
+  } catch (error) {
+    console.error(`Error getting diff for commit ${commit}:`, error);
+    return "";
+  }
 }
 
 /**
@@ -153,3 +183,4 @@ export function findLongestPrefixMatch(
   const nonMatch = search.slice(prefixLength, prefixLength + nonMatchLength);
   return { match, nonMatch };
 }
+
