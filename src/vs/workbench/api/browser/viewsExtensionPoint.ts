@@ -232,7 +232,7 @@ const viewsContribution: IJSONSchema = {
 			type: 'array',
 			items: remoteViewDescriptor,
 			default: []
-		}
+		},
 	},
 	additionalProperties: {
 		description: localize('views.contributed', "Contributes views to contributed views container"),

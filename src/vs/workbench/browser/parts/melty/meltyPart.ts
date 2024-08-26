@@ -18,6 +18,9 @@ import { IHoverService } from 'vs/platform/hover/browser/hover';
 import { ICommandService } from 'vs/platform/commands/common/commands';
 import { IMenuService } from 'vs/platform/actions/common/actions';
 
+// import { Registry } from 'vs/platform/registry/common/platform';
+// import { IViewContainersRegistry, Extensions } from 'vs/workbench/common/views';
+
 export class MeltyPart extends AbstractPaneCompositePart {
 	static readonly ID = 'workbench.parts.melty';
 
@@ -102,6 +105,10 @@ export class MeltyPart extends AbstractPaneCompositePart {
 		this.content.style.bottom = '0';
 
 		this.content.textContent = 'Melty Fullscreen Popup';
+
+		// const viewContainersRegistry = Registry.as<IViewContainersRegistry>(Extensions.ViewContainersRegistry);
+
+		// viewContainersRegistry.registerViewContainer
 
 		return this.content;
 	}
