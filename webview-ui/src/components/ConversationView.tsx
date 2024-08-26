@@ -8,7 +8,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import posthog from "posthog-js";
-import { FilePicker } from "./FilePicker";
+import { FastFilePicker } from "./FastFilePicker";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { Task } from "../types";
 import { RpcClient } from "../rpcClient";
@@ -269,13 +269,13 @@ export function ConversationView() {
           </div>
         )}
 
-        <FilePicker
-          open={pickerOpen}
-          setOpen={setPickerOpen}
+        <FastFilePicker
+          isOpen={pickerOpen}
+          setIsOpen={setPickerOpen}
           meltyMindFilePaths={meltyFiles}
           workspaceFilePaths={workspaceFiles}
-          handleAddFile={handleAddFile}
-          handleDropFile={handleDropFile}
+          onFileSelect={handleAddFile}
+          onFileDrop={handleDropFile}
         />
       </div>
       <div

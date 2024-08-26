@@ -27,6 +27,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
 import * as strings from "../utilities/strings";
+import { FastFilePicker } from "./FastFilePicker";
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -224,13 +225,13 @@ export function Tasks({
 
   return (
     <div>
-      <FilePicker
-        open={pickerOpen}
-        setOpen={setPickerOpen}
-        meltyMindFilePaths={meltyMindFilePaths}
+      <FastFilePicker
+        isOpen={pickerOpen}
+        setIsOpen={setPickerOpen}
         workspaceFilePaths={workspaceFilePaths}
-        handleAddFile={handleAddFile}
-        handleDropFile={handleDropFile}
+        meltyMindFilePaths={meltyMindFilePaths}
+        onFileSelect={handleAddFile}
+        onFileDrop={handleDropFile}
       />
       <form onSubmit={handleSubmit}>
         <div className="mt-4 relative">

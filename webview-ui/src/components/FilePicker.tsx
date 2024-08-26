@@ -1,6 +1,7 @@
 import * as React from "react";
 import { File } from "lucide-react";
-
+import { FixedSizeList as List } from "react-window";
+import { debounce } from "lodash";
 import {
   CommandDialog,
   CommandEmpty,
@@ -12,7 +13,7 @@ import {
   CommandShortcut,
 } from "./ui/command";
 
-const getFileIcon = (filePath: string) => {
+const getFileIcon = React.memo((filePath: string) => {
   const extension = filePath.split(".").pop()?.toLowerCase();
   if (extension === "ts" || extension === "tsx") {
     return (
@@ -198,7 +199,7 @@ const getFileIcon = (filePath: string) => {
     );
   }
   return <File className="mr-2 h-4 w-4" />;
-};
+});
 
 export function FilePicker({
   open,
@@ -215,12 +216,14 @@ export function FilePicker({
   handleAddFile: (filePath: string) => void;
   handleDropFile: (filePath: string) => void;
 }) {
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [filteredWorkspaceFiles, setFilteredWorkspaceFiles] =
+    React.useState(workspaceFilePaths);
+
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      // Check for Cmd+Shift+m on Mac or Ctrl+Shift+m on Windows/Linux
-      console.log("event.key", event.key);
       if (event.key === "\\") {
-        event.preventDefault(); // Prevent default browser behavior
+        event.preventDefault();
         setOpen(!open);
       }
     };
@@ -229,56 +232,86 @@ export function FilePicker({
     return () => document.removeEventListener("keydown", handleKeyPress);
   }, [open, setOpen]);
 
+  const debouncedSearch = React.useMemo(() => {
+    return debounce((term: string) => {
+      const filtered = workspaceFilePaths.filter((filePath) => {
+        const match = filePath.toLowerCase().includes(term.toLowerCase());
+        return match;
+      });
+      console.log("Filtered results:", filtered);
+      setFilteredWorkspaceFiles(filtered);
+    }, 300);
+  }, [workspaceFilePaths]);
+
+  React.useEffect(() => {
+    console.log("Search term changed:", searchTerm);
+    debouncedSearch(searchTerm);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchTerm, debouncedSearch]);
+
+  const FileItem = ({ index }: { index: number }) => {
+    const filePath = filteredWorkspaceFiles[index];
+    const isInMeltyMind = meltyMindFilePaths.includes(filePath);
+
+    console.log(`Rendering FileItem for index ${index}, filePath: ${filePath}`);
+
+    return (
+      <CommandItem
+        key={filePath}
+        onSelect={() =>
+          isInMeltyMind ? handleDropFile(filePath) : handleAddFile(filePath)
+        }
+        className="data-[disabled]:text-gray-500"
+      >
+        <span>{filePath}</span>
+        {!isInMeltyMind && <CommandShortcut>+</CommandShortcut>}
+      </CommandItem>
+    );
+  };
+
+  console.log(
+    "Rendering FilePicker, filteredWorkspaceFiles:",
+    filteredWorkspaceFiles
+  );
+
   return (
-    <>
-      <CommandDialog open={open} onOpenChange={setOpen} key="file-picker">
-        <CommandInput id="file" placeholder="Type a filename" />
-        <CommandList>
-          <CommandEmpty>All files in workspace are in context.</CommandEmpty>
-          {/* todo - would be nice to show recent or suggested here */}
-          {meltyMindFilePaths.length > 0 && (
-            <CommandGroup heading="Current">
-              {meltyMindFilePaths.map((filePath) => (
-                <CommandItem
-                  onSelect={() => handleDropFile(filePath)}
-                  key={filePath}
-                >
-                  <span className="mr-2">{getFileIcon(filePath)}</span>
-                  <span>{filePath}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
+    <CommandDialog open={open} onOpenChange={setOpen} key="file-picker">
+      <CommandInput
+        id="file"
+        placeholder="Type a filename"
+        value={searchTerm}
+        onValueChange={setSearchTerm}
+      />
 
-          <CommandGroup heading="Add to context">
-            {workspaceFilePaths
-              .filter((filePath) => !meltyMindFilePaths.includes(filePath))
-              .map((filePath: string) => (
-                <CommandItem
-                  onSelect={() => handleAddFile(filePath)}
-                  className="data-[disabled]:text-gray-500"
-                  key={filePath}
-                >
-                  <span className="mr-2">{getFileIcon(filePath)}</span>
-                  <span>{filePath}</span>
-                  <CommandShortcut>+</CommandShortcut>
-                </CommandItem>
-              ))}
-          </CommandGroup>
-          <CommandSeparator />
-        </CommandList>
-
-        <div className="flex justify-between items-center my-3 px-4">
-          <p className="text-xs text-muted-foreground">
-            {workspaceFilePaths.length} file
-            {workspaceFilePaths.length !== 1 ? "s" : ""} in workspace
-          </p>
-          <p className="flex items-center text-xs">
-            Add/Drop
-            <span className="ml-1">⏎</span>
-          </p>
-        </div>
-      </CommandDialog>
-    </>
+      <CommandList className="max-h-[300px] overflow-y-auto">
+        {filteredWorkspaceFiles.length === 0 ? (
+          <CommandEmpty>No matching files found.</CommandEmpty>
+        ) : (
+          //   <CommandGroup heading="Add to context">
+          <List
+            height={200}
+            itemCount={Math.max(0, filteredWorkspaceFiles.length - 1)}
+            itemSize={35}
+            width="100%"
+          >
+            {FileItem}
+          </List>
+          //   </CommandGroup>
+        )}
+        <CommandSeparator />
+      </CommandList>
+      <div className="flex justify-between items-center my-3 px-4">
+        <p className="text-xs text-muted-foreground">
+          {filteredWorkspaceFiles.length} file
+          {filteredWorkspaceFiles.length !== 1 ? "s" : ""}
+        </p>
+        <p className="flex items-center text-xs">
+          Add/Drop
+          <span className="ml-1">⏎</span>
+        </p>
+      </div>
+    </CommandDialog>
   );
 }
