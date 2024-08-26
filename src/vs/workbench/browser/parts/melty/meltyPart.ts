@@ -2,14 +2,10 @@ import { Part } from 'vs/workbench/browser/part';
 import { IWorkbenchLayoutService, Parts } from 'vs/workbench/services/layout/browser/layoutService';
 import { IThemeService } from 'vs/platform/theme/common/themeService';
 import { IStorageService } from 'vs/platform/storage/common/storage';
-import { $, getActiveWindow } from 'vs/base/browser/dom';
+import { $ } from 'vs/base/browser/dom';
 
 // import type { Webview } from 'vscode';
-import { IWebviewViewService } from 'vs/workbench/contrib/webviewView/browser/webviewViewService';
-import { URI } from 'vs/base/common/uri';
-import { IWebviewElement } from 'vs/workbench/contrib/webview/browser/webview';
-import { IWebviewService } from 'vs/workbench/contrib/webview/browser/webview';
-import { CancellationTokenSource } from 'vs/base/common/cancellation';
+import { IOverlayWebview } from 'vs/workbench/contrib/webview/browser/webview';
 
 // import { Registry } from 'vs/platform/registry/common/platform';
 // import { IViewContainersRegistry, Extensions } from 'vs/workbench/common/views';
@@ -28,16 +24,18 @@ export class MeltyPart extends Part {
 	//#endregion
 
 	private content: HTMLElement | undefined;
-	private webview: IWebviewElement | undefined;
+	private webview: IOverlayWebview | undefined;
 
 	constructor(
 		@IThemeService themeService: IThemeService,
 		@IStorageService storageService: IStorageService,
 		@IWorkbenchLayoutService layoutService: IWorkbenchLayoutService,
-		@IWebviewService private readonly _webviewService: IWebviewService,
-		@IWebviewViewService private readonly _webviewViewService: IWebviewViewService,
 	) {
 		super(MeltyPart.ID, { hasTitle: false }, themeService, storageService, layoutService);
+	}
+
+	public registerWebview(webview: IOverlayWebview) {
+		this.webview = webview;
 	}
 
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
@@ -65,14 +63,20 @@ export class MeltyPart extends Part {
 		const meltyMagicWebview = $('div.melty-magic-webview');
 		this.content.appendChild(meltyMagicWebview);
 
-		// create a webview view
-		// associate webview view with the melty-magic-webview html element?
-		// get the extension to resolve it
+		this.webview?.layoutWebviewOverElement(meltyMagicWebview);
 
-		const webviewHtml = this._extHostWebview.getWebviewHtml('melty.magicWebview');
+		// 1. create a WebviewView
+
+		// 2. somehow associate the WebviewView with the melty-magic-webview html element?
+
+		// 3. get the webview provider from the melty extension
+		// this will have to be done by reading ExtHostWebviewViews
+
+		// 4. resolve the WebviewView using
+		// await provider.resolveWebviewView(webview, { state }, cancellation);
 
 
-
+		// const webviewHtml = this._extHostWebview.getWebviewHtml('melty.magicWebview');
 		// this.createWebview(meltyMagicWebview);
 
 		// const source = new CancellationTokenSource(); // todo save this somewhere
@@ -88,7 +92,6 @@ export class MeltyPart extends Part {
 
 		// const helloWorldPanel = new HelloWorldPanel(meltyUri);
 		// helloWorldPanel.resolveWebview(this.webview);
-		// this.webview.setHtml(helloWorldPanel.render());
 
 		return this.content;
 	}
