@@ -1,0 +1,13 @@
+example_project/.git
+.aider*
+node_modules
+.github
+.git_BACKUP
+venv
+**/out/**
+.vscode-test
+__pycache__
+spectacle-0.0.1.vsix
+melty-0.0.1.vsix
+.melty
+nextjs-demo

@@ -1,0 +1,27 @@
+<FileSummary filePath="pig.py">
+/**
+ * Represents a pig
+ */
+class Pig extends Animal:
+    def __init__(self, name: str)
+    
+    def make_noise(self)
+</FileSummary>
+<FileSummary filePath="cow.py">
+/**
+ * Represents a cow
+ */
+class Cow extends Animal:
+    def __init__(self, name: str)
+    
+    def make_noise(self)
+</FileSummary>
+<FileSummary filePath="animal.py">
+/**
+ * Represents an animal
+ */
+class Animal:
+    def __init__(self, name: str)
+    
+    def make_noise(self)
+</FileSummary>

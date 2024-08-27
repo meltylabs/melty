@@ -1,0 +1,23 @@
+<<<<<<< SEARCH
+    def moo(self):
+        return f"{self.name} says: Moo!"
+=======
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+    def get_info(self):
+        return f"Name: {self.name}, Age: {self.age}, Breed: {self.breed}, Total Milk Produced: {self.milk_produced} liters"
+=======
+    def summarize(self):
+        return f"Name: {self.name}, Age: {self.age}, Breed: {self.breed}, Total Milk Produced: {self.milk_produced} gallons"
+>>>>>>> REPLACE
+
+<<<<<<< SEARCH
+    def produce_milk(self, liters):
+        self.milk_produced += liters
+        return f"{self.name} produced {liters} liters of milk."
+=======
+    def produce_milk(self, gallons):
+        self.milk_produced += gallons
+        return f"{self.name} produced {gallons} gallons of milk."
+>>>>>>> REPLACE
