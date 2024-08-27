@@ -29,7 +29,9 @@ export class MeltyExtension {
 
 	async activate() {
 		// TODO need to decide whether to privilege workspace or repo
-		this.meltyRoot = vscode.workspace.workspaceFolders![0].uri.fsPath;
+		this.meltyRoot = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
+			? vscode.workspace.workspaceFolders[0].uri.fsPath
+			: undefined;
 
 		outputChannel.appendLine("Melty activation started");
 
