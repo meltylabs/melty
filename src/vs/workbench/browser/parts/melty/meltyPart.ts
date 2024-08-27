@@ -144,9 +144,10 @@ export class MeltyPart extends Part {
 	override layout(width: number, height: number, top: number, left: number): void {
 		super.layout(width, height, top, left);
 
-		if (this.content) {
-			this.content.style.width = `${width}px`;
-			this.content.style.height = `${height}px`;
+		if (this.state !== 'loading') {
+			this.content!.style.width = `${width}px`;
+			this.content!.style.height = `${height}px`;
+			this.webviewView!.webview.layoutWebviewOverElement(this.content!);
 		}
 	}
 
