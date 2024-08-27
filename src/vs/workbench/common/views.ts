@@ -43,7 +43,7 @@ export const enum ViewContainerLocation {
 	Melty
 }
 
-export const ViewContainerLocations = [ViewContainerLocation.Sidebar, ViewContainerLocation.Panel, ViewContainerLocation.AuxiliaryBar, ViewContainerLocation.Melty]; // TODO figure out whether we should add here. probably but it breaks another thing.
+export const ViewContainerLocations = [ViewContainerLocation.Sidebar, ViewContainerLocation.Panel, ViewContainerLocation.AuxiliaryBar]; // TODO figure out whether we should add here. probably but it breaks another thing.
 
 export function ViewContainerLocationToString(viewContainerLocation: ViewContainerLocation) {
 	switch (viewContainerLocation) {

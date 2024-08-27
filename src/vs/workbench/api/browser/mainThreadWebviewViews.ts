@@ -13,7 +13,6 @@ import { IViewBadge } from 'vs/workbench/common/views';
 import { IWebviewViewService, WebviewView } from 'vs/workbench/contrib/webviewView/browser/webviewViewService';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { IExtHostContext } from 'vs/workbench/services/extensions/common/extHostCustomers';
-import { IMeltyService } from 'vs/workbench/browser/parts/melty/meltyService';
 
 export class MainThreadWebviewsViews extends Disposable implements extHostProtocol.MainThreadWebviewViewsShape {
 
@@ -27,7 +26,6 @@ export class MainThreadWebviewsViews extends Disposable implements extHostProtoc
 		private readonly mainThreadWebviews: MainThreadWebviews,
 		@ITelemetryService private readonly _telemetryService: ITelemetryService,
 		@IWebviewViewService private readonly _webviewViewService: IWebviewViewService,
-		@IMeltyService private readonly _meltyService: IMeltyService,
 	) {
 		super();
 
@@ -67,6 +65,7 @@ export class MainThreadWebviewsViews extends Disposable implements extHostProtoc
 
 		const registration = this._webviewViewService.register(viewType, {
 			resolve: async (webviewView: WebviewView, cancellation: CancellationToken) => {
+				console.log('registering webview view provider 2');
 				const handle = generateUuid();
 
 				this._webviewViews.set(handle, webviewView);
@@ -111,11 +110,6 @@ export class MainThreadWebviewsViews extends Disposable implements extHostProtoc
 					id: viewType,
 				});
 
-				if (handle === 'melty.magicWebview') {
-					console.log('registering melty.magicWebview');
-					this._meltyService.meltyPart.registerWebview(webviewView.webview);
-				}
-
 				try {
 					await this._proxy.$resolveWebviewView(handle, viewType, webviewView.title, state, cancellation);
 				} catch (error) {
@@ -124,6 +118,18 @@ export class MainThreadWebviewsViews extends Disposable implements extHostProtoc
 				}
 			}
 		});
+
+		// if (viewType === 'melty.magicWebview') {
+		// 	console.log('registering melty.magicWebview');
+		// 	this._meltyService.meltyPart.setWebviewResolver(
+		// 		async (webview, cancellation: CancellationToken) => {
+		// 			console.log('resolving melty.magicWebview');
+		// 			const handle = generateUuid();
+		// 			// todo try to load state?
+		// 			await this._proxy.$resolveWebviewView(handle, 'melty.magicWebview', 'Melty', undefined, cancellation);
+		// 		}
+		// 	);
+		// }
 
 		this._webviewViewProviders.set(viewType, registration);
 	}
