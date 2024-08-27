@@ -1505,7 +1505,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		meltyPartContainer.style.left = '0';
 		meltyPartContainer.style.right = '0';
 		meltyPartContainer.style.bottom = '0';
-		meltyPartContainer.style.zIndex = '10';
+		meltyPartContainer.style.zIndex = '-10';
 		meltyPartContainer.style.display = 'absolute';
 		meltyPartContainer.classList.add('melty-part-container');
 		this.mainContainer.appendChild(meltyPartContainer);

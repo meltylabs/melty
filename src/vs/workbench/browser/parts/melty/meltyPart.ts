@@ -32,6 +32,8 @@ export class MeltyPart extends Part {
 	private webviewView: WebviewView | undefined;
 	private _webviewService: WebviewService | undefined;
 
+	private state: 'loading' | 'open' | 'closed' = 'loading';
+
 	constructor(
 		@IThemeService themeService: IThemeService,
 		@IStorageService storageService: IStorageService,
@@ -47,7 +49,7 @@ export class MeltyPart extends Part {
 	}
 
 	private async initialize() {
-		// 0. create an IOverlayWebview
+		// 1. create an IOverlayWebview
 		const webview = this._webviewService!.createWebviewOverlay({
 			title: 'Melty',
 			options: {
@@ -65,7 +67,7 @@ export class MeltyPart extends Part {
 
 		webview.claim(this, getActiveWindow(), undefined);
 
-		// 1. initialize this.webviewView by creating a WebviewView
+		// 2. initialize this.webviewView by creating a WebviewView
 		this.webviewView = {
 			webview,
 			onDidChangeVisibility: () => { return { dispose: () => { } }; },
@@ -92,101 +94,52 @@ export class MeltyPart extends Part {
 			}
 		};
 
-		// 2. in createContentArea, we call webviewView.webview.layoutWebviewOverElement(meltyMagicWebview);
-
 		// 3. ask the webviewViewService to connect our webviewView to the webviewViewProvider, i.e., HelloWorldPanel
 		const source = new CancellationTokenSource(); // todo add to disposables
-		console.log("resolving webview 0")
 		await this._webviewViewService.resolve('melty.magicWebview', this.webviewView!, source.token);
-		// now re-render the webview view?
-		if (this.content) {
-			this.webviewView?.webview.layoutWebviewOverElement(this.content!);
+
+		// if both content and webview are ready, end loading state and open
+		if (this.content && this.webviewView) {
+			this.webviewView?.webview.layoutWebviewOverElement(this.content);
+			this.open();
+		} else {
+			// hide stuff while we load
+			this.webviewView!.webview.container.style.display = 'none';
 		}
 	}
 
-	// public registerWebview(webview: IOverlayWebview) {
-	// 	this.webview = webview;
-	// }
-
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
-		this.element = parent;
-		this.content = $('div.melty-content');
-		parent.appendChild(this.content);
-
-		// Add visible content and styling
-		this.content.style.margin = '40px';
-		this.content.style.borderRadius = '40px';
-		this.content.style.backgroundColor = 'white'; // Semi-transparent blue
-		this.content.style.color = '#333';
-		this.content.style.fontSize = '24px';
-		this.content.style.display = 'flex';
-		this.content.style.justifyContent = 'center';
-		this.content.style.alignItems = 'center';
+		this.content = $('div.melty-popup-container');
+		this.content.style.margin = '50px';
+		// this.content.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
+		// this.content.style.borderRadius = '40px';
+		// this.content.style.backgroundColor = 'white';
+		// this.content.style.color = '#333';
+		// this.content.style.fontSize = '24px';
+		// this.content.style.display = 'flex';
+		// this.content.style.justifyContent = 'center';
+		// this.content.style.alignItems = 'center';
+		this.content.style.zIndex = '-10';
 		this.content.style.position = 'absolute';
 		this.content.style.top = '0';
 		this.content.style.left = '0';
 		this.content.style.right = '0';
 		this.content.style.bottom = '0';
 
-		this.content.textContent = 'Melty Fullscreen Popup';
+		this.element = parent;
+		parent.appendChild(this.content!);
 
-		// const meltyMagicWebview = $('div.melty-magic-webview');
-		// this.content.appendChild(meltyMagicWebview);
+		// if both content and webview are ready, end loading state and open
+		if (this.content && this.webviewView) {
+			this.webviewView?.webview.layoutWebviewOverElement(this.content);
+			this.open();
+		} else {
+			// hide stuff while we load
+			this.content!.style.display = 'none';
+		}
 
-		return this.content;
+		return this.content!;
 	}
-
-	// 3. get the webview provider from the melty extension
-	// this will have to be done by reading ExtHostWebviewViews
-
-	// 4. resolve the WebviewView using
-	// await provider.resolveWebviewView(webview, { state }, cancellation);
-
-
-	// const webviewHtml = this._extHostWebview.getWebviewHtml('melty.magicWebview');
-	// this.createWebview(meltyMagicWebview);
-
-	// const source = new CancellationTokenSource(); // todo save this somewhere
-	// ExtHostWebviewViews.resolve('melty.magicWebview', this.webview!, source);
-
-	// await this._proxy.$resolveWebviewView(handle, viewType, webviewView.title, state, cancellation);
-
-	// this.content.innerHTML = this.meltyMagicWebview!.html;
-
-	// const viewContainersRegistry = Registry.as<IViewContainersRegistry>(Extensions.ViewContainersRegistry);
-
-	// viewContainersRegistry.registerViewContainer
-
-	// const helloWorldPanel = new HelloWorldPanel(meltyUri);
-	// helloWorldPanel.resolveWebview(this.webview);
-
-
-
-
-
-
-
-	// private createWebview(parent: HTMLElement) {
-	// 	const meltyUri = URI.file('/Users/jdecampos/Development/code/extensions/spectacular/');
-
-	// 	this.webview = this._webviewService.createWebviewElement({
-	// 		title: 'Melty Webview',
-	// 		options: {
-	// 			enableFindWidget: false,
-	// 			retainContextWhenHidden: true,
-	// 		},
-	// 		contentOptions: {
-	// 			allowScripts: true,
-	// 			localResourceRoots: [
-	// 				// Uri.joinPath(this._meltyUri, 'out'),
-	// 				URI.joinPath(meltyUri, 'webview-ui/build'),
-	// 			],
-	// 		},
-	// 		extension: undefined,
-	// 	});
-
-	// 	this.webview.mountTo(parent, getActiveWindow());
-	// }
 
 	override layout(width: number, height: number, top: number, left: number): void {
 		super.layout(width, height, top, left);
@@ -197,28 +150,57 @@ export class MeltyPart extends Part {
 		}
 	}
 
+	private open() {
+		this.state = 'open';
+		this.content!.style.display = 'flex';
+		this.webviewView!.webview.container.style.display = 'flex';
+		this.webviewView!.webview.container.style.boxSizing = 'border-box';
+		this.webviewView!.webview.container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
+		this.webviewView!.webview.container.style.borderRadius = '30px';
+		this.webviewView!.webview.container.style.padding = '20px';
+		this.webviewView!.webview.container.style.backgroundColor = 'white';
+		this.webviewView!.webview.container.style.zIndex = '100';
+	}
+
+	private close() {
+		this.state = 'closed';
+		this.content!.style.display = 'none';
+		this.webviewView!.webview.container.style.display = 'none';
+	}
+
+	private toggleOpenClose() {
+		this.state === 'open' ? this.close() : this.open();
+	}
+
 	focus(): void {
-		if (this.content) {
-			this.content.focus();
+		if (this.webviewView) {
+			this.webviewView.webview.focus();
 		}
 	}
 
 	show(): void {
-		if (this.content) {
-			this.content.style.display = 'block';
+		if (this.state === 'loading') {
+			console.warn('Can\'t open Melty while loading');
+			return;
 		}
+
+		this.open();
 	}
 
 	hide(): void {
-		if (this.content) {
-			this.content.style.display = 'none';
+		if (this.state === 'loading') {
+			console.warn('Can\'t close Melty while loading');
+			return;
 		}
+		this.close();
 	}
 
 	toggle(): void {
-		if (this.content) {
-			this.content.style.display = this.content.style.display === 'flex' ? 'none' : 'flex';
+		if (this.state === 'loading') {
+			console.warn('Can\'t toggle Melty while loading');
+			return;
 		}
+		this.toggleOpenClose();
 	}
 
 	toJSON(): object {

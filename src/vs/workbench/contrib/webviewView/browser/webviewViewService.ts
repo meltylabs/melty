@@ -126,7 +126,6 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 	}
 
 	resolve(viewType: string, webview: WebviewView, cancellation: CancellationToken): Promise<void> {
-		console.log("resolving webview 2")
 		const resolver = this._resolvers.get(viewType);
 		if (!resolver) {
 			if (this._awaitingRevival.has(viewType)) {
@@ -138,7 +137,6 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 			return promise;
 		}
 
-		console.log("resolving webview 3")
 		return resolver.resolve(webview, cancellation);
 	}
 }
