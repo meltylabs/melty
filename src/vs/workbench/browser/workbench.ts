@@ -51,6 +51,7 @@ import { setProgressAcccessibilitySignalScheduler } from 'vs/base/browser/ui/pro
 import { AccessibleViewRegistry } from 'vs/platform/accessibility/browser/accessibleViewRegistry';
 import { NotificationAccessibleView } from 'vs/workbench/browser/parts/notifications/notificationAccessibleView';
 import { isESM } from 'vs/base/common/amd';
+import { IMeltyService } from 'vs/workbench/browser/parts/melty/meltyService';
 
 export interface IWorkbenchOptions {
 
@@ -368,9 +369,18 @@ export class Workbench extends Layout {
 			{ id: Parts.EDITOR_PART, role: 'main', classes: ['editor'], options: { restorePreviousState: this.willRestoreEditors() } },
 			{ id: Parts.PANEL_PART, role: 'none', classes: ['panel', 'basepanel', positionToString(this.getPanelPosition())] },
 			{ id: Parts.AUXILIARYBAR_PART, role: 'none', classes: ['auxiliarybar', 'basepanel', this.getSideBarPosition() === Position.LEFT ? 'right' : 'left'] },
-			{ id: Parts.STATUSBAR_PART, role: 'status', classes: ['statusbar'] }
+			{ id: Parts.STATUSBAR_PART, role: 'status', classes: ['statusbar'] },
+			{ id: Parts.MELTY_PART, role: 'none', classes: [] }
 		]) {
 			const partContainer = this.createPart(id, role, classes);
+
+			// TODO this is probably hacky
+			if (id === Parts.MELTY_PART) {
+				// Ensure MeltyService is instantiated here
+				instantiationService.invokeFunction(accessor => {
+					accessor.get(IMeltyService);
+				});
+			}
 
 			mark(`code/willCreatePart/${id}`);
 			this.getPart(id).create(partContainer, options);

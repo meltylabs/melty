@@ -261,6 +261,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 	private auxiliaryBarPartView!: ISerializableView;
 	private editorPartView!: ISerializableView;
 	private statusBarPartView!: ISerializableView;
+	private meltyPartView!: ISerializableView;
 
 	private environmentService!: IBrowserWorkbenchEnvironmentService;
 	private extensionService!: IExtensionService;
@@ -1484,6 +1485,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		const auxiliaryBarPart = this.getPart(Parts.AUXILIARYBAR_PART);
 		const sideBar = this.getPart(Parts.SIDEBAR_PART);
 		const statusBar = this.getPart(Parts.STATUSBAR_PART);
+		const meltyPart = this.getPart(Parts.MELTY_PART);
 
 		// View references for all parts
 		this.titleBarPartView = titleBar;
@@ -1494,6 +1496,21 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		this.panelPartView = panelPart;
 		this.auxiliaryBarPartView = auxiliaryBarPart;
 		this.statusBarPartView = statusBar;
+		this.meltyPartView = meltyPart;
+
+		// Create a new container for MeltyPart
+		const meltyPartContainer = document.createElement('div');
+		meltyPartContainer.style.position = 'absolute';
+		meltyPartContainer.style.top = '0';
+		meltyPartContainer.style.left = '0';
+		meltyPartContainer.style.right = '0';
+		meltyPartContainer.style.bottom = '0';
+		meltyPartContainer.style.zIndex = '-10';
+		meltyPartContainer.style.display = 'absolute';
+		meltyPartContainer.classList.add('melty-part-container');
+		this.mainContainer.appendChild(meltyPartContainer);
+		// Initialize MeltyPart in this new container
+		meltyPart.create(meltyPartContainer);
 
 		const viewMap = {
 			[Parts.ACTIVITYBAR_PART]: this.activityBarPartView,
@@ -1503,7 +1520,8 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 			[Parts.PANEL_PART]: this.panelPartView,
 			[Parts.SIDEBAR_PART]: this.sideBarPartView,
 			[Parts.STATUSBAR_PART]: this.statusBarPartView,
-			[Parts.AUXILIARYBAR_PART]: this.auxiliaryBarPartView
+			[Parts.AUXILIARYBAR_PART]: this.auxiliaryBarPartView,
+			[Parts.MELTY_PART]: this.meltyPartView, // pass MeltyPart into this thing but never use it
 		};
 
 		const fromJSON = ({ type }: { type: Parts }) => viewMap[type];
