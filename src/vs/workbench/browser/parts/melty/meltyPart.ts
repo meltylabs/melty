@@ -3,18 +3,12 @@ import { IWorkbenchLayoutService, Parts } from 'vs/workbench/services/layout/bro
 import { IThemeService } from 'vs/platform/theme/common/themeService';
 import { IStorageService } from 'vs/platform/storage/common/storage';
 import { $, getActiveWindow } from 'vs/base/browser/dom';
-
-// import type { Webview } from 'vscode';
-import { IWebviewViewService, WebviewView } from 'vs/workbench/contrib/webviewView/browser/webviewViewService';
 import { CancellationTokenSource } from 'vs/base/common/cancellation';
-
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
+
+// imports that violate vscode source organization
+import { IWebviewViewService, WebviewView } from 'vs/workbench/contrib/webviewView/browser/webviewViewService';
 import { WebviewService } from 'vs/workbench/contrib/webview/browser/webviewService';
-// import { URI } from 'vs/base/common/uri';
-
-// import { Registry } from 'vs/platform/registry/common/platform';
-// import { IViewContainersRegistry, Extensions } from 'vs/workbench/common/views';
-
 
 export class MeltyPart extends Part {
 	static readonly ID = 'workbench.parts.melty';
@@ -28,7 +22,8 @@ export class MeltyPart extends Part {
 
 	//#endregion
 
-	private content: HTMLElement | undefined;
+	private fullScreenOverlay: HTMLElement | undefined;
+	private popupAreaOverlay: HTMLElement | undefined;
 	private webviewView: WebviewView | undefined;
 	private _webviewService: WebviewService | undefined;
 
@@ -99,8 +94,8 @@ export class MeltyPart extends Part {
 		await this._webviewViewService.resolve('melty.magicWebview', this.webviewView!, source.token);
 
 		// if both content and webview are ready, end loading state and open
-		if (this.content && this.webviewView) {
-			this.webviewView?.webview.layoutWebviewOverElement(this.content);
+		if (this.popupAreaOverlay && this.webviewView) {
+			this.webviewView?.webview.layoutWebviewOverElement(this.popupAreaOverlay);
 			this.open();
 		} else {
 			// hide stuff while we load
@@ -108,52 +103,56 @@ export class MeltyPart extends Part {
 		}
 	}
 
-	protected override createContentArea(parent: HTMLElement): HTMLElement {
-		this.content = $('div.melty-popup-container');
-		this.content.style.margin = '50px';
-		// this.content.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
-		// this.content.style.borderRadius = '40px';
-		// this.content.style.backgroundColor = 'white';
-		// this.content.style.color = '#333';
-		// this.content.style.fontSize = '24px';
-		// this.content.style.display = 'flex';
-		// this.content.style.justifyContent = 'center';
-		// this.content.style.alignItems = 'center';
-		this.content.style.zIndex = '-10';
-		this.content.style.position = 'absolute';
-		this.content.style.top = '0';
-		this.content.style.left = '0';
-		this.content.style.right = '0';
-		this.content.style.bottom = '0';
+	protected override createContentArea(element: HTMLElement): HTMLElement {
+		// create the full screen overlay. this serves as a click target for closing melty
+		this.fullScreenOverlay = $('div.melty-full-screen-overlay');
+		this.fullScreenOverlay.style.zIndex = '95';
+		this.fullScreenOverlay.style.position = 'absolute';
+		this.fullScreenOverlay.style.top = '0';
+		this.fullScreenOverlay.style.left = '0';
+		this.fullScreenOverlay.style.right = '0';
+		this.fullScreenOverlay.style.bottom = '0';
 
-		this.element = parent;
-		parent.appendChild(this.content!);
+		// create the popup area overlay. this is just a target for webview to layout over
+		this.popupAreaOverlay = $('div.melty-popup-area-overlay');
+		this.popupAreaOverlay.style.position = 'absolute'; // couldn't get it to work with relative for some reason
+		this.popupAreaOverlay.style.margin = '50px';
+		this.popupAreaOverlay.style.top = '0';
+		this.popupAreaOverlay.style.left = '0';
+		this.popupAreaOverlay.style.right = '0';
+		this.popupAreaOverlay.style.bottom = '0';
+		this.fullScreenOverlay.appendChild(this.popupAreaOverlay);
+
+		this.element = element;
+		element.appendChild(this.fullScreenOverlay!);
 
 		// if both content and webview are ready, end loading state and open
-		if (this.content && this.webviewView) {
-			this.webviewView?.webview.layoutWebviewOverElement(this.content);
+		if (this.popupAreaOverlay && this.webviewView) {
+			this.webviewView?.webview.layoutWebviewOverElement(this.popupAreaOverlay);
 			this.open();
 		} else {
 			// hide stuff while we load
-			this.content!.style.display = 'none';
+			this.fullScreenOverlay!.style.display = 'none';
 		}
 
-		return this.content!;
+		return this.fullScreenOverlay!;
 	}
 
 	override layout(width: number, height: number, top: number, left: number): void {
 		super.layout(width, height, top, left);
+		if (this.fullScreenOverlay) {
+			this.fullScreenOverlay!.style.width = `${width}px`;
+			this.fullScreenOverlay!.style.height = `${height}px`;
+		}
 
-		if (this.state !== 'loading') {
-			this.content!.style.width = `${width}px`;
-			this.content!.style.height = `${height}px`;
-			this.webviewView!.webview.layoutWebviewOverElement(this.content!);
+		if (this.state === 'open') {
+			this.webviewView!.webview.layoutWebviewOverElement(this.popupAreaOverlay!);
 		}
 	}
 
 	private open() {
 		this.state = 'open';
-		this.content!.style.display = 'flex';
+		this.fullScreenOverlay!.style.display = 'flex';
 		this.webviewView!.webview.container.style.display = 'flex';
 		this.webviewView!.webview.container.style.boxSizing = 'border-box';
 		this.webviewView!.webview.container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
@@ -161,11 +160,14 @@ export class MeltyPart extends Part {
 		this.webviewView!.webview.container.style.padding = '20px';
 		this.webviewView!.webview.container.style.backgroundColor = 'white';
 		this.webviewView!.webview.container.style.zIndex = '100';
+
+		this.webviewView!.webview.layoutWebviewOverElement(this.popupAreaOverlay!);
+		this.focus();
 	}
 
 	private close() {
 		this.state = 'closed';
-		this.content!.style.display = 'none';
+		this.fullScreenOverlay!.style.display = 'none';
 		this.webviewView!.webview.container.style.display = 'none';
 	}
 

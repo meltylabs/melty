@@ -1,9 +1,9 @@
 import { registerSingleton, InstantiationType } from 'vs/platform/instantiation/common/extensions';
-import { IDisposable } from 'vs/base/common/lifecycle';
+import { Disposable, IDisposable } from 'vs/base/common/lifecycle';
 import { MeltyPart } from './meltyPart';
 import { createDecorator, IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
-import { IThemeService } from 'vs/platform/theme/common/themeService';
-import { IStorageService } from 'vs/platform/storage/common/storage';
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
+import { ITerminalService } from 'vs/workbench/contrib/terminal/browser/terminal';
 
 export const IMeltyService = createDecorator<IMeltyService>('meltyService');
 
@@ -31,7 +31,7 @@ export interface IMeltyService extends IDisposable {
 	toggle(): void;
 }
 
-export class MeltyService implements IMeltyService {
+export class MeltyService extends Disposable implements IMeltyService {
 
 	declare readonly _serviceBrand: undefined;
 
@@ -39,10 +39,23 @@ export class MeltyService implements IMeltyService {
 
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IThemeService themeService: IThemeService,
-		@IStorageService storageService: IStorageService
+		@IEditorService private readonly _editorService: IEditorService,
+		@ITerminalService private readonly _terminalService: ITerminalService,
 	) {
+		super();
 		this._meltyPart = this.instantiationService.createInstance(MeltyPart);
+		this.registerListeners();
+	}
+
+
+	private registerListeners(): void {
+		this._register(this._editorService.onDidActiveEditorChange(() => {
+			this.hide();
+		}));
+
+		this._register(this._terminalService.onDidFocusInstance(() => {
+			this.hide();
+		}));
 	}
 
 	get meltyPart(): MeltyPart {
@@ -61,7 +74,8 @@ export class MeltyService implements IMeltyService {
 		this._meltyPart.toggle();
 	}
 
-	dispose(): void {
+	override dispose(): void {
+		super.dispose();
 		this._meltyPart.dispose();
 	}
 }

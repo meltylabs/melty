@@ -1591,6 +1591,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 
 			// Layout the grid widget
 			this.workbenchGrid.layout(this._mainContainerDimension.width, this._mainContainerDimension.height);
+			this.meltyPartView.layout(this._mainContainerDimension.width, this._mainContainerDimension.height, 0, 0);
 			this.initialized = true;
 
 			// Emit as event
