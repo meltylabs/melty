@@ -65,7 +65,7 @@ export class MainThreadWebviewsViews extends Disposable implements extHostProtoc
 
 		const registration = this._webviewViewService.register(viewType, {
 			resolve: async (webviewView: WebviewView, cancellation: CancellationToken) => {
-				console.log('registering webview view provider 2');
+				console.log('resolving webview 3');
 				const handle = generateUuid();
 
 				this._webviewViews.set(handle, webviewView);

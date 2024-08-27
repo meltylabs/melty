@@ -2,7 +2,7 @@ import { Part } from 'vs/workbench/browser/part';
 import { IWorkbenchLayoutService, Parts } from 'vs/workbench/services/layout/browser/layoutService';
 import { IThemeService } from 'vs/platform/theme/common/themeService';
 import { IStorageService } from 'vs/platform/storage/common/storage';
-import { $ } from 'vs/base/browser/dom';
+import { $, getActiveWindow } from 'vs/base/browser/dom';
 
 // import type { Webview } from 'vscode';
 import { IWebviewViewService, WebviewView } from 'vs/workbench/contrib/webviewView/browser/webviewViewService';
@@ -47,8 +47,6 @@ export class MeltyPart extends Part {
 	}
 
 	private async initialize() {
-		// PLAN
-
 		// 0. create an IOverlayWebview
 		const webview = this._webviewService!.createWebviewOverlay({
 			title: 'Melty',
@@ -64,6 +62,8 @@ export class MeltyPart extends Part {
 			},
 			extension: undefined,
 		});
+
+		webview.claim(this, getActiveWindow(), undefined);
 
 		// 1. initialize this.webviewView by creating a WebviewView
 		this.webviewView = {
@@ -96,7 +96,12 @@ export class MeltyPart extends Part {
 
 		// 3. ask the webviewViewService to connect our webviewView to the webviewViewProvider, i.e., HelloWorldPanel
 		const source = new CancellationTokenSource(); // todo add to disposables
+		console.log("resolving webview 0")
 		await this._webviewViewService.resolve('melty.magicWebview', this.webviewView!, source.token);
+		// now re-render the webview view?
+		if (this.content) {
+			this.webviewView?.webview.layoutWebviewOverElement(this.content!);
+		}
 	}
 
 	// public registerWebview(webview: IOverlayWebview) {
@@ -127,8 +132,6 @@ export class MeltyPart extends Part {
 
 		// const meltyMagicWebview = $('div.melty-magic-webview');
 		// this.content.appendChild(meltyMagicWebview);
-
-		this.webviewView?.webview.layoutWebviewOverElement(this.content);
 
 		return this.content;
 	}

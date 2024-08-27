@@ -104,6 +104,7 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 	public readonly onNewResolverRegistered = this._onNewResolverRegistered.event;
 
 	register(viewType: string, resolver: IWebviewViewResolver): IDisposable {
+		console.log("registering webview view resolver for", viewType);
 		if (this._resolvers.has(viewType)) {
 			throw new Error(`View resolver already registered for ${viewType}`);
 		}
@@ -125,6 +126,7 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 	}
 
 	resolve(viewType: string, webview: WebviewView, cancellation: CancellationToken): Promise<void> {
+		console.log("resolving webview 2")
 		const resolver = this._resolvers.get(viewType);
 		if (!resolver) {
 			if (this._awaitingRevival.has(viewType)) {
@@ -136,6 +138,7 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 			return promise;
 		}
 
+		console.log("resolving webview 3")
 		return resolver.resolve(webview, cancellation);
 	}
 }
