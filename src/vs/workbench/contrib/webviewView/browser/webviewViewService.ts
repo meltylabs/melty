@@ -104,7 +104,6 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 	public readonly onNewResolverRegistered = this._onNewResolverRegistered.event;
 
 	register(viewType: string, resolver: IWebviewViewResolver): IDisposable {
-		console.log("registering webview view resolver for", viewType);
 		if (this._resolvers.has(viewType)) {
 			throw new Error(`View resolver already registered for ${viewType}`);
 		}

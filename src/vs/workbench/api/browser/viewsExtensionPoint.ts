@@ -277,7 +277,7 @@ class ViewsExtensionHandler implements IWorkbenchContribution {
 
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@ILogService private readonly logService: ILogService,
+		@ILogService private readonly logService: ILogService
 	) {
 		this.viewContainersRegistry = Registry.as<IViewContainersRegistry>(ViewContainerExtensions.ViewContainersRegistry);
 		this.viewsRegistry = Registry.as<IViewsRegistry>(ViewContainerExtensions.ViewsRegistry);
@@ -520,6 +520,7 @@ class ViewsExtensionHandler implements IWorkbenchContribution {
 						weight,
 						accessibilityHelpContent
 					};
+
 
 					viewIds.add(viewDescriptor.id);
 					viewDescriptors.push(viewDescriptor);

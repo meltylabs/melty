@@ -49,7 +49,7 @@ export enum CompositeBarPosition {
 
 export interface IPaneCompositePart extends IView {
 
-	readonly partId: Parts.PANEL_PART | Parts.AUXILIARYBAR_PART | Parts.SIDEBAR_PART | Parts.MELTY_PART;
+	readonly partId: Parts.PANEL_PART | Parts.AUXILIARYBAR_PART | Parts.SIDEBAR_PART;
 
 	readonly onDidPaneCompositeOpen: Event<IPaneComposite>;
 	readonly onDidPaneCompositeClose: Event<IPaneComposite>;
@@ -129,7 +129,7 @@ export abstract class AbstractPaneCompositePart extends CompositePart<PaneCompos
 	protected contentDimension: Dimension | undefined;
 
 	constructor(
-		readonly partId: Parts.PANEL_PART | Parts.AUXILIARYBAR_PART | Parts.SIDEBAR_PART | Parts.MELTY_PART,
+		readonly partId: Parts.PANEL_PART | Parts.AUXILIARYBAR_PART | Parts.SIDEBAR_PART,
 		partOptions: IPartOptions,
 		activePaneCompositeSettingsKey: string,
 		private readonly activePaneContextKey: IContextKey<string>,

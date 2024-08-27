@@ -14,6 +14,7 @@ import { IWebviewViewService, WebviewView } from 'vs/workbench/contrib/webviewVi
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { IExtHostContext } from 'vs/workbench/services/extensions/common/extHostCustomers';
 
+
 export class MainThreadWebviewsViews extends Disposable implements extHostProtocol.MainThreadWebviewViewsShape {
 
 	private readonly _proxy: extHostProtocol.ExtHostWebviewViewsShape;
@@ -117,18 +118,6 @@ export class MainThreadWebviewsViews extends Disposable implements extHostProtoc
 				}
 			}
 		});
-
-		// if (viewType === 'melty.magicWebview') {
-		// 	console.log('registering melty.magicWebview');
-		// 	this._meltyService.meltyPart.setWebviewResolver(
-		// 		async (webview, cancellation: CancellationToken) => {
-		// 			console.log('resolving melty.magicWebview');
-		// 			const handle = generateUuid();
-		// 			// todo try to load state?
-		// 			await this._proxy.$resolveWebviewView(handle, 'melty.magicWebview', 'Melty', undefined, cancellation);
-		// 		}
-		// 	);
-		// }
 
 		this._webviewViewProviders.set(viewType, registration);
 	}

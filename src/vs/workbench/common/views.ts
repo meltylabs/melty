@@ -39,18 +39,16 @@ export namespace Extensions {
 export const enum ViewContainerLocation {
 	Sidebar,
 	Panel,
-	AuxiliaryBar,
-	Melty
+	AuxiliaryBar
 }
 
-export const ViewContainerLocations = [ViewContainerLocation.Sidebar, ViewContainerLocation.Panel, ViewContainerLocation.AuxiliaryBar]; // TODO figure out whether we should add here. probably but it breaks another thing.
+export const ViewContainerLocations = [ViewContainerLocation.Sidebar, ViewContainerLocation.Panel, ViewContainerLocation.AuxiliaryBar];
 
 export function ViewContainerLocationToString(viewContainerLocation: ViewContainerLocation) {
 	switch (viewContainerLocation) {
 		case ViewContainerLocation.Sidebar: return 'sidebar';
 		case ViewContainerLocation.Panel: return 'panel';
 		case ViewContainerLocation.AuxiliaryBar: return 'auxiliarybar';
-		case ViewContainerLocation.Melty: return 'meltypopup';
 	}
 }
 

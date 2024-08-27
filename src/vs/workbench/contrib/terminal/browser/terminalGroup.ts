@@ -568,8 +568,6 @@ export class TerminalGroup extends Disposable implements ITerminalGroup {
 				return this._layoutService.getSideBarPosition();
 			case ViewContainerLocation.AuxiliaryBar:
 				return this._layoutService.getSideBarPosition() === Position.LEFT ? Position.RIGHT : Position.LEFT;
-			default:
-				throw new Error(`Unsupported terminal location: ${this._terminalLocation}`);
 		}
 	}
 
