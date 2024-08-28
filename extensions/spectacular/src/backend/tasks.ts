@@ -158,6 +158,11 @@ export class Task implements Task {
 			const meltyMindFiles =
 				await this.fileManager!.getMeltyMindFilesRelative();
 
+			// just in case something's gone terribly wrong
+			this.conversation = conversations.forceReadyForResponseFrom(
+				this.conversation,
+				"bot"
+			);
 			this.conversation = await assistant.respond(
 				this.conversation,
 				this.gitRepo!,

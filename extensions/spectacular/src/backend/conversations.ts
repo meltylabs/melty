@@ -90,7 +90,7 @@ function removeEmptyJoules(conversation: Conversation): Conversation {
 /**
  * removes any joules needed to make the conversation ready for a response from the given author
  */
-export function forceConversationReadyForResponseFrom(
+export function forceReadyForResponseFrom(
 	conversation: Conversation,
 	author: "human" | "bot"
 ): Conversation {
