@@ -9,15 +9,26 @@ class EventManager {
 			this.listeners.set(type, new Set());
 		}
 		this.listeners.get(type)!.add(callback);
-		console.log(`[EventManager] there are now ${this.listeners.get(type)?.size} listeners for ,${type},`);
+		this.printListenersCounts();
 	}
 
 	removeListener(type: string, callback: EventCallback) {
+		this.printListenersCounts();
 		console.log(`[EventManager] Removing listener for ${type}`);
 		this.listeners.get(type)?.delete(callback);
 	}
 
+	private printListenersCounts() {
+		console.log(
+			Array.from(this.listeners).map(([type, listeners]) => {
+				return `[EventManager] there are now ${listeners.size} listeners for ,${type},`;
+			})
+				.join("\n")
+		);
+	}
+
 	handleMessage = (event: MessageEvent) => {
+		this.printListenersCounts();
 		const message = event.data;
 		if (message.type) {
 			console.log(`[EventManager] Handling message of type ,${message.type},`);
