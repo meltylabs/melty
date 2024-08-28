@@ -81,7 +81,7 @@ function categorizeLine(
 	}
 }
 
-function nextSection(currentSection: Section, nextSection: Section): Section {
+function nextSection(currentSection: Section, nextSection: Section, fullContent: string): Section {
 	const allowedTransitions: Record<Section, Section[]> = {
 		search: ["replace"],
 		replace: ["codeChange"],
@@ -90,8 +90,12 @@ function nextSection(currentSection: Section, nextSection: Section): Section {
 		melthinking: ["topLevel"],
 	};
 	if (!allowedTransitions[currentSection].includes(nextSection)) {
+		console.error(
+			`Unexpected next section "${nextSection}" from "${currentSection}". Full content:\n`,
+			fullContent
+		);
 		throw new Error(
-			`Unexpected next section ${nextSection} from ${currentSection}`
+			`Unexpected next section ${nextSection} from ${currentSection}. See logs for details.`
 		);
 	}
 	return nextSection;
@@ -120,10 +124,10 @@ export function splitResponse(
 	for (const line of lines) {
 		switch (categorizeLine(line)) {
 			case "melthinkingOpen":
-				currentSection = nextSection(currentSection, "melthinking");
+				currentSection = nextSection(currentSection, "melthinking", content);
 				break;
 			case "melthinkingClose":
-				currentSection = nextSection(currentSection, "topLevel");
+				currentSection = nextSection(currentSection, "topLevel", content);
 				break;
 			case "ccOpen":
 				// // DISABLED -- parsed message strategy
@@ -141,7 +145,7 @@ export function splitResponse(
 						throw e;
 					}
 				}
-				currentSection = nextSection(currentSection, "codeChange");
+				currentSection = nextSection(currentSection, "codeChange", content);
 				break;
 			case "srOpen":
 				// // DISABLED - parse message strategy
@@ -153,10 +157,10 @@ export function splitResponse(
 				//   throw new Error(`Unexpected file name ${currentFile}`);
 				// }
 				// messageChunksList.push("");
-				currentSection = nextSection(currentSection, "search");
+				currentSection = nextSection(currentSection, "search", content);
 				break;
 			case "srDivider":
-				currentSection = nextSection(currentSection, "replace");
+				currentSection = nextSection(currentSection, "replace", content);
 				break;
 			case "srClose":
 				// // DISABLED -- parsed message strategy
@@ -171,11 +175,11 @@ export function splitResponse(
 				);
 				currentSearch = [];
 				currentReplace = [];
-				currentSection = nextSection(currentSection, "codeChange");
+				currentSection = nextSection(currentSection, "codeChange", content);
 				break;
 			case "ccClose":
 				currentFile = undefined; // we could maybe relax this later
-				currentSection = nextSection(currentSection, "topLevel");
+				currentSection = nextSection(currentSection, "topLevel", content);
 				break;
 			case "other":
 				if (currentSection === "search") {
