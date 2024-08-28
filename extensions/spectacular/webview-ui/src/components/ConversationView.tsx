@@ -206,6 +206,7 @@ export function ConversationView() {
 			}
 		};
 
+		console.log("[ConversationView] Adding listener for notification");
 		eventManager.addListener('notification', handleNotification);
 
 		return () => {
