@@ -14,7 +14,7 @@ import { Task } from "../types";
 import { RpcClient } from "../rpcClient";
 import { JouleComponent } from "./JouleComponent";
 import * as strings from "../utilities/strings";
-import { eventManager } from '../eventManager';
+import { EventManager } from '../eventManager';
 
 const MemoizedJouleComponent = memo(JouleComponent);
 
@@ -207,10 +207,10 @@ export function ConversationView() {
 		};
 
 		console.log("[ConversationView] Adding listener for notification");
-		eventManager.addListener('notification', handleNotification);
+		EventManager.Instance.addListener('notification', handleNotification);
 
 		return () => {
-			eventManager.removeListener('notification', handleNotification);
+			EventManager.Instance.removeListener('notification', handleNotification);
 		};
 	}, []);
 

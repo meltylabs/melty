@@ -11,7 +11,7 @@ import { Tasks } from "./components/Tasks";
 import { ConversationView } from "./components/ConversationView";
 import { Onboarding } from "./components/Onboarding";
 import "./App.css";
-import { eventManager } from './eventManager';
+import { EventManager } from './eventManager';
 
 function AppContent() {
 	const navigate = useNavigate();
@@ -63,8 +63,7 @@ function AppContent() {
 
 function App() {
 	useEffect(() => {
-		eventManager.init();
-		return () => eventManager.cleanup();
+		return () => EventManager.Instance.cleanup();
 	}, []);
 
 	return (

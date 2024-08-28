@@ -1,6 +1,6 @@
 import { vscode } from "./utilities/vscode";
 import { RpcMethod } from "./types";
-import { eventManager } from "./eventManager";
+import { EventManager } from "./eventManager";
 
 export class RpcClient {
 	private messageId = 0;
@@ -13,7 +13,7 @@ export class RpcClient {
 		// Bind the method to ensure 'this' always refers to the class instance
 		this.handleMessage = this.handleMessage.bind(this);
 
-		eventManager.addListener("rpcResponse", this.handleMessage); // todo remove on dispose
+		EventManager.Instance.addListener("rpcResponse", this.handleMessage); // todo remove on dispose
 	}
 
 
