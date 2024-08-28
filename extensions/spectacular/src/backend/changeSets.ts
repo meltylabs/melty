@@ -5,13 +5,13 @@ import path from "path";
 import * as files from "./meltyFiles";
 
 export function createEmpty(): ChangeSet {
-  return {
-    filesChanged: {},
-  };
+	return {
+		filesChanged: {},
+	};
 }
 
 export function isEmpty(changeSet: ChangeSet) {
-  return Object.keys(changeSet.filesChanged).length === 0;
+	return Object.keys(changeSet.filesChanged).length === 0;
 }
 
 /**
@@ -20,17 +20,17 @@ export function isEmpty(changeSet: ChangeSet) {
  * @param gitRepo The git repo to apply the change set to
  */
 export function applyChangeSet(changeSet: ChangeSet, rootPath: string): void {
-  Object.entries(changeSet.filesChanged).forEach(
-    ([_path, { original, updated }]) => {
-      fs.mkdirSync(path.dirname(files.absolutePath(updated, rootPath)), {
-        recursive: true,
-      });
-      fs.writeFileSync(
-        files.absolutePath(updated, rootPath),
-        files.contents(updated)
-      );
-    }
-  );
+	Object.entries(changeSet.filesChanged).forEach(
+		([_path, { original, updated }]) => {
+			fs.mkdirSync(path.dirname(files.absolutePath(updated, rootPath)), {
+				recursive: true,
+			});
+			fs.writeFileSync(
+				files.absolutePath(updated, rootPath),
+				files.contents(updated)
+			);
+		}
+	);
 }
 
 /**
@@ -40,32 +40,32 @@ export function applyChangeSet(changeSet: ChangeSet, rootPath: string): void {
  * @returns The new commit hash
  */
 export async function commitChangeSet(
-  changeSet: ChangeSet,
-  gitRepo: GitRepo,
-  commitMessage: string
+	changeSet: ChangeSet,
+	gitRepo: GitRepo,
+	commitMessage: string
 ) {
-  const repository = gitRepo.repository;
-  await repository.status();
-  // check for uncommitted changes
-  if (!utils.repoIsClean(repository)) {
-    utils.handleGitError(
-      "Actualizing despite unclean repo. Seems a bit weird..."
-    );
-  }
+	const repository = gitRepo.repository;
+	await repository.status();
+	// check for uncommitted changes
+	if (!utils.repoIsClean(repository)) {
+		utils.handleGitError(
+			"Actualizing despite unclean repo. Seems a bit weird..."
+		);
+	}
 
-  applyChangeSet(changeSet, gitRepo.rootPath);
+	applyChangeSet(changeSet, gitRepo.rootPath);
 
-  await repository.add(
-    Object.values(changeSet.filesChanged).map(
-      ({ original, updated }) => files.absolutePath(updated, gitRepo.rootPath) // either original or updated works here
-    )
-  );
+	await repository.add(
+		Object.values(changeSet.filesChanged).map(
+			({ original, updated }) => files.absolutePath(updated, gitRepo.rootPath) // either original or updated works here
+		)
+	);
 
-  await repository.commit(`[by melty] ${commitMessage}`, {
-    empty: true,
-  });
+	await repository.commit(`[by melty] ${commitMessage}`, {
+		empty: true,
+	});
 
-  await repository.status();
-  const newCommit = repository.state.HEAD!.commit;
-  return newCommit;
+	await repository.status();
+	const newCommit = repository.state.HEAD!.commit;
+	return newCommit;
 }

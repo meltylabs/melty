@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Diff2HtmlUI,
-  Diff2HtmlUIConfig,
+	Diff2HtmlUI,
+	Diff2HtmlUIConfig,
 } from "diff2html/lib/ui/js/diff2html-ui-slim";
 import "diff2html/bundles/css/diff2html.min.css";
 import * as Diff2Html from "diff2html";
@@ -10,7 +10,7 @@ import { Toggle } from "./ui/toggle";
 import { Columns2 } from "lucide-react";
 
 interface Diff2HtmlProps {
-  diff: string;
+	diff: string;
 }
 
 // const dummyDiff =
@@ -50,53 +50,53 @@ interface Diff2HtmlProps {
 // };
 
 const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [outputFormat, setOutputFormat] = useState<
-    "line-by-line" | "side-by-side"
-  >("line-by-line");
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [outputFormat, setOutputFormat] = useState<
+		"line-by-line" | "side-by-side"
+	>("line-by-line");
 
-  useEffect(() => {
-    if (containerRef.current) {
-      const configuration = {
-        drawFileList: true,
-        fileListToggle: true,
-        fileListStartVisible: false,
-        fileContentToggle: true,
-        matching: "lines",
-        outputFormat: outputFormat,
-        synchronisedScroll: true,
-        highlight: true,
-        renderNothingWhenEmpty: false,
-      };
+	useEffect(() => {
+		if (containerRef.current) {
+			const configuration = {
+				drawFileList: true,
+				fileListToggle: true,
+				fileListStartVisible: false,
+				fileContentToggle: true,
+				matching: "lines",
+				outputFormat: outputFormat,
+				synchronisedScroll: true,
+				highlight: true,
+				renderNothingWhenEmpty: false,
+			};
 
-      const diff2htmlUi = new Diff2HtmlUI(
-        containerRef.current,
-        diff,
-        configuration as Diff2HtmlUIConfig
-      );
-      diff2htmlUi.draw();
-      diff2htmlUi.highlightCode();
-    }
-  }, [diff, outputFormat]);
+			const diff2htmlUi = new Diff2HtmlUI(
+				containerRef.current,
+				diff,
+				configuration as Diff2HtmlUIConfig
+			);
+			diff2htmlUi.draw();
+			diff2htmlUi.highlightCode();
+		}
+	}, [diff, outputFormat]);
 
-  return (
-    <div className="sticky text-xs top-0 overflow-y-auto max-h-[calc(100vh-200px)] no-scrollbar">
-      <div className="absolute right-0 top-0">
-        <Toggle
-          pressed={outputFormat === "side-by-side"}
-          onPressedChange={(pressed) =>
-            setOutputFormat(pressed ? "side-by-side" : "line-by-line")
-          }
-        >
-          <Columns2 className="w-4 h-4" />
-        </Toggle>
-      </div>
-      <div
-        ref={containerRef}
-        className="diff-container custom-diff-viewer"
-      ></div>
-    </div>
-  );
+	return (
+		<div className="sticky text-xs top-0 overflow-y-auto max-h-[calc(100vh-200px)] no-scrollbar">
+			<div className="absolute right-0 top-0">
+				<Toggle
+					pressed={outputFormat === "side-by-side"}
+					onPressedChange={(pressed) =>
+						setOutputFormat(pressed ? "side-by-side" : "line-by-line")
+					}
+				>
+					<Columns2 className="w-4 h-4" />
+				</Toggle>
+			</div>
+			<div
+				ref={containerRef}
+				className="diff-container custom-diff-viewer"
+			></div>
+		</div>
+	);
 };
 
 export default Diff2HtmlComponent;

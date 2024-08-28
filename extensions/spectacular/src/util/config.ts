@@ -1,38 +1,38 @@
 import * as vscode from "vscode";
 
 export function getUserPrompt(): string {
-  const config = vscode.workspace.getConfiguration("melty");
-  return config.get<string>("userPrompt", "");
+	const config = vscode.workspace.getConfiguration("melty");
+	return config.get<string>("userPrompt", "");
 }
 
 const EXCLUDES = [
-  "**/node_modules/**",
-  "**/.melty/**",
-  "**/venv/**",
-  "**/.venv/**",
-  "**/out/**",
-  "**/build/**",
-  "**/.vscode-test/**",
-  "**/.github/**",
-  "**/.aider.tags.cache",
-  "**/.expo/**",
-  "**/.next/**",
-  "**/.vercel/**",
-  "**.env/**",
-  "**.env.local/**",
-  "**/.ruby-lsp/**",
-  "**/tmp/**",
-  "**/dist/**",
-  "**/.expo/**",
-  "**/.contentlayer/**",
-  "**/db.sql/**",
+	"**/node_modules/**",
+	"**/.melty/**",
+	"**/venv/**",
+	"**/.venv/**",
+	"**/out/**",
+	"**/build/**",
+	"**/.vscode-test/**",
+	"**/.github/**",
+	"**/.aider.tags.cache",
+	"**/.expo/**",
+	"**/.next/**",
+	"**/.vercel/**",
+	"**.env/**",
+	"**.env.local/**",
+	"**/.ruby-lsp/**",
+	"**/tmp/**",
+	"**/dist/**",
+	"**/.expo/**",
+	"**/.contentlayer/**",
+	"**/db.sql/**",
 ];
 
 export function getExcludesGlob(): string {
-  const config = vscode.workspace.getConfiguration("melty");
-  const userExcludes = config.get<string[]>("excludes", []);
-  const allExcludes = [...EXCLUDES, ...userExcludes];
-  return `{${allExcludes.join(",")}}`;
+	const config = vscode.workspace.getConfiguration("melty");
+	const userExcludes = config.get<string[]>("excludes", []);
+	const allExcludes = [...EXCLUDES, ...userExcludes];
+	return `{${allExcludes.join(",")}}`;
 }
 
 export const STRICT_GIT = false;
@@ -40,6 +40,6 @@ export const STRICT_GIT = false;
 export const DEV_MODE = true;
 
 export function getIsAutocommitMode(): boolean {
-  const config = vscode.workspace.getConfiguration("melty");
-  return config.get<boolean>("autocommit", true);
+	const config = vscode.workspace.getConfiguration("melty");
+	return config.get<boolean>("autocommit", true);
 }

@@ -15,9 +15,9 @@ const config = defaults.__get__("config");
 
 // Disable code splitting
 config.optimization.splitChunks = {
-  cacheGroups: {
-    default: false,
-  },
+	cacheGroups: {
+		default: false,
+	},
 };
 
 // Disable code chunks
