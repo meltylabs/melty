@@ -14,6 +14,7 @@ import { Task } from "../types";
 import { RpcClient } from "../rpcClient";
 import { JouleComponent } from "./JouleComponent";
 import * as strings from "../utilities/strings";
+import { eventManager } from '../eventManager';
 
 const MemoizedJouleComponent = memo(JouleComponent);
 
@@ -205,12 +206,10 @@ export function ConversationView() {
 			}
 		};
 
-		window.addEventListener("message", rpcClient.handleMessage);
-		window.addEventListener("message", handleNotification);
+		eventManager.addListener('notification', handleNotification);
 
 		return () => {
-			window.removeEventListener("message", rpcClient.handleMessage);
-			window.removeEventListener("message", handleNotification);
+			eventManager.removeListener('notification', handleNotification);
 		};
 	}, []);
 
