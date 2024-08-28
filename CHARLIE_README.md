@@ -20,3 +20,11 @@
 # VSCode contribution instructions
 
 https://github.com/microsoft/vscode/wiki/How-to-Contribute
+
+# Issues encountered
+
+## Unable to launch browser
+
+Problem: Unable to launch browser: Could not connect to debug target at http://localhost:9222: Could not find any debuggable target
+
+Solution: restart vscode
