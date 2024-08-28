@@ -40,24 +40,6 @@
         "mac": "cmd+m"
       }
     ],
-    "viewsContainers": {
-      "meltypopup": [
-        {
-          "id": "meltyPopupViewContainer",
-          "title": "Melty",
-          "icon": "resources/melty.svg"
-        }
-      ]
-    },
-    "views": {
-      "nonExistentViewContainerWillDefaultToExplorer": [
-        {
-          "type": "webview",
-          "id": "melty.magicWebview",
-          "name": "Melty Chat"
-        }
-      ]
-    },
     "viewsWelcome": [
       {
         "view": "melty.chatView",
