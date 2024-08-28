@@ -1,6 +1,6 @@
 import { Joule, Conversation } from "../types";
 import * as vscode from "vscode";
-
+import * as joules from "./joules";
 export function create(): Conversation {
 	return { joules: [] };
 }
@@ -79,6 +79,14 @@ function removeLeadingBotJoules(conversation: Conversation): Conversation {
 	return conversation;
 }
 
+function removeEmptyJoules(conversation: Conversation): Conversation {
+	return {
+		joules: conversation.joules.filter((joule) =>
+			joules.formatMessageForClaude(joule).length > 0
+		),
+	};
+}
+
 /**
  * removes any joules needed to make the conversation ready for a response from the given author
  */
@@ -87,6 +95,7 @@ export function forceConversationReadyForResponseFrom(
 	author: "human" | "bot"
 ): Conversation {
 	const processors = [
+		removeEmptyJoules,
 		(c: Conversation) => removeFinalJoulesFrom(c, author),
 		removeLeadingErrorJoules,
 		removeLeadingBotJoules,

@@ -48,7 +48,7 @@ export class Task implements Task {
 
 	public addErrorJoule(message: string): void {
 		// first, remove any bot joules
-		this.conversation = conversations.forceConversationReadyForResponseFrom(
+		this.conversation = conversations.forceReadyForResponseFrom(
 			this.conversation,
 			"bot"
 		);
@@ -202,7 +202,7 @@ export class Task implements Task {
 	 * Adds a human message (and changes) to the conversation.
 	 */
 	public async respondHuman(message: string): Promise<Joule> {
-		this.conversation = conversations.forceConversationReadyForResponseFrom(
+		this.conversation = conversations.forceReadyForResponseFrom(
 			this.conversation,
 			"human"
 		);
