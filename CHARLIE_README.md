@@ -28,3 +28,11 @@ https://github.com/microsoft/vscode/wiki/How-to-Contribute
 Problem: Unable to launch browser: Could not connect to debug target at http://localhost:9222: Could not find any debuggable target
 
 Solution: restart vscode
+
+## A javascript error occurred in the main process
+
+Solution: run yarn watch
+
+## Doesn't open, then says "check launch.json" or something like that
+
+SOlution ???

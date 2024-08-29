@@ -17,13 +17,13 @@ import { CodeXmlIcon } from "lucide-react";
 export function JouleComponent({
 	joule,
 	isPartial = false,
-	latestCommitHash,
+	isLatestCommit,
 	showDiff = true,
 }: {
 	joule: Joule;
 	isPartial?: boolean;
+	isLatestCommit: boolean;
 	showUndo?: boolean;
-	latestCommitHash?: string;
 	showDiff?: boolean;
 }) {
 	const [rpcClient] = useState(() => new RpcClient());
@@ -31,8 +31,6 @@ export function JouleComponent({
 
 	const diffHtml =
 		showDiff && joule.diffInfo?.diffPreview ? joule.diffInfo.diffPreview : null;
-
-	const isLatestCommit = latestCommitHash === joule.commit;
 
 	const handleUndo = async () => {
 		setUndoClicked(true);

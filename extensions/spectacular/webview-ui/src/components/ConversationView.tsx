@@ -287,7 +287,7 @@ export function ConversationView() {
 						<MemoizedJouleComponent
 							key={index}
 							joule={joule}
-							latestCommitHash={latestCommitHash!}
+							isLatestCommit={latestCommitHash === joule.commit}
 							isPartial={joule.state === "partial"}
 							showDiff={index !== 0} // Hide diff view for the first message
 						/>
