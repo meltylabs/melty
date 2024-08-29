@@ -121,7 +121,7 @@ export function ConversationView() {
 	const checkScrollPosition = () => {
 		if (conversationRef.current) {
 			const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
-			const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+			const isNearBottom = scrollHeight - scrollTop - clientHeight < 25;
 			setIsAtBottom(isNearBottom);
 		}
 	};

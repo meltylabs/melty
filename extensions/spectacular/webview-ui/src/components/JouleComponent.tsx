@@ -1,18 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { RpcClient } from "../rpcClient";
 import { Joule } from "../types";
 import CopyButton from "./CopyButton";
-import DiffViewer from "./DiffViewer";
-import { Button } from "./ui/button";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "./ui/collapsible";
-import { CodeXmlIcon } from "lucide-react";
+import DiffContent from "./DiffContent";
 
 export function JouleComponent({
 	joule,
@@ -96,41 +89,20 @@ export function JouleComponent({
 		</div>
 	);
 
-	const DiffContent = ({ isHuman }: { isHuman: boolean }) =>
-		isHuman ? (
-			<Collapsible className="bg-white border border-gray-200 rounded-md">
-				<CollapsibleTrigger className="flex items-center text-xs justify-between w-full p-2 bg-white hover:bg-gray-100 rounded-t-md">
-					<span className="flex items-center italic">
-						<CodeXmlIcon className="h-4 w-4 mr-2" />
-						Human wrote some code...
-					</span>
-					<span className="font-mono text-muted-foreground text-xs">
-						{joule.commit?.substring(0, 7)}
-					</span>
-				</CollapsibleTrigger>
-				<CollapsibleContent className="p-2">
-					<DiffViewer diff={diffHtml!} />
-				</CollapsibleContent>
-			</Collapsible>
-		) : (
-			<>
-				<DiffViewer diff={diffHtml!} />
-				{!isPartial && isLatestCommit && !undoClicked && (
-					<div className="mt-2">
-						<Button variant="outline" size="sm" onClick={handleUndo}>
-							Undo commit
-						</Button>
-					</div>
-				)}
-			</>
-		);
-
 	return (
 		<div className="mb-2">
 			{joule.author === "human" && diffHtml ? (
 				<div className="flex flex-col">
 					<div className="w-full mb-2">
-						<DiffContent isHuman={true} />
+					<DiffContent
+						isHuman={true}
+						diffHtml={diffHtml}
+						jouleCommit={joule.commit}
+						isPartial={isPartial}
+						isLatestCommit={isLatestCommit}
+						undoClicked={undoClicked}
+						handleUndo={handleUndo}
+						/>
 					</div>
 					<div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-md">
 						<MessageContent />
@@ -149,7 +121,15 @@ export function JouleComponent({
 					</div>
 					{showDiff && diffHtml && (
 						<div className="w-[60%] overflow-auto h-full">
-							<DiffContent isHuman={false} />
+              <DiffContent
+                isHuman={false}
+                diffHtml={diffHtml}
+                jouleCommit={joule.commit}
+                isPartial={isPartial}
+                isLatestCommit={isLatestCommit}
+                undoClicked={undoClicked}
+                handleUndo={handleUndo}
+              />
 						</div>
 					)}
 				</div>
@@ -157,3 +137,4 @@ export function JouleComponent({
 		</div>
 	);
 }
+
