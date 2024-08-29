@@ -105,13 +105,15 @@ export class MeltyPart extends Part {
 
 	protected override createContentArea(element: HTMLElement): HTMLElement {
 		// create the full screen overlay. this serves as a click target for closing melty
-		this.fullScreenOverlay = $('div.melty-full-screen-overlay');
-		this.fullScreenOverlay.style.zIndex = '95';
+		this.element = element;
+		this.fullScreenOverlay = element; // use the meltyPart root element as the fullScreenOverlay
+		this.fullScreenOverlay.style.zIndex = '-10';
 		this.fullScreenOverlay.style.position = 'absolute';
 		this.fullScreenOverlay.style.top = '0';
 		this.fullScreenOverlay.style.left = '0';
 		this.fullScreenOverlay.style.right = '0';
 		this.fullScreenOverlay.style.bottom = '0';
+		this.fullScreenOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
 
 		// create the popup area overlay. this is just a target for webview to layout over
 		this.popupAreaOverlay = $('div.melty-popup-area-overlay');
@@ -121,10 +123,7 @@ export class MeltyPart extends Part {
 		this.popupAreaOverlay.style.left = '0';
 		this.popupAreaOverlay.style.right = '0';
 		this.popupAreaOverlay.style.bottom = '0';
-		this.fullScreenOverlay.appendChild(this.popupAreaOverlay);
-
-		this.element = element;
-		element.appendChild(this.fullScreenOverlay!);
+		this.element.appendChild(this.popupAreaOverlay);
 
 		// if both content and webview are ready, end loading state and open
 		if (this.popupAreaOverlay && this.webviewView) {
@@ -152,7 +151,7 @@ export class MeltyPart extends Part {
 
 	private open() {
 		this.state = 'open';
-		this.fullScreenOverlay!.style.display = 'flex';
+		this.fullScreenOverlay!.style.zIndex = '95';
 		this.webviewView!.webview.container.style.display = 'flex';
 		this.webviewView!.webview.container.style.boxSizing = 'border-box';
 		this.webviewView!.webview.container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
@@ -161,13 +160,18 @@ export class MeltyPart extends Part {
 		this.webviewView!.webview.container.style.backgroundColor = 'white';
 		this.webviewView!.webview.container.style.zIndex = '100';
 
+		this.fullScreenOverlay?.addEventListener("click", (() => {
+			this.close();
+		}));
+
 		this.webviewView!.webview.layoutWebviewOverElement(this.popupAreaOverlay!);
 		this.focus();
 	}
 
 	private close() {
 		this.state = 'closed';
-		this.fullScreenOverlay!.style.display = 'none';
+		// this.fullScreenOverlay!.style.display = 'none';
+		this.fullScreenOverlay!.style.zIndex = '-10';
 		this.webviewView!.webview.container.style.display = 'none';
 	}
 
