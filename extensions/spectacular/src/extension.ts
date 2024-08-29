@@ -7,12 +7,17 @@ import * as datastores from "./backend/datastores";
 import { v4 as uuidv4 } from "uuid";
 import { Octokit } from "@octokit/rest";
 import { getRepoAtWorkspaceRoot } from "./util/gitUtils";
+import { generateTodoFromCurrentPR } from "./util/todoGenerator";
+
 import posthog from "posthog-js";
 
 export class MeltyExtension {
 	private outputChannel: vscode.OutputChannel;
 	private tasks: Map<string, Task> = new Map();
 	private currentTask: Task | undefined;
+	private currentBranch: string | null = null;
+	private branchCheckInterval: NodeJS.Timeout | null = null;
+	private currentTodo: string | null = null;
 
 	public meltyRoot: string | undefined;
 
@@ -38,6 +43,53 @@ export class MeltyExtension {
 		this.tasks = datastores.loadTasksFromDisk();
 
 		// don't bother kicking off task.init() here; the git repo isn't ready.
+
+		// Start the branch check interval
+		this.branchCheckInterval = setInterval(
+			() => this.checkBranchChange(),
+			3000
+		);
+		this.context.subscriptions.push(
+			new vscode.Disposable(() => {
+				if (this.branchCheckInterval) {
+					clearInterval(this.branchCheckInterval);
+				}
+			})
+		);
+
+		// Get the initial branch and generate initial todo
+		this.currentBranch = await this.getCurrentBranch();
+		await this.checkBranchChange();
+	}
+
+	private async getCurrentBranch(): Promise<string | null> {
+		try {
+			const gitExtension =
+				vscode.extensions.getExtension("vscode.git")?.exports;
+			const git = gitExtension.getAPI(1);
+			const repository = git.repositories[0];
+			return repository.state.HEAD?.name || null;
+		} catch (error) {
+			this.outputChannel.appendLine(`Error getting current branch: ${error}`);
+			return null;
+		}
+	}
+
+	private async checkBranchChange(): Promise<void> {
+		const newBranch = await this.getCurrentBranch();
+		if (newBranch !== this.currentBranch) {
+			this.currentBranch = newBranch;
+			if (newBranch) {
+				const gitRepo = await getRepoAtWorkspaceRoot();
+				if (typeof gitRepo !== "string") {
+					this.currentTodo = await generateTodoFromCurrentPR(gitRepo);
+				}
+			}
+		}
+	}
+
+	public getCurrentTodo(): string | null {
+		return this.currentTodo;
 	}
 
 	public async getGitConfigErrors(): Promise<string> {
@@ -49,6 +101,10 @@ export class MeltyExtension {
 		// The extension instance will be garbage collected, so we don't need to call deactivate explicitly
 		for (const task of this.tasks.values()) {
 			await datastores.dumpTaskToDisk(task);
+		}
+
+		if (this.branchCheckInterval) {
+			clearInterval(this.branchCheckInterval);
 		}
 	}
 
@@ -475,7 +531,6 @@ export function activate(context: vscode.ExtensionContext) {
 	extension = new MeltyExtension(context, outputChannel);
 	extension.activate();
 
-	console.log("registering webview provider 0");
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(
 			"melty.magicWebview",

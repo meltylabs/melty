@@ -96,7 +96,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 
 	React.useEffect(() => {
 		const handleKeyPress = (event: KeyboardEvent) => {
-			if (event.key === "\\") {
+			if (event.key === "@") {
 				event.preventDefault();
 				setIsOpen(!isOpen);
 			}

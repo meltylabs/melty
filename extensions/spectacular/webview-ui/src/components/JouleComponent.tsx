@@ -53,7 +53,7 @@ export function JouleComponent({
 	}
 
 	const MessageContent = () => (
-		<div className="text-xs prose">
+		<div className="text-xs prose dark:prose-invert">
 			<ReactMarkdown
 				components={{
 					code({ node, className, children, ...props }) {
@@ -140,9 +140,7 @@ export function JouleComponent({
 				</div>
 			) : (
 				<div
-					className={`flex p-2 rounded-md ${joule.author === "human"
-							? "bg-gray-50 border border-gray-200"
-							: "bg-white"
+					className={`flex p-2 rounded-md ${joule.author === "human" ? "bg-gray-50 border border-gray-200" : ""
 						}`}
 				>
 					<div

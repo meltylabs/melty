@@ -10,8 +10,8 @@ import {
 import { Tasks } from "./components/Tasks";
 import { ConversationView } from "./components/ConversationView";
 import { Onboarding } from "./components/Onboarding";
-import "./App.css";
 import { EventManager } from './eventManager';
+import "./App.css";
 
 function AppContent() {
 	const navigate = useNavigate();
@@ -39,16 +39,8 @@ function AppContent() {
 	return (
 		<main className="">
 			{/* <nav className="mb-4 flex justify-between">
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              Melty
-            </Button>
-          </Link>
-          <Link to="/onboarding">
-            <Button variant="ghost" size="sm">
-              Setup
-            </Button>
-          </Link>
+
+
         </nav> */}
 
 			<Routes>
@@ -65,7 +57,6 @@ function App() {
 	useEffect(() => {
 		return () => EventManager.Instance.cleanup();
 	}, []);
-
 	return (
 		<Router>
 			<AppContent />

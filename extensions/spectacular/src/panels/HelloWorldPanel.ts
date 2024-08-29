@@ -39,6 +39,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	private _view?: WebviewView;
 	private _disposables: Disposable[] = [];
 	private fileManager?: FileManager;
+	private todoCheckInterval: NodeJS.Timeout | null = null;
 
 	private MeltyExtension: MeltyExtension;
 
@@ -63,15 +64,32 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
 		webviewView.webview.html = this._getWebviewContent(webviewView.webview);
 
-		console.log("set html for webview");
-
 		this._setWebviewMessageListener(webviewView.webview);
 
 		const webviewNotifier = WebviewNotifier.getInstance();
 		webviewNotifier.setView(this._view);
 		this.fileManager = new FileManager(this.MeltyExtension.meltyRoot!);
 		this.MeltyExtension.pushSubscription(this.fileManager);
+
+		// Start the todo check interval
+		this.todoCheckInterval = setInterval(() => this.checkAndSendTodo(), 10000);
+		this.MeltyExtension.pushSubscription(new vscode.Disposable(() => {
+			if (this.todoCheckInterval) {
+				clearInterval(this.todoCheckInterval);
+			}
+		}));
+
 		console.log("success in resolveWebviewView!");
+	}
+
+	private checkAndSendTodo() {
+		const todo = this.MeltyExtension.getCurrentTodo();
+		if (todo) {
+			this._view?.webview.postMessage({
+				type: "updateTodo",
+				todo: todo,
+			});
+		}
 	}
 
 	/**

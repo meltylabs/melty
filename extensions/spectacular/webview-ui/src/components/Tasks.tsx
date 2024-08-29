@@ -1,15 +1,19 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useId } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { RpcClient } from "../rpcClient";
 import { Button } from "./ui/button";
 import {
 	ArrowUp,
-	Trash2,
+	X,
 	CheckCircle,
 	XCircle,
 	LoaderCircle,
 	XIcon,
 	CircleHelp,
+	MessageCircle,
+	PlayCircle,
+	PlayIcon,
+	LightbulbIcon,
 } from "lucide-react";
 import { FilePicker } from "./FilePicker";
 import { MouseEvent, KeyboardEvent } from "react";
@@ -66,6 +70,7 @@ export function Tasks({
 		type: "coder",
 		description: "",
 	});
+	const [suggestions, setSuggestions] = useState<string[]>([]);
 
 	useEffect(() => {
 		if (shouldFocus) {
@@ -216,15 +221,34 @@ export function Tasks({
 		checkGitConfig();
 		fetchFilePaths();
 
+		const handleMessage = (event: MessageEvent) => {
+			const message = event.data;
+			switch (message.type) {
+				case "updateTodo":
+					// add suggestion if it's not already a suggestion
+					const newSuggestions = [...suggestions, message.todo];
+					const uniqueSuggestions = new Set(newSuggestions);
+					const newUniqueSuggestions = Array.from(uniqueSuggestions);
+					setSuggestions(newUniqueSuggestions);
+
+					break;
+			}
+		};
+
 		window.addEventListener("message", rpcClient.handleMessage);
+		window.addEventListener("message", handleMessage);
 
 		return () => {
 			window.removeEventListener("message", rpcClient.handleMessage);
+			window.addEventListener("message", handleMessage);
 		};
-	}, [fetchTasks, fetchFilePaths, checkGitConfig, rpcClient]);
+	}, [fetchTasks, fetchFilePaths, checkGitConfig, suggestions, rpcClient]);
 
 	return (
 		<div>
+			<h1 className="text-3xl font-extrabold tracking-tighter mb-6 mt-4 text-center">
+				melty
+			</h1>
 			<FastFilePicker
 				isOpen={pickerOpen}
 				setIsOpen={setPickerOpen}
@@ -280,7 +304,7 @@ export function Tasks({
 					</div>
 
 					<div className="absolute right-2 bottom-2">
-						<AddFileButton keyboardShortcut="\" />
+						<AddFileButton keyboardShortcut="@" />
 					</div>
 				</div>
 			</form>
@@ -315,7 +339,7 @@ export function Tasks({
 										</p>
 										{meltyMindFilePaths.length === 0 ? (
 											<p>
-												<AddFileButton keyboardShortcut="\" />
+												<AddFileButton keyboardShortcut="@" />
 											</p>
 										) : (
 											<div>
@@ -337,7 +361,7 @@ export function Tasks({
 					{meltyMindFilePaths.map((file, i) => (
 						<button
 							onClick={() => handleDropFile(file)}
-							className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-gray-100 px-2 py-1 inline-flex items-center rounded"
+							className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-muted px-2 py-1 inline-flex items-center rounded"
 							key={`file-${i}`}
 						>
 							<XIcon className="h-3 w-3 mr-2" />
@@ -347,7 +371,32 @@ export function Tasks({
 				</div>
 			</div>
 
-			<div className="grid md:grid-cols-2 grid-cols-1 gap-6 mt-4">
+			{suggestions.length > 0 && (
+				<div className="mb-4 mt-4 rounded-md fade-in">
+					<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
+						<LightbulbIcon className="h-3 w-3 text-muted-foreground mr-1" />
+						Ideas
+					</h2>
+					<div className="gap-2">
+						{suggestions.map((suggestion, i) => (
+							<Button
+								variant="outline"
+								onClick={() => setMessageText(suggestion)}
+								key={`suggestion-${i}`}
+								className="mr-2"
+							>
+								{suggestion}
+							</Button>
+						))}
+					</div>
+				</div>
+			)}
+
+			<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
+				<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
+				Chats
+			</h2>
+			<div className="grid md:grid-cols-3 grid-cols-1 gap-6 mt-4">
 				{tasks.length === 0 && <p>No tasks</p>}
 				{tasks.map((task) => (
 					<div key={task.id} className="relative">
@@ -369,7 +418,7 @@ export function Tasks({
 							className="absolute top-2 right-2 p-1"
 							onClick={(e) => deleteTask(task.id, e)}
 						>
-							<Trash2 className="h-4 w-4" />
+							<X className="text-muted-foreground h-4 w-4" />
 						</Button>
 					</div>
 				))}

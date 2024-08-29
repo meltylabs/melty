@@ -32,3 +32,18 @@ export async function getRepoAtWorkspaceRoot(): Promise<GitRepo | string> {
 	return { repository: repo, rootPath: repo.rootUri.fsPath };
 }
 
+
+export async function getCurrentPRName(
+	gitRepo: GitRepo
+): Promise<string | null> {
+	if (!gitRepo.repository) {
+		throw new Error("Git repository is not initialized");
+	}
+
+	const currentBranch = gitRepo.repository.state.HEAD?.name;
+	if (!currentBranch) {
+		return null; // Not on any branch
+	}
+
+	return currentBranch;
+}
