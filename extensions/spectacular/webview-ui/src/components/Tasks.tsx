@@ -15,7 +15,6 @@ import {
 	PlayIcon,
 	LightbulbIcon,
 } from "lucide-react";
-import { FilePicker } from "./FilePicker";
 import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";

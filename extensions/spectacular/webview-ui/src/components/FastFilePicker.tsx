@@ -13,6 +13,12 @@ interface PopoverSearchProps {
 	setIsOpen: (open: boolean) => void;
 }
 
+// Helper function to extract file name from path
+const getFileName = (filePath: string): string => {
+	const parts = filePath.split(/[\/\\]/);
+	return parts[parts.length - 1];
+};
+
 export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 	workspaceFilePaths,
 	meltyMindFilePaths,
@@ -28,10 +34,22 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 	const listRef = useRef<List>(null);
 
 	useEffect(() => {
-		const filtered = workspaceFilePaths.filter((file) =>
-			file.toLowerCase().includes(searchQuery.toLowerCase())
-		);
-		setFilteredFiles(filtered);
+		const lowerQuery = searchQuery.toLowerCase();
+		const fileNameMatches: string[] = [];
+		const pathMatches: string[] = [];
+
+		workspaceFilePaths.forEach((filePath) => {
+			const fileName = getFileName(filePath).toLowerCase();
+			const lowerFilePath = filePath.toLowerCase();
+
+			if (fileName.includes(lowerQuery)) {
+				fileNameMatches.push(filePath);
+			} else if (lowerFilePath.includes(lowerQuery)) {
+				pathMatches.push(filePath);
+			}
+		});
+
+		setFilteredFiles([...fileNameMatches, ...pathMatches]);
 		setSelectedIndex(0);
 	}, [searchQuery, workspaceFilePaths]);
 
@@ -140,3 +158,4 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 		</Dialog>
 	);
 };
+
