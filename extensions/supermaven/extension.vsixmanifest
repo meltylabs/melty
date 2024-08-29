@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+		<Metadata>
+			<Identity Language="en-US" Id="supermaven" Version="1.1.2" Publisher="Supermaven" />
+			<DisplayName>Supermaven</DisplayName>
+			<Description xml:space="preserve">The fastest copilot.</Description>
+			<Tags>ai,anthropic,autocomplete,intellicode,intellisense,code completion,bash,c,claude,chat,chatgpt,cpp,csharp,css,dart,elixir,erlang,go,java,javascript,json,kotlin,lua,markdown,openai,php,python,ruby,rust,scala,sonnet,shell,sql,swift,typescript,yaml,super,maven,copilot,keybindings</Tags>
+			<Categories>Machine Learning,Programming Languages,Snippets,AI,Chat</Categories>
+			<GalleryFlags>Public</GalleryFlags>
+			
+			<Properties>
+				<Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.68.0" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionDependencies" Value="vscode.git" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionPack" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionKind" Value="workspace" />
+				<Property Id="Microsoft.VisualStudio.Code.LocalizedLanguages" Value="" />
+				
+				
+				
+				<Property Id="Microsoft.VisualStudio.Services.Links.Support" Value="mailto:support@supermaven.com" />
+				
+				
+				
+				<Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />
+				<Property Id="Microsoft.VisualStudio.Services.Content.Pricing" Value="Free"/>
+
+				
+				
+			</Properties>
+			<License>extension/LICENSE.md</License>
+			<Icon>extension/assets/logo-square.png</Icon>
+		</Metadata>
+		<Installation>
+			<InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+		</Installation>
+		<Dependencies/>
+		<Assets>
+			<Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+			<Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Content.Changelog" Path="extension/CHANGELOG.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/assets/logo-square.png" Addressable="true" />
+		</Assets>
+	</PackageManifest>

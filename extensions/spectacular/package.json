@@ -33,19 +33,7 @@
   ],
   "contributes": {
     "commands": [],
-    "keybindings": [
-      {
-        "command": "melty.chatView.focus",
-        "key": "ctrl+m",
-        "mac": "cmd+m"
-      }
-    ],
-    "viewsWelcome": [
-      {
-        "view": "melty.chatView",
-        "contents": "Welcome to Melty! Start a conversation to begin pair programming."
-      }
-    ],
+    "keybindings": [],
     "configuration": {
       "title": "Melty Settings",
       "properties": {
