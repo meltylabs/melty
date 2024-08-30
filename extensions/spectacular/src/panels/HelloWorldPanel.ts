@@ -237,6 +237,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return await this.rpcGetGitConfigErrors();
 				case "getAssistantDescription":
 					return await this.rpcGetAssistantDescription(params.assistantType);
+				case "getVSCodeTheme":
+					return this.rpcGetVSCodeTheme();
 				default:
 					throw new Error(`Unknown RPC method: ${method}`);
 			}
@@ -352,6 +354,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
 	private async rpcSwitchTask(taskId: string): Promise<void> {
 		await this.switchTask(taskId);
+	}
+
+	private rpcGetVSCodeTheme(): string {
+		return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'light';
 	}
 
 	private async rpcChatMessage(text: string, taskId: string): Promise<void> {

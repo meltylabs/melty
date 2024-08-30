@@ -94,17 +94,17 @@ export function JouleComponent({
 			{joule.author === "human" && diffHtml ? (
 				<div className="flex flex-col">
 					<div className="w-full mb-2">
-					<DiffContent
-						isHuman={true}
-						diffHtml={diffHtml}
-						jouleCommit={joule.commit}
-						isPartial={isPartial}
-						isLatestCommit={isLatestCommit}
-						undoClicked={undoClicked}
-						handleUndo={handleUndo}
+						<DiffContent
+							isHuman={true}
+							diffHtml={diffHtml}
+							jouleCommit={joule.commit}
+							isPartial={isPartial}
+							isLatestCommit={isLatestCommit}
+							undoClicked={undoClicked}
+							handleUndo={handleUndo}
 						/>
 					</div>
-					<div className="w-full p-2 bg-gray-50 border border-gray-200 rounded-md">
+					<div className="w-full p-2 bg-gray-50 dark:bg-black border border-gray-200 rounded-md">
 						<MessageContent />
 					</div>
 				</div>
@@ -121,15 +121,15 @@ export function JouleComponent({
 					</div>
 					{showDiff && diffHtml && (
 						<div className="w-[60%] overflow-auto h-full">
-              <DiffContent
-                isHuman={false}
-                diffHtml={diffHtml}
-                jouleCommit={joule.commit}
-                isPartial={isPartial}
-                isLatestCommit={isLatestCommit}
-                undoClicked={undoClicked}
-                handleUndo={handleUndo}
-              />
+							<DiffContent
+								isHuman={false}
+								diffHtml={diffHtml}
+								jouleCommit={joule.commit}
+								isPartial={isPartial}
+								isLatestCommit={isLatestCommit}
+								undoClicked={undoClicked}
+								handleUndo={handleUndo}
+							/>
 						</div>
 					)}
 				</div>
@@ -137,4 +137,3 @@ export function JouleComponent({
 		</div>
 	);
 }
-

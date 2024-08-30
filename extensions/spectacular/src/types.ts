@@ -117,4 +117,5 @@ export type RpcMethod =
 	| "undoLatestCommit"
 	| "getLatestCommit"
 	| "getGitConfigErrors"
-	| "getAssistantDescription";
+	| "getAssistantDescription"
+	| "getVSCodeTheme";

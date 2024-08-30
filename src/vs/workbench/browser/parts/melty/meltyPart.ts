@@ -155,9 +155,8 @@ export class MeltyPart extends Part {
 		this.webviewView!.webview.container.style.display = 'flex';
 		this.webviewView!.webview.container.style.boxSizing = 'border-box';
 		this.webviewView!.webview.container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
-		this.webviewView!.webview.container.style.borderRadius = '30px';
-		this.webviewView!.webview.container.style.padding = '20px';
-		this.webviewView!.webview.container.style.backgroundColor = 'white';
+		this.webviewView!.webview.container.style.borderRadius = '20px';
+		this.webviewView!.webview.container.style.backgroundColor = 'black';
 		this.webviewView!.webview.container.style.zIndex = '100';
 
 		this.fullScreenOverlay?.addEventListener("click", (() => {
@@ -216,4 +215,3 @@ export class MeltyPart extends Part {
 		};
 	}
 }
-
