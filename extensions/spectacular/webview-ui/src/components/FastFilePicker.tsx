@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { FixedSizeList as List } from "react-window";
+import Fuse, { FuseResult } from 'fuse.js';
 
 interface PopoverSearchProps {
 	workspaceFilePaths: string[];
@@ -28,30 +29,30 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 	setIsOpen,
 }) => {
 	const [searchQuery, setSearchQuery] = useState("");
-	const [filteredFiles, setFilteredFiles] = useState<string[]>([]);
+	const [filteredFiles, setFilteredFiles] = useState<FuseResult<string>[]>(
+		workspaceFilePaths.map((path, index) => ({ item: path, refIndex: index }))
+	);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const listRef = useRef<List>(null);
 
+	const fuse = useMemo(() => new Fuse(workspaceFilePaths, {
+		includeScore: true,
+		threshold: 0.4,
+		keys: [
+			{ name: 'path', getFn: (path) => path },
+			{ name: 'fileName', getFn: (path) => getFileName(path) }
+		]
+	}), [workspaceFilePaths]);
+
 	useEffect(() => {
-		const lowerQuery = searchQuery.toLowerCase();
-		const fileNameMatches: string[] = [];
-		const pathMatches: string[] = [];
-
-		workspaceFilePaths.forEach((filePath) => {
-			const fileName = getFileName(filePath).toLowerCase();
-			const lowerFilePath = filePath.toLowerCase();
-
-			if (fileName.includes(lowerQuery)) {
-				fileNameMatches.push(filePath);
-			} else if (lowerFilePath.includes(lowerQuery)) {
-				pathMatches.push(filePath);
-			}
-		});
-
-		setFilteredFiles([...fileNameMatches, ...pathMatches]);
+		if (searchQuery.trim() === '') {
+			setFilteredFiles(workspaceFilePaths.map((path, index) => ({ item: path, refIndex: index })));
+		} else {
+			setFilteredFiles(fuse.search(searchQuery));
+		}
 		setSelectedIndex(0);
-	}, [searchQuery, workspaceFilePaths]);
+	}, [searchQuery, fuse, workspaceFilePaths]);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -71,7 +72,12 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 		} else if (e.key === "Enter") {
 			e.preventDefault();
 			if (filteredFiles[selectedIndex]) {
-				onFileSelect(filteredFiles[selectedIndex]);
+				const selectedFile = filteredFiles[selectedIndex].item;
+				if (meltyMindFilePaths.includes(selectedFile)) {
+					onFileDrop(selectedFile);
+				} else {
+					onFileSelect(selectedFile);
+				}
 				setIsOpen(false);
 			}
 		}
@@ -84,7 +90,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 		index: number;
 		style: React.CSSProperties;
 	}) => {
-		const file = filteredFiles[index];
+		const file = filteredFiles[index].item;
 		const isInMeltyMind = meltyMindFilePaths.includes(file);
 		return (
 			<div
