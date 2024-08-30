@@ -94,16 +94,14 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 					alignItems: "center",
 					padding: "0 8px",
 				}}
-				className={`cursor-pointer rounded-md ${index === selectedIndex ? "bg-gray-100" : ""
-					} ${isInMeltyMind ? "bg-blue-50" : ""}`}
+				className={`cursor-pointer truncate rounded-md ${index === selectedIndex ? "bg-gray-100 dark:bg-gray-800 dark:text-white" : ""
+					} ${isInMeltyMind ? "bg-blue-50 font-bold text-blue-600 dark:bg-blue-800 dark:text-blue-50" : ""}`}
 				onClick={() => {
 					isInMeltyMind ? onFileDrop(file) : onFileSelect(file);
 					setIsOpen(false);
 				}}
 			>
 				<div
-					className={`truncate ${isInMeltyMind ? "font-bold text-blue-600" : ""
-						}`}
 					title={file}
 				>
 					{file}
@@ -158,4 +156,3 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 		</Dialog>
 	);
 };
-

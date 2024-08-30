@@ -104,13 +104,13 @@ export function JouleComponent({
 							handleUndo={handleUndo}
 						/>
 					</div>
-					<div className="w-full p-2 bg-gray-50 dark:bg-black border border-gray-200 rounded-md">
+					<div className="w-full p-2 bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 rounded-md">
 						<MessageContent />
 					</div>
 				</div>
 			) : (
 				<div
-					className={`flex p-2 rounded-md ${joule.author === "human" ? "bg-gray-50 border border-gray-200" : ""
+					className={`flex p-2 rounded-md ${joule.author === "human" ? "bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200" : ""
 						}`}
 				>
 					<div
