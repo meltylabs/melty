@@ -38,7 +38,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 
 	const fuse = useMemo(() => new Fuse(workspaceFilePaths, {
 		includeScore: true,
-		threshold: 0.4,
+		threshold: 0.6,
 		keys: [
 			{ name: 'path', getFn: (path) => path },
 			{ name: 'fileName', getFn: (path) => getFileName(path) }
