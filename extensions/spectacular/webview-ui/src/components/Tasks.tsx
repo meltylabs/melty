@@ -410,7 +410,7 @@ export function Tasks({
 				{tasks.length === 0 && <p>No tasks</p>}
 				{tasks.map((task) => (
 					<div key={task.id} className="relative">
-						<button className="text-left" onClick={() => { activateAndNavigateToTask(task.id) }}>
+						<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
 							<Card>
 								<CardHeader>
 									<CardTitle>{task.name}</CardTitle>

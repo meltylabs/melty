@@ -15,6 +15,7 @@ import { JouleComponent } from "components/JouleComponent";
 import * as strings from "utilities/strings";
 import { EventManager } from 'eventManager';
 import { DehydratedTask } from "types";
+import { useNavigate } from "react-router-dom";
 
 const MemoizedJouleComponent = memo(JouleComponent);
 const rpcClient = RpcClient.getInstance();
@@ -31,6 +32,7 @@ export function ConversationView() {
 	const conversationRef = useRef<HTMLDivElement>(null);
 	const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
 	const [isAtBottom, setIsAtBottom] = useState(true);
+	const navigate = useNavigate();
 
 	const [nonInitialHumanMessageInFlight, setNonInitialHumanMessageInFlight] =
 		useState(false);
@@ -246,6 +248,11 @@ export function ConversationView() {
 		}
 	};
 
+	const handleBack = async () => {
+		await rpcClient.run("deactivateTask", { taskId });
+		navigate("/");
+	}
+
 	return (
 		<div className="flex flex-col h-screen">
 			<div className="mt-2 flex flex-col">
@@ -259,12 +266,12 @@ export function ConversationView() {
 				)}
 				{task && (
 					<div className="mb-2 flex items-center">
-						<Link className="flex items-center" to={"/"}> {/* TODOREFACTOR need to deactivate a task here */}
+						<button onClick={handleBack} className="flex items-center"> {/* TODOREFACTOR need to deactivate a task here */}
 							<ArrowLeft className="h-4 w-4" />
 							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
 								⌘<span className="text-[8px]">[</span>
 							</kbd>
-						</Link>
+						</button>
 						<p className="text-sm font-semibold ml-2">{task.name}</p>
 					</div>
 				)}
