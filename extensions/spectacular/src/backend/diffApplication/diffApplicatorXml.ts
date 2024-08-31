@@ -20,7 +20,7 @@ export async function searchReplaceToChangeSet(
 
 	// Apply changes in parallel across files
 	const changeSetValues = await Promise.all(
-		Object.entries(groupedSearchReplaceBlocks).map(
+		Array.from(groupedSearchReplaceBlocks,
 			async ([filePath, searchReplaces]) => {
 				const rawOriginalContent = fs.existsSync(
 					path.join(meltyRoot, filePath)

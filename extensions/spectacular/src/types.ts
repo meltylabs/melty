@@ -15,7 +15,7 @@ export type DehydratedTask = {
 export type ContextPaths = {
 	readonly paths: string[];
 	meltyRoot: string;
-}
+};
 
 export type TaskMode = "vanilla" | "coder";
 

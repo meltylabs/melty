@@ -1,4 +1,6 @@
 // implemented by the Task class. this is the UI-facing one
+// note that datastores.ts has an independent list of properties
+// that will get loaded from disk
 export type DehydratedTask = {
 	id: string;
 	name: string;
@@ -13,7 +15,7 @@ export type DehydratedTask = {
 export type ContextPaths = {
 	readonly paths: string[];
 	meltyRoot: string;
-}
+};
 
 export type TaskMode = "vanilla" | "coder";
 
