@@ -11,7 +11,7 @@ import { Tasks } from "./components/Tasks";
 import { ConversationView } from "./components/ConversationView";
 import { Onboarding } from "./components/Onboarding";
 import { EventManager } from './eventManager';
-import { RpcClient } from "./rpcClient";
+import { RpcClient } from "RpcClient";
 import "./App.css";
 
 const rpcClient = RpcClient.getInstance();
