@@ -3,13 +3,23 @@ import { RpcMethod } from "./types";
 import { EventManager } from "./eventManager";
 
 export class RpcClient {
+	private static instance: RpcClient | null = null;
 	private messageId = 0;
+
 	private pendingMessages = new Map<
 		number,
 		{ resolve: (value: any) => void; reject: (reason?: any) => void }
 	>();
 
-	constructor() {
+	public static getInstance(): RpcClient {
+		if (!RpcClient.instance) {
+			console.log("[RpcClient] Creating new RpcClient instance");
+			RpcClient.instance = new RpcClient();
+		}
+		return RpcClient.instance;
+	}
+
+	protected constructor() {
 		// Bind the method to ensure 'this' always refers to the class instance
 		this.handleMessage = this.handleMessage.bind(this);
 
@@ -30,7 +40,7 @@ export class RpcClient {
 		});
 	}
 
-	public handleMessage(event: MessageEvent) {
+	private handleMessage(event: MessageEvent) {
 		const message = event.data;
 		if (message.type === "rpcResponse") {
 			console.log("[RpcClient] Webview received rpcResponse message", message);
@@ -39,18 +49,18 @@ export class RpcClient {
 				this.pendingMessages.delete(message.id);
 				if (message.error) {
 					console.log(
-						`[RpcClient] rejecting message ${message.id} with error ${message.error}`
+						`[RpcClient] rejecting message ${message.id} (${message.type}) with error`, message.error
 					);
 					pending.reject(message.error);
 				} else {
-					console.log(
-						`[RpcClient] resolving message ${message.id} with result ${message.result}`
-					);
+					// console.log(
+					// 	`[RpcClient] resolving message ${message.id} (${message.type}) with result`, message.result
+					// );
 					pending.resolve(message.result);
 				}
 			} else {
 				console.warn(
-					`[RpcClient] received response for unknown message ${message.id}`
+					`[RpcClient] received response for unknown message ${message.id} (${message.type})`
 				);
 			}
 		}

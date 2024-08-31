@@ -1,8 +1,8 @@
-import { Task } from "./tasks";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { resolveTildePath } from "../util/utils";
+import { DehydratedTask } from "types";
 
 function getMeltyDir(): string {
 	const config = vscode.workspace.getConfiguration('melty');
@@ -11,38 +11,47 @@ function getMeltyDir(): string {
 	return resolvedPath;
 }
 
-export function loadTasksFromDisk(): Map<string, Task> {
+export function loadTasksFromDisk(): Map<string, DehydratedTask> {
 	const meltyDir = getMeltyDir();
 	if (!fs.existsSync(meltyDir)) {
 		return new Map();
 	}
 
 	const taskFiles = fs.readdirSync(meltyDir);
-	const taskMap = new Map<string, Task>();
+	const taskMap = new Map<string, DehydratedTask>();
 	for (const file of taskFiles) {
-		const taskData = JSON.parse(
+		const rawTask = JSON.parse(
 			fs.readFileSync(path.join(meltyDir, file), "utf8")
 		);
-		const task = Task.deserialize(taskData);
 
+		const task = Object.fromEntries(
+			Object.entries(rawTask).filter(([key]) => [
+				"id",
+				"name",
+				"branch",
+				"conversation",
+				"createdAt",
+				"updatedAt",
+				"taskMode",
+				"meltyMindFiles"
+			].includes(key))
+		) as DehydratedTask;
 		taskMap.set(task.id, task);
 	}
 	return taskMap;
 }
 
-export async function dumpTaskToDisk(task: Task): Promise<void> {
+export async function dumpTaskToDisk(task: DehydratedTask): Promise<void> {
 	const meltyDir = getMeltyDir();
 	if (!fs.existsSync(meltyDir)) {
 		fs.mkdirSync(meltyDir, { recursive: true });
 	}
 
-	const serializableTask = task.serialize();
-
 	const taskPath = path.join(meltyDir, `${task.id}.json`);
-	fs.writeFileSync(taskPath, JSON.stringify(serializableTask, null, 2));
+	fs.writeFileSync(taskPath, JSON.stringify(task, null, 2));
 }
 
-export async function deleteTaskFromDisk(task: Task): Promise<void> {
+export async function deleteTaskFromDisk(task: DehydratedTask): Promise<void> {
 	const meltyDir = getMeltyDir();
 	const taskPath = path.join(meltyDir, `${task.id}.json`);
 

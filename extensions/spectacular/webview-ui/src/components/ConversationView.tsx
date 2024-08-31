@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo } from "react";
+import React, { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
 	XIcon,
@@ -8,25 +8,25 @@ import {
 	LoaderCircle,
 } from "lucide-react";
 import posthog from "posthog-js";
-import { FastFilePicker } from "./FastFilePicker";
-import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { Task } from "../types";
-import { RpcClient } from "../rpcClient";
-import { JouleComponent } from "./JouleComponent";
-import * as strings from "../utilities/strings";
-import { EventManager } from '../eventManager';
+import { FastFilePicker } from "components/FastFilePicker";
+import AutoExpandingTextarea from "components/AutoExpandingTextarea";
+import { RpcClient } from "RpcClient";
+import { JouleComponent } from "components/JouleComponent";
+import * as strings from "utilities/strings";
+import { EventManager } from 'eventManager';
+import { DehydratedTask } from "types";
 
 const MemoizedJouleComponent = memo(JouleComponent);
+const rpcClient = RpcClient.getInstance();
 
 export function ConversationView() {
-	const [rpcClient] = useState(() => new RpcClient());
 	const { taskId } = useParams<{ taskId: string }>();
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
 	const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const [shouldFocus, setShouldFocus] = useState(false);
-	const [task, setTask] = useState<Task | null>(null);
+	const [task, setTask] = useState<DehydratedTask | null>(null);
 	const [messageText, setMessageText] = useState("");
 	const conversationRef = useRef<HTMLDivElement>(null);
 	const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
@@ -89,19 +89,18 @@ export function ConversationView() {
 		}
 	}, [pickerOpen]);
 
-	async function loadTask(taskId: string) {
-		console.log("loading task ", taskId);
-		const task = await rpcClient.run("loadTask", { taskId });
+	const loadTask = useCallback(async (taskId: string) => {
+		console.log("loading active task ", taskId);
+		const task = await rpcClient.run("getActiveTask", { taskId });
 		setTask(task);
-		await rpcClient.run("switchTask", { taskId });
-	}
+	}, [setTask]);
 
-	async function loadFiles() {
+	const loadFiles = useCallback(async () => {
 		const meltyFiles = await rpcClient.run("listMeltyFiles");
 		setMeltyFiles(meltyFiles);
 		const workspaceFiles = await rpcClient.run("listWorkspaceFiles");
 		setWorkspaceFiles(workspaceFiles);
-	}
+	}, [setMeltyFiles, setWorkspaceFiles]);
 
 	function handleSendMessage(text: string, taskId: string) {
 		setNonInitialHumanMessageInFlight(true);
@@ -118,6 +117,8 @@ export function ConversationView() {
 		console.log("PR created", result);
 	}
 
+	// TODO Review scroll behavior for overeager effects
+
 	const checkScrollPosition = () => {
 		if (conversationRef.current) {
 			const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
@@ -126,11 +127,18 @@ export function ConversationView() {
 		}
 	};
 
+	const scrollToBottom = useCallback(() => {
+		if (conversationRef.current) {
+			conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+		}
+		checkScrollPosition();
+	}, []);
+
 	useEffect(() => {
 		if (isAtBottom) {
 			scrollToBottom();
 		}
-	}, [task?.conversation.joules, isAtBottom]);
+	}, [isAtBottom, scrollToBottom]);
 
 	useEffect(() => {
 		const conversationElement = conversationRef.current;
@@ -140,13 +148,6 @@ export function ConversationView() {
 				conversationElement.removeEventListener("scroll", checkScrollPosition);
 		}
 	}, []);
-
-	const scrollToBottom = () => {
-		if (conversationRef.current) {
-			conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
-		}
-		checkScrollPosition();
-	};
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -163,6 +164,19 @@ export function ConversationView() {
 		};
 	}, []);
 
+	const updateTask = useCallback((task: DehydratedTask) => {
+		const lastJoule =
+			task.conversation.joules.length > 0 ?
+				task.conversation.joules[
+				task.conversation.joules.length - 1
+				] : undefined;
+		if (lastJoule?.author === "human") {
+			setNonInitialHumanMessageInFlight(false);
+		}
+		setTask(task);
+	}, []);
+
+	// Initialization. Everything in here must be wrapped in useCallback.
 	useEffect(() => {
 		loadFiles();
 		if (taskId) {
@@ -178,20 +192,7 @@ export function ConversationView() {
 				);
 				switch (message.notificationType) {
 					case "updateTask":
-						console.log(
-							"[ConversationView.tsx] updateTask",
-							message.task === task
-						);
-						const lastJoule =
-							message.task.conversation.joules.length > 0 &&
-							message.task.conversation.joules[
-							message.task.conversation.joules.length - 1
-							];
-						if (lastJoule.author === "human") {
-							setNonInitialHumanMessageInFlight(false);
-						}
-						console.log(lastJoule);
-						setTask(message.task);
+						updateTask(message.task);
 						return;
 					case "updateWorkspaceFiles":
 						setWorkspaceFiles(message.files);
@@ -206,13 +207,12 @@ export function ConversationView() {
 			}
 		};
 
-		console.log("[ConversationView] Adding listener for notification");
 		EventManager.Instance.addListener('notification', handleNotification);
 
 		return () => {
 			EventManager.Instance.removeListener('notification', handleNotification);
 		};
-	}, []);
+	}, [taskId, loadFiles, loadTask, updateTask]);
 
 	useEffect(() => {
 		const checkIfLatestCommit = async () => {
@@ -259,7 +259,7 @@ export function ConversationView() {
 				)}
 				{task && (
 					<div className="mb-2 flex items-center">
-						<Link className="flex items-center" to={"/"}>
+						<Link className="flex items-center" to={"/"}> {/* TODOREFACTOR need to deactivate a task here */}
 							<ArrowLeft className="h-4 w-4" />
 							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
 								⌘<span className="text-[8px]">[</span>

@@ -1,27 +1,24 @@
 import {
 	Disposable,
 	Webview,
-	WebviewPanel,
-	window,
 	Uri,
-	ViewColumn,
 	WebviewViewProvider,
 	WebviewView,
-	WebviewViewResolveContext,
-	CancellationToken,
 } from "vscode";
 import * as vscode from "vscode";
-import { getUri, getNonce } from "../util/utils";
-import { Conversation, TaskMode } from "../types";
-import { MeltyExtension } from "../extension";
-import * as utils from "../util/utils";
-import { Task } from "../backend/tasks";
-import * as config from "../util/config";
-import { WebviewNotifier } from "../webviewNotifier";
-import { FileManager } from "../fileManager";
-import { RpcMethod } from "../types";
-import { Coder } from "../assistants/coder";
-import { Vanilla } from "../assistants/vanilla";
+import { getUri, getNonce } from "./util/utils";
+import { Conversation, TaskMode } from "./types";
+import { MeltyExtension } from "./extension";
+import { createNewDehydratedTask } from "./backend/tasks";
+import * as config from "./util/config";
+import { WebviewNotifier } from "./services/WebviewNotifier";
+import { FileManager } from "./services/FileManager";
+import { DehydratedTask, RpcMethod } from "./types";
+import { Coder } from "./backend/assistants/coder";
+import { Vanilla } from "./backend/assistants/vanilla";
+import { GitManager } from "./services/GitManager";
+import { GitHubManager } from './services/GitHubManager';
+import { TaskManager } from './services/TaskManager';
 import posthog from "posthog-js";
 
 /**
@@ -45,7 +42,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
 	constructor(
 		private readonly _extensionUri: Uri,
-		MeltyExtension: MeltyExtension
+		MeltyExtension: MeltyExtension,
+		private readonly _gitManager: GitManager = GitManager.getInstance(),
+		private readonly _gitHubManager: GitHubManager = GitHubManager.getInstance(),
+		private readonly _taskManager: TaskManager = TaskManager.getInstance(),
+		private readonly _fileManager: FileManager = FileManager.getInstance(),
+		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance()
 	) {
 		this.MeltyExtension = MeltyExtension;
 	}
@@ -66,18 +68,15 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
 		this._setWebviewMessageListener(webviewView.webview);
 
-		const webviewNotifier = WebviewNotifier.getInstance();
-		webviewNotifier.setView(this._view);
-		this.fileManager = new FileManager(this.MeltyExtension.meltyRoot!);
-		this.MeltyExtension.pushSubscription(this.fileManager);
+		this._webviewNotifier.setView(this._view);
 
 		// Start the todo check interval
-		this.todoCheckInterval = setInterval(() => this.checkAndSendTodo(), 10000);
-		this.MeltyExtension.pushSubscription(new vscode.Disposable(() => {
-			if (this.todoCheckInterval) {
-				clearInterval(this.todoCheckInterval);
-			}
-		}));
+		// this.todoCheckInterval = setInterval(() => this.checkAndSendTodo(), 10000);
+		// this.MeltyExtension.pushSubscription(new vscode.Disposable(() => {
+		// 	if (this.todoCheckInterval) {
+		// 		clearInterval(this.todoCheckInterval);
+		// 	}
+		// }));
 
 		console.log("success in resolveWebviewView!");
 	}
@@ -161,10 +160,11 @@ export class HelloWorldPanel implements WebviewViewProvider {
 				this.handleRPCCall(message.method as RpcMethod, message.params)
 					.then((result) => {
 						console.log(
-							`[RPC Server] sending RPC response for ${message.id} with result ${result}`
+							`[RPC Server] sending RPC response for ${message.id} (${message.method})`
 						);
 						webview.postMessage({
 							type: "rpcResponse",
+							method: message.method,
 							id: message.id,
 							result,
 						});
@@ -179,6 +179,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 						);
 						webview.postMessage({
 							type: "rpcResponse",
+							method: message.method,
 							id: message.id,
 							error: error.message,
 						});
@@ -188,23 +189,21 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	}
 
 	private async notifyWebviewOfChatError(taskId: string, message: string) {
-		const task = await this.MeltyExtension.getOrInitTask(
-			taskId,
-			this.fileManager
-		);
-
+		const task = this._taskManager.getActiveTask(taskId)!;
+		if (task === null) {
+			console.warn(`Couldn't notify webview of error because task ${taskId} was not active`);
+		}
 		task.addErrorJoule(message);
-
 		await WebviewNotifier.getInstance().sendNotification("updateTask", {
-			task: task.serialize(),
+			task: task.dehydrateForWire(),
 		});
 	}
 
 	private async handleRPCCall(method: RpcMethod, params: any): Promise<any> {
 		try {
 			switch (method) {
-				case "loadTask":
-					return await this.rpcLoadTask(params.taskId);
+				case "getActiveTask":
+					return await this.rpcGetActiveTask(params.taskId);
 				case "listMeltyFiles":
 					return await this.rpcListMeltyFiles();
 				case "listWorkspaceFiles":
@@ -219,16 +218,18 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return await this.rpcGetLatestCommit();
 				case "chatMessage":
 					return await this.rpcChatMessage(params.text, params.taskId);
-				case "createAndSwitchToTask":
-					return await this.rpcCreateAndSwitchToTask(
+				case "createTask":
+					return await this.rpcCreateTask(
 						params.name,
 						params.taskMode,
 						params.files
 					);
-				case "listTasks":
-					return this.rpcListTasks();
-				case "switchTask":
-					return await this.rpcSwitchTask(params.taskId);
+				case "listTaskPreviews":
+					return this.rpcListTaskPreviews();
+				case "activateTask":
+					return await this.rpcActivateTask(params.taskId);
+				case "deactivateTask":
+					return await this.rpcDeactivateTask(params.taskId);
 				case "createPullRequest":
 					return await this.rpcCreatePullRequest();
 				case "deleteTask":
@@ -284,76 +285,97 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		}
 	}
 
-	private async rpcLoadTask(taskId: string): Promise<Task> {
-		const task = this.MeltyExtension.getTask(taskId);
-		return Promise.resolve(task.serialize());
+	private async rpcGetActiveTask(taskId: string): Promise<DehydratedTask | undefined> {
+		const task = this._taskManager.getActiveTask(taskId);
+		if (!task) {
+			vscode.window.showErrorMessage(`Failed to get active task ${taskId}`);
+		}
+		return task!.dehydrate();
 	}
 
 	private async rpcListMeltyFiles(): Promise<string[]> {
-		const meltyMindFilePaths = this.fileManager!.getMeltyMindFilesRelative();
+		const meltyMindFilePaths = this._fileManager!.getMeltyMindFilesRelative();
 		return Promise.resolve(meltyMindFilePaths);
 	}
 
 	private async rpcListWorkspaceFiles(): Promise<string[]> {
 		const workspaceFilePaths =
-			await this.fileManager!.getWorkspaceFilesRelative();
+			await this._fileManager!.getWorkspaceFilesRelative();
 		return workspaceFilePaths;
 	}
 
 	private async rpcAddMeltyFile(filePath: string): Promise<string[]> {
-		await this.fileManager!.addMeltyMindFile(filePath, false);
+		await this._fileManager!.addMeltyMindFile(filePath, false);
 		vscode.window.showInformationMessage(`Added ${filePath} to Melty's Mind`);
-		return this.fileManager!.getMeltyMindFilesRelative();
+		return this._fileManager!.getMeltyMindFilesRelative();
 	}
 
 	private async rpcDropMeltyFile(filePath: string): Promise<string[]> {
-		this.fileManager!.dropMeltyMindFile(filePath);
+		this._fileManager!.dropMeltyMindFile(filePath);
 		vscode.window.showInformationMessage(
 			`Removed ${filePath} from Melty's Mind`
 		);
-		return await this.fileManager!.getMeltyMindFilesRelative();
+		return await this._fileManager!.getMeltyMindFilesRelative();
 	}
 
-	private async rpcCreateAndSwitchToTask(
+	private async rpcCreateTask(
 		name: string,
 		taskMode: TaskMode,
 		files: string[]
 	): Promise<string> {
-		const newTaskId = await this.MeltyExtension.createNewTask(
-			name,
-			taskMode,
-			files
-		);
-		await this.switchTask(newTaskId);
-		return newTaskId;
+		const task = createNewDehydratedTask(name, taskMode, files);
+		this._taskManager.add(task);
+		return task.id;
 	}
 
-	private rpcListTasks(): Task[] {
-		return this.MeltyExtension.listTasks();
+	private rpcListTaskPreviews(): DehydratedTask[] {
+		return this._taskManager.listInactiveTasks();
 	}
 
 	private async rpcCreatePullRequest(): Promise<void> {
-		await this.MeltyExtension.createPullRequest();
+		await this._gitHubManager.createPullRequest();
 	}
 
 	private async rpcDeleteTask(taskId: string): Promise<void> {
-		await this.MeltyExtension.deleteTask(taskId);
+		await this._taskManager.delete(taskId);
 	}
 
 	private async rpcGetGitConfigErrors(): Promise<string> {
-		return this.MeltyExtension.getGitConfigErrors();
+		const result = this._gitManager.init();
+		return typeof result === "string" ? result : "";
 	}
 
-	private async rpcGetLatestCommit(): Promise<string | null> {
-		return await this.MeltyExtension.getLatestCommitHash();
+	private async rpcGetLatestCommit(): Promise<string | undefined> {
+		return await this._gitManager.getLatestCommitHash();
 	}
 
 	private async rpcUndoLatestCommit(commitId: string): Promise<void> {
-		await this.MeltyExtension.undoLastCommit(commitId);
+		const errMessage = this._gitManager.undoLastCommit(commitId);
+		if (errMessage === null) {
+			vscode.window.showInformationMessage(
+				"Last commit has been undone by hard reset."
+			);
+		} else {
+			vscode.window.showErrorMessage("Failed to undo last commit: " + errMessage);
+		}
 	}
 
-	private async rpcSwitchTask(taskId: string): Promise<void> {
-		await this.switchTask(taskId);
+	private async rpcDeactivateTask(taskId: string): Promise<boolean> {
+		const errMessage = await this._taskManager.deactivate(taskId);
+		if (errMessage) {
+			vscode.window.showErrorMessage(`Failed to deactivate task ${taskId}: ${errMessage}`);
+			return false;
+		}
+		return false;
+	}
+
+	private async rpcActivateTask(taskId: string): Promise<boolean> {
+		const errorMessage = await this._taskManager.activate(taskId);
+		if (errorMessage) {
+			vscode.window.showErrorMessage(`Failed to activate task ${taskId}: ${errorMessage}`);
+			return false;
+		}
+		return true;
 	}
 
 	private rpcGetVSCodeTheme(): string {
@@ -363,72 +385,30 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	private async rpcChatMessage(text: string, taskId: string): Promise<void> {
 		const webviewNotifier = WebviewNotifier.getInstance();
 		webviewNotifier.updateStatusMessage("Starting up");
-		const task = await this.MeltyExtension.getOrInitTask(
-			taskId,
-			this.fileManager
-		);
+		const task = this._taskManager.getActiveTask(taskId)!;
+		if (!task) {
+			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
+		}
 
 		// human response
 		await task.respondHuman(text);
 		webviewNotifier.sendNotification("updateTask", {
-			task: task.serialize(),
+			task: task.dehydrateForWire(),
 		});
 
 		// bot response
 		const processPartial = (partialConversation: Conversation) => {
-			// copy task
-			const serialTask = task.serialize();
-			serialTask.conversation = partialConversation;
+			const dehydratedTask = task.dehydrateForWire();
+			dehydratedTask.conversation = partialConversation;
 			webviewNotifier.sendNotification("updateTask", {
-				task: serialTask,
+				task: dehydratedTask,
 			});
 		};
 		await task.respondBot(processPartial);
 
 		webviewNotifier.sendNotification("updateTask", {
-			task: task.serialize(),
+			task: task.dehydrateForWire(),
 		});
 		webviewNotifier.resetStatusMessage();
-	}
-
-	private async switchTask(taskId: string): Promise<void> {
-		const oldTask = await this.MeltyExtension.getCurrentTask(this.fileManager);
-		if (oldTask && this.fileManager) {
-			const meltyMindFiles =
-				await this.fileManager!.getMeltyMindFilesRelative();
-			if (meltyMindFiles) {
-				oldTask.savedMeltyMindFiles = meltyMindFiles;
-			}
-		}
-
-		await this.MeltyExtension.switchToTask(taskId);
-		const newTask = (await this.MeltyExtension.getCurrentTask(
-			this.fileManager
-		))!;
-		await newTask.init(this.fileManager!);
-
-		// load meltyMindFiles into new task
-		this.fileManager?.loadMeltyMindFiles(newTask.savedMeltyMindFiles);
-	}
-
-	/**
-	 * Run a terminal command
-	 * @param command The command to run
-	 */
-	private runTerminalCommand(command: string) {
-		const terminal = vscode.window.activeTerminal;
-		if (terminal) {
-			terminal.sendText(command);
-
-			// You might want to set up an event listener for terminal data
-			vscode.window.onDidChangeActiveTerminal((terminal) => {
-				if (terminal) {
-					// Handle terminal change
-					console.log("Terminal changed");
-				}
-			});
-		} else {
-			vscode.window.showInformationMessage("No active terminal");
-		}
 	}
 }

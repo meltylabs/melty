@@ -1,6 +1,6 @@
-import { streamClaude, Models } from "../backend/claudeAPI";
-import { ClaudeConversation, GitRepo } from "../types";
-import { getCurrentPRName } from "./gitUtils";
+import { streamClaude, Models } from "./backend/claudeAPI";
+import { ClaudeConversation, GitRepo } from "./types";
+import { GitManager } from "./services/GitManager";
 
 export async function generateTodoFromPRName(prName: string): Promise<string> {
 	const prompt = `Convert the following pull request name into a concise, actionable todo item:
@@ -38,10 +38,8 @@ Todo:`;
 	}
 }
 
-export async function generateTodoFromCurrentPR(
-	gitRepo: GitRepo
-): Promise<string | null> {
-	const prName = await getCurrentPRName(gitRepo);
+export async function generateTodoFromCurrentPR(): Promise<string | null> {
+	const prName = GitManager.getInstance().getCurrentBranch();
 
 	if (!prName) {
 		return "No active PR found. Make sure you're on a feature branch.";

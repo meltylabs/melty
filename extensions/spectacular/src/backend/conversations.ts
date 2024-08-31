@@ -119,7 +119,7 @@ function removeFinalJoulesFrom(
 		return conversation;
 	} else {
 		vscode.window.showInformationMessage(
-			`Melty is force-removing ${oppositeAuthor} joules to prepare for a response from ${author}`
+			`Melty is force-removing ${oppositeAuthor} messages to prepare for a response from ${author}`
 		);
 		return {
 			joules: conversation.joules.slice(0, indexOfLastNonMatchingJoule + 1),

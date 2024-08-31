@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { RpcClient } from "../rpcClient";
+import { RpcClient } from "../RpcClient";
 import { Joule } from "../types";
 import CopyButton from "./CopyButton";
 import DiffContent from "./DiffContent";
@@ -19,7 +19,8 @@ export function JouleComponent({
 	showUndo?: boolean;
 	showDiff?: boolean;
 }) {
-	const [rpcClient] = useState(() => new RpcClient());
+	const rpcClient = RpcClient.getInstance();
+
 	const [undoClicked, setUndoClicked] = useState(false);
 
 	const diffHtml =

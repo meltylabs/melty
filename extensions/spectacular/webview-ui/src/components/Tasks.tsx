@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef, useId } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { RpcClient } from "../rpcClient";
+import { RpcClient } from "RpcClient";
 import { Button } from "./ui/button";
 import {
 	ArrowUp,
@@ -11,15 +11,13 @@ import {
 	XIcon,
 	CircleHelp,
 	MessageCircle,
-	PlayCircle,
-	PlayIcon,
 	LightbulbIcon,
 } from "lucide-react";
 import { MouseEvent, KeyboardEvent } from "react";
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { Task, TaskMode, AssistantInfo } from "../types";
+import { DehydratedTask, TaskMode, AssistantInfo } from "../types";
 import {
 	Select,
 	SelectContent,
@@ -31,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
 import * as strings from "../utilities/strings";
 import { FastFilePicker } from "./FastFilePicker";
+import { EventManager } from "../eventManager";
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -48,13 +47,14 @@ function formatDate(date: Date): string {
 	return date.toLocaleDateString();
 }
 
+const rpcClient = RpcClient.getInstance();
+
 export function Tasks({
 	initialMeltyMindFiles,
 }: {
 	initialMeltyMindFiles?: string[];
 }) {
-	const [rpcClient] = useState(() => new RpcClient());
-	const [tasks, setTasks] = useState<Task[]>([]);
+	const [tasks, setTasks] = useState<DehydratedTask[]>([]);
 	const [messageText, setMessageText] = useState("");
 	const [gitConfigError, setGitConfigError] = useState<string | null>(null);
 	const navigate = useNavigate();
@@ -94,28 +94,28 @@ export function Tasks({
 			} catch (error) {
 				console.error("Failed to fetch assistant description:", error);
 			}
-		},
-		[rpcClient]
+		}, []
 	);
 
 	useEffect(() => {
 		fetchAssistantDescription("coder");
 	}, [fetchAssistantDescription]);
 
+	// TODO we probably want to run this just once, when Melty loads,
+	// rather than when the Tasks view loads
 	const fetchTasks = useCallback(async () => {
-		const fetchedTasks = (await rpcClient.run("listTasks")) as Task[];
-		console.log(`[Tasks] fetched ${fetchedTasks.length} tasks`);
+		const fetchedTasks = (await rpcClient.run("listTaskPreviews")) as DehydratedTask[];
 		const sortedTasks = fetchedTasks.sort(
 			(a, b) =>
 				new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
 		);
 		setTasks(sortedTasks);
-	}, [rpcClient]);
+	}, []);
 
 	const checkGitConfig = useCallback(async () => {
 		const possibleError = await rpcClient.run("getGitConfigErrors");
 		setGitConfigError(possibleError);
-	}, [rpcClient]);
+	}, []);
 
 	const deleteTask = useCallback(
 		async (taskId: string, e: MouseEvent) => {
@@ -129,12 +129,19 @@ export function Tasks({
 				console.error("Failed to delete task:", error);
 			}
 		},
-		[fetchTasks, rpcClient]
+		[fetchTasks]
 	);
 
-	const createNewTask = async (taskName: string, taskMode: TaskMode) => {
+	const handleSendMessage = useCallback((text: string, taskId: string) => {
+		rpcClient.run("chatMessage", { text, taskId });
+	}, []);
+
+	/* =====================================================
+	 * Unwrapped stuff
+	 * ===================================================== */
+	async function createNewTask(taskName: string, taskMode: TaskMode) {
 		console.log(`[Tasks] creating new task ${taskName}`);
-		const newTaskId = (await rpcClient.run("createAndSwitchToTask", {
+		const newTaskId = (await rpcClient.run("createTask", {
 			name: taskName.trim(),
 			taskMode: taskMode,
 			files: meltyMindFilePaths,
@@ -143,12 +150,7 @@ export function Tasks({
 		return newTaskId;
 	};
 
-	function handleSendMessage(text: string, taskId: string) {
-		rpcClient.run("chatMessage", { text, taskId });
-	}
-
-	const handleSubmit = async (event: React.FormEvent) => {
-		event.preventDefault();
+	async function handleMessageSend() {
 		const message = messageText;
 		const taskMode = currentMode.type;
 		console.log(`[Tasks] to ${taskMode}`);
@@ -156,10 +158,18 @@ export function Tasks({
 		if (message.length > 40) {
 			taskName = taskName + "...";
 		}
-		const newTaskId = await createNewTask(taskName, taskMode);
-		handleSendMessage(message, newTaskId);
-		setMessageText("");
-		navigate(`/task/${newTaskId}`);
+		const taskId = await createNewTask(taskName, taskMode);
+
+		const didActivate = await rpcClient.run("activateTask", { taskId });
+		if (didActivate) {
+			handleSendMessage(message, taskId);
+			navigate(`/task/${taskId}`);
+		}
+	}
+
+	const handleSubmit = async (event: React.FormEvent) => {
+		event.preventDefault();
+		await handleMessageSend();
 	};
 
 	const handleKeyDown = async (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -169,16 +179,7 @@ export function Tasks({
 			if (event.currentTarget && event.currentTarget.value !== undefined) {
 				const form = event.currentTarget.form;
 				if (form) {
-					const taskMode = form.taskMode.value as TaskMode;
-					console.log(`[Tasks] to ${taskMode}`);
-					let taskName = messageText.substring(0, 40);
-					if (messageText.length > 40) {
-						taskName = taskName + "...";
-					}
-					const newTaskId = await createNewTask(taskName, taskMode);
-					handleSendMessage(messageText, newTaskId);
-					setMessageText("");
-					navigate(`/task/${newTaskId}`);
+					handleMessageSend();
 				}
 			}
 		}
@@ -192,7 +193,7 @@ export function Tasks({
 			const meltyMindPaths = await rpcClient.run("listMeltyFiles");
 			setMeltyMindFilePaths(meltyMindPaths);
 		}
-	}, [rpcClient, initialMeltyMindFiles]);
+	}, [initialMeltyMindFiles]); // TODO not sure whether this is a problem
 
 	const handleAddFile = useCallback(
 		async (filePath: string) => {
@@ -203,45 +204,55 @@ export function Tasks({
 			setPickerOpen(false);
 			setShouldFocus(true);
 		},
-		[rpcClient]
+		[]
 	);
 
-	async function handleDropFile(file: string) {
+	const handleDropFile = useCallback(async (file: string) => {
 		const meltyFiles = await rpcClient.run("dropMeltyFile", {
 			filePath: file,
 		});
 		setMeltyMindFilePaths(meltyFiles);
 		setPickerOpen(false);
 		setShouldFocus(true);
+	}, []);
+
+	async function activateAndNavigateToTask(taskId: string) {
+		const didActivate = await rpcClient.run("activateTask", { taskId });
+		if (didActivate) {
+			navigate(`/task/${taskId}`);
+		}
 	}
 
+	const addSuggestion = useCallback(async (suggestion: string) => {
+		setSuggestions(prevSuggestions => {
+			const newSuggestions = [...prevSuggestions, suggestion];
+			return Array.from(new Set(newSuggestions));
+		});
+	}, []);
+
+	// initialization
 	useEffect(() => {
 		fetchTasks();
 		checkGitConfig();
 		fetchFilePaths();
 
-		const handleMessage = (event: MessageEvent) => {
+		const handleNotification = (event: MessageEvent) => {
 			const message = event.data;
 			switch (message.type) {
 				case "updateTodo":
-					// add suggestion if it's not already a suggestion
-					const newSuggestions = [...suggestions, message.todo];
-					const uniqueSuggestions = new Set(newSuggestions);
-					const newUniqueSuggestions = Array.from(uniqueSuggestions);
-					setSuggestions(newUniqueSuggestions);
-
+					addSuggestion(message.todo);
+					break;
+				default:
 					break;
 			}
 		};
 
-		window.addEventListener("message", rpcClient.handleMessage);
-		window.addEventListener("message", handleMessage);
+		EventManager.Instance.addListener('notification', handleNotification);
 
 		return () => {
-			window.removeEventListener("message", rpcClient.handleMessage);
-			window.addEventListener("message", handleMessage);
+			EventManager.Instance.removeListener('notification', handleNotification);
 		};
-	}, [fetchTasks, fetchFilePaths, checkGitConfig, suggestions, rpcClient]);
+	}, [fetchTasks, fetchFilePaths, checkGitConfig, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
 
 	return (
 		<div>
@@ -399,7 +410,7 @@ export function Tasks({
 				{tasks.length === 0 && <p>No tasks</p>}
 				{tasks.map((task) => (
 					<div key={task.id} className="relative">
-						<Link to={`/task/${task.id}`}>
+						<button className="text-left" onClick={() => { activateAndNavigateToTask(task.id) }}>
 							<Card>
 								<CardHeader>
 									<CardTitle>{task.name}</CardTitle>
@@ -410,7 +421,7 @@ export function Tasks({
 									</p>
 								</CardContent>
 							</Card>
-						</Link>
+						</button>
 						<Button
 							variant="ghost"
 							size="sm"

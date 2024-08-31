@@ -18,36 +18,25 @@ export class EventManager {
 			this.listeners.set(type, new Set());
 		}
 		this.listeners.get(type)!.add(callback);
-		this.printListenersCounts();
 	}
 
 	removeListener(type: string, callback: EventCallback) {
-		this.printListenersCounts();
 		console.log(`[EventManager ${this.id}] Removing listener for ${type}`);
 		this.listeners.get(type)?.delete(callback);
 	}
 
-	private printListenersCounts() {
-		console.log(
-			Array.from(this.listeners).map(([type, listeners]) => {
-				return `[EventManager ${this.id}] there are now ${listeners.size} listeners for ,${type},`;
-			})
-				.join("\n")
-		);
-	}
-
 	handleMessage = (event: MessageEvent) => {
-		this.printListenersCounts();
 		const message = event.data;
 		if (message.type) {
-			console.log(`[EventManager ${this.id}] Handling message of type ,${message.type},`);
-			console.log(`[EventManager ${this.id}] listeners list is ${this.listeners.get(message.type)}`);
-			console.log(`[EventManager ${this.id}] Dispatching to ${this.listeners.get(message.type)?.size ?? 0} listeners`);
-			this.listeners.get(message.type)?.forEach(callback => callback(event));
+			console.log(`[EventManager ${this.id}] Dispatching message ${message.type} to ${this.listeners.get(message.type)?.size ?? 0} listeners`);
+			this.listeners.get(message.type)?.forEach(callback => {
+				callback(event)
+			});
 		}
 	}
 
 	init() {
+		console.log(`[EventManager ${this.id}] Initializing EventManager`);
 		window.addEventListener('message', this.handleMessage);
 	}
 

@@ -57,6 +57,11 @@
           "default": "",
           "description": "GitHub token for creating pull requests"
         },
+        "melty.remoteName": {
+          "type": "string",
+          "default": "origin",
+          "description": "Name of the remote Melty should work off"
+        },
         "melty.excludes": {
           "type": "array",
           "items": {

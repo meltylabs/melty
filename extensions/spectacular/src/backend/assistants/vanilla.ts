@@ -1,8 +1,8 @@
-import { Conversation, GitRepo, ClaudeConversation } from "../types";
-import * as joules from "../backend/joules";
-import * as prompts from "../backend/prompts";
-import * as claudeAPI from "../backend/claudeAPI";
-import * as conversations from "../backend/conversations";
+import { Conversation, ContextPaths, ClaudeConversation } from "../../types";
+import * as joules from "../joules";
+import * as prompts from "../prompts";
+import * as claudeAPI from "../claudeAPI";
+import * as conversations from "../conversations";
 import { BaseAssistant } from "./baseAssistant";
 
 export class Vanilla extends BaseAssistant {
@@ -12,8 +12,7 @@ export class Vanilla extends BaseAssistant {
 
 	async respond(
 		conversation: Conversation,
-		gitRepo: GitRepo,
-		contextPaths: string[],
+		contextPaths: ContextPaths,
 		processPartial: (partialConversation: Conversation) => void
 	) {
 		const systemPrompt = prompts.vanillaModeSystemPrompt();
@@ -21,7 +20,7 @@ export class Vanilla extends BaseAssistant {
 		const claudeConversation: ClaudeConversation = {
 			system: systemPrompt,
 			messages: [
-				...this.codebaseView(gitRepo, contextPaths, ""),
+				...this.codebaseView(contextPaths, ""),
 				...this.encodeMessages(conversation),
 			],
 		};
@@ -54,7 +53,7 @@ export class Vanilla extends BaseAssistant {
 		conversation: Conversation,
 		response: string,
 		partialMode: boolean,
-		contextPaths: string[]
+		contextPaths: ContextPaths
 	): Conversation {
 		const newJoule = joules.createJouleBot(
 			response,

@@ -1,6 +1,6 @@
 import * as assert from "assert";
-import { applyWithReindent } from "../diffApplication/diffApplicationStrategies";
-import { SearchReplace } from "../types";
+import { applyWithReindent } from "backend/diffApplication/diffApplicationStrategies";
+import { SearchReplace } from "types";
 
 suite("applyWithReindent", () => {
 	test("should reindent and apply diff when indentation matches", async () => {

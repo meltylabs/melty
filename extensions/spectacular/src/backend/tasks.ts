@@ -1,49 +1,67 @@
 import * as vscode from "vscode";
-import { Joule, Conversation, GitRepo, TaskMode, DiffInfo } from "../types";
+import { Joule, Conversation, TaskMode, DehydratedTask } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
-import { Vanilla } from "../assistants/vanilla";
-import { Coder } from "../assistants/coder";
+import { Vanilla } from "./assistants/vanilla";
+import { Coder } from "./assistants/coder";
 import * as config from "../util/config";
-import { FileManager } from "../fileManager";
-import { getRepoAtWorkspaceRoot } from "../util/gitUtils";
+import { FileManager } from "../services/FileManager";
 import * as datastores from "./datastores";
-import { generateCommitMessage } from "./commitMessageGenerator";
-import { WebviewNotifier } from "../webviewNotifier";
+import { WebviewNotifier } from "../services/WebviewNotifier";
+import { GitManager } from "../services/GitManager";
+import { v4 as uuidv4 } from "uuid";
 
 const webviewNotifier = WebviewNotifier.getInstance();
+
+export function createNewDehydratedTask(name: string, taskMode: TaskMode, files: string[]): DehydratedTask {
+	return {
+		id: uuidv4(),
+		name: name,
+		branch: utils.meltyBranchNameFromTaskName(name),
+		conversation: conversations.create(),
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		taskMode: taskMode,
+		meltyMindFiles: files,
+	};
+}
 
 /**
  * A Task manages the interaction between a conversation and a git repository
  */
-export class Task implements Task {
+export class Task {
+	id: string;
+	name: string;
+	branch: string;
 	conversation: Conversation;
-	gitRepo: GitRepo | null;
-	fileManager: FileManager | undefined;
 	createdAt: Date;
 	updatedAt: Date;
+	taskMode: TaskMode;
 	savedMeltyMindFiles: string[] = [];
 
-	constructor(
-		public id: string,
-		public name: string,
-		public taskMode: TaskMode,
-		public files?: string[]
+	// TODO: keep track of responses as "active jobs"
+	inFlightRequest: any; // CancellablePromise | null;
+
+	/**
+	 * Private constructor for deserializing or creating new tasks
+	 */
+	private constructor(
+		public dehydratedTask: DehydratedTask,
+		private readonly _fileManager: FileManager = FileManager.getInstance(),
+		private readonly _gitManager: GitManager = GitManager.getInstance()
 	) {
-		this.conversation = conversations.create();
-		this.gitRepo = null;
-		this.savedMeltyMindFiles = files || [];
-		this.createdAt = new Date();
-		this.updatedAt = new Date();
+		this.id = dehydratedTask.id;
+		this.name = dehydratedTask.name;
+		this.branch = dehydratedTask.branch;
+		this.conversation = dehydratedTask.conversation;
+		this.createdAt = dehydratedTask.createdAt;
+		this.updatedAt = dehydratedTask.updatedAt;
+		this.taskMode = dehydratedTask.taskMode;
 	}
 
 	updateLastModified() {
 		this.updatedAt = new Date();
-	}
-
-	public setFileManager(fileManager: FileManager) {
-		this.fileManager = fileManager;
 	}
 
 	public addErrorJoule(message: string): void {
@@ -59,73 +77,12 @@ export class Task implements Task {
 	}
 
 	/**
-	 * Initializes the GitRepo's repository field. Note that if the GitRepo has only a rootPath,
-	 * then we still need to run `init` to populate the repository field.
-	 */
-	public async init(fileManager: FileManager): Promise<boolean> {
-		if (this.gitRepo && this.gitRepo.repository) {
-			return true;
-		}
-
-		const result = await getRepoAtWorkspaceRoot();
-		if (typeof result === "string") {
-			console.log(`Could not initialize task: ${result}`);
-			return false;
-		}
-
-		this.gitRepo = result;
-		console.log(`Initialized task ${this.id}`);
-
-		this.setFileManager(fileManager);
-		return true;
-	}
-
-	/**
 	 * Lists Joules in a Task.
 	 */
 	public listJoules(): readonly Joule[] {
 		return this.conversation.joules;
 	}
 
-	private ensureWorkingDirectoryClean(): void {
-		if (!utils.repoIsClean(this.gitRepo!.repository)) {
-			utils.handleGitError(`Working directory is not clean:
-                ${this.gitRepo!.repository.state.workingTreeChanges.length}
-                ${this.gitRepo!.repository.state.indexChanges.length}
-                ${this.gitRepo!.repository.state.mergeChanges.length}`);
-		}
-	}
-
-	/**
-	 * Commits any local changes (or empty commit if none).
-	 * @returns the number of changes committed
-	 */
-	private async commitLocalChanges(): Promise<number> {
-		// Get all changes, including untracked files
-		const changes = await this.gitRepo!.repository.diffWithHEAD();
-
-		// Filter out ignored files
-		const nonIgnoredChanges = changes.filter(
-			(change: any) => !change.gitIgnored
-		);
-
-		// Add only non-ignored files
-		await this.gitRepo!.repository.add(
-			nonIgnoredChanges.map((change: any) => change.uri.fsPath)
-		);
-
-		const indexChanges = this.gitRepo!.repository.state.indexChanges;
-
-		if (indexChanges.length > 0) {
-			const udiffPreview = await utils.getUdiffFromWorking(this.gitRepo!);
-			const message = await generateCommitMessage(udiffPreview);
-
-			await this.gitRepo!.repository.commit(`[via melty] ${message}`);
-		}
-
-		await this.gitRepo!.repository.status();
-		return indexChanges.length;
-	}
 
 	/**
 	 * Adds a bot message (and changes) to the conversation.
@@ -139,8 +96,9 @@ export class Task implements Task {
 	): Promise<void> {
 		try {
 			webviewNotifier.updateStatusMessage("Checking repo status");
-			await this.gitRepo!.repository.status();
-			this.ensureWorkingDirectoryClean();
+
+			// TODOREFACTOR ensure working directory clean
+
 			webviewNotifier.resetStatusMessage();
 
 			let assistant;
@@ -156,7 +114,7 @@ export class Task implements Task {
 			}
 
 			const meltyMindFiles =
-				await this.fileManager!.getMeltyMindFilesRelative();
+				await this._fileManager.getMeltyMindFilesRelative();
 
 			// just in case something's gone terribly wrong
 			this.conversation = conversations.forceReadyForResponseFrom(
@@ -165,8 +123,10 @@ export class Task implements Task {
 			);
 			this.conversation = await assistant.respond(
 				this.conversation,
-				this.gitRepo!,
-				meltyMindFiles,
+				{ // TODOREFACTOR use ContextPaths object up the chain
+					paths: meltyMindFiles,
+					meltyRoot: this._gitManager.getMeltyRoot()
+				},
 				processPartial
 			);
 
@@ -177,13 +137,13 @@ export class Task implements Task {
 			if (lastJoule.diffInfo?.filePathsChanged) {
 				// add any edited files to melty's mind
 				lastJoule.diffInfo.filePathsChanged.forEach((editedFile) => {
-					this.fileManager!.addMeltyMindFile(editedFile, true);
+					this._fileManager.addMeltyMindFile(editedFile, true);
 				});
 			}
 
 			webviewNotifier.updateStatusMessage("Autosaving conversation");
 			this.updateLastModified();
-			await datastores.dumpTaskToDisk(this);
+			await datastores.dumpTaskToDisk(await this.dehydrate());
 		} catch (e) {
 			if (config.DEV_MODE) {
 				throw e;
@@ -194,7 +154,7 @@ export class Task implements Task {
 					message,
 					{
 						rawOutput: message,
-						contextPaths: [],
+						contextPaths: { paths: [], meltyRoot: '' },
 					},
 					"complete"
 				);
@@ -217,16 +177,12 @@ export class Task implements Task {
 		if (config.getIsAutocommitMode() && this.taskMode !== "vanilla") {
 			webviewNotifier.updateStatusMessage("Checking repo status");
 			let didCommit = false;
-			await this.gitRepo!.repository.status();
 			webviewNotifier.updateStatusMessage("Committing user's changes");
-			didCommit = (await this.commitLocalChanges()) > 0;
+			didCommit = await this._gitManager.commitLocalChanges() > 0;
 			webviewNotifier.resetStatusMessage();
 
-			const latestCommit = this.gitRepo!.repository.state.HEAD?.commit;
-			const diffPreview = await utils.getUdiffFromCommit(
-				this.gitRepo!,
-				latestCommit
-			);
+			const latestCommit = await this._gitManager.getLatestCommitHash();
+			const diffPreview = latestCommit ? await this._gitManager.getUdiffFromCommit(latestCommit) : '';
 
 			const diffInfo = {
 				filePathsChanged: null,
@@ -234,7 +190,7 @@ export class Task implements Task {
 			};
 
 			newJoule = didCommit
-				? joules.createJouleHumanWithChanges(message, latestCommit, diffInfo)
+				? joules.createJouleHumanWithChanges(message, latestCommit!, diffInfo)
 				: joules.createJouleHuman(message);
 		} else {
 			newJoule = joules.createJouleHuman(message);
@@ -244,37 +200,34 @@ export class Task implements Task {
 		this.updateLastModified();
 
 		webviewNotifier.updateStatusMessage("Autosaving conversation");
-		await datastores.dumpTaskToDisk(this);
+		await datastores.dumpTaskToDisk(await this.dehydrate());
 
 		webviewNotifier.resetStatusMessage();
 		return conversations.lastJoule(this.conversation)!;
 	}
 
 	/**
-	 * goes to a plain JSON object that can be passed to JSON.stringify
+	 * Leaves out the melty mind files
 	 */
-	public serialize(): any {
+	public dehydrateForWire(): DehydratedTask {
 		return {
 			...this,
-			gitRepo: {
-				...this.gitRepo,
-				repository: null,
-			},
-			fileManager: null,
-			savedMeltyMindFiles: this.fileManager
-				? this.fileManager.dumpMeltyMindFiles()
-				: undefined,
+			_fileManager: undefined,
+			_gitManager: undefined,
+			files: null
 		};
 	}
 
-	public static deserialize(serializedTask: any): Task {
-		const task = Object.assign(
-			new Task(serializedTask.id, "", "coder"), // default to coder
-			serializedTask
-		) as Task;
+	public async dehydrate(): Promise<DehydratedTask> {
+		return {
+			...this,
+			_fileManager: undefined,
+			_gitManager: undefined,
+			meltyMindFiles: await this._fileManager.getMeltyMindFilesRelative()
+		};
+	}
 
-		task.fileManager = undefined;
-
-		return task;
+	public static hydrate(dehydratedTask: DehydratedTask) {
+		return new Task(dehydratedTask);
 	}
 }

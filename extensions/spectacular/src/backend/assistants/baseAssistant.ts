@@ -1,8 +1,8 @@
-import { Conversation, GitRepo, ClaudeMessage } from "../types";
-import * as joules from "../backend/joules";
+import { Conversation, ClaudeMessage, Joule, ContextPaths } from "../../types";
+import * as joules from "../joules";
 import fs from "fs";
 import path from "path";
-import { getUserPrompt } from "../util/config";
+import { getUserPrompt } from "../../util/config";
 
 export abstract class BaseAssistant {
 	static get description(): string {
@@ -11,8 +11,7 @@ export abstract class BaseAssistant {
 
 	abstract respond(
 		conversation: Conversation,
-		gitRepo: GitRepo,
-		contextPaths: string[],
+		contextPaths: ContextPaths,
 		processPartial: (partialConversation: Conversation) => void
 	): Promise<Conversation>;
 
@@ -37,7 +36,7 @@ export abstract class BaseAssistant {
 		}
 
 		messages.push(
-			...conversation.joules.map((joule) => ({
+			...conversation.joules.map((joule: Joule) => ({
 				role: authorToRole(joule.author),
 				content: joules.formatMessageForClaude(joule),
 			}))
@@ -50,29 +49,28 @@ export abstract class BaseAssistant {
 	 * Encodes files for Claude. Note that we're being loose with the newlines.
 	 * @returns string encoding the files
 	 */
-	protected encodeFile(gitRepo: GitRepo, filePath: string) {
+	protected encodeFile(relativeFilePath: string, meltyRoot: string): string {
 		const fileContents = fs.readFileSync(
-			path.join(gitRepo.rootPath, filePath),
+			path.join(meltyRoot, relativeFilePath),
 			"utf8"
 		);
 
 		// TODO should we use | indentation here?
-		return `<file_contents file=${filePath}>
+		return `<file_contents file=${relativeFilePath}>
 ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 </file_contents>`;
 	}
 
 	protected codebaseView(
-		gitRepo: GitRepo,
-		contextPaths: string[],
+		contextPaths: ContextPaths,
 		repoMapString: string
 	): ClaudeMessage[] {
 		const codebaseSummary = `<codebase_summary>
 ${repoMapString ? repoMapString : "[No summary provided.]"}
 </codebase_summary>`;
 
-		const fileContents = contextPaths
-			.map((path) => this.encodeFile(gitRepo, path))
+		const fileContents = contextPaths.paths
+			.map((path) => this.encodeFile(path, contextPaths.meltyRoot))
 			.join("\n");
 
 		return [

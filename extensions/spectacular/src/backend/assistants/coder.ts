@@ -1,24 +1,26 @@
 import {
 	Conversation,
-	GitRepo,
+	ContextPaths,
 	ClaudeConversation,
 	ChangeSet,
 	BotExecInfo,
 	Joule,
-} from "../types";
-import * as joules from "../backend/joules";
-import * as prompts from "../backend/prompts";
-import * as claudeAPI from "../backend/claudeAPI";
+} from "../../types";
+import * as joules from "..//joules";
+import * as prompts from "..//prompts";
+import * as claudeAPI from "..//claudeAPI";
 import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
-import { RepoMapSpec } from "../backend/repoMapSpec";
-import * as utils from "../util/utils";
-import * as conversations from "../backend/conversations";
+import { RepoMapSpec } from "..//repoMapSpec";
+import * as utils from "../../util/utils";
+import * as conversations from "..//conversations";
 import { BaseAssistant } from "./baseAssistant";
 import * as parser from "../diffApplication/parser";
-import * as changeSets from "../backend/changeSets";
-import * as config from "../util/config";
-import { generateCommitMessage } from "../backend/commitMessageGenerator";
-import { WebviewNotifier } from "../webviewNotifier";
+import * as changeSets from "..//changeSets";
+import * as config from "../../util/config";
+import { generateCommitMessage } from "../commitMessageGenerator";
+import { WebviewNotifier } from "services/WebviewNotifier";
+import { FileManager } from 'services/FileManager';
+import { GitManager } from 'services/GitManager';
 
 const webviewNotifier = WebviewNotifier.getInstance();
 
@@ -27,11 +29,17 @@ export class Coder extends BaseAssistant {
 		return "Coder can view your codebase structure, suggest edits, and write code.";
 	}
 
+	constructor(
+		private readonly _fileManager: FileManager = FileManager.getInstance(),
+		private readonly _gitManager: GitManager = GitManager.getInstance()
+	) {
+		super();
+	}
+
 	async respond(
 		conversation: Conversation,
-		gitRepo: GitRepo,
-		contextPaths: string[],
-		processPartial: (partialConversation: Conversation) => void
+		contextPaths: ContextPaths,
+		processPartial: (partialConversation: Conversation) => void,
 	) {
 		webviewNotifier.updateStatusMessage("Preparing context");
 		if (
@@ -40,8 +48,8 @@ export class Coder extends BaseAssistant {
 		) {
 			throw new Error("Cannot respond to non-human message");
 		}
-		const repoMap = new RepoMapSpec(gitRepo);
-		const workspaceFilePaths = await utils.getWorkspaceFilePaths(gitRepo);
+		const repoMap = new RepoMapSpec();
+		const workspaceFilePaths = await this._fileManager.getWorkspaceFilesRelative(); // await utils.getWorkspaceFilePaths(gitRepo);
 		const repoMapString = await repoMap.getRepoMap(workspaceFilePaths);
 
 		// const contextSuggestions = await contextSuggester.suggestContext(
@@ -71,7 +79,7 @@ export class Coder extends BaseAssistant {
 			system: systemPrompt,
 			messages: [
 				// TODOV2 user system info
-				...this.codebaseView(gitRepo, contextPaths, repoMapString),
+				...this.codebaseView(contextPaths, repoMapString),
 				...this.encodeMessages(conversation),
 			],
 		};
@@ -92,7 +100,6 @@ export class Coder extends BaseAssistant {
 					partialMessage,
 					true,
 					contextPaths,
-					gitRepo,
 					true // ignore changes
 				);
 				processPartial(newConversation);
@@ -106,7 +113,6 @@ export class Coder extends BaseAssistant {
 			finalResponse,
 			false,
 			contextPaths,
-			gitRepo,
 			false // apply changes
 		);
 	}
@@ -115,8 +121,7 @@ export class Coder extends BaseAssistant {
 		prevConversation: Conversation,
 		response: string,
 		partialMode: boolean,
-		contextPaths: string[],
-		gitRepo: GitRepo,
+		contextPaths: ContextPaths,
 		ignoreChanges: boolean
 	): Promise<Conversation> {
 		const { messageChunksList, searchReplaceList } = parser.splitResponse(
@@ -126,13 +131,12 @@ export class Coder extends BaseAssistant {
 		const changeSet = ignoreChanges
 			? changeSets.createEmpty()
 			: await diffApplicatorXml.searchReplaceToChangeSet(
-				gitRepo,
-				searchReplaceList
+				searchReplaceList,
+				contextPaths.meltyRoot
 			);
 
 		const nextJoule = await this.applyChangesToGetNextJoule(
 			changeSet,
-			gitRepo,
 			messageChunksList.join("\n"),
 			{
 				rawOutput: response,
@@ -146,7 +150,6 @@ export class Coder extends BaseAssistant {
 
 	private async applyChangesToGetNextJoule(
 		changeSet: ChangeSet,
-		gitRepo: GitRepo,
 		message: string,
 		botExecInfo: BotExecInfo,
 		partialMode: boolean
@@ -167,14 +170,13 @@ export class Coder extends BaseAssistant {
 				webviewNotifier.updateStatusMessage("Writing a commit message");
 				const commitMessage = await generateCommitMessage(udiff, message);
 				webviewNotifier.updateStatusMessage("Committing changes");
-				commit = await changeSets.commitChangeSet(
+				commit = await this._gitManager.commitChangeSet(
 					changeSet,
-					gitRepo,
 					commitMessage
 				);
 				webviewNotifier.resetStatusMessage();
 			} else {
-				changeSets.applyChangeSet(changeSet, gitRepo.rootPath);
+				changeSets.applyChangeSet(changeSet, this._gitManager.getMeltyRoot());
 				commit = null;
 			}
 			const diffInfo = {

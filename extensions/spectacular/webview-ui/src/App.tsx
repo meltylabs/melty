@@ -14,6 +14,8 @@ import { EventManager } from './eventManager';
 import { RpcClient } from "./rpcClient";
 import "./App.css";
 
+const rpcClient = RpcClient.getInstance();
+
 // Create a context for the theme
 const ThemeContext = createContext<'light' | 'dark'>('light');
 
@@ -23,10 +25,14 @@ function AppContent() {
 	const theme = useContext(ThemeContext);
 
 	const handleKeyDown = useCallback(
-		(event: KeyboardEvent) => {
+		async (event: KeyboardEvent) => {
 			if ((event.metaKey || event.ctrlKey) && event.key === "[") {
 				event.preventDefault();
 				if (location.pathname !== "/") {
+					if (location.pathname.startsWith("/task/")) {
+						const taskId = location.pathname.split("/")[2]; // TODO there's gotta be a less hacky way...
+						await rpcClient.run("deactivateTask", { taskId })
+					}
 					navigate("/");
 				}
 			}
@@ -40,6 +46,10 @@ function AppContent() {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	}, [handleKeyDown]);
+
+	useEffect(() => {
+		return () => EventManager.Instance.cleanup();
+	}, []);
 
 	return (
 		<main className={theme === 'dark' ? 'dark' : ''}>
@@ -57,13 +67,12 @@ function AppContent() {
 
 function App() {
 	const [theme, setTheme] = useState<'light' | 'dark'>('light');
-	const [rpcClient] = useState(() => new RpcClient());
 
-	const initTheme = async () => {
+	const initTheme = useCallback(async () => {
 		const theme = await rpcClient.run("getVSCodeTheme", {});
 		console.log("theme", theme);
 		setTheme(theme);
-	};
+	}, []);
 
 	useEffect(() => {
 		initTheme()
@@ -79,10 +88,10 @@ function App() {
 		EventManager.Instance.addListener('notification', handleNotification);
 
 		return () => {
-			EventManager.Instance.removeListener('notification', handleNotification);
+			EventManager.Instance.removeListener('notification', handleNotification); // probably don't need but can't hurt
 			EventManager.Instance.cleanup();
 		};
-	}, [rpcClient]);
+	}, [initTheme]);
 
 	useEffect(() => {
 		if (theme === 'dark') {

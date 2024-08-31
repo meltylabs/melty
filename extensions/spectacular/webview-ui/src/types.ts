@@ -1,18 +1,19 @@
 // implemented by the Task class. this is the UI-facing one
-export interface Task {
+export type DehydratedTask = {
 	id: string;
 	name: string;
 	conversation: Conversation;
-	gitRepo: GitRepo | null;
+	branch: string;
 	createdAt: Date;
 	updatedAt: Date;
 	taskMode: TaskMode;
-}
-
-export type GitRepo = {
-	repository: any;
-	rootPath: string;
+	meltyMindFiles: string[];
 };
+
+export type ContextPaths = {
+	readonly paths: string[];
+	meltyRoot: string;
+}
 
 export type TaskMode = "vanilla" | "coder";
 
@@ -46,7 +47,7 @@ export type DiffInfo = {
 
 export type BotExecInfo = {
 	readonly rawOutput: string;
-	readonly contextPaths: ReadonlyArray<string>;
+	readonly contextPaths: ContextPaths;
 };
 
 export type SearchReplace = {
@@ -79,14 +80,6 @@ export type ClaudeConversation = {
 	readonly system: string;
 };
 
-export interface Task {
-	id: string;
-	title: string;
-	description: string;
-	status: string;
-	github_link: string;
-}
-
 export type Conversation = {
 	readonly joules: ReadonlyArray<Joule>;
 };
@@ -105,10 +98,11 @@ export type ChangeSet = {
 export type RpcMethod =
 	| "listMeltyFiles"
 	| "listWorkspaceFiles"
-	| "loadTask"
-	| "listTasks"
-	| "createAndSwitchToTask"
-	| "switchTask"
+	| "getActiveTask"
+	| "listTaskPreviews"
+	| "createTask"
+	| "activateTask"
+	| "deactivateTask"
 	| "addMeltyFile"
 	| "dropMeltyFile"
 	| "chatMessage"

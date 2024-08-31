@@ -1,5 +1,5 @@
-import { SearchReplace } from "../types";
-import * as searchReplaces from "../backend/searchReplace";
+import { SearchReplace } from "types";
+import * as searchReplaces from "backend/searchReplace";
 
 export const CODE_FENCE = ["<change_code>", "</change_code>"];
 export const DIFF_OPEN = "<<<<<<< SEARCH";

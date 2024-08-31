@@ -8,12 +8,10 @@ import { ChangeSet } from "../types";
 import * as os from "os";
 import * as diff from "diff";
 
-export function handleGitError(message: string) {
-	if (config.STRICT_GIT) {
-		error(message);
-	} else {
-		console.log(message);
-	}
+export function meltyBranchNameFromTaskName(taskName: string): string {
+	const rnd = Math.random().toString(16).substring(2, 8);
+	const sanitizedTaskName = taskName.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12);
+	return `melty/${rnd}_${sanitizedTaskName}`;
 }
 
 export function error(message: string) {
@@ -24,37 +22,6 @@ export function error(message: string) {
 export function info(message: string) {
 	console.info(message);
 	vscode.window.showInformationMessage(message);
-}
-
-export function repoIsClean(repository: any) {
-	return (
-		!repository.state.workingTreeChanges.length &&
-		!repository.state.indexChanges.length &&
-		!repository.state.mergeChanges.length
-	);
-}
-
-export function repoIsOnMain(repo: any) {
-	return repo.state.HEAD?.name === "main";
-}
-
-export function ensureRepoIsOnCommit(repo: any, commit: string) {
-	if (repo.state.HEAD?.commit !== commit) {
-		handleGitError(
-			`Expected repo to be on commit ${commit} but found ${repo.state.HEAD?.commit}`
-		);
-	}
-}
-
-export function serialize(task: Task) {
-	return {
-		...task,
-		gitRepo: {
-			...task.gitRepo,
-			repository: null,
-		},
-		workspaceFiles: null,
-	};
 }
 
 /**
@@ -95,67 +62,6 @@ export function resolveTildePath(path: string): string {
 		return path.replace("~", os.homedir());
 	}
 	return path;
-}
-
-/**
- * Gets the diff of working changes against HEAD
- */
-export async function getUdiffFromWorking(gitRepo: GitRepo): Promise<string> {
-	const repository = gitRepo.repository;
-	return await repository.diff("HEAD");
-}
-
-/**
- * Gets the diff from a commit to its parent
- */
-export async function getUdiffFromCommit(
-	gitRepo: GitRepo,
-	commit: string | undefined
-): Promise<string | null> {
-	const repository = gitRepo.repository;
-
-	try {
-		// Check if there are any commits in the repository
-		const headCommit = await repository.getCommit('HEAD').catch(() => null);
-
-		if (!headCommit) {
-			// No commits in the repository yet
-			return null;
-		}
-
-		if (!commit) {
-			// If commit is undefined, use the current HEAD
-			commit = headCommit.hash;
-		}
-
-		// Check if the commit has exactly one parent
-		const hasOneParent = await repository.getCommit(commit).then(
-			async (commitObj: any) => {
-				return commitObj.parents?.length === 1;
-			}
-		);
-
-		if (!hasOneParent) {
-			return "";
-		}
-
-		const baseCommit = commit + "^"; // empty tree
-
-		const diff = await repository.diffBetween(baseCommit, commit);
-		const udiffs = await Promise.all(
-			diff.map(async (change: any) => {
-				return await repository.diffBetween(
-					baseCommit,
-					commit,
-					change.uri.fsPath
-				);
-			})
-		);
-		return udiffs.join("\n");
-	} catch (error) {
-		console.error(`Error getting diff for commit ${commit}:`, error);
-		return "";
-	}
 }
 
 /**

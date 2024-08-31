@@ -1,8 +1,8 @@
-import { SearchReplace, ClaudeConversation } from "../types";
-import * as claudeAPI from "../backend/claudeAPI";
-import * as prompts from "../backend/prompts";
-import * as parser from "../diffApplication/parser";
-import * as utils from "../util/utils";
+import { SearchReplace, ClaudeConversation } from "types";
+import * as claudeAPI from "backend/claudeAPI";
+import * as prompts from "backend/prompts";
+import * as parser from "backend/diffApplication/parser";
+import * as utils from "util/utils";
 
 type DiffApplicationStrategy = (
 	originalContents: string,
