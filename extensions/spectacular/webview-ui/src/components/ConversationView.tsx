@@ -266,7 +266,7 @@ export function ConversationView() {
 				)}
 				{task && (
 					<div className="mb-2 flex items-center">
-						<button onClick={handleBack} className="flex items-center"> {/* TODOREFACTOR need to deactivate a task here */}
+						<button onClick={handleBack} className="flex items-center">
 							<ArrowLeft className="h-4 w-4" />
 							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
 								⌘<span className="text-[8px]">[</span>
