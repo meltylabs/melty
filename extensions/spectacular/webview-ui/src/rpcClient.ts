@@ -12,6 +12,7 @@ export class RpcClient {
 	>();
 
 	public static getInstance(): RpcClient {
+
 		if (!RpcClient.instance) {
 			console.log("[RpcClient] Creating new RpcClient instance");
 			RpcClient.instance = new RpcClient();
