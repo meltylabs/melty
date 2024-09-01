@@ -1,3 +1,7 @@
+# Welcome!
+
+Hi there! Welcome to the project. We're glad you're here.
+
 # To initialize
 
 > yarn
