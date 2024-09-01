@@ -53,7 +53,7 @@ export function JouleComponent({
 						if (match && match[1] === "codechange") {
 							return (
 								<details>
-									<summary>Writing code...</summary>
+									<summary className='py-2'>Writing code...</summary>
 									<pre
 										{...(props as React.DetailedHTMLProps<
 											React.HTMLAttributes<HTMLPreElement>,

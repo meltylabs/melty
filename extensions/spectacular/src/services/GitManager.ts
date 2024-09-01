@@ -120,7 +120,7 @@ export class GitManager {
 			const udiffPreview = await this.getUdiffFromWorking();
 			const message = await generateCommitMessage(udiffPreview);
 
-			await this.repo!.sitory.commit(`[via melty] ${message}`);
+			await this.repo!.sitory.commit(`${message}`);
 		}
 
 		await this.repo!.sitory.status();
@@ -153,7 +153,7 @@ export class GitManager {
 				)
 			);
 
-			await this.repo!.sitory.commit(`[by melty] ${commitMessage}`, {
+			await this.repo!.sitory.commit(`${commitMessage}`, {
 				empty: true,
 			});
 
