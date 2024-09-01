@@ -273,6 +273,12 @@ export function ConversationView() {
 							</kbd>
 						</button>
 						<p className="text-sm font-semibold ml-2">{task.name}</p>
+						<button
+							onClick={handleCreatePR}
+							className="ml-auto px-3 py-1 text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+						>
+							Create PR
+						</button>
 					</div>
 				)}
 
