@@ -178,25 +178,13 @@ export class Task {
 
 		if (config.getIsAutocommitMode() && this.taskMode !== "vanilla") {
 			webviewNotifier.updateStatusMessage("Checking repo status");
-			let didCommit = false;
+
 			webviewNotifier.updateStatusMessage("Committing user's changes");
-			didCommit = await this._gitManager.commitLocalChanges() > 0;
+			const commitResult = await this._gitManager.commitLocalChanges();
 			webviewNotifier.resetStatusMessage();
 
-			const latestCommit = await this._gitManager.getLatestCommitHash();
-			if (!latestCommit) {
-				vscode.window.showErrorMessage("No latest commit");
-				return joules.createJouleError("No latest commit");
-			}
-			const diffPreview = latestCommit ? await this._gitManager.getUdiffFromCommit(latestCommit) : '';
-
-			const diffInfo = {
-				filePathsChanged: null,
-				diffPreview: diffPreview || "",
-			};
-
-			newJoule = didCommit
-				? joules.createJouleHumanWithChanges(message, latestCommit!, diffInfo)
+			newJoule = commitResult !== null
+				? joules.createJouleHumanWithChanges(message, commitResult.commit, commitResult.diffInfo)
 				: joules.createJouleHuman(message);
 		} else {
 			newJoule = joules.createJouleHuman(message);

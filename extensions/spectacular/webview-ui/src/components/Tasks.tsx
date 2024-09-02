@@ -298,13 +298,22 @@ export function Tasks({
 					</div>
 				</div>
 			) : gitConfigError !== "" ? (
-				<div className="bg-background text-foreground p-4">
-					<div className="text-center">
-						<h2 className="text-lg font-bold">Let's start Melting.</h2>
-						<p>To get started, create a git repo in the workspace root folder.</p>
-						<Button onClick={handleCreateGitRepo} className="mt-4">Create git repo</Button>
+				gitConfigError?.includes("git init") ?
+					<div className="bg-background text-foreground p-4">
+						<div className="text-center">
+							<h2 className="text-lg font-bold">Let's start Melting.</h2>
+							<p>To get started, create a git repo in the workspace root folder.</p>
+							<Button onClick={handleCreateGitRepo} className="mt-4">Create git repo</Button>
+						</div>
 					</div>
-				</div>
+					:
+					<div className="bg-background text-foreground p-4">
+						<div className="text-center">
+							<h2 className="text-lg font-bold">Git config error</h2>
+							<p>Oops! Try restarting Melty?</p>
+							<p>{gitConfigError}</p>
+						</div>
+					</div>
 			) : (
 				<>
 					<FastFilePicker
@@ -450,25 +459,6 @@ export function Tasks({
 						</div>
 					)}
 
-					<div className="mt-4 flex items-center">
-						{gitConfigError === null ? (
-							<>
-								<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
-								<span>Checking Git configuration...</span>
-							</>
-						) : gitConfigError === "" ? (
-							<>
-								<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
-								<span>Git configured</span>
-							</>
-						) : (
-							<>
-								<XCircle className="text-red-500 mr-2 h-4 w-4" />
-								<span>Git configuration error: {gitConfigError}</span>
-							</>
-						)}
-					</div>
-
 					<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
 						<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
 						Chats
@@ -499,6 +489,24 @@ export function Tasks({
 								</Button>
 							</div>
 						))}
+					</div>
+					<div className="mt-4 flex items-center">
+						{gitConfigError === null ? (
+							<>
+								<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
+								<span>Checking Git configuration...</span>
+							</>
+						) : gitConfigError === "" ? (
+							<>
+								<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
+								<span>Git configured</span>
+							</>
+						) : (
+							<>
+								<XCircle className="text-red-500 mr-2 h-4 w-4" />
+								<span>Git configuration error: {gitConfigError}</span>
+							</>
+						)}
 					</div>
 				</>
 			)}

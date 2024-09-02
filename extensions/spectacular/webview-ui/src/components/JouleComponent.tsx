@@ -28,14 +28,9 @@ export function JouleComponent({
 
 	const handleUndo = async () => {
 		setUndoClicked(true);
-		try {
-			const result = await rpcClient.run("undoLatestCommit", {
-				commitId: joule.commit,
-			});
-			console.log("Result:", result);
-		} catch (error) {
-			console.error("Failed to undo commit:", error);
-		}
+		await rpcClient.run("undoLatestCommit", {
+			commitId: joule.commit,
+		});
 	};
 
 	if (joule.state === "error") {

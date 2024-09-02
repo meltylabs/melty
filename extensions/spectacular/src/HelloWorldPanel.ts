@@ -221,7 +221,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 				case "undoLatestCommit":
 					return await this.rpcUndoLatestCommit(params.commitId);
 				case "getLatestCommit":
-					return await this.rpcGetLatestCommit();
+					return this.rpcGetLatestCommit();
 				case "chatMessage":
 					return await this.rpcStartResponse(
 						params.text, params.taskId
@@ -346,15 +346,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
 	private async rpcAddMeltyFile(filePath: string): Promise<string[]> {
 		await this._fileManager!.addMeltyMindFile(filePath, false);
-		vscode.window.showInformationMessage(`Added ${filePath} to Melty's Mind`);
+		console.log(`Added ${filePath} to Melty's Mind`);
 		return this._fileManager!.getMeltyMindFilesRelative();
 	}
 
 	private async rpcDropMeltyFile(filePath: string): Promise<string[]> {
 		this._fileManager!.dropMeltyMindFile(filePath);
-		vscode.window.showInformationMessage(
-			`Removed ${filePath} from Melty's Mind`
-		);
+		console.log(`Removed ${filePath} from Melty's Mind`);
 		return await this._fileManager!.getMeltyMindFilesRelative();
 	}
 
@@ -385,18 +383,18 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		return result === undefined ? "" : result;
 	}
 
-	private async rpcGetLatestCommit(): Promise<string | undefined> {
-		return await this._gitManager.getLatestCommitHash();
+	private rpcGetLatestCommit(): string | undefined {
+		return this._gitManager.getLatestCommitHash();
 	}
 
 	private async rpcUndoLatestCommit(commitId: string): Promise<void> {
-		const errMessage = this._gitManager.undoLastCommit(commitId);
+		const errMessage = await this._gitManager.undoLastCommit(commitId);
 		if (errMessage === null) {
 			vscode.window.showInformationMessage(
 				"Last commit has been undone by hard reset."
 			);
 		} else {
-			vscode.window.showErrorMessage("Failed to undo last commit: " + errMessage);
+			vscode.window.showErrorMessage(errMessage);
 		}
 	}
 

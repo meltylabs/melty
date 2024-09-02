@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 // TODOREFACTOR get these imports out of here
 import { generateCommitMessage } from '../backend/commitMessageGenerator';
-import { ChangeSet } from 'types';
+import { ChangeSet, DiffInfo } from 'types';
 import * as changesets from 'backend/changeSets';
 import * as files from 'backend/meltyFiles';
 
@@ -82,6 +82,7 @@ export class GitManager {
 
 		const repositories = this.gitApi.repositories;
 		if (!repositories.length) {
+			// this string is parsed on frontend to decide whether to show the create repo button
 			return "No git repositories found. Run `git init` in the root workspace folder.";
 		}
 
@@ -90,6 +91,7 @@ export class GitManager {
 			(r: any) => r.rootUri.fsPath === this.workspaceRoot
 		);
 		if (!repo) {
+			// this string is parsed on frontend to decide whether to show the create repo button
 			return "No git repository found at workspace root. Run `git init` in the root workspace folder.";
 		}
 
@@ -117,9 +119,11 @@ export class GitManager {
 
 	/**
 	 * Commits any local changes (or empty commit if none).
-	 * @returns the number of changes committed
+	 * @returns info if changes were committed, or null otherwise
 	 */
-	public async commitLocalChanges(): Promise<number> {
+	public async commitLocalChanges(): Promise<{
+		commit: string, diffInfo: DiffInfo
+	} | null> {
 		await this.repo!.sitory.status();
 
 		// Get all changes, including untracked files
@@ -142,10 +146,21 @@ export class GitManager {
 			const message = await generateCommitMessage(udiffPreview);
 
 			await this.repo!.sitory.commit(`${message}`);
-		}
+			await this.repo!.sitory.status();
+			const commitHash = this.getLatestCommitHash()!;
 
-		await this.repo!.sitory.status();
-		return indexChanges.length;
+			return {
+				commit: commitHash,
+				diffInfo: {
+					diffPreview: udiffPreview,
+					filePathsChanged: indexChanges.map(
+						(change: any) => change.uri.fsPath
+					),
+				}
+			};
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -242,11 +257,10 @@ export class GitManager {
 	/**
 	 * TODOREFACTOR can we replace with this? this.repo!.sitory.state.HEAD!.commit;
 	 */
-	public async getLatestCommitHash(): Promise<string | undefined> {
+	public getLatestCommitHash(): string | undefined {
 		try {
 			this.checkInit();
-			const latestCommit = await this.repo!.sitory.getCommit('HEAD');
-			return latestCommit.hash;
+			return this.repo!.sitory.state.HEAD?.commit;
 		} catch (error) {
 			console.error('Error getting latest commit hash:', error);
 			return undefined;
@@ -254,28 +268,37 @@ export class GitManager {
 	}
 
 	/**
-	 * Undoes the last commit if it matches the given commit ID and is the latest commit.
-	 * @param commitId The ID of the commit to undo
+	 * Undoes the last commit
+	 * @param commitId The ID of the commit to undo (guardrail)
+	 * @returns Null if successful, otherwise error message
 	 */
 	public async undoLastCommit(commitId: string): Promise<string | null> {
 		try {
 			this.checkInit();
 
-			const isLatest = (await this.getLatestCommitHash()) === commitId;
+			const isLatest = (this.getLatestCommitHash()) === commitId;
+			const workingTreeChanges = this.repo!.sitory.state.workingTreeChanges;
 
 			if (!isLatest) {
-				return "The specified commit is not the latest commit. Cannot undo.";
+				return "Can't undo because this commit is no longer the latest.";
 			}
-			const gitExtension =
-				vscode.extensions.getExtension("vscode.git")?.exports;
-			const git = gitExtension.getAPI(1);
 
-			const repo = git.repositories[0];
+			if (workingTreeChanges.length > 0) {
+				return "Can't undo because there are uncommitted changes.";
+			}
 
-			// Undo the last commit by resetting to the previous commit
-			await repo.repository.reset("HEAD~1", true);
+			// note that this is on some sort of internal repository object, NOT the ApiRepository
+			// that we usually interact with
+			// https://github.com/microsoft/vscode/blob/main/extensions/git/src/repository.ts#L831
+			await this.repo!.sitory.repository.reset("HEAD~1", true);
 			return null;
-		} catch (error) {
+		} catch (error: any) {
+			if (error.stderr?.includes("unknown revision or path")) {
+				// TODO we could run this instead
+				// git update-ref -d HEAD
+				// git rm -rf .
+				return `Could not undo last commit because it has no parent`;
+			}
 			console.error('Error undoing last commit:', error);
 			return `Error undoing last commit: ${error}`;
 		}

@@ -42,7 +42,7 @@ export class GitHubManager {
 	public async createPullRequest() {
 		try {
 			const currentBranch = this._gitManager.getCurrentBranch();
-			const commitSha = await this._gitManager.getLatestCommitHash();
+			const commitSha = this._gitManager.getLatestCommitHash();
 			if (!currentBranch || !commitSha) {
 				vscode.window.showErrorMessage(`Failed to get git info: ${currentBranch}, ${commitSha}`);
 				return;
