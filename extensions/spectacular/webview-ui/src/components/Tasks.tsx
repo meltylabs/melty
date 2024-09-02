@@ -288,9 +288,7 @@ export function Tasks({
 					<div className="text-center">
 						<h2 className="text-lg font-bold">Let's start Melting.</h2>
 						<p>To get started, add a workspace for Melty work in.</p>
-						<Button onClick={handleOpenWorkspaceDialog} className="mt-4">
-							Add Folder to Workspace
-						</Button>
+						<Button onClick={handleOpenWorkspaceDialog} className="mt-4">Open folder</Button>
 					</div>
 				</div>
 			) : (
