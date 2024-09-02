@@ -17,15 +17,11 @@ export class GitManager {
 	private static instance: GitManager | null = null;
 
 	private repo: Repo | undefined = undefined;
-	private workspaceRoot: string;
+	private workspaceRoot: string | undefined;
 	private pollForGitExtensionInterval: NodeJS.Timeout | null = null;
 
 	private constructor() {
-		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-		if (!workspaceRoot) {
-			throw new Error('No workspace folder found'); // TODO happens in this case? this is a bug rn
-		}
-		this.workspaceRoot = workspaceRoot;
+		this.workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 
 		// TODO properly dispose of pollForGitExtensionInterval
 		this.pollForGitExtensionInterval = setInterval(
@@ -54,9 +50,13 @@ export class GitManager {
 	}
 
 	private async checkInit() {
-		if (this.repo === undefined) {
+		if (this.repo === undefined && this.workspaceRoot) {
 			throw new Error('Git repository not initialized');
 		}
+	}
+
+	public isWorkspaceOpen(): boolean {
+		return !!this.workspaceRoot;
 	}
 
 	/**
@@ -64,6 +64,10 @@ export class GitManager {
 	 * Returns errors.
 	 */
 	private async init(): Promise<string | undefined> {
+		if (!this.workspaceRoot) {
+			return "No workspace folder found";
+		}
+
 		const gitExtension = vscode.extensions.getExtension('vscode.git');
 		if (!gitExtension) {
 			return "Git extension not found";
@@ -73,11 +77,6 @@ export class GitManager {
 		const repositories = git.repositories;
 		if (!repositories.length) {
 			return "No git repositories found";
-		}
-
-		// Get the vscode workspace root path
-		if (!this.workspaceRoot) {
-			return "No workspace folder found";
 		}
 
 		// Find the repository that matches the workspace root
@@ -167,9 +166,8 @@ export class GitManager {
 	}
 
 
-
 	public getMeltyRoot(): string {
-		return this.workspaceRoot;
+		return this.workspaceRoot!;
 	}
 
 	public getMeltyRemote(): { fetchUrl: string, pushUrl: string } | null {

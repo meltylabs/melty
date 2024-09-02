@@ -202,6 +202,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	private async handleRPCCall(method: RpcMethod, params: any): Promise<any> {
 		try {
 			switch (method) {
+				case "isWorkspaceOpen":
+					return this._gitManager.isWorkspaceOpen();
+				case "openWorkspaceDialog":
+					return await this.rpcOpenWorkspaceDialog();
 				case "getActiveTask":
 					return await this.rpcGetActiveTask(params.taskId);
 				case "listMeltyFiles":
@@ -271,6 +275,27 @@ export class HelloWorldPanel implements WebviewViewProvider {
 			throw error;
 		}
 	}
+
+	private async rpcOpenWorkspaceDialog(): Promise<boolean> {
+		const result = await vscode.window.showOpenDialog({
+			canSelectFiles: false,
+			canSelectFolders: true,
+			canSelectMany: false,
+			openLabel: "Add to Workspace",
+		});
+
+		if (result && result[0]) {
+			const newFolderUri = result[0];
+			return vscode.workspace.updateWorkspaceFolders(
+				vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0,
+				0, // Number of folders to remove (0 in this case as we're adding)
+				{ uri: newFolderUri }
+			);
+		} else {
+			return false;
+		}
+	}
+
 
 	private async rpcGetAssistantDescription(
 		taskMode: TaskMode

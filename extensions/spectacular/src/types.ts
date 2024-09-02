@@ -114,4 +114,6 @@ export type RpcMethod =
 	| "getLatestCommit"
 	| "getGitConfigErrors"
 	| "getAssistantDescription"
-	| "getVSCodeTheme";
+	| "getVSCodeTheme"
+	| "isWorkspaceOpen"
+	| "openWorkspaceDialog";

@@ -51,6 +51,7 @@ function AppContent() {
 		return () => EventManager.Instance.cleanup();
 	}, []);
 
+
 	return (
 		<main className={theme === 'dark' ? 'dark' : ''}>
 			<div className="bg-background text-foreground p-4">
