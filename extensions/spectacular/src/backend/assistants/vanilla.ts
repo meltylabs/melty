@@ -27,8 +27,8 @@ export class Vanilla extends BaseAssistant {
 
 		let partialResponse = "";
 		const finalResponse = await claudeAPI.streamClaude(
-			claudeConversation,
-			(responseFragment: string) => {
+			claudeConversation, {
+			processPartial: (responseFragment: string) => {
 				partialResponse += responseFragment;
 				const partialConversation = this.claudeOutputToConversation(
 					conversation,
@@ -38,7 +38,7 @@ export class Vanilla extends BaseAssistant {
 				);
 				processPartial(partialConversation);
 			}
-		);
+		});
 		console.log(finalResponse);
 
 		return this.claudeOutputToConversation(

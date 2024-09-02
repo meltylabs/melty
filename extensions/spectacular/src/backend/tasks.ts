@@ -40,14 +40,14 @@ export class Task {
 	taskMode: TaskMode;
 	savedMeltyMindFiles: string[] = [];
 
-	// TODO: keep track of responses as "active jobs"
-	inFlightRequest: any; // CancellablePromise | null;
+	inFlightOperationCancellationTokenSource: vscode.CancellationTokenSource | null = null;
 
 	/**
 	 * Private constructor for deserializing or creating new tasks
 	 */
 	private constructor(
 		public dehydratedTask: DehydratedTask,
+		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance(),
 		private readonly _fileManager: FileManager = FileManager.getInstance(),
 		private readonly _gitManager: GitManager = GitManager.getInstance()
 	) {
@@ -91,8 +91,9 @@ export class Task {
 	 * @param mode - the mode of the assistant to use
 	 * @param processPartial - a function to process the partial joule
 	 */
-	public async respondBot(
-		processPartial: (partialConversation: Conversation) => void
+	private async respondBot(
+		processPartial: (partialConversation: Conversation) => void,
+		cancellationToken?: vscode.CancellationToken,
 	): Promise<void> {
 		try {
 			webviewNotifier.updateStatusMessage("Checking repo status");
@@ -127,7 +128,8 @@ export class Task {
 					paths: meltyMindFiles,
 					meltyRoot: this._gitManager.getMeltyRoot()
 				},
-				processPartial
+				processPartial,
+				cancellationToken
 			);
 
 			webviewNotifier.updateStatusMessage(
@@ -166,7 +168,7 @@ export class Task {
 	/**
 	 * Adds a human message (and changes) to the conversation.
 	 */
-	public async respondHuman(message: string): Promise<Joule> {
+	private async respondHuman(message: string): Promise<Joule> {
 		this.conversation = conversations.forceReadyForResponseFrom(
 			this.conversation,
 			"human"
@@ -204,6 +206,62 @@ export class Task {
 
 		webviewNotifier.resetStatusMessage();
 		return conversations.lastJoule(this.conversation)!;
+	}
+
+	/**
+	 * @returns whether launched successfully or not
+	 */
+	public startResponse(text: string): boolean {
+		this._webviewNotifier.updateStatusMessage("Starting up");
+
+		if (this.inFlightOperationCancellationTokenSource) {
+			console.error("Response is already running");
+			return false;
+		}
+		this.inFlightOperationCancellationTokenSource = new vscode.CancellationTokenSource();
+		const cancellationToken = this.inFlightOperationCancellationTokenSource.token;
+
+		(async () => {
+			// human response
+			await this.respondHuman(text);
+			webviewNotifier.sendNotification("updateTask", {
+				task: this.dehydrateForWire(),
+			});
+
+			// bot response
+			const processPartial = (partialConversation: Conversation) => {
+				const dehydratedTask = this.dehydrateForWire();
+				dehydratedTask.conversation = partialConversation;
+				webviewNotifier.sendNotification("updateTask", {
+					task: dehydratedTask,
+				});
+			};
+			await this.respondBot(
+				processPartial,
+				cancellationToken
+			);
+
+			webviewNotifier.sendNotification("updateTask", {
+				task: this.dehydrateForWire(),
+			});
+			webviewNotifier.resetStatusMessage();
+
+			// end running operation
+			this.inFlightOperationCancellationTokenSource = null;
+		})();
+
+		return true;
+	}
+
+	public stopResponse(): void {
+		if (this.inFlightOperationCancellationTokenSource) {
+			this.inFlightOperationCancellationTokenSource.cancel();
+			this.inFlightOperationCancellationTokenSource = null;
+
+			// TODO we need to wait until the operation is ACTUALLY cancelled before returning!
+		} else {
+			console.error("No response operation to stop");
+		}
 	}
 
 	/**

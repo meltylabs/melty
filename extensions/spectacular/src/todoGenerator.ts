@@ -1,6 +1,6 @@
-import { streamClaude, Models } from "./backend/claudeAPI";
-import { ClaudeConversation, GitRepo } from "./types";
-import { GitManager } from "./services/GitManager";
+import { streamClaude, Models } from "backend/claudeAPI";
+import { ClaudeConversation } from "types";
+import { GitManager } from "services/GitManager";
 
 export async function generateTodoFromPRName(prName: string): Promise<string> {
 	const prompt = `Convert the following pull request name into a concise, actionable todo item:
@@ -28,8 +28,7 @@ Todo:`;
 	try {
 		const todo = await streamClaude(
 			claudeConversation,
-			() => { }, // We don't need to process partial responses for this use case
-			Models.Claude3Haiku // Using a smaller model for faster response
+			{ model: Models.Claude3Haiku }
 		);
 		return todo.trim();
 	} catch (error) {

@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import {
 	Conversation,
 	ContextPaths,
@@ -21,6 +22,7 @@ import { generateCommitMessage } from "../commitMessageGenerator";
 import { WebviewNotifier } from "services/WebviewNotifier";
 import { FileManager } from 'services/FileManager';
 import { GitManager } from 'services/GitManager';
+import { ErrorOperationCancelled } from 'util/utils';
 
 const webviewNotifier = WebviewNotifier.getInstance();
 
@@ -40,6 +42,7 @@ export class Coder extends BaseAssistant {
 		conversation: Conversation,
 		contextPaths: ContextPaths,
 		processPartial: (partialConversation: Conversation) => void,
+		cancellationToken?: vscode.CancellationToken
 	) {
 		webviewNotifier.updateStatusMessage("Preparing context");
 		if (
@@ -93,16 +96,22 @@ export class Coder extends BaseAssistant {
 		let partialMessage = "";
 		const finalResponse = await claudeAPI.streamClaude(
 			claudeConversation,
-			async (responseFragment: string) => {
-				partialMessage += responseFragment;
-				const newConversation = await this.claudeOutputToConversation(
-					conversation,
-					partialMessage,
-					true,
-					contextPaths,
-					true // ignore changes
-				);
-				processPartial(newConversation);
+			{
+				cancellationToken,
+				processPartial: async (responseFragment: string) => {
+					if (cancellationToken?.isCancellationRequested) {
+						throw new ErrorOperationCancelled();
+					}
+					partialMessage += responseFragment;
+					const newConversation = await this.claudeOutputToConversation(
+						conversation,
+						partialMessage,
+						true,
+						contextPaths,
+						true // ignore changes
+					);
+					processPartial(newConversation);
+				}
 			}
 		);
 		console.log(finalResponse);
@@ -113,7 +122,8 @@ export class Coder extends BaseAssistant {
 			finalResponse,
 			false,
 			contextPaths,
-			false // apply changes
+			false, // apply changes
+			cancellationToken
 		);
 	}
 
@@ -122,7 +132,8 @@ export class Coder extends BaseAssistant {
 		response: string,
 		partialMode: boolean,
 		contextPaths: ContextPaths,
-		ignoreChanges: boolean
+		ignoreChanges: boolean,
+		cancellationToken?: vscode.CancellationToken
 	): Promise<Conversation> {
 		const { messageChunksList, searchReplaceList } = parser.splitResponse(
 			response,
@@ -134,6 +145,10 @@ export class Coder extends BaseAssistant {
 				searchReplaceList,
 				contextPaths.meltyRoot
 			);
+
+		if (cancellationToken?.isCancellationRequested) {
+			throw new ErrorOperationCancelled();
+		}
 
 		const nextJoule = await this.applyChangesToGetNextJoule(
 			changeSet,

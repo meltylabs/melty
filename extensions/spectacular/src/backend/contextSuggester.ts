@@ -27,9 +27,7 @@ ${message}
 	};
 
 	const finalResponse = await claudeAPI.streamClaude(
-		claudeConversation,
-		() => { },
-		claudeAPI.Models.Claude3Haiku
+		claudeConversation
 	);
 
 	const contextSuggestions =

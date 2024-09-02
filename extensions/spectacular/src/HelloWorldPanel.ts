@@ -221,7 +221,9 @@ export class HelloWorldPanel implements WebviewViewProvider {
 				case "getLatestCommit":
 					return await this.rpcGetLatestCommit();
 				case "chatMessage":
-					return await this.rpcChatMessage(params.text, params.taskId);
+					return await this.rpcStartResponse(
+						params.text, params.taskId
+					);
 				case "createTask":
 					return await this.rpcCreateTask(
 						params.name,
@@ -407,33 +409,19 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'light';
 	}
 
-	private async rpcChatMessage(text: string, taskId: string): Promise<void> {
-		const webviewNotifier = WebviewNotifier.getInstance();
-		webviewNotifier.updateStatusMessage("Starting up");
+	private async rpcStartResponse(text: string, taskId: string): Promise<boolean> {
 		const task = this._taskManager.getActiveTask(taskId)!;
 		if (!task) {
 			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
 		}
+		return task.startResponse(text);
+	}
 
-		// human response
-		await task.respondHuman(text);
-		webviewNotifier.sendNotification("updateTask", {
-			task: task.dehydrateForWire(),
-		});
-
-		// bot response
-		const processPartial = (partialConversation: Conversation) => {
-			const dehydratedTask = task.dehydrateForWire();
-			dehydratedTask.conversation = partialConversation;
-			webviewNotifier.sendNotification("updateTask", {
-				task: dehydratedTask,
-			});
-		};
-		await task.respondBot(processPartial);
-
-		webviewNotifier.sendNotification("updateTask", {
-			task: task.dehydrateForWire(),
-		});
-		webviewNotifier.resetStatusMessage();
+	private async rpcStopResponse(taskId: string): Promise<void> {
+		const task = this._taskManager.getActiveTask(taskId)!;
+		if (!task) {
+			throw new Error(`Tried to stop operation with an inactive task ${taskId}`);
+		}
+		task.stopResponse();
 	}
 }

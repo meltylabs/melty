@@ -1,44 +1,20 @@
 import { Uri, Webview } from "vscode";
-import * as vscode from "vscode";
-import * as config from "./config";
-import * as path from "path";
-import { GitRepo } from "../types";
-import { Task } from "../backend/tasks";
 import { ChangeSet } from "../types";
 import * as os from "os";
 import * as diff from "diff";
+
+export class ErrorOperationCancelled extends Error {
+	constructor() {
+		super("Operation cancelled");
+		this.name = "ErrorOperationCancelled";
+	}
+}
 
 export function meltyBranchNameFromTaskName(taskName: string): string {
 	const rnd = Math.random().toString(16).substring(2, 8);
 	const sanitizedTaskName = taskName.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12);
 	return `melty/${rnd}_${sanitizedTaskName}`;
 }
-
-export function error(message: string) {
-	vscode.window.showErrorMessage(message);
-	throw new Error(message);
-}
-
-export function info(message: string) {
-	console.info(message);
-	vscode.window.showInformationMessage(message);
-}
-
-/**
- * Get all the file paths in the workspace. Get their paths relative to the root of a git repo
- * @param gitRepo
- * @returns
- */
-export async function getWorkspaceFilePaths(gitRepo: GitRepo) {
-	const workspaceFileUris = await vscode.workspace.findFiles(
-		"**/*",
-		config.getExcludesGlob()
-	);
-	return workspaceFileUris.map((file) => {
-		return path.relative(gitRepo.rootPath, file.fsPath);
-	});
-}
-
 export function getUri(
 	webview: Webview,
 	extensionUri: Uri,

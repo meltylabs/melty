@@ -1,7 +1,9 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
+import { CancellationToken } from "vscode";
 
 import { ClaudeConversation } from "../types";
+import { ErrorOperationCancelled } from 'util/utils';
 
 export enum Models {
 	Claude35Sonnet = "claude-3-5-sonnet-20240620",
@@ -10,9 +12,13 @@ export enum Models {
 
 export async function streamClaude(
 	claudeConversation: ClaudeConversation,
-	processPartial: (text: string) => void,
-	model: Models = Models.Claude35Sonnet
-): Promise<string> {
+	opts: {
+		model?: Models,
+		cancellationToken?: CancellationToken,
+		processPartial?: (text: string) => void,
+	} = {}): Promise<string> {
+	const { model = Models.Claude35Sonnet, cancellationToken, processPartial } = opts;
+
 	if (claudeConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
 	}
@@ -32,7 +38,7 @@ export async function streamClaude(
 
 	try {
 		console.log("waiting for claude...");
-		const stream = await anthropic.messages
+		const stream = anthropic.messages
 			.stream(
 				{
 					model: model,
@@ -47,8 +53,19 @@ export async function streamClaude(
 					},
 				}
 			)
-			.on("text", processPartial);
+			.on("text", (text) => {
+				if (cancellationToken?.isCancellationRequested) {
+					stream.controller.abort();
+					return;
+				}
+				if (processPartial) {
+					processPartial(text);
+				}
+			});
 
+		if (cancellationToken?.isCancellationRequested) {
+			throw new ErrorOperationCancelled();
+		}
 		const final = await stream.finalMessage();
 		const textContent = final.content.find((block) => "text" in block);
 		if (textContent && "text" in textContent) {

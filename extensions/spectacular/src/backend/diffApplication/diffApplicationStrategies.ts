@@ -94,9 +94,7 @@ ${parser.DIFF_CLOSE}`;
 	};
 
 	const response = await claudeAPI.streamClaude(
-		claudeConversation,
-		() => { },
-		claudeAPI.Models.Claude35Sonnet
+		claudeConversation
 	);
 
 	// remove the closing

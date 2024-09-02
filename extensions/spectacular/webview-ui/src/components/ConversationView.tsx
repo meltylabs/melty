@@ -17,6 +17,8 @@ import { EventManager } from 'eventManager';
 import { DehydratedTask } from "types";
 import { useNavigate } from "react-router-dom";
 
+import * as vscode from "vscode";
+
 const MemoizedJouleComponent = memo(JouleComponent);
 const rpcClient = RpcClient.getInstance();
 
