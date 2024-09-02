@@ -153,13 +153,13 @@ export function Tasks({
 	 * Unwrapped stuff
 	 * ===================================================== */
 	async function createNewTask(taskName: string, taskMode: TaskMode) {
-		console.log(`[Tasks] creating new task ${taskName}`);
+		console.log(`[Tasks.tsx] creating new task ${taskName}`);
 		const newTaskId = (await rpcClient.run("createTask", {
 			name: taskName.trim(),
 			taskMode: taskMode,
 			files: meltyMindFilePaths,
 		})) as string;
-		console.log(`[Tasks] created new task ${newTaskId}`);
+		console.log(`[Tasks.tsx] created new task ${newTaskId}`);
 		return newTaskId;
 	};
 
@@ -249,7 +249,13 @@ export function Tasks({
 		console.log("did open workspace dialog?", didOpen);
 		setIsWorkspaceOpen(didOpen);
 		await fetchTasks();
-	}, []);
+	}, [fetchTasks]);
+
+	const handleCreateGitRepo = useCallback(async () => {
+		const didCreate = await rpcClient.run("createGitRepository", {});
+		console.log("did create git repo?", didCreate);
+		await checkGitConfig();
+	}, [checkGitConfig]);
 
 	// initialization
 	useEffect(() => {
@@ -289,6 +295,14 @@ export function Tasks({
 						<h2 className="text-lg font-bold">Let's start Melting.</h2>
 						<p>To get started, add a workspace for Melty work in.</p>
 						<Button onClick={handleOpenWorkspaceDialog} className="mt-4">Open folder</Button>
+					</div>
+				</div>
+			) : gitConfigError !== "" ? (
+				<div className="bg-background text-foreground p-4">
+					<div className="text-center">
+						<h2 className="text-lg font-bold">Let's start Melting.</h2>
+						<p>To get started, create a git repo in the workspace root folder.</p>
+						<Button onClick={handleCreateGitRepo} className="mt-4">Create git repo</Button>
 					</div>
 				</div>
 			) : (
@@ -436,6 +450,25 @@ export function Tasks({
 						</div>
 					)}
 
+					<div className="mt-4 flex items-center">
+						{gitConfigError === null ? (
+							<>
+								<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
+								<span>Checking Git configuration...</span>
+							</>
+						) : gitConfigError === "" ? (
+							<>
+								<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
+								<span>Git configured</span>
+							</>
+						) : (
+							<>
+								<XCircle className="text-red-500 mr-2 h-4 w-4" />
+								<span>Git configuration error: {gitConfigError}</span>
+							</>
+						)}
+					</div>
+
 					<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
 						<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
 						Chats
@@ -466,25 +499,6 @@ export function Tasks({
 								</Button>
 							</div>
 						))}
-					</div>
-
-					<div className="mt-4 flex items-center">
-						{gitConfigError === null ? (
-							<>
-								<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
-								<span>Checking Git configuration...</span>
-							</>
-						) : gitConfigError === "" ? (
-							<>
-								<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
-								<span>Git configured</span>
-							</>
-						) : (
-							<>
-								<XCircle className="text-red-500 mr-2 h-4 w-4" />
-								<span>Git configuration error: {gitConfigError}</span>
-							</>
-						)}
 					</div>
 				</>
 			)}

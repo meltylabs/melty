@@ -16,6 +16,7 @@ type Repo = {
 export class GitManager {
 	private static instance: GitManager | null = null;
 
+	private gitApi: { repositories: any, init: any } | undefined = undefined;
 	private repo: Repo | undefined = undefined;
 	private workspaceRoot: string | undefined;
 	private pollForGitExtensionInterval: NodeJS.Timeout | null = null;
@@ -63,20 +64,25 @@ export class GitManager {
 	 * Initializes this.repo to be the repo at workspace root.
 	 * Returns errors.
 	 */
-	private async init(): Promise<string | undefined> {
+	public async init(): Promise<string | undefined> {
 		if (!this.workspaceRoot) {
 			return "No workspace folder found";
 		}
 
-		const gitExtension = vscode.extensions.getExtension('vscode.git');
-		if (!gitExtension) {
-			return "Git extension not found";
+		if (!this.gitApi) {
+			const gitExtension = vscode.extensions.getExtension('vscode.git');
+			if (!gitExtension) {
+				return "Git extension not found. Try reloading the window.";
+			}
+			this.gitApi = gitExtension.exports.getAPI(1);
+			if (!this.gitApi) {
+				return "Git API not found. Try reloading the window.";
+			}
 		}
 
-		const git = gitExtension.exports.getAPI(1);
-		const repositories = git.repositories;
+		const repositories = this.gitApi.repositories;
 		if (!repositories.length) {
-			return "No git repositories found";
+			return "No git repositories found. Run `git init` in the root workspace folder.";
 		}
 
 		// Find the repository that matches the workspace root
@@ -84,13 +90,29 @@ export class GitManager {
 			(r: any) => r.rootUri.fsPath === this.workspaceRoot
 		);
 		if (!repo) {
-			return "No git repository found at workspace root";
+			return "No git repository found at workspace root. Run `git init` in the root workspace folder.";
 		}
 
 		this.repo = { sitory: repo };
 		await this.repo.sitory.status();
 
 		return undefined;
+	}
+
+	public async createRepository(): Promise<boolean> {
+		try {
+			if (!this.workspaceRoot) {
+				throw new Error('No workspace folder');
+			}
+			const _repo = await this.gitApi?.init(
+				vscode.Uri.parse(this.workspaceRoot)
+			);
+			// for now, we throw out _repo and let a call to init() find it again
+			return true;
+		} catch (error) {
+			console.error('Error creating git repository:', error);
+			return false;
+		}
 	}
 
 	/**

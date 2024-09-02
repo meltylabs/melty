@@ -206,6 +206,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return this._gitManager.isWorkspaceOpen();
 				case "openWorkspaceDialog":
 					return await this.rpcOpenWorkspaceDialog();
+				case "createGitRepository":
+					return await this.rpcCreateGitRepository();
 				case "getActiveTask":
 					return await this.rpcGetActiveTask(params.taskId);
 				case "listMeltyFiles":
@@ -298,6 +300,17 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		}
 	}
 
+	private async rpcCreateGitRepository(): Promise<boolean> {
+		const success = await this._gitManager.createRepository();
+		if (success) {
+			vscode.window.showInformationMessage("Git repository created");
+			return true;
+		} else {
+			vscode.window.showErrorMessage(`Failed to create git repository`);
+			return false;
+		}
+	}
+
 
 	private async rpcGetAssistantDescription(
 		taskMode: TaskMode
@@ -368,8 +381,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	}
 
 	private async rpcGetGitConfigErrors(): Promise<string> {
-		const result = this._gitManager.init();
-		return typeof result === "string" ? result : "";
+		const result: string | undefined = await this._gitManager.init();
+		return result === undefined ? "" : result;
 	}
 
 	private async rpcGetLatestCommit(): Promise<string | undefined> {

@@ -184,6 +184,10 @@ export class Task {
 			webviewNotifier.resetStatusMessage();
 
 			const latestCommit = await this._gitManager.getLatestCommitHash();
+			if (!latestCommit) {
+				vscode.window.showErrorMessage("No latest commit");
+				return joules.createJouleError("No latest commit");
+			}
 			const diffPreview = latestCommit ? await this._gitManager.getUdiffFromCommit(latestCommit) : '';
 
 			const diffInfo = {

@@ -116,4 +116,5 @@ export type RpcMethod =
 	| "getAssistantDescription"
 	| "getVSCodeTheme"
 	| "isWorkspaceOpen"
-	| "openWorkspaceDialog";
+	| "openWorkspaceDialog"
+	| "createGitRepository";
