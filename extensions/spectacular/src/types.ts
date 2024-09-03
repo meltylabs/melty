@@ -116,4 +116,7 @@ export type RpcMethod =
 	| "getAssistantDescription"
 	| "getVSCodeTheme"
 	| "openWorkspaceDialog"
-	| "createGitRepository";
+	| "createGitRepository"
+	| "createAndOpenWorkspace"
+	| "checkOnboardingComplete"
+	| "setOnboardingComplete";

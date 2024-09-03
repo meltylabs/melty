@@ -4,11 +4,12 @@ import {
 	Route,
 	Routes,
 	Navigate,
-	useNavigate,
 	useLocation,
 } from "react-router-dom";
 import { Tasks } from "./components/Tasks";
 import { ConversationView } from "./components/ConversationView";
+import { Help } from "./components/Help";
+import { NavBar } from "./components/NavBar";
 import { Onboarding } from "./components/Onboarding";
 import { EventManager } from './eventManager';
 import { RpcClient } from "RpcClient";
@@ -20,45 +21,55 @@ const rpcClient = RpcClient.getInstance();
 const ThemeContext = createContext<'light' | 'dark'>('light');
 
 function AppContent() {
-	const navigate = useNavigate();
-	const location = useLocation();
 	const theme = useContext(ThemeContext);
-
-	const handleKeyDown = useCallback(
-		async (event: KeyboardEvent) => {
-			if ((event.metaKey || event.ctrlKey) && event.key === "[") {
-				event.preventDefault();
-				if (location.pathname !== "/") {
-					if (location.pathname.startsWith("/task/")) {
-						const taskId = location.pathname.split("/")[2]; // TODO there's gotta be a less hacky way...
-						await rpcClient.run("deactivateTask", { taskId })
-					}
-					navigate("/");
-				}
-			}
-		},
-		[navigate, location]
-	);
+	const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+	const location = useLocation();
 
 	useEffect(() => {
-		window.addEventListener("keydown", handleKeyDown);
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
+		const checkOnboarding = async () => {
+			const onboardingComplete = await rpcClient.run("checkOnboardingComplete", {});
+			console.log("onboardingComplete", onboardingComplete);
+			setShowOnboarding(!onboardingComplete);
 		};
-	}, [handleKeyDown]);
 
-	useEffect(() => {
+		checkOnboarding();
 		return () => EventManager.Instance.cleanup();
 	}, []);
 
+	useEffect(() => {
+		if (showOnboarding === false && location.pathname === '/onboarding') {
+			// Redirect to home page after onboarding is complete
+			window.history.pushState(null, '', '/');
+		}
+	}, [showOnboarding, location.pathname]);
+
+	if (showOnboarding === null) {
+		return <div>Loading...</div>;
+	}
+
+	if (showOnboarding && location.pathname !== '/onboarding') {
+		return <Navigate to="/onboarding" replace />;
+	}
 
 	return (
 		<main className={theme === 'dark' ? 'dark' : ''}>
+			{!showOnboarding && <NavBar />}
 			<div className="bg-background text-foreground p-4">
 				<Routes>
+					<Route
+						path="/onboarding"
+						element={
+							<Onboarding
+								onComplete={() => {
+									setShowOnboarding(false);
+									rpcClient.run("setOnboardingComplete", {});
+								}}
+							/>
+						}
+					/>
 					<Route path="/task/:taskId" element={<ConversationView />} />
-					<Route path="/onboarding" element={<Onboarding />} />
 					<Route path="/" element={<Tasks />} />
+					<Route path="/help" element={<Help />} />
 					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>
 			</div>
@@ -89,7 +100,7 @@ function App() {
 		EventManager.Instance.addListener('notification', handleNotification);
 
 		return () => {
-			EventManager.Instance.removeListener('notification', handleNotification); // probably don't need but can't hurt
+			EventManager.Instance.removeListener('notification', handleNotification);
 			EventManager.Instance.cleanup();
 		};
 	}, [initTheme]);

@@ -75,6 +75,14 @@ export class MeltyExtension {
 			clearInterval(this.branchCheckInterval);
 		}
 	}
+
+	public async checkOnboardingComplete(): Promise<boolean> {
+		return this.context.globalState.get('onboardingComplete', false);
+	}
+
+	public async setOnboardingComplete(): Promise<void> {
+		await this.context.globalState.update('onboardingComplete', true);
+	}
 }
 
 let outputChannel: vscode.OutputChannel;

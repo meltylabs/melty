@@ -15,6 +15,8 @@ import {
 	LightbulbIcon,
 } from "lucide-react";
 import { MouseEvent, KeyboardEvent } from "react";
+import Ascii from "./Ascii";
+import OnboardingSection from './OnboardingSection';
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
@@ -37,13 +39,19 @@ function formatDate(date: Date): string {
 	const now = new Date();
 	const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-	if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-	if (diffInSeconds < 3600)
-		return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-	if (diffInSeconds < 86400)
-		return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-	if (diffInSeconds < 604800)
-		return `${Math.floor(diffInSeconds / 86400)} days ago`;
+	if (diffInSeconds < 60) return `${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''} ago`;
+	if (diffInSeconds < 3600) {
+		const minutes = Math.floor(diffInSeconds / 60);
+		return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+	}
+	if (diffInSeconds < 86400) {
+		const hours = Math.floor(diffInSeconds / 3600);
+		return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+	}
+	if (diffInSeconds < 604800) {
+		const days = Math.floor(diffInSeconds / 86400);
+		return `${days} day${days !== 1 ? 's' : ''} ago`;
+	}
 
 	return date.toLocaleDateString();
 }
@@ -241,11 +249,27 @@ export function Tasks({
 		await fetchTasks();
 	}, [fetchTasks, checkGitConfig]);
 
+
 	const handleCreateGitRepo = useCallback(async () => {
 		const didCreate = await rpcClient.run("createGitRepository", {});
 		console.log("did create git repo?", didCreate);
 		await checkGitConfig();
 	}, [checkGitConfig]);
+
+	const createAndOpenWorkspace = useCallback(async () => {
+		try {
+			const result = await rpcClient.run("createAndOpenWorkspace", {});
+			if (result) {
+				// We don't need to call checkGitConfig and fetchTasks here
+				// because VS Code will reload the window when opening a new folder
+			} else {
+				console.log("User cancelled workspace creation or it failed");
+				// We don't need to show an error message here as the user might have just cancelled
+			}
+		} catch (error) {
+			console.error("Error creating and opening workspace:", error);
+		}
+	}, []);
 
 	// initialization
 	useEffect(() => {
@@ -276,25 +300,32 @@ export function Tasks({
 	}, [fetchTasks, fetchFilePaths, checkGitConfig, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
 
 
+
 	return (
 		<div>
-			<h1 className="text-3xl font-extrabold tracking-tighter mb-6 mt-4 text-center">
-				melty
-			</h1>
+
 			{gitConfigError !== "" ? (
 				gitConfigError?.includes("Open a workspace folder") ?
 					<div className="bg-background text-foreground p-4">
 						<div className="text-center">
-							<h2 className="text-lg font-bold">Let's start Melting.</h2>
-							<p>To get started, add a workspace for Melty work in.</p>
-							<Button onClick={handleOpenWorkspaceDialog} className="mt-4">Open folder</Button>
+
+							<Ascii />
+
+							<h2 className="mt-12 text-lg font-bold">Where should I work?</h2>
+							<p>Choose a folder for Melty to work in.</p>
+
+							<div className="space-x-2 mt-4">
+								<Button onClick={handleOpenWorkspaceDialog} className="mt-4">Choose folder</Button>
+								<Button onClick={createAndOpenWorkspace} variant="secondary" className="mt-4">Create one for me in <span className="font-mono pl-1">~/melty-workspace</span></Button>
+							</div>
+
 						</div>
 					</div>
 					: gitConfigError?.includes("git init") ?
 						<div className="bg-background text-foreground p-4">
 							<div className="text-center">
 								<h2 className="text-lg font-bold">Let's start Melting.</h2>
-								<p>To get started, create a git repo in the workspace root folder.</p>
+								<p>Melty needs a git repo in the workspace root folder.</p>
 								<Button onClick={handleCreateGitRepo} className="mt-4">Create git repo</Button>
 							</div>
 						</div>
@@ -429,6 +460,10 @@ export function Tasks({
 							))}
 						</div>
 					</div>
+
+					{tasks.length === 0 &&
+						<OnboardingSection setMessageText={setMessageText} />
+					}
 
 					{suggestions.length > 0 && (
 						<div className="mb-4 mt-4 rounded-md fade-in">

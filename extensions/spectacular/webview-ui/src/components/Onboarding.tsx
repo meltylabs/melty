@@ -1,75 +1,69 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Checkbox } from "./ui/checkbox";
-const checklistItems = [
-	{
-		id: "welcome",
-		title: "Get an Anthropic API key",
-		link: {
-			text: "Get Anthropic key",
-			href: "https://console.anthropic.com/settings/keys",
-		},
-	},
-	{
-		id: "welcome",
-		title: "Set your Anthropic API key",
-		description:
-			"Open user settings (CMD+SHIFT+P → Open User Settings), search for Melty, and set the Anthropic key.",
-	},
-	{
-		id: "repo",
-		title: "Open a directory that has a git repo in its root",
-		description: "Melty uses the repo to commit changes as it goes along.",
-	},
-	{
-		id: "chat",
-		title: "Plug into a monitor and make it big!",
-		description: "Melty is designed for big screens.",
-	},
-];
-export function Onboarding() {
-	return (
-		<Card className="w-[400px]">
-			<CardHeader>
-				<CardTitle>🫠 Welcome to Melty!</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<ul className="space-y-8">
-					{checklistItems.map((item) => (
-						<li key={item.id} className="">
-							<div className="flex items-center space-x-2">
-								<Checkbox id={item.id} />
-								<label
-									htmlFor={item.id}
-									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								>
-									{item.title}
-								</label>
-							</div>
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { RpcClient } from '../RpcClient';
+import { Button } from './ui/button';
+import Ascii from './Ascii';
 
-							<p className="text-sm mt-2 text-muted-foreground">
-								{item.description}
-							</p>
-							{item.link && (
-								<a
-									className="text-sm underline text-muted-foreground"
-									href={item.link.href}
-									target="_blank"
-								>
-									{item.link.text} &rarr;
-								</a>
-							)}
-						</li>
-					))}
-				</ul>
-				<div className="mt-6">
-					<Link to="/" className="w-full">
-						<Button className="w-full">Start coding with Melty</Button>
-					</Link>
-				</div>
-			</CardContent>
-		</Card>
+export function Onboarding({ onComplete }: { onComplete: () => void }) {
+
+	const [keyPressed, setKeyPressed] = useState(false);
+	const [cmdPressed, setCmdPressed] = useState(false);
+	const [mPressed, setMPressed] = useState(false);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.metaKey || event.ctrlKey) {
+				setCmdPressed(true);
+			}
+			if (event.key === "m") {
+				setMPressed(true);
+			}
+			if ((event.metaKey || event.ctrlKey) && event.key === "m") {
+				setKeyPressed(true);
+				onComplete();
+			}
+			if (keyPressed && event.key === "Enter") {
+				onComplete();
+			}
+		};
+
+		const handleKeyUp = (event: KeyboardEvent) => {
+			if (!(event.metaKey || event.ctrlKey)) {
+				setCmdPressed(false);
+			}
+			if (event.key === "m") {
+				setMPressed(false);
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		window.addEventListener("keyup", handleKeyUp);
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+			window.removeEventListener("keyup", handleKeyUp);
+		};
+	}, [])
+
+	return (
+		<div className="text-center">
+			<Ascii />
+			<h1 className="text-2xl font-bold mb-4 mt-12">Hi, human.</h1>
+			<p>Melty is a new kind of IDE that writes code for you.</p>
+			<p>First things first — to open and close me press ⌘ + m. Try it now.</p>
+
+			<div className="mt-6">
+				<kbd className={`ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border ${!keyPressed && cmdPressed ? 'bg-green-50' : 'bg-muted'} px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100`}>
+					<span className="text-xs">⌘</span>
+				</kbd>{" "}
+				<kbd className={`ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border ${!keyPressed && mPressed ? 'bg-green-50' : 'bg-muted'} px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100`}>
+					<span className="text-xs">m</span>
+				</kbd>
+			</div>
+			<div className="mt-6">
+				{keyPressed && <Link to="/" className="hover:text-white"><Button>Wow, you're pretty smart for a human.
+					Next &rarr;</Button></Link>}
+			</div>
+		</div>
 	);
-}
+};

@@ -20,6 +20,7 @@ import { GitManager } from "./services/GitManager";
 import { GitHubManager } from './services/GitHubManager';
 import { TaskManager } from './services/TaskManager';
 import posthog from "posthog-js";
+import { create } from 'domain';
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -212,6 +213,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return await this.rpcOpenWorkspaceDialog();
 				case "createGitRepository":
 					return await this.rpcCreateGitRepository();
+				case "createAndOpenWorkspace":
+					return await this.rpcCreateAndOpenWorkspace();
 				case "getActiveTask":
 					return await this.rpcGetActiveTask(params.taskId);
 				case "listMeltyFiles":
@@ -252,6 +255,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return await this.rpcGetAssistantDescription(params.assistantType);
 				case "getVSCodeTheme":
 					return this.rpcGetVSCodeTheme();
+				case "checkOnboardingComplete":
+					return this.rpcCheckOnboardingComplete();
+				case "setOnboardingComplete":
+					return this.rpcSetOnboardingComplete();
 				default:
 					throw new Error(`Unknown RPC method: ${method}`);
 			}
@@ -282,6 +289,35 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
 			throw error;
 		}
+	}
+
+	private async rpcCreateAndOpenWorkspace(): Promise<boolean> {
+		try {
+			const homedir = require('os').homedir();
+			const workspacePath = vscode.Uri.file(homedir + '/melty-workspace');
+
+			// Create the directory
+			await vscode.workspace.fs.createDirectory(workspacePath);
+
+			// Open the new workspace in the current window without prompting
+			const success = await vscode.commands.executeCommand('vscode.openFolder', workspacePath, {
+				forceNewWindow: false,
+				noRecentEntry: true
+			});
+
+			return success === undefined;
+		} catch (error) {
+			console.error("Failed to create and open workspace:", error);
+			return false;
+		}
+	}
+
+	private async rpcCheckOnboardingComplete(): Promise<boolean> {
+		return this.MeltyExtension.checkOnboardingComplete();
+	}
+
+	private async rpcSetOnboardingComplete(): Promise<void> {
+		await this.MeltyExtension.setOnboardingComplete();
 	}
 
 	private async rpcOpenWorkspaceDialog(): Promise<boolean> {
