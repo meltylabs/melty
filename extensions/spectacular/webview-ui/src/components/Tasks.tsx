@@ -71,16 +71,6 @@ export function Tasks({
 		description: "",
 	});
 	const [suggestions, setSuggestions] = useState<string[]>([]);
-	const [isWorkspaceOpen, setIsWorkspaceOpen] = useState<boolean>(true);
-
-	const checkWorkspaceStatus = useCallback(async () => {
-		const result = await rpcClient.run("isWorkspaceOpen", {});
-		setIsWorkspaceOpen(result);
-	}, []);
-
-	useEffect(() => {
-		checkWorkspaceStatus();
-	}, [checkWorkspaceStatus]);
 
 
 	useEffect(() => {
@@ -247,9 +237,9 @@ export function Tasks({
 	const handleOpenWorkspaceDialog = useCallback(async () => {
 		const didOpen = await rpcClient.run("openWorkspaceDialog", {});
 		console.log("did open workspace dialog?", didOpen);
-		setIsWorkspaceOpen(didOpen);
+		await checkGitConfig();
 		await fetchTasks();
-	}, [fetchTasks]);
+	}, [fetchTasks, checkGitConfig]);
 
 	const handleCreateGitRepo = useCallback(async () => {
 		const didCreate = await rpcClient.run("createGitRepository", {});
@@ -260,7 +250,6 @@ export function Tasks({
 	// initialization
 	useEffect(() => {
 		console.log("initializing tasks");
-		checkWorkspaceStatus();
 		fetchTasks();
 		checkGitConfig();
 		fetchFilePaths();
@@ -270,6 +259,9 @@ export function Tasks({
 			switch (message.type) {
 				case "updateTodo":
 					addSuggestion(message.todo);
+					break;
+				case "updateGitConfigError":
+					setGitConfigError(message.errors);
 					break;
 				default:
 					break;
@@ -281,7 +273,7 @@ export function Tasks({
 		return () => {
 			EventManager.Instance.removeListener('notification', handleNotification);
 		};
-	}, [fetchTasks, fetchFilePaths, checkGitConfig, addSuggestion, checkWorkspaceStatus]); // DO NOT add anything to the initialization dependency array that isn't a constant
+	}, [fetchTasks, fetchFilePaths, checkGitConfig, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
 
 
 	return (
@@ -289,31 +281,31 @@ export function Tasks({
 			<h1 className="text-3xl font-extrabold tracking-tighter mb-6 mt-4 text-center">
 				melty
 			</h1>
-			{!isWorkspaceOpen ? (
-				<div className="bg-background text-foreground p-4">
-					<div className="text-center">
-						<h2 className="text-lg font-bold">Let's start Melting.</h2>
-						<p>To get started, add a workspace for Melty work in.</p>
-						<Button onClick={handleOpenWorkspaceDialog} className="mt-4">Open folder</Button>
-					</div>
-				</div>
-			) : gitConfigError !== "" ? (
-				gitConfigError?.includes("git init") ?
+			{gitConfigError !== "" ? (
+				gitConfigError?.includes("Open a workspace folder") ?
 					<div className="bg-background text-foreground p-4">
 						<div className="text-center">
 							<h2 className="text-lg font-bold">Let's start Melting.</h2>
-							<p>To get started, create a git repo in the workspace root folder.</p>
-							<Button onClick={handleCreateGitRepo} className="mt-4">Create git repo</Button>
+							<p>To get started, add a workspace for Melty work in.</p>
+							<Button onClick={handleOpenWorkspaceDialog} className="mt-4">Open folder</Button>
 						</div>
 					</div>
-					:
-					<div className="bg-background text-foreground p-4">
-						<div className="text-center">
-							<h2 className="text-lg font-bold">Git config error</h2>
-							<p>Oops! Try restarting Melty?</p>
-							<p>{gitConfigError}</p>
+					: gitConfigError?.includes("git init") ?
+						<div className="bg-background text-foreground p-4">
+							<div className="text-center">
+								<h2 className="text-lg font-bold">Let's start Melting.</h2>
+								<p>To get started, create a git repo in the workspace root folder.</p>
+								<Button onClick={handleCreateGitRepo} className="mt-4">Create git repo</Button>
+							</div>
 						</div>
-					</div>
+						:
+						<div className="bg-background text-foreground p-4">
+							<div className="text-center">
+								<h2 className="text-lg font-bold">Git config error</h2>
+								<p>Oops! Try restarting Melty?</p>
+								<p>{gitConfigError}</p>
+							</div>
+						</div>
 			) : (
 				<>
 					<FastFilePicker

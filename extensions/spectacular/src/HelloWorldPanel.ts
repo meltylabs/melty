@@ -50,6 +50,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance()
 	) {
 		this.MeltyExtension = MeltyExtension;
+
+		this.MeltyExtension.pushSubscription(
+			vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+				this._webviewNotifier.sendNotification("updateGitConfigError", { error: this._gitManager.init() });
+			})
+		);
 	}
 
 	public resolveWebviewView(webviewView: WebviewView) {
@@ -202,8 +208,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	private async handleRPCCall(method: RpcMethod, params: any): Promise<any> {
 		try {
 			switch (method) {
-				case "isWorkspaceOpen":
-					return this._gitManager.isWorkspaceOpen();
 				case "openWorkspaceDialog":
 					return await this.rpcOpenWorkspaceDialog();
 				case "createGitRepository":
@@ -290,11 +294,16 @@ export class HelloWorldPanel implements WebviewViewProvider {
 
 		if (result && result[0]) {
 			const newFolderUri = result[0];
-			return vscode.workspace.updateWorkspaceFolders(
-				vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0,
-				0, // Number of folders to remove (0 in this case as we're adding)
-				{ uri: newFolderUri }
-			);
+
+			// // disabling because it caused a dialog prompting user to save the workspace
+			// return vscode.workspace.updateWorkspaceFolders(
+			// 	vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0,
+			// 	0, // Number of folders to remove (0 in this case as we're adding)
+			// 	{ uri: newFolderUri }
+			// );
+
+			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false)
+			return openResult === undefined;
 		} else {
 			return false;
 		}

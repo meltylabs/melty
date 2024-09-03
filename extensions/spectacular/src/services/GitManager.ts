@@ -22,8 +22,6 @@ export class GitManager {
 	private pollForGitExtensionInterval: NodeJS.Timeout | null = null;
 
 	private constructor() {
-		this.workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-
 		// TODO properly dispose of pollForGitExtensionInterval
 		this.pollForGitExtensionInterval = setInterval(
 			async () => {
@@ -56,17 +54,16 @@ export class GitManager {
 		}
 	}
 
-	public isWorkspaceOpen(): boolean {
-		return !!this.workspaceRoot;
-	}
-
 	/**
 	 * Initializes this.repo to be the repo at workspace root.
 	 * Returns errors.
 	 */
 	public async init(): Promise<string | undefined> {
+		this.workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
 		if (!this.workspaceRoot) {
-			return "No workspace folder found";
+			// this string is parsed on frontend to decide whether to show the workspace folder dialog
+			return "No workspace folder found. Open a workspace folder.";
 		}
 
 		if (!this.gitApi) {
