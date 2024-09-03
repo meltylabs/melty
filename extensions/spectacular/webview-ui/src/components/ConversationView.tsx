@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, memo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
 	XIcon,
@@ -218,14 +218,23 @@ export function ConversationView() {
 		};
 	}, [taskId, loadFiles, loadTask, updateTask]);
 
-	useEffect(() => {
-		const checkIfLatestCommit = async () => {
-			const result = await rpcClient.run("getLatestCommit", {});
-			setLatestCommitHash(result);
-		};
+	const checkIfLatestCommit = useCallback(async () => {
+		const result = await rpcClient.run("getLatestCommit", {});
+		setLatestCommitHash(result);
+	}, []);
 
-		checkIfLatestCommit();
-	}, [task]);
+	const lastJouleCommit = useMemo(() => {
+		if (!task?.conversation.joules.length) return null;
+		const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
+		return lastJoule.commit;
+	  }, [task?.conversation.joules]);
+
+	  useEffect(() => {
+		if (lastJouleCommit !== null) {
+		  checkIfLatestCommit();
+		}
+	  }, [lastJouleCommit, checkIfLatestCommit]);
+
 
 	const handleSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
