@@ -121,41 +121,47 @@ export class GitManager {
 	public async commitLocalChanges(): Promise<{
 		commit: string, diffInfo: DiffInfo
 	} | null> {
-		await this.repo!.sitory.status();
-
-		// Get all changes, including untracked files
-		const changes = await this.repo!.sitory.diffWithHEAD();
-
-		// Filter out ignored files
-		const nonIgnoredChanges = changes.filter(
-			(change: any) => !change.gitIgnored
-		);
-
-		// Add only non-ignored files
-		await this.repo!.sitory.add(
-			nonIgnoredChanges.map((change: any) => change.uri.fsPath)
-		);
-
-		const indexChanges = this.repo!.sitory.state.indexChanges;
-
-		if (indexChanges.length > 0) {
-			const udiffPreview = await this.getUdiffFromWorking();
-			const message = await generateCommitMessage(udiffPreview);
-
-			await this.repo!.sitory.commit(`${message}`);
+		try {
+			this.checkInit();
 			await this.repo!.sitory.status();
-			const commitHash = this.getLatestCommitHash()!;
 
-			return {
-				commit: commitHash,
-				diffInfo: {
-					diffPreview: udiffPreview,
-					filePathsChanged: indexChanges.map(
-						(change: any) => change.uri.fsPath
-					),
-				}
-			};
-		} else {
+			// Get all changes, including untracked files
+			const changes = await this.repo!.sitory.diffWithHEAD();
+
+			// Filter out ignored files
+			const nonIgnoredChanges = changes.filter(
+				(change: any) => !change.gitIgnored
+			);
+
+			// Add only non-ignored files
+			await this.repo!.sitory.add(
+				nonIgnoredChanges.map((change: any) => change.uri.fsPath)
+			);
+
+			const indexChanges = this.repo!.sitory.state.indexChanges;
+
+			if (indexChanges.length > 0) {
+				const udiffPreview = await this.getUdiffFromWorking();
+				const message = await generateCommitMessage(udiffPreview);
+
+				await this.repo!.sitory.commit(`${message}`);
+				await this.repo!.sitory.status();
+				const commitHash = this.getLatestCommitHash()!;
+
+				return {
+					commit: commitHash,
+					diffInfo: {
+						diffPreview: udiffPreview,
+						filePathsChanged: indexChanges.map(
+							(change: any) => change.uri.fsPath
+						),
+					}
+				};
+			} else {
+				return null;
+			}
+		} catch (error) {
+			console.error('Error comitting local changes', error);
 			return null;
 		}
 	}
