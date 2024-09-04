@@ -10,7 +10,7 @@ cd extensions/spectacular && npm i
 cd webview-ui && npm i
 
 # Return to spectacular directory and build
-cd .. && npm run build:webview
+cd .. && npm run compile && npm run build:webview
 
 # Navigate to supermaven extension and install dependencies
 cd ../supermaven && npm i
