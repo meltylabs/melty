@@ -11,3 +11,4 @@ spectacle-0.0.1.vsix
 melty-0.0.1.vsix
 .melty
 nextjs-demo
+*.env
