@@ -486,37 +486,41 @@ export function Tasks({
 						</div>
 					)}
 
-					<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
-						<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
-						Chats
-					</h2>
-					<div className="grid md:grid-cols-3 grid-cols-1 gap-6 mt-4">
-						{tasks.length === 0 && <p>No tasks</p>}
-						{tasks.map((task) => (
-							<div key={task.id} className="relative">
-								<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
-									<Card>
-										<CardHeader>
-											<CardTitle>{task.name}</CardTitle>
-										</CardHeader>
-										<CardContent>
-											<p className="text-xs text-gray-500 mt-2">
-												{formatDate(new Date(task.updatedAt))}
-											</p>
-										</CardContent>
-									</Card>
-								</button>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="absolute top-2 right-2 p-1"
-									onClick={(e) => deleteTask(task.id, e)}
-								>
-									<X className="text-muted-foreground h-4 w-4" />
-								</Button>
+					{tasks.length > 0 &&
+						<>
+							<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
+								<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
+								Chats
+							</h2>
+							<div className="grid md:grid-cols-3 grid-cols-1 gap-6 mt-4">
+								{tasks.length === 0 && <p>No tasks</p>}
+								{tasks.map((task) => (
+									<div key={task.id} className="relative">
+										<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
+											<Card>
+												<CardHeader>
+													<CardTitle>{task.name}</CardTitle>
+												</CardHeader>
+												<CardContent>
+													<p className="text-xs text-gray-500 mt-2">
+														{formatDate(new Date(task.updatedAt))}
+													</p>
+												</CardContent>
+											</Card>
+										</button>
+										<Button
+											variant="ghost"
+											size="sm"
+											className="absolute top-2 right-2 p-1"
+											onClick={(e) => deleteTask(task.id, e)}
+										>
+											<X className="text-muted-foreground h-4 w-4" />
+										</Button>
+									</div>
+								))}
 							</div>
-						))}
-					</div>
+						</>
+					}
 					<div className="mt-4 flex items-center">
 						{gitConfigError === null ? (
 							<>
