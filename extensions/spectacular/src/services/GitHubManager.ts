@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { GitManager } from "./GitManager";
-import { Octokit } from '@octokit/rest';
 
 export class GitHubManager {
 	private static instance: GitHubManager | null = null;
@@ -14,6 +13,15 @@ export class GitHubManager {
 			GitHubManager.instance = new GitHubManager();
 		}
 		return GitHubManager.instance;
+	}
+
+	// using dynamic import because Octokit does not support ESM
+	// unless moduleResolution is set to node16 in tsconfig
+	// but setting that requires all relative imports to have file extensions
+	// and that's a pain
+	private async getOctokit() {
+		const { Octokit } = await import('@octokit/rest');
+		return Octokit;
 	}
 
 	private getOwnerAndRepo(): [string, string] | null {
@@ -74,6 +82,7 @@ export class GitHubManager {
 			console.log("Owner:", owner);
 			console.log("Repo:", repo);
 
+			const Octokit = await this.getOctokit();
 			const octokit = new Octokit({ auth: token });
 
 			// Check if branch exists on GitHub
