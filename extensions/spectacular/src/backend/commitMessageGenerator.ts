@@ -61,9 +61,21 @@ ${accompanyingMessage}
 			],
 		});
 
-		const responseText = response.content[0].text.trim();
-		const commitMessage = responseText.split("</commit_message>")[0].trim();
-		return commitMessage;
+		if (response.content.length > 0 && response.content[0].type === 'text') {
+			const responseText = response.content[0].text.trim();
+			const commitMessage = responseText.split("</commit_message>")[0].trim();
+			return commitMessage;
+		} else {
+			let errorMessage: string;
+			if (response.content.length === 0) {
+				errorMessage = "No response from Anthropic API";
+			} else if (response.content[0].type === 'tool_use') {
+				errorMessage = "Response of type 'tool_use' received from Anthropic API. Expected 'text'.";
+			} else {
+				errorMessage = "Unknown error";
+			}
+			throw new Error(errorMessage);
+		}
 	} catch (error) {
 		console.error("Error generating commit message:", error);
 		return "bot changes";
