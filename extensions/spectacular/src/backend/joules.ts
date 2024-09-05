@@ -5,7 +5,10 @@ import { Joule, JouleHuman, JouleBot, BotExecInfo, DiffInfo } from "../types";
 export function createJouleError(errorMessage: string): JouleBot {
   return createJouleBot(errorMessage, {
     rawOutput: "[error encountered]",
-    contextPaths: [],
+    contextPaths: {
+			meltyRoot: '',
+			paths: []
+		},
   });
 }
 
