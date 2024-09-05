@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { CancellationToken } from "vscode";
 
 import { ClaudeConversation } from "../types";
-import { ErrorOperationCancelled } from 'util/utils';
+import { ErrorOperationCancelled } from '../util/utils';
 
 export enum Models {
 	Claude35Sonnet = "claude-3-5-sonnet-20240620",

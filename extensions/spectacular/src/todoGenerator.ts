@@ -1,6 +1,6 @@
-import { streamClaude, Models } from "backend/claudeAPI";
+import { streamClaude, Models } from "./backend/claudeAPI";
 import { ClaudeConversation } from "types";
-import { GitManager } from "services/GitManager";
+import { GitManager } from "./services/GitManager";
 
 export async function generateTodoFromPRName(prName: string): Promise<string> {
 	const prompt = `Convert the following pull request name into a concise, actionable todo item:

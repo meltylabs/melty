@@ -19,10 +19,10 @@ import * as parser from "../diffApplication/parser";
 import * as changeSets from "..//changeSets";
 import * as config from "../../util/config";
 import { generateCommitMessage } from "../commitMessageGenerator";
-import { WebviewNotifier } from "services/WebviewNotifier";
-import { FileManager } from 'services/FileManager';
-import { GitManager } from 'services/GitManager';
-import { ErrorOperationCancelled } from 'util/utils';
+import { WebviewNotifier } from "../../services/WebviewNotifier";
+import { FileManager } from '../../services/FileManager';
+import { GitManager } from '../../services/GitManager';
+import { ErrorOperationCancelled } from '../../util/utils';
 
 const webviewNotifier = WebviewNotifier.getInstance();
 

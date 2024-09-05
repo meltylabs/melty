@@ -3,8 +3,8 @@ import * as vscode from 'vscode';
 // TODOREFACTOR get these imports out of here
 import { generateCommitMessage } from '../backend/commitMessageGenerator';
 import { ChangeSet, DiffInfo } from 'types';
-import * as changesets from 'backend/changeSets';
-import * as files from 'backend/meltyFiles';
+import * as changesets from '../backend/changeSets';
+import * as files from '../backend/meltyFiles';
 
 type Repo = {
 	sitory: any;

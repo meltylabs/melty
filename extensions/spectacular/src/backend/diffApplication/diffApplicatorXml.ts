@@ -2,7 +2,7 @@ import { SearchReplace, ChangeSet } from "types";
 import * as vscode from "vscode";
 import fs from "fs";
 import path from "path";
-import * as meltyFiles from "backend/meltyFiles";
+import * as meltyFiles from "../../backend/meltyFiles";
 import { diffApplicationStrategies } from "./diffApplicationStrategies";
 
 export async function searchReplaceToChangeSet(

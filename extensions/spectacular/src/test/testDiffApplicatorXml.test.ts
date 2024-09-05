@@ -1,7 +1,7 @@
 // import * as assert from "assert";
 // import { PseudoCommit } from "../backend/pseudoCommits";
 // import * as pseudoCommits from "../backend/pseudoCommits";
-// import { SearchReplace } from "backend/searchReplace";
+// import { SearchReplace } from "../backend/searchReplace";
 // import {
 //   splitResponse,
 //   applySearchReplaceBlocks,

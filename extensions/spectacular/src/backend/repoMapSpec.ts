@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
 
-import { GitManager } from "services/GitManager";
+import { GitManager } from "../services/GitManager";
 
 export class RepoMapSpec {
 	constructor(

@@ -3,8 +3,7 @@ import * as config from "../util/config";
 import * as path from "path";
 import * as fs from "fs/promises";
 import { WebviewNotifier } from "./WebviewNotifier";
-import { MeltyExtension } from 'extension';
-import { GitManager } from 'services/GitManager';
+import { GitManager } from '../services/GitManager';
 
 const webviewNotifier = WebviewNotifier.getInstance();
 

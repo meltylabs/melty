@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { applyWithReindent } from "backend/diffApplication/diffApplicationStrategies";
+import { applyWithReindent } from "../backend/diffApplication/diffApplicationStrategies";
 import { SearchReplace } from "types";
 
 suite("applyWithReindent", () => {
