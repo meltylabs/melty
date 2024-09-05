@@ -66,6 +66,10 @@ export interface Tag {
 	line: number;
 }
 
+export interface GitRepo {
+	rootPath: string;
+}
+
 export interface Message {
 	text: string;
 	sender: "user" | "bot";
