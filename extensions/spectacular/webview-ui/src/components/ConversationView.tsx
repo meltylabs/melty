@@ -374,7 +374,7 @@ export function ConversationView() {
 							value={messageText}
 							onChange={(e) => setMessageText(e.target.value)}
 							onKeyDown={handleKeyDown}
-							autoFocus
+							autoFocus={true}
 						/>
 
 						{messageText.trim() !== "" && (

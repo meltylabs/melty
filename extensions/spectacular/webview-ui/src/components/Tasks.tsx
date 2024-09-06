@@ -357,6 +357,7 @@ export function Tasks({
 								className="flex-grow p-3 pr-12 pb-12"
 								ref={textareaRef}
 								required
+								autoFocus={true}
 							/>
 
 							<div className="absolute right-2 top-2 flex gap-2">
