@@ -260,10 +260,25 @@ export function ConversationView() {
 		}
 	};
 
-	const handleBack = async () => {
+	const handleBack = useCallback(async () => {
 		await rpcClient.run("deactivateTask", { taskId });
 		navigate("/");
-	}
+	}, [taskId, navigate]);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if ((event.metaKey || event.ctrlKey) && event.key === '[') {
+				event.preventDefault();
+				handleBack();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	}, [handleBack]);
 
 	return (
 		<div className="flex flex-col h-[calc(100vh-1rem)] overflow-hidden">
