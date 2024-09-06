@@ -349,7 +349,7 @@ export function ConversationView() {
 						<AutoExpandingTextarea
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12"
+							className="p-3 pr-12 pb-12 focus-visible:ring-1"
 							ref={inputRef}
 							required
 							value={messageText}
@@ -381,7 +381,7 @@ export function ConversationView() {
 						<div className="absolute right-2 bottom-2">
 							<span className="text-xs text-muted-foreground">
 								<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-									<span className="text-xs">\</span>
+									<span className="text-xs">@</span>
 								</kbd>{" "}
 								to add a file
 							</span>

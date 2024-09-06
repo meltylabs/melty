@@ -55,7 +55,7 @@ function AppContent() {
 	return (
 		<main className={theme === 'dark' ? 'dark' : ''}>
 			{!showOnboarding && !isTaskRoute && <NavBar />}
-			<div className="bg-background text-foreground p-4">
+			<div className="bg-background text-foreground px-4">
 				<Routes>
 					<Route
 						path="/onboarding"
