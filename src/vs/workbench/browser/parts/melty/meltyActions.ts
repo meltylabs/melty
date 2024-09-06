@@ -20,7 +20,7 @@ export class CloseMeltyAction extends Action2 {
 
 	run(accessor: ServicesAccessor): void {
 		const meltyService = accessor.get(IMeltyService);
-		meltyService.close();
+		meltyService.hide();
 	}
 }
 
