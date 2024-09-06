@@ -5,10 +5,11 @@ import { cn } from "../lib/utils";
 interface AutoExpandingTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
 	value: string;
 	onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+	autoFocus?: boolean;
 }
 
 const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTextareaProps>(
-	({ value, onChange, className, ...props }, ref) => {
+	({ value, onChange, className, autoFocus, ...props }, ref) => {
 		const adjustHeight = useCallback((element: HTMLTextAreaElement | null) => {
 			if (element) {
 				element.style.height = "auto";
@@ -31,7 +32,9 @@ const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTexta
 					onChange(e);
 					adjustHeight(e.target);
 				}}
+				autoFocus={autoFocus}
 				className={cn("resize-none overflow-hidden", className)}
+				autoFocus={autoFocus}
 				{...props}
 			/>
 		);

@@ -356,6 +356,7 @@ export function Tasks({
 								onKeyDown={handleKeyDown}
 								className="flex-grow p-3 pr-12 pb-12"
 								ref={textareaRef}
+								autoFocus={true}
 								required
 							/>
 
