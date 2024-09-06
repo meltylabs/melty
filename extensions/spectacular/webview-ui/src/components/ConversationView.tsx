@@ -10,6 +10,7 @@ import {
 import posthog from "posthog-js";
 import { FastFilePicker } from "components/FastFilePicker";
 import AutoExpandingTextarea from "components/AutoExpandingTextarea";
+import { Button } from 'components/ui/button'
 import { RpcClient } from "RpcClient";
 import { JouleComponent } from "components/JouleComponent";
 import * as strings from "utilities/strings";
@@ -227,13 +228,13 @@ export function ConversationView() {
 		if (!task?.conversation.joules.length) return null;
 		const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
 		return lastJoule.commit;
-	  }, [task?.conversation.joules]);
+	}, [task?.conversation.joules]);
 
-	  useEffect(() => {
+	useEffect(() => {
 		if (lastJouleCommit !== null) {
-		  checkIfLatestCommit();
+			checkIfLatestCommit();
 		}
-	  }, [lastJouleCommit, checkIfLatestCommit]);
+	}, [lastJouleCommit, checkIfLatestCommit]);
 
 
 	const handleSubmit = (event: React.FormEvent) => {
@@ -265,7 +266,7 @@ export function ConversationView() {
 	}
 
 	return (
-		<div className="flex flex-col h-screen">
+		<div className="flex flex-col h-screen mt-2">
 			<div className="mt-2 flex flex-col">
 				{!isAtBottom && (
 					<button
@@ -284,12 +285,14 @@ export function ConversationView() {
 							</kbd>
 						</button>
 						<p className="text-sm font-semibold ml-2">{task.name}</p>
-						<button
-							onClick={handleCreatePR}
-							className="ml-auto px-3 py-1 text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-						>
-							Create PR
-						</button>
+						<div className="ml-auto">
+							<Button
+								variant="outline"
+								onClick={handleCreatePR}
+							>
+								Create PR
+							</Button>
+						</div>
 					</div>
 				)}
 
