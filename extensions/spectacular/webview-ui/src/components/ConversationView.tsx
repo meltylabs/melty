@@ -29,7 +29,6 @@ export function ConversationView() {
 	const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
 	const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
 	const [pickerOpen, setPickerOpen] = useState(false);
-	const [shouldFocus, setShouldFocus] = useState(true);
 	const isInitialRender = useRef(true);
 	const [task, setTask] = useState<DehydratedTask | null>(null);
 	const [messageText, setMessageText] = useState("");
@@ -70,7 +69,6 @@ export function ConversationView() {
 		});
 		setMeltyFiles(meltyFiles);
 		setPickerOpen(false);
-		setShouldFocus(true);
 	}
 
 	async function handleDropFile(file: string) {
@@ -79,22 +77,15 @@ export function ConversationView() {
 		});
 		setMeltyFiles(meltyFiles);
 		setPickerOpen(false);
-		setShouldFocus(true);
 	}
 
 	useLayoutEffect(() => {
-		if (shouldFocus || isInitialRender.current) {
+		if (isInitialRender.current) {
 			inputRef.current?.focus();
-			setShouldFocus(false);
 			isInitialRender.current = false;
 		}
-	}, [shouldFocus, taskId]);
+	}, [taskId]);
 
-	useEffect(() => {
-		if (!pickerOpen) {
-			setShouldFocus(true);
-		}
-	}, [pickerOpen]);
 
 	const loadTask = useCallback(async (taskId: string) => {
 		console.log("loading active task ", taskId);
@@ -246,7 +237,6 @@ export function ConversationView() {
 		handleSendMessage(message, taskId!);
 		setMessageText("");
 		form.reset();
-		setShouldFocus(true);
 	};
 
 	const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -258,7 +248,6 @@ export function ConversationView() {
 					handleSendMessage(event.currentTarget.value, taskId!);
 					setMessageText("");
 					event.currentTarget.value = "";
-					setShouldFocus(true);
 				}
 			}
 		}
