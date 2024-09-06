@@ -358,7 +358,6 @@ export function Tasks({
 								ref={textareaRef}
 								autoFocus={true}
 								required
-								autoFocus={true}
 							/>
 
 							<div className="absolute right-2 top-2 flex gap-2">
