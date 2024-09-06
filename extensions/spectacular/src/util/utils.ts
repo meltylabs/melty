@@ -3,6 +3,37 @@ import { ChangeSet } from "../types";
 import * as os from "os";
 import * as diff from "diff";
 
+/**
+ * Log an arbitrary error object verbosely
+ */
+export function logErrorVerbose(source: string, error: unknown): void {
+	console.error(error, `
+Source: ${source}
+Stringify: ${JSON.stringify(error)}
+${printErrorChain(error)}
+`);
+}
+
+export function printErrorChain(error: unknown): string {
+	const logLines: string[] = [];
+
+	const logRecursive = (error: unknown, depth: number) => {
+		if (!(error instanceof Error)) {
+			logLines.push(`${' '.repeat(depth * 2)}Non-Error thrown: ${error}`);
+			return;
+		}
+
+		logLines.push(`${' '.repeat(depth * 2)}Error: ${error.message}`);
+
+		if ('cause' in error && error.cause) {
+			logRecursive(error.cause, depth + 1);
+		}
+	};
+	logRecursive(error, 0);
+
+	return `=========Error Chain=========\n${logLines.join('\n')}\n==========================`;
+}
+
 export class ErrorOperationCancelled extends Error {
 	constructor() {
 		super("Operation cancelled");

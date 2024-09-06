@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as vscode from "vscode";
 import { CancellationToken } from "vscode";
+import * as utils from "util/utils";
 
 import { ClaudeConversation } from "../types";
 import { ErrorOperationCancelled } from 'util/utils';
@@ -53,14 +54,17 @@ export async function streamClaude(
 					},
 				}
 			)
-			.on("text", (text) => {
+			.on("text", (textDelta: string, _textSnapshot: string) => {
 				if (cancellationToken?.isCancellationRequested) {
 					stream.controller.abort();
 					return;
 				}
 				if (processPartial) {
-					processPartial(text);
+					processPartial(textDelta);
 				}
+			})
+			.on('error', (error) => {
+				utils.logErrorVerbose("Claude error (streaming)", error);
 			});
 
 		if (cancellationToken?.isCancellationRequested) {
@@ -74,9 +78,7 @@ export async function streamClaude(
 			throw new Error("No text content found in the response");
 		}
 	} catch (error) {
-		console.log("Error communicating with Claude: ", error);
-		console.log("Messages was: ", claudeConversation.messages);
-		console.log("System was: ", claudeConversation.system);
+		utils.logErrorVerbose("Claude error (final)", error);
 		throw error;
 	}
 }
