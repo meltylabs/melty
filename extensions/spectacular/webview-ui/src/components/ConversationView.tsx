@@ -266,7 +266,7 @@ export function ConversationView() {
 	}
 
 	return (
-		<div className="flex flex-col h-screen mt-2">
+		<div className="flex flex-col h-[calc(100vh-1rem)] overflow-hidden">
 			<div className="mt-2 flex flex-col">
 				{!isAtBottom && (
 					<button
@@ -306,7 +306,7 @@ export function ConversationView() {
 				/>
 			</div>
 			<div
-				className="flex-grow mb-20 rounded overflow-y-auto"
+				className="flex-1 mb-4 rounded overflow-y-auto"
 				ref={conversationRef}
 			>
 				<div className="flex flex-col h-full">
