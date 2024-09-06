@@ -34,7 +34,6 @@ const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTexta
 				}}
 				autoFocus={autoFocus}
 				className={cn("resize-none overflow-hidden", className)}
-				autoFocus={autoFocus}
 				{...props}
 			/>
 		);
