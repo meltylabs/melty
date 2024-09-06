@@ -10,6 +10,7 @@ import {
 import posthog from "posthog-js";
 import { FastFilePicker } from "components/FastFilePicker";
 import AutoExpandingTextarea from "components/AutoExpandingTextarea";
+import { Button } from 'components/ui/button'
 import { RpcClient } from "RpcClient";
 import { JouleComponent } from "components/JouleComponent";
 import * as strings from "utilities/strings";
@@ -227,13 +228,13 @@ export function ConversationView() {
 		if (!task?.conversation.joules.length) return null;
 		const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
 		return lastJoule.commit;
-	  }, [task?.conversation.joules]);
+	}, [task?.conversation.joules]);
 
-	  useEffect(() => {
+	useEffect(() => {
 		if (lastJouleCommit !== null) {
-		  checkIfLatestCommit();
+			checkIfLatestCommit();
 		}
-	  }, [lastJouleCommit, checkIfLatestCommit]);
+	}, [lastJouleCommit, checkIfLatestCommit]);
 
 
 	const handleSubmit = (event: React.FormEvent) => {
@@ -259,13 +260,28 @@ export function ConversationView() {
 		}
 	};
 
-	const handleBack = async () => {
+	const handleBack = useCallback(async () => {
 		await rpcClient.run("deactivateTask", { taskId });
 		navigate("/");
-	}
+	}, [taskId, navigate]);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if ((event.metaKey || event.ctrlKey) && event.key === '[') {
+				event.preventDefault();
+				handleBack();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
+	}, [handleBack]);
 
 	return (
-		<div className="flex flex-col h-screen">
+		<div className="flex flex-col h-[calc(100vh-1rem)] overflow-hidden">
 			<div className="mt-2 flex flex-col">
 				{!isAtBottom && (
 					<button
@@ -284,12 +300,14 @@ export function ConversationView() {
 							</kbd>
 						</button>
 						<p className="text-sm font-semibold ml-2">{task.name}</p>
-						<button
-							onClick={handleCreatePR}
-							className="ml-auto px-3 py-1 text-sm bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-						>
-							Create PR
-						</button>
+						<div className="ml-auto">
+							<Button
+								variant="outline"
+								onClick={handleCreatePR}
+							>
+								Create PR
+							</Button>
+						</div>
 					</div>
 				)}
 
@@ -303,7 +321,7 @@ export function ConversationView() {
 				/>
 			</div>
 			<div
-				className="flex-grow mb-20 rounded overflow-y-auto"
+				className="flex-1 mb-4 rounded overflow-y-auto"
 				ref={conversationRef}
 			>
 				<div className="flex flex-col h-full">
@@ -346,7 +364,7 @@ export function ConversationView() {
 						<AutoExpandingTextarea
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12"
+							className="p-3 pr-12 pb-12 focus-visible:ring-1"
 							ref={inputRef}
 							required
 							value={messageText}
@@ -378,7 +396,7 @@ export function ConversationView() {
 						<div className="absolute right-2 bottom-2">
 							<span className="text-xs text-muted-foreground">
 								<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-									<span className="text-xs">\</span>
+									<span className="text-xs">@</span>
 								</kbd>{" "}
 								to add a file
 							</span>

@@ -4,7 +4,7 @@ import {
 	Route,
 	Routes,
 	Navigate,
-	useLocation,
+	useLocation, useMatch,
 } from "react-router-dom";
 import { Tasks } from "./components/Tasks";
 import { ConversationView } from "./components/ConversationView";
@@ -24,6 +24,7 @@ function AppContent() {
 	const theme = useContext(ThemeContext);
 	const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 	const location = useLocation();
+	const isTaskRoute = useMatch('/task/:taskId');
 
 	useEffect(() => {
 		const checkOnboarding = async () => {
@@ -53,8 +54,8 @@ function AppContent() {
 
 	return (
 		<main className={theme === 'dark' ? 'dark' : ''}>
-			{!showOnboarding && <NavBar />}
-			<div className="bg-background text-foreground p-4">
+			{!showOnboarding && !isTaskRoute && <NavBar />}
+			<div className="bg-background text-foreground px-4">
 				<Routes>
 					<Route
 						path="/onboarding"
