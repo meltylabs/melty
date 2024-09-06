@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo, useLayoutEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
 	XIcon,
@@ -29,7 +29,8 @@ export function ConversationView() {
 	const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
 	const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
 	const [pickerOpen, setPickerOpen] = useState(false);
-	const [shouldFocus, setShouldFocus] = useState(false);
+	const [shouldFocus, setShouldFocus] = useState(true);
+	const isInitialRender = useRef(true);
 	const [task, setTask] = useState<DehydratedTask | null>(null);
 	const [messageText, setMessageText] = useState("");
 	const conversationRef = useRef<HTMLDivElement>(null);
@@ -81,12 +82,13 @@ export function ConversationView() {
 		setShouldFocus(true);
 	}
 
-	useEffect(() => {
-		if (shouldFocus) {
+	useLayoutEffect(() => {
+		if (shouldFocus || isInitialRender.current) {
 			inputRef.current?.focus();
 			setShouldFocus(false);
+			isInitialRender.current = false;
 		}
-	}, [shouldFocus]);
+	}, [shouldFocus, taskId]);
 
 	useEffect(() => {
 		if (!pickerOpen) {
@@ -244,6 +246,7 @@ export function ConversationView() {
 		handleSendMessage(message, taskId!);
 		setMessageText("");
 		form.reset();
+		setShouldFocus(true);
 	};
 
 	const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -255,6 +258,7 @@ export function ConversationView() {
 					handleSendMessage(event.currentTarget.value, taskId!);
 					setMessageText("");
 					event.currentTarget.value = "";
+					setShouldFocus(true);
 				}
 			}
 		}
@@ -370,6 +374,7 @@ export function ConversationView() {
 							value={messageText}
 							onChange={(e) => setMessageText(e.target.value)}
 							onKeyDown={handleKeyDown}
+							autoFocus
 						/>
 
 						{messageText.trim() !== "" && (
