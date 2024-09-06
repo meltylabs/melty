@@ -4,7 +4,7 @@ Thanks for helping make Melty better!
 
 ## Feedback
 
-We'd love to hear your feedback at [founders@melty.sh](mailto:founders@melty.sh).
+We'd love to hear your feedback at [humans@melty.sh](mailto:humans@melty.sh).
 
 ## Issues and feature requests
 
