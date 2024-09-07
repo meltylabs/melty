@@ -11,13 +11,27 @@ export enum Models {
 	Claude3Haiku = "claude-3-haiku-20240307",
 }
 
+export type ClaudeOpts = {
+	model?: Models,
+	cancellationToken?: CancellationToken,
+	processPartial?: (text: string) => void,
+}
+
 export async function streamClaude(
 	claudeConversation: ClaudeConversation,
-	opts: {
-		model?: Models,
-		cancellationToken?: CancellationToken,
-		processPartial?: (text: string) => void,
-	} = {}): Promise<string> {
+	opts: ClaudeOpts = {}): Promise<string> {
+	const final = await streamClaudeRaw(claudeConversation, opts);
+	const textContent = final.content.find((block) => "text" in block);
+	if (textContent && "text" in textContent) {
+		return textContent.text.trim();
+	} else {
+		throw new Error("No text content found in the response");
+	}
+}
+
+export async function streamClaudeRaw(
+	claudeConversation: ClaudeConversation,
+	opts: ClaudeOpts = {}): Promise<Anthropic.Messages.Message> {
 	const { model = Models.Claude35Sonnet, cancellationToken, processPartial } = opts;
 
 	if (claudeConversation.messages.length === 0) {
@@ -77,12 +91,7 @@ export async function streamClaude(
 			throw new ErrorOperationCancelled();
 		}
 		const final = await stream.finalMessage();
-		const textContent = final.content.find((block) => "text" in block);
-		if (textContent && "text" in textContent) {
-			return textContent.text.trim();
-		} else {
-			throw new Error("No text content found in the response");
-		}
+		return final;
 	} catch (error) {
 		utils.logErrorVerbose("Claude error (final)", error);
 		throw error;
