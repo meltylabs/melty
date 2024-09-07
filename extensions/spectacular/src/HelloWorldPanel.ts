@@ -227,10 +227,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return await this.rpcUndoLatestCommit(params.commitId);
 				case "getLatestCommit":
 					return this.rpcGetLatestCommit();
-				case "chatMessage":
-					return await this.rpcStartResponse(
-						params.text, params.taskId
+				case "startBotTurn":
+					this.rpcStartBotTurn(
+						params.taskId
 					);
+					return undefined;
+				case "humanChat":
+					return this.rpcHumanChat(params.taskId, params.text);
 				case "createTask":
 					return await this.rpcCreateTask(
 						params.name,
@@ -273,7 +276,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
 				);
 			}
 
-			if (method === "chatMessage") {
+			if (method === "startBotTurn") {
+				// TODO revisit error handling for rpcHumanChat
 				await this.notifyWebviewOfChatError(params.taskId, errorMessage);
 				await WebviewNotifier.getInstance().resetStatusMessage();
 			}
@@ -336,7 +340,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 			// 	{ uri: newFolderUri }
 			// );
 
-			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false)
+			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false);
 			return openResult === undefined;
 		} else {
 			return false;
@@ -463,12 +467,20 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'light';
 	}
 
-	private async rpcStartResponse(text: string, taskId: string): Promise<boolean> {
+	private async rpcHumanChat(taskId: string, text: string): Promise<void> {
 		const task = this._taskManager.getActiveTask(taskId)!;
 		if (!task) {
 			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
 		}
-		return task.startResponse(text);
+		await task.humanChat(text);
+	}
+
+	private rpcStartBotTurn(taskId: string) {
+		const task = this._taskManager.getActiveTask(taskId)!;
+		if (!task) {
+			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
+		}
+		task.startBotTurn();
 	}
 
 	private async rpcStopResponse(taskId: string): Promise<void> {
@@ -476,6 +488,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		if (!task) {
 			throw new Error(`Tried to stop operation with an inactive task ${taskId}`);
 		}
-		task.stopResponse();
+		task.stopBotTurn();
 	}
 }

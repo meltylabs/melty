@@ -1,5 +1,3 @@
-import * as vscode from "vscode";
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { RpcClient } from "../RpcClient";
@@ -19,7 +17,7 @@ import { MouseEvent, KeyboardEvent } from "react";
 import Ascii from "./Ascii";
 import OnboardingSection from './OnboardingSection';
 import "diff2html/bundles/css/diff2html.min.css";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { DehydratedTask, TaskMode, AssistantInfo } from "../types";
 import {
@@ -144,8 +142,9 @@ export function Tasks({
 		[fetchTasks]
 	);
 
-	const handleSendMessage = useCallback((text: string, taskId: string) => {
-		rpcClient.run("chatMessage", { text, taskId });
+	const handleSendMessage = useCallback(async (text: string, taskId: string) => {
+		await rpcClient.run("humanChat", { text, taskId });
+		rpcClient.run("startBotTurn", { taskId });
 	}, []);
 
 	/* =====================================================

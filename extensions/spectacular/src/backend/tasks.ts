@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Joule, Conversation, TaskMode, DehydratedTask } from "../types";
+import { Joule, Conversation, TaskMode, DehydratedTask, ConvoState } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
@@ -40,7 +40,7 @@ export class Task {
 	taskMode: TaskMode;
 	savedMeltyMindFiles: string[] = [];
 
-	inFlightOperationCancellationTokenSource: vscode.CancellationTokenSource | null = null;
+	botTurnCancellationTokenSource: vscode.CancellationTokenSource | null = null;
 
 	/**
 	 * Private constructor for deserializing or creating new tasks
@@ -82,7 +82,6 @@ export class Task {
 	public listJoules(): readonly Joule[] {
 		return this.conversation.joules;
 	}
-
 
 	/**
 	 * Adds a bot message (and changes) to the conversation.
@@ -136,9 +135,9 @@ export class Task {
 				"Adding edited files to Melty's Mind"
 			);
 			const lastJoule = conversations.lastJoule(this.conversation)!;
-			if (lastJoule.diffInfo?.filePathsChanged) {
+			if (lastJoule.chatCodeInfo.diffInfo?.filePathsChanged) {
 				// add any edited files to melty's mind
-				lastJoule.diffInfo.filePathsChanged.forEach((editedFile) => {
+				lastJoule.chatCodeInfo.diffInfo.filePathsChanged.forEach((editedFile) => {
 					this._fileManager.addMeltyMindFile(editedFile, true);
 				});
 			}
@@ -200,55 +199,120 @@ export class Task {
 		return conversations.lastJoule(this.conversation)!;
 	}
 
+	// TODO we need to implement something like
+	// I think we should split human and bot apart, and so
+	// rename startResponse to something else
+	// it is a little weird that human response can be async, isn't it?
+	// that doesn't fit in the model very well. it means a human joule
+	// is not always easily applied. oh, well. I think we ignore that for now.
+	// no stopping mid-human commit. that's a sacrifice we can make.
+
+	// or: two-layer system where a joule has a status
+
+	// public async progress() {
+	// 	const lastJoule = conversations.lastJoule(this.conversation);
+	// 	const jouleState = lastJoule?.jouleState || "complete";
+	// 	if (jouleState !== "complete") {
+	// 		throw new Error("can't progress incomplete joule");
+	// 	}
+
+	// 	const convoState = lastJoule?.convoState || "BotChat"; // as if the bot just sent a message
+	// 	// todo: somehow ensure that this corresponds to stateMachineEdges defined in types.ts
+	// 	switch (convoState) {
+	// 		case "HumanChat":
+	// 			botChat(this.conversation);
+	// 			break;
+	// 		case "HumanConfirmCode":
+	// 			botCode(this.conversation);
+	// 			break;
+	// 		default:
+	// 			throw new Error("unrecognized convoState case");
+	// 	}
+	// }
+
+	/**
+	 * all bot behaviors
+	 */
+	private edges = new Map<ConvoState, () => void>([
+		["HumanChat", () => {
+			// goes to: BotChat state
+			this.startCancelableOperation(async (cancellationToken) => {
+				const processPartial = (partialConversation: Conversation) => {
+					const dehydratedTask = this.dehydrateForWire();
+					dehydratedTask.conversation = partialConversation;
+					webviewNotifier.sendNotification("updateTask", {
+						task: dehydratedTask,
+					});
+				};
+				await this.respondBot(
+					processPartial,
+					cancellationToken
+				);
+
+				webviewNotifier.sendNotification("updateTask", {
+					task: this.dehydrateForWire(),
+				});
+				webviewNotifier.resetStatusMessage();
+
+				// end running operation
+				this.botTurnCancellationTokenSource = null;
+			});
+		}],
+		// ["HumanConfirm", () => {
+
+		// }]
+	]);
+
+	/**
+	 * Executes humanChat synchronously.
+	 * New task comes back through notification.
+	 */
+	public async humanChat(text: string) {
+		await this.respondHuman(text);
+		await webviewNotifier.sendNotification("updateTask", {
+			task: this.dehydrateForWire(),
+		});
+	}
+
+	public startBotTurn(): void {
+		const lastJoule = conversations.lastJoule(this.conversation);
+		const jouleState = lastJoule?.jouleState;
+		if (jouleState !== "complete") {
+			throw new Error("can't progress incomplete joule");
+		}
+
+		// todo if multiple bot operations can happen back-to-back,
+		// we'll need to add a loop somewhere
+		const convoState = lastJoule?.convoState;
+		const startOp = convoState ? this.edges.get(convoState) : undefined;
+		if (!startOp) {
+			throw new Error(`no operation for ${convoState}`);
+		}
+		startOp();
+	}
+
 	/**
 	 * @returns whether launched successfully or not
 	 */
-	public startResponse(text: string): boolean {
+	private startCancelableOperation(operation: (t: vscode.CancellationToken) => Promise<void>): boolean {
 		this._webviewNotifier.updateStatusMessage("Starting up");
 
-		if (this.inFlightOperationCancellationTokenSource) {
+		if (this.botTurnCancellationTokenSource) {
 			console.error("Response is already running");
 			return false;
 		}
-		this.inFlightOperationCancellationTokenSource = new vscode.CancellationTokenSource();
-		const cancellationToken = this.inFlightOperationCancellationTokenSource.token;
+		this.botTurnCancellationTokenSource = new vscode.CancellationTokenSource();
+		const cancellationToken = this.botTurnCancellationTokenSource.token;
 
-		(async () => {
-			// human response
-			await this.respondHuman(text);
-			webviewNotifier.sendNotification("updateTask", {
-				task: this.dehydrateForWire(),
-			});
-
-			// bot response
-			const processPartial = (partialConversation: Conversation) => {
-				const dehydratedTask = this.dehydrateForWire();
-				dehydratedTask.conversation = partialConversation;
-				webviewNotifier.sendNotification("updateTask", {
-					task: dehydratedTask,
-				});
-			};
-			await this.respondBot(
-				processPartial,
-				cancellationToken
-			);
-
-			webviewNotifier.sendNotification("updateTask", {
-				task: this.dehydrateForWire(),
-			});
-			webviewNotifier.resetStatusMessage();
-
-			// end running operation
-			this.inFlightOperationCancellationTokenSource = null;
-		})();
+		operation(cancellationToken);
 
 		return true;
 	}
 
-	public stopResponse(): void {
-		if (this.inFlightOperationCancellationTokenSource) {
-			this.inFlightOperationCancellationTokenSource.cancel();
-			this.inFlightOperationCancellationTokenSource = null;
+	public stopBotTurn(): void {
+		if (this.botTurnCancellationTokenSource) {
+			this.botTurnCancellationTokenSource.cancel();
+			this.botTurnCancellationTokenSource = null;
 
 			// TODO we need to wait until the operation is ACTUALLY cancelled before returning!
 		} else {

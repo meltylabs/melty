@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo, useLayoutEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
 	XIcon,
 	ArrowUp,
@@ -17,8 +17,6 @@ import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
 import { DehydratedTask } from "types";
 import { useNavigate } from "react-router-dom";
-
-import * as vscode from "vscode";
 
 const MemoizedJouleComponent = memo(JouleComponent);
 const rpcClient = RpcClient.getInstance();
@@ -58,7 +56,7 @@ export function ConversationView() {
 			nonInitialHumanMessageInFlight ||
 			task?.conversation.joules[task?.conversation.joules.length - 1].author ===
 			"human" ||
-			task?.conversation.joules[task?.conversation.joules.length - 1].state ===
+			task?.conversation.joules[task?.conversation.joules.length - 1].jouleState ===
 			"partial"
 		);
 	}
@@ -107,7 +105,10 @@ export function ConversationView() {
 			task_id: taskId,
 		});
 		console.log("posthog event captured!", result);
-		rpcClient.run("chatMessage", { text, taskId });
+		(async () => {
+			await rpcClient.run("humanChat", { text, taskId });
+			rpcClient.run("startBotTurn", { taskId });
+		})();
 	}
 
 	async function handleCreatePR() {
@@ -220,7 +221,7 @@ export function ConversationView() {
 	const lastJouleCommit = useMemo(() => {
 		if (!task?.conversation.joules.length) return null;
 		const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
-		return lastJoule.commit;
+		return lastJoule.chatCodeInfo.commit;
 	}, [task?.conversation.joules]);
 
 	useEffect(() => {
@@ -324,9 +325,9 @@ export function ConversationView() {
 							joule={joule}
 							isLatestCommit={
 								// isLatestCommit checks that we are actually on a commit and that commit actually matches the joule's commit
-								latestCommitHash !== undefined && joule.commit !== undefined && latestCommitHash === joule.commit
+								latestCommitHash !== undefined && joule.chatCodeInfo.diffInfo !== undefined && latestCommitHash === joule.chatCodeInfo.commit
 							}
-							isPartial={joule.state === "partial"}
+							isPartial={joule.jouleState === "partial"}
 							showDiff={index !== 0} // Hide diff view for the first message
 						/>
 					))}

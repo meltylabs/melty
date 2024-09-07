@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -24,16 +24,16 @@ export function JouleComponent({
 	const [undoClicked, setUndoClicked] = useState(false);
 
 	const diffHtml =
-		showDiff && joule.diffInfo?.diffPreview ? joule.diffInfo.diffPreview : null;
+		showDiff && joule.chatCodeInfo.diffInfo?.diffPreview ? joule.chatCodeInfo.diffInfo.diffPreview : null;
 
 	const handleUndo = async () => {
 		setUndoClicked(true);
 		await rpcClient.run("undoLatestCommit", {
-			commitId: joule.commit,
+			commitId: joule.chatCodeInfo.commit,
 		});
 	};
 
-	if (joule.state === "error") {
+	if (joule.jouleState === "error") {
 		return (
 			<div className="text-red-800">Oops, something went wrong. Try again?</div>
 		);
@@ -80,7 +80,7 @@ export function JouleComponent({
 					},
 				}}
 			>
-				{joule.message}
+				{joule.chatCodeInfo.message}
 			</ReactMarkdown>
 		</div>
 	);
@@ -93,7 +93,7 @@ export function JouleComponent({
 						<DiffContent
 							isHuman={true}
 							diffHtml={diffHtml}
-							jouleCommit={joule.commit}
+							jouleCommit={joule.chatCodeInfo.commit}
 							isPartial={isPartial}
 							isLatestCommit={isLatestCommit}
 							undoClicked={undoClicked}
@@ -120,7 +120,7 @@ export function JouleComponent({
 							<DiffContent
 								isHuman={false}
 								diffHtml={diffHtml}
-								jouleCommit={joule.commit}
+								jouleCommit={joule.chatCodeInfo.commit}
 								isPartial={isPartial}
 								isLatestCommit={isLatestCommit}
 								undoClicked={undoClicked}
