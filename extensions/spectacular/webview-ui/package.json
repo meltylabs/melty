@@ -7,7 +7,7 @@
     "build": "node ./scripts/build-react-no-split.js",
     "test": "EXTEND_ESLINT=true react-scripts test",
     "eject": "react-scripts eject",
-    "watch": "EXTEND_ESLINT=true react-scripts start"
+    "watch": "nodemon --ext ts,js,tsx,jsx,json --ignore dist --ignore build --ignore node_modules --exec 'npm run build'"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.0",
@@ -55,6 +55,7 @@
     "@types/react-window": "^1.8.5",
     "@types/vscode-webview": "^1.57.0",
     "autoprefixer": "^10.4.19",
+    "nodemon": "^3.1.4",
     "postcss": "^8.4.40",
     "react-scripts": "^5.0.1",
     "rewire": "^5.0.0",
