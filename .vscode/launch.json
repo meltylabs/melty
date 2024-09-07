@@ -540,7 +540,7 @@
 	],
 	"compounds": [
 		{
-			"name": "VS Code",
+			"name": "Melty",
 			"stopAll": true,
 			"configurations": [
 				"Launch VS Code Internal",
