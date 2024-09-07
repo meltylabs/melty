@@ -1,9 +1,20 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { HelpCircle } from 'lucide-react';
 
 export const NavBar: React.FC = () => {
 	const location = useLocation();
+	const navigate = useNavigate();
+
+	const isHelpPage = location.pathname === '/help';
+
+	const toggleHelp = () => {
+		if (isHelpPage) {
+			navigate('/');
+		} else {
+			navigate('/help');
+		}
+	};
 
 	return (
 		<nav className="mb-6 mt-4 mx-3 relative">
@@ -20,9 +31,9 @@ export const NavBar: React.FC = () => {
 				</li>
 			</ul>
 
-			<Link to="/help" className="absolute right-4 top-2">
+			<button onClick={toggleHelp} className="absolute right-4 top-2">
 				<HelpCircle />
-			</Link>
+			</button>
 		</nav>
 	);
 };
