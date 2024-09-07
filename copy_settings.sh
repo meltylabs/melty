@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Source and destination directories
-SRC_DIR="/Users/charlieholtz/Library/Application Support/Code/User"
-DEST_DIR="/Users/charlieholtz/Library/Application Support/melty/User"
+# Source and destination directories using $HOME
+SRC_DIR="$HOME/Library/Application Support/Code/User"
+DEST_DIR="$HOME/Library/Application Support/melty/User"
 
 # Files to copy
 FILES=("keybindings.json" "settings.json")
