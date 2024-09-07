@@ -56,4 +56,4 @@ https://twitter.com/charliebholtz/status/1825647665776046472
 
 ### Contributing
 
-Please see our [contributing guidelines](CONTRIBUTING.md) for details on how to set up/contriubte to the project.
+Please see our [contributing guidelines](CONTRIBUTING.md) for details on how to set up/contribute to the project.
