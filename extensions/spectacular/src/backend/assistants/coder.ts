@@ -95,7 +95,7 @@ export class Coder extends BaseAssistant {
 
 		webviewNotifier.updateStatusMessage("Thinking");
 		let partialMessage = "";
-		const finalResponse = await claudeAPI.streamClaude(
+		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
 			{
 				cancellationToken,
@@ -115,12 +115,24 @@ export class Coder extends BaseAssistant {
 				}
 			}
 		);
+
+		const text = finalResponse.content.find((block) => "text" in block)?.text?.trim() || ""; // todo better error handling
 		console.log(finalResponse);
+
+		if (finalResponse.stop_reason === "stop_sequence") {
+			switch (finalResponse.stop_sequence) {
+				case "<change_code":
+					vscode.window.showInformationMessage("stopped for input");
+					break;
+				default:
+					throw new Error(`Unrecognized stop sequence ${finalResponse.stop_sequence}`);
+			}
+		}
 
 		webviewNotifier.updateStatusMessage("Applying changes");
 		return await this.claudeOutputToConversation(
 			conversation,
-			finalResponse,
+			text,
 			false,
 			contextPaths,
 			false, // apply changes
