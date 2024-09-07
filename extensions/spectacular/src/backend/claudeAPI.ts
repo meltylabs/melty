@@ -52,7 +52,7 @@ export async function streamClaude(
 					max_tokens: 4096,
 					messages: claudeConversation.messages as any,
 					system: claudeConversation.system,
-					stop_sequences: ["<code_change"]
+					stop_sequences: ["<change_code"]
 				},
 				{
 					headers: {
