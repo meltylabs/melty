@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
 import * as vscode from "vscode";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { RpcClient } from "RpcClient";
+import { RpcClient } from "../RpcClient";
 import { Button } from "./ui/button";
 import {
 	ArrowUp,
