@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo, useLayoutEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
 	XIcon,
 	ArrowUp,
@@ -15,10 +15,12 @@ import { RpcClient } from "@/RpcClient";
 import { JouleComponent } from "./JouleComponent";
 import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
-import { DehydratedTask } from "types";
+import { DehydratedTask, UserAttachedImage } from "types";
 import { useNavigate } from "react-router-dom";
-
-import * as vscode from "vscode";
+import { imagePasteHandler, showNotification } from '@/lib/utils';
+import { MAX_IMAGES } from '@/lib/constants';
+import { CustomError } from '@/lib/errors';
+import { PreviewImage } from '@/components/PreviewImage';
 
 const MemoizedJouleComponent = memo(JouleComponent);
 const rpcClient = RpcClient.getInstance();
@@ -27,6 +29,7 @@ export function ConversationView() {
 	const { taskId } = useParams<{ taskId: string }>();
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const [meltyFiles, setMeltyFiles] = useState<string[]>([]);
+	const [images, setImages] = useState<UserAttachedImage[]>([]);
 	const [workspaceFiles, setWorkspaceFiles] = useState<string[]>([]);
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const isInitialRender = useRef(true);
@@ -79,6 +82,11 @@ export function ConversationView() {
 		setPickerOpen(false);
 	}
 
+	const handleDropImage = useCallback((idx: number) => {
+		const updatedImages = images.filter((_, i) => i !== idx);
+		setImages(updatedImages);
+	}, [images]);
+
 	useLayoutEffect(() => {
 		if (isInitialRender.current) {
 			inputRef.current?.focus();
@@ -100,14 +108,14 @@ export function ConversationView() {
 		setWorkspaceFiles(workspaceFiles);
 	}, [setMeltyFiles, setWorkspaceFiles]);
 
-	function handleSendMessage(text: string, taskId: string) {
+	function handleSendMessage(text: string, taskId: string, images?: UserAttachedImage[]) {
 		setNonInitialHumanMessageInFlight(true);
 		const result = posthog.capture("chatmessage_sent", {
 			message: text,
 			task_id: taskId,
 		});
 		console.log("posthog event captured!", result);
-		rpcClient.run("chatMessage", { text, taskId });
+		rpcClient.run("chatMessage", { text, taskId, images });
 	}
 
 	async function handleCreatePR() {
@@ -234,9 +242,10 @@ export function ConversationView() {
 		event.preventDefault();
 		const form = event.target as HTMLFormElement;
 		const message = form.message.value;
-		handleSendMessage(message, taskId!);
+		handleSendMessage(message, taskId!, images);
 		setMessageText("");
 		form.reset();
+		setImages([]);
 	};
 
 	const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -245,13 +254,34 @@ export function ConversationView() {
 			if (event.currentTarget && event.currentTarget.value !== undefined) {
 				const form = event.currentTarget.form;
 				if (form) {
-					handleSendMessage(event.currentTarget.value, taskId!);
+					handleSendMessage(event.currentTarget.value, taskId!, images);
 					setMessageText("");
+					setImages([]);
 					event.currentTarget.value = "";
 				}
 			}
 		}
 	};
+
+	const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+		try {
+			await imagePasteHandler(event, (imgs) => {
+				const totalImages = images.length + imgs.length;
+				if (totalImages > MAX_IMAGES) {
+					throw new CustomError(`You can only attach up to ${MAX_IMAGES} images.`);
+				}
+
+				setImages(i => [...i, ...imgs]);
+			})
+		} catch (error) {
+			console.error(error)
+			let errorMessage = "Failed to paste image. Please try again.";
+			if (error instanceof CustomError) {
+				errorMessage = error.getDisplayMessage();
+			}
+			showNotification(errorMessage, 'error');
+		}
+	}
 
 	const handleBack = useCallback(async () => {
 		await rpcClient.run("deactivateTask", { taskId });
@@ -364,6 +394,7 @@ export function ConversationView() {
 							onChange={(e) => setMessageText(e.target.value)}
 							onKeyDown={handleKeyDown}
 							autoFocus={true}
+							onPaste={handlePaste}
 						/>
 
 						{messageText.trim() !== "" && (
@@ -402,12 +433,24 @@ export function ConversationView() {
 						{meltyFiles.map((file, i) => (
 							<button
 								onClick={() => handleDropFile(file)}
-								className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-gray-100 px-2 py-1 inline-flex items-center rounded"
+								className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-muted px-2 py-1 inline-flex items-center rounded"
 								key={`file-${i}`}
 							>
 								<XIcon className="h-3 w-3 mr-2" />
 								{file}
 							</button>
+						))}
+					</div>
+					<div className="flex overflow-x-auto pt-2">
+						{images.map((image, i) => (
+							<div key={`image-${i}`} className="relative mr-2 mb-2">
+								<PreviewImage
+									src={image.blobUrl}
+									className='w-12 h-12'
+									handleRemoveImage={() => handleDropImage(i)}
+									stopEscapePropagation
+								/>
+							</div>
 						))}
 					</div>
 				</div>
