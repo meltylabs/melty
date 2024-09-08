@@ -6,7 +6,7 @@
   "publisher": "meltylabs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YourUsername/melty.git"
+    "url": "https://github.com/meltylabs/melty.git"
   },
   "license": "MIT",
   "private": true,
