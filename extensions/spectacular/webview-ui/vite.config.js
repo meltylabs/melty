@@ -8,6 +8,7 @@ export default defineConfig(() => {
 		build: {
 			outDir: 'build',
 			rollupOptions: {
+				external: ['vscode'],
 				output: {
 					// Ensure that the output files are named `main.js` and `main.css`
 					entryFileNames: 'assets/main.js',
