@@ -13,7 +13,7 @@ import { createNewDehydratedTask } from "./backend/tasks";
 import * as config from "./util/config";
 import { WebviewNotifier } from "./services/WebviewNotifier";
 import { FileManager } from "./services/FileManager";
-import { DehydratedTask, RpcMethod } from "./types";
+import { DehydratedTask, RpcMethod, UserAttachedImage } from "./types";
 import { Coder } from "./backend/assistants/coder";
 import { Vanilla } from "./backend/assistants/vanilla";
 import { GitManager } from "./services/GitManager";
@@ -229,7 +229,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return this.rpcGetLatestCommit();
 				case "chatMessage":
 					return await this.rpcStartResponse(
-						params.text, params.taskId
+						params.text, params.taskId, params.images
 					);
 				case "createTask":
 					return await this.rpcCreateTask(
@@ -463,12 +463,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'light';
 	}
 
-	private async rpcStartResponse(text: string, taskId: string): Promise<boolean> {
+	private async rpcStartResponse(text: string, taskId: string, images?: UserAttachedImage[]): Promise<boolean> {
 		const task = this._taskManager.getActiveTask(taskId)!;
 		if (!task) {
 			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
 		}
-		return task.startResponse(text);
+		return task.startResponse(text, images);
 	}
 
 	private async rpcStopResponse(taskId: string): Promise<void> {

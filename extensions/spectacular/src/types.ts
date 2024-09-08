@@ -1,3 +1,5 @@
+import Anthropic from '@anthropic-ai/sdk';
+
 // implemented by the Task class. this is the UI-facing one
 // note that datastores.ts has an independent list of properties
 // that will get loaded from disk
@@ -24,11 +26,18 @@ export interface AssistantInfo {
 	description: string;
 }
 
+export type UserAttachedImage = {
+	blobUrl: string;
+	mimeType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+	base64: string;
+};
+
 export type Joule = {
 	readonly id: string;
 	readonly author: "human" | "bot";
 	readonly state: "complete" | "partial" | "error";
 	readonly message: string;
+	readonly images?: UserAttachedImage[];
 	readonly commit: string | null;
 	readonly diffInfo: DiffInfo | null;
 };
@@ -74,7 +83,7 @@ export interface Message {
 
 export type ClaudeMessage = {
 	readonly role: "user" | "assistant";
-	readonly content: string;
+	readonly content: Anthropic.Messages.MessageParam['content'];
 };
 
 export type ClaudeConversation = {
@@ -119,4 +128,5 @@ export type RpcMethod =
 	| "createGitRepository"
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
-	| "setOnboardingComplete";
+	| "setOnboardingComplete"
+	| "showNotification";
