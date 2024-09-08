@@ -308,7 +308,6 @@ export function Tasks({
 				gitConfigError?.includes("Open a workspace folder") ?
 					<div className="bg-background text-foreground p-4">
 						<div className="text-center">
-
 							<Ascii />
 
 							<h2 className="mt-12 text-lg font-bold">Where should I work?</h2>
