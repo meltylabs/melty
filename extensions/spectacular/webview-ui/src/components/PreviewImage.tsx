@@ -16,6 +16,7 @@ export function PreviewImage({
 	handleRemoveImage,
 	src,
 	stopEscapePropagation,
+	className,
 	...props
 }: PreviewImageProps) {
 	return (
@@ -27,7 +28,7 @@ export function PreviewImage({
 				<XIcon className="h-4 w-4" />
 			</button>
 			<DialogTrigger asChild>
-				<img src={src} alt="preview-image" className={cn('w-16 h-16 object-cover cursor-pointer', props.className)} {...props} />
+				<img src={src} alt="preview-image" className={cn('w-16 h-16 object-cover cursor-pointer', className)} {...props} />
 			</DialogTrigger>
 
 			<DialogContent className='outline-none focus:outline-none' onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
