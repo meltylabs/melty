@@ -199,7 +199,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		}
 		task.addErrorJoule(message);
 		await WebviewNotifier.getInstance().sendNotification("updateTask", {
-			task: task.dehydrateForWire(),
+			task: await task.dehydrateForWire(),
 		});
 	}
 
@@ -342,7 +342,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 			// 	{ uri: newFolderUri }
 			// );
 
-			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false)
+			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false);
 			return openResult === undefined;
 		} else {
 			return false;
@@ -374,12 +374,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		}
 	}
 
-	private async rpcGetActiveTask(taskId: string): Promise<DehydratedTask | undefined> {
+	private async rpcGetActiveTask(taskId: string) {
 		const task = this._taskManager.getActiveTask(taskId);
 		if (!task) {
 			vscode.window.showErrorMessage(`Failed to get active task ${taskId}`);
 		}
-		return task!.dehydrate();
+		return task!.dehydrateForWire();
 	}
 
 	private async rpcListMeltyFiles(): Promise<string[]> {

@@ -12,10 +12,10 @@ export abstract class BaseAssistant {
 	abstract respond(
 		conversation: Conversation,
 		contextPaths: ContextPaths,
-		processPartial: (partialConversation: Conversation) => void
+		processPartial: (partialConversation: Conversation) => Promise<void>,
 	): Promise<Conversation>;
 
-	protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
+	protected async encodeMessages(conversation: Conversation): Promise<ClaudeMessage[]> {
 		const userPrompt = getUserPrompt();
 		const messages: ClaudeMessage[] = [];
 
@@ -35,12 +35,12 @@ export abstract class BaseAssistant {
 			return author === "human" ? "user" : "assistant";
 		}
 
-		messages.push(
-			...conversation.joules.map((joule: Joule) => ({
+		for (const joule of conversation.joules) {
+			messages.push({
 				role: authorToRole(joule.author),
-				content: joules.formatMessageForClaude(joule),
-			}))
-		);
+				content: await joules.formatMessageForClaude(joule),
+			});
+		}
 
 		return messages;
 	}

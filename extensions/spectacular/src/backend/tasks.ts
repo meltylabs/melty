@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Joule, Conversation, TaskMode, DehydratedTask, UserAttachedImage } from "../types";
+import { Joule, Conversation, TaskMode, DehydratedTask, UserAttachedImage, DehydratedTaskWithDehydratedConversation } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
@@ -92,7 +92,7 @@ export class Task {
 	 * @param processPartial - a function to process the partial joule
 	 */
 	private async respondBot(
-		processPartial: (partialConversation: Conversation) => void,
+		processPartial: (partialConversation: Conversation) => Promise<void>,
 		cancellationToken?: vscode.CancellationToken,
 	): Promise<void> {
 		try {
@@ -184,10 +184,10 @@ export class Task {
 			webviewNotifier.resetStatusMessage();
 
 			newJoule = commitResult !== null
-				? joules.createJouleHumanWithChanges(message, commitResult.commit, commitResult.diffInfo, images)
-				: joules.createJouleHuman(message, images);
+				? await joules.createJouleHumanWithChanges(message, commitResult.commit, commitResult.diffInfo, images)
+				: await joules.createJouleHuman(message, images);
 		} else {
-			newJoule = joules.createJouleHuman(message, images);
+			newJoule = await joules.createJouleHuman(message, images);
 		}
 
 		this.conversation = conversations.addJoule(this.conversation, newJoule);
@@ -217,13 +217,13 @@ export class Task {
 			// human response
 			await this.respondHuman(text, images);
 			webviewNotifier.sendNotification("updateTask", {
-				task: this.dehydrateForWire(),
+				task: await this.dehydrateForWire(),
 			});
 
 			// bot response
-			const processPartial = (partialConversation: Conversation) => {
-				const dehydratedTask = this.dehydrateForWire();
-				dehydratedTask.conversation = partialConversation;
+			const processPartial = async (partialConversation: Conversation) => {
+				const dehydratedTask = await this.dehydrateForWire();
+				dehydratedTask.conversation = await conversations.dehydrate(partialConversation);
 				webviewNotifier.sendNotification("updateTask", {
 					task: dehydratedTask,
 				});
@@ -234,7 +234,7 @@ export class Task {
 			);
 
 			webviewNotifier.sendNotification("updateTask", {
-				task: this.dehydrateForWire(),
+				task: await this.dehydrateForWire(),
 			});
 			webviewNotifier.resetStatusMessage();
 
@@ -257,14 +257,15 @@ export class Task {
 	}
 
 	/**
-	 * Leaves out the melty mind files
+	 * Leaves out the melty mind files and dehydrates the conversation to include joule images as base64 strings
 	 */
-	public dehydrateForWire(): DehydratedTask {
+	public async dehydrateForWire(): Promise<DehydratedTaskWithDehydratedConversation> {
 		return {
 			...this,
 			_fileManager: undefined,
 			_gitManager: undefined,
-			files: null
+			files: null,
+			conversation: await conversations.dehydrate(this.conversation),
 		};
 	}
 

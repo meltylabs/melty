@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { Joule, JouleHuman, JouleBot, BotExecInfo, DiffInfo, ClaudeMessage, UserAttachedImage } from "../types";
+import { Joule, JouleHuman, JouleBot, BotExecInfo, DiffInfo, ClaudeMessage, UserAttachedImage, JouleImage, DehydratedJoule } from "../types";
+import * as datastores from './datastores';
 
 export function createJouleError(errorMessage: string): JouleBot {
 	return createJouleBot(errorMessage, {
@@ -12,17 +13,19 @@ export function createJouleError(errorMessage: string): JouleBot {
 	});
 }
 
-export function createJouleHuman(message: string, images?: UserAttachedImage[]): JouleHuman {
+export async function createJouleHuman(message: string, images?: UserAttachedImage[]): Promise<JouleHuman> {
 	return createJouleHumanWithChanges(message, null, null, images);
 }
 
-export function createJouleHumanWithChanges(
+export async function createJouleHumanWithChanges(
 	message: string,
 	commit: string | null,
 	diffInfo: DiffInfo | null,
 	images?: UserAttachedImage[]
-): JouleHuman {
+): Promise<JouleHuman> {
 	const id = uuidv4();
+	const imagesData: JouleImage[] | undefined = images ? await datastores.saveJouleImagesToDisk(images) : [];
+
 	return {
 		id,
 		message,
@@ -30,7 +33,7 @@ export function createJouleHumanWithChanges(
 		state: "complete",
 		commit,
 		diffInfo,
-		images
+		images: imagesData,
 	};
 }
 
@@ -65,7 +68,7 @@ export function updateMessage(joule: Joule, message: string): Joule {
 	return { ...joule, message };
 }
 
-export function formatMessageForClaude(joule: Joule): ClaudeMessage['content'] {
+export async function formatMessageForClaude(joule: Joule): Promise<ClaudeMessage['content']> {
 	// note that if we show a processed message, we'll need to use `message.length ? message : "..."`
 	// to ensure no Anthropic API errors
 	switch (joule.author) {
@@ -73,11 +76,18 @@ export function formatMessageForClaude(joule: Joule): ClaudeMessage['content'] {
 			if (joule.images && joule.images.length > 0) {
 				const content: ClaudeMessage['content'] = [];
 				for (const img of joule.images) {
+					const { buffer, exists } = await datastores.readImageFromDisk(img.path);
+					if (!exists) {
+						console.warn(`Skipping image ${img.path} as it doesn't exist`);
+						continue;
+					}
+
+					const base64 = buffer.toString('base64');
 					content.push({
 						type: 'image',
 						source: {
 							type: 'base64',
-							data: img.base64.replace(/^data:image\/\w+;base64,/, ''),
+							data: base64,
 							media_type: img.mimeType
 						}
 					});
@@ -92,6 +102,24 @@ export function formatMessageForClaude(joule: Joule): ClaudeMessage['content'] {
 			}
 			return joule.message;
 		case "bot":
-			return (joule as JouleBot).botExecInfo.rawOutput ?? "";
+			return (joule as JouleBot)?.botExecInfo?.rawOutput ?? "";
 	}
+}
+
+// reads images in the joule and converts them to base64 to be rendered on the ui
+export async function dehydrate(joule: Joule): Promise<DehydratedJoule> {
+	return {
+		...joule,
+		images: joule.images ? await Promise.all(joule.images.map(async (img) => {
+			const { buffer } = await datastores.readImageFromDisk(img.path);
+			let base64 = buffer.toString('base64');
+			// add the data:image\/\w+;base64, prefix
+			base64 = `data:${img.mimeType};base64,${base64}`;
+
+			return {
+				mimeType: img.mimeType,
+				base64: base64
+			};
+		})) : undefined
+	};
 }

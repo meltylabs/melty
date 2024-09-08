@@ -1,4 +1,4 @@
-import { Joule, Conversation } from "../types";
+import { Joule, Conversation, JouleBot, DehydratedConversation } from "../types";
 import * as vscode from "vscode";
 import * as joules from "./joules";
 export function create(): Conversation {
@@ -130,4 +130,11 @@ function removeFinalJoulesFrom(
 			joules: conversation.joules.slice(0, indexOfLastNonMatchingJoule + 1),
 		};
 	}
+}
+
+export async function dehydrate(conversation: Conversation): Promise<DehydratedConversation> {
+	return {
+		...conversation,
+		joules: await Promise.all(conversation.joules.map(j => joules.dehydrate(j))),
+	};
 }
