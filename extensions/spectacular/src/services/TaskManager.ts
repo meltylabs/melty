@@ -69,10 +69,15 @@ export class TaskManager {
 	 * Optimization to try to make Tasks page faster
 	 */
 	public listInactiveTasks(): DehydratedTask[] {
-		const tasks = Array.from(this.inactiveTasks.values());
-		// for (const task of tasks) {
-		// 	task.conversation = { joules: [] };
-		// }
+		const inactiveTasks = Array.from(this.inactiveTasks.values());
+		const tasks: DehydratedTask[] = [];
+		// remove conversation data as it is not needed in the list view
+		for (const task of inactiveTasks) {
+			tasks.push({
+				...task,
+				conversation: { joules: [] }
+			});
+		}
 		return tasks;
 	}
 
