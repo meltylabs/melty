@@ -31,6 +31,7 @@ export type Joule = {
 	readonly message: string;
 	readonly commit: string | null;
 	readonly diffInfo: DiffInfo | null;
+	images?: UserAttachedImage[];
 };
 
 export type JouleHuman = Joule & {
@@ -120,3 +121,9 @@ export type RpcMethod =
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
 	| "setOnboardingComplete";
+
+export type UserAttachedImage = {
+	blobUrl: string;
+	mimeType: string;
+	base64: string;
+}

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Joule, Conversation, TaskMode, DehydratedTask } from "../types";
+import { Joule, Conversation, TaskMode, DehydratedTask, UserAttachedImage } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
@@ -168,7 +168,7 @@ export class Task {
 	/**
 	 * Adds a human message (and changes) to the conversation.
 	 */
-	private async respondHuman(message: string): Promise<Joule> {
+	private async respondHuman(message: string, images?: UserAttachedImage[]): Promise<Joule> {
 		this.conversation = conversations.forceReadyForResponseFrom(
 			this.conversation,
 			"human"
@@ -184,10 +184,10 @@ export class Task {
 			webviewNotifier.resetStatusMessage();
 
 			newJoule = commitResult !== null
-				? joules.createJouleHumanWithChanges(message, commitResult.commit, commitResult.diffInfo)
-				: joules.createJouleHuman(message);
+				? joules.createJouleHumanWithChanges(message, commitResult.commit, commitResult.diffInfo, images)
+				: joules.createJouleHuman(message, images);
 		} else {
-			newJoule = joules.createJouleHuman(message);
+			newJoule = joules.createJouleHuman(message, images);
 		}
 
 		this.conversation = conversations.addJoule(this.conversation, newJoule);
@@ -203,7 +203,7 @@ export class Task {
 	/**
 	 * @returns whether launched successfully or not
 	 */
-	public startResponse(text: string): boolean {
+	public startResponse(text: string, images?: UserAttachedImage[]): boolean {
 		this._webviewNotifier.updateStatusMessage("Starting up");
 
 		if (this.inFlightOperationCancellationTokenSource) {
@@ -215,7 +215,7 @@ export class Task {
 
 		(async () => {
 			// human response
-			await this.respondHuman(text);
+			await this.respondHuman(text, images);
 			webviewNotifier.sendNotification("updateTask", {
 				task: this.dehydrateForWire(),
 			});
