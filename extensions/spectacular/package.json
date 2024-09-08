@@ -32,7 +32,12 @@
     "onStartupFinished"
   ],
   "contributes": {
-    "commands": [],
+    "commands": [
+      {
+        "command": "melty.copySettings",
+        "title": "Melty: Copy VS Code Settings"
+      }
+    ],
     "keybindings": [],
     "configuration": {
       "title": "Melty Settings",
