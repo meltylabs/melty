@@ -219,8 +219,8 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 			steps: [
 				{
 					id: 'openMeltyOverlay',
-					title: 'Open Melty',
-					description: 'Open the Melty popup by pressing ⌘+m',
+					title: 'Say hello to Melty',
+					description: localize('gettingStarted.openMeltyOverlay.description.interpolated', "Open the Melty popup! \n{0}", Button(localize('openMelty', "Open Melty"), 'command:workbench.action.toggleMelty')),
 					media: {
 						type: 'svg', altText: 'Language extensions', path: 'languages.svg'
 					},
@@ -237,7 +237,7 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 				{
 					id: 'settings',
 					title: 'Import your VS Code settings and keybindings into Melty',
-					description: 'Melty supports VS Code\'s settings and keybindings. Import your settings and keybindings to get started.',
+					description: localize('gettingStarted.settings.description.interpolated', "Melty supports VS Code's settings and keyboard shortcuts. \n{0}", Button(localize('copySettings', "Copy Settings"), 'command:melty.copySettings')),
 					media: {
 						type: 'svg', altText: 'VS Code Settings', path: 'settings.svg'
 					},
@@ -245,8 +245,7 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 				{
 					id: 'settingsSync',
 					title: 'Import your VS Code extensions to Melty',
-					description: localize('gettingStarted.settingsSync.description.interpolated', "Keep your essential customizations backed up and updated across all your devices.\n{0}", Button(localize('enableSync', "Backup and Sync Settings"), 'command:workbench.userDataSync.actions.turnOn')),
-					completionEvents: ['onEvent:sync-enabled'],
+					description: localize('gettingStarted.settingsSync.description.interpolated', "Import all your VS Code extensions to Melty.\n{0}", Button(localize('copyExtensions', "Copy Extensions"), 'command:melty.copyExtensions')),
 					media: {
 						type: 'svg', altText: 'The "Turn on Sync" entry in the settings gear menu.', path: 'settingsSync.svg'
 					},
@@ -254,8 +253,8 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 				{
 					id: 'openTerminal',
 					title: 'Open the integrated terminal',
-					description: 'Toggle the integrated terminal by pressing ⌘+t',
-					media: { type: 'svg', altText: 'Command Palette overlay for searching and executing commands.', path: 'commandPalette.svg' },
+					description: localize('gettingStarted.terminal.description.interpolated', "Quickly run shell commands and monitor build output, right next to your code.\n{0}", Button(localize('openTerminal', "Open Terminal"), 'command:workbench.action.terminal.toggleTerminal')),
+					media: { type: 'svg', altText: 'Command Palette overlay for searching and executing commands.', path: 'terminal.svg' },
 				},
 				{
 					id: 'pickAFolderTask-Mac',

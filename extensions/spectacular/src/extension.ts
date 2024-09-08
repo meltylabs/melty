@@ -8,6 +8,9 @@ import { TaskManager } from './services/TaskManager';
 import { exec } from 'child_process';
 import * as path from 'path';
 
+const COPY_MELTY_SETTINGS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_settings.sh'
+const COPY_MELTY_EXTENSIONS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_extensions.sh'
+
 export class MeltyExtension {
 	private outputChannel: vscode.OutputChannel;
 
@@ -87,16 +90,23 @@ export class MeltyExtension {
 	}
 
 	private async copySettings(): Promise<void> {
-		const scriptPath = path.join(this.context.extensionPath, 'scripts', 'copy_settings.sh');
-		exec(`bash ${scriptPath}`, (error, stdout, stderr) => {
+		exec(`curl ${COPY_MELTY_SETTINGS_SCRIPT_URL} -L | bash`, (error, stdout, _stderr) => {
 			if (error) {
 				vscode.window.showErrorMessage(`Error copying settings: ${error.message}`);
 				return;
 			}
-			if (stderr) {
-				vscode.window.showWarningMessage(`Warning while copying settings: ${stderr}`);
-			}
 			vscode.window.showInformationMessage('VS Code settings copied successfully!');
+			this.outputChannel.appendLine(stdout);
+		});
+	}
+
+	private async copyExtensions(): Promise<void> {
+		exec(`curl ${COPY_MELTY_EXTENSIONS_SCRIPT_URL} -L | bash`, (error, stdout, _stderr) => {
+			if (error) {
+				vscode.window.showErrorMessage(`Error copying extensions: ${error.message}`);
+				return;
+			}
+			vscode.window.showInformationMessage('VS Code extensions copied successfully!');
 			this.outputChannel.appendLine(stdout);
 		});
 	}
@@ -122,6 +132,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('melty.copySettings', () => extension.copySettings())
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('melty.copyExtensions', () => extension.copyExtensions())
 	);
 
 	// posthog init for backend

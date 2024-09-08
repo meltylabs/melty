@@ -36,6 +36,10 @@
       {
         "command": "melty.copySettings",
         "title": "Melty: Copy VS Code Settings"
+      },
+      {
+        "command": "melty.copyExtensions",
+        "title": "Melty: Copy VS Code extensions"
       }
     ],
     "keybindings": [],
