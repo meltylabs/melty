@@ -35,3 +35,11 @@ npm run melty:dev
 > **Note:** The `melty:dev` script runs the melty extension in development mode, alongside the code editor. The extension may take time to build and start. If the code editor launches while the extension is building, you will have to reload the code editor by pressing `cmd+R` or `ctrl+R` after the extension has been built and started.
 
 In the development mode, any changes you make to the `./extensions/spectacular/` directory will be watched and the extension will be built. To see your changes, you must reload the code editor (`cmd+R` or `ctrl+R`).
+
+#### Setup Claude API Key
+
+Melty uses Claude, and you will need to set the `melty.anthropicApiKey` in Melty's settings. You can do that by:
+
+- Waiting for the editor to launch.
+- Opening preferences by pressing `cmd+,` or `ctrl+,`.
+- Searching for `melty.anthropicApiKey` and setting the API key.
