@@ -1,8 +1,11 @@
-import * as fs from "fs";
+import fs from "fs/promises";
 import * as path from "path";
 import * as vscode from "vscode";
-import { resolveTildePath } from "../util/utils";
-import { DehydratedTask } from "types";
+import { isPathInside, resolveTildePath, isDirectory, isFile, pathExists } from "../util/utils";
+import { DehydratedTask, JouleImage, UserAttachedImage } from "types";
+import { v4 as uuidv4 } from "uuid";
+import { LRUCache } from 'lru-cache';
+import { IMAGE_CACHE_TTL_MS, MAX_IMAGES_TO_CACHE } from '../constants';
 
 function getMeltyDir(): string {
 	const config = vscode.workspace.getConfiguration('melty');
@@ -11,17 +14,22 @@ function getMeltyDir(): string {
 	return resolvedPath;
 }
 
-export function loadTasksFromDisk(): Map<string, DehydratedTask> {
+export async function loadTasksFromDisk(): Promise<Map<string, DehydratedTask>> {
 	const meltyDir = getMeltyDir();
-	if (!fs.existsSync(meltyDir)) {
+	if (!(await pathExists(meltyDir))) {
 		return new Map();
 	}
 
-	const taskFiles = fs.readdirSync(meltyDir);
+	const taskFiles = await fs.readdir(meltyDir);
 	const taskMap = new Map<string, DehydratedTask>();
-	for (const file of taskFiles) {
+	await Promise.all(taskFiles.map(async (file) => {
+		const filePath = path.join(meltyDir, file);
+		if ((await isDirectory(filePath))) {
+			return;
+		}
+
 		const rawTask = JSON.parse(
-			fs.readFileSync(path.join(meltyDir, file), "utf8")
+			await fs.readFile(filePath, "utf8")
 		);
 
 		const task = Object.fromEntries(
@@ -37,18 +45,19 @@ export function loadTasksFromDisk(): Map<string, DehydratedTask> {
 			].includes(key))
 		) as DehydratedTask;
 		taskMap.set(task.id, task);
-	}
+	}));
+
 	return taskMap;
 }
 
 export async function dumpTaskToDisk(task: DehydratedTask): Promise<void> {
 	const meltyDir = getMeltyDir();
-	if (!fs.existsSync(meltyDir)) {
-		fs.mkdirSync(meltyDir, { recursive: true });
+	if (!(await pathExists(meltyDir))) {
+		await fs.mkdir(meltyDir, { recursive: true });
 	}
 
 	const taskPath = path.join(meltyDir, `${task.id}.json`);
-	fs.writeFileSync(taskPath, JSON.stringify(task, null, 2));
+	await fs.writeFile(taskPath, JSON.stringify(task, null, 2));
 }
 
 export async function deleteTaskFromDisk(task: DehydratedTask): Promise<void> {
