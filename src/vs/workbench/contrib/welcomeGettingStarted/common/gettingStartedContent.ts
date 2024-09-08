@@ -222,7 +222,7 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 					title: 'Say hello to Melty',
 					description: localize('gettingStarted.openMeltyOverlay.description.interpolated', "Open the Melty popup! \n{0}", Button(localize('openMelty', "Open Melty"), 'command:workbench.action.toggleMelty')),
 					media: {
-						type: 'svg', altText: 'Language extensions', path: 'languages.svg'
+						type: 'svg', altText: 'Language extensions', path: 'melty.svg'
 					},
 				},
 				{
@@ -274,12 +274,12 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 						type: 'svg', altText: 'Explorer view showing buttons for opening folder and cloning repository.', path: 'openFolder.svg'
 					}
 				},
-				{
-					id: 'videoTutorial',
-					title: localize('gettingStarted.videoTutorial.title', "Watch video tutorials"),
-					description: localize('gettingStarted.videoTutorial.description.interpolated', "Watch the first in a series of short & practical video tutorials for VS Code's key features.\n{0}", Button(localize('watch', "Watch Tutorial"), 'https://aka.ms/vscode-getting-started-video')),
-					media: { type: 'svg', altText: 'VS Code Settings', path: 'learn.svg' },
-				}
+				// {
+				// 	id: 'videoTutorial',
+				// 	title: localize('gettingStarted.videoTutorial.title', "Watch video tutorials"),
+				// 	description: localize('gettingStarted.videoTutorial.description.interpolated', "Watch the first in a series of short & practical video tutorials for VS Code's key features.\n{0}", Button(localize('watch', "Watch Tutorial"), 'https://aka.ms/vscode-getting-started-video')),
+				// 	media: { type: 'svg', altText: 'VS Code Settings', path: 'learn.svg' },
+				// }
 			]
 		}
 	},
