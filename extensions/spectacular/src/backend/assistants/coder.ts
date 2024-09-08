@@ -41,7 +41,7 @@ export class Coder extends BaseAssistant {
 	async respond(
 		conversation: Conversation,
 		contextPaths: ContextPaths,
-		processPartial: (partialConversation: Conversation) => void,
+		processPartial: (partialConversation: Conversation) => Promise<void>,
 		cancellationToken?: vscode.CancellationToken
 	) {
 		webviewNotifier.updateStatusMessage("Preparing context");
@@ -83,7 +83,7 @@ export class Coder extends BaseAssistant {
 			messages: [
 				// TODOV2 user system info
 				...this.codebaseView(contextPaths, repoMapString),
-				...this.encodeMessages(conversation),
+				...(await this.encodeMessages(conversation)),
 			],
 		};
 
@@ -110,7 +110,7 @@ export class Coder extends BaseAssistant {
 						contextPaths,
 						true // ignore changes
 					);
-					processPartial(newConversation);
+					await processPartial(newConversation);
 				}
 			}
 		);

@@ -14,6 +14,10 @@ export type DehydratedTask = {
 	meltyMindFiles: string[];
 };
 
+export type DehydratedTaskWithDehydratedConversation = Omit<DehydratedTask, 'conversation'> & {
+	conversation: DehydratedConversation;
+};
+
 export type ContextPaths = {
 	readonly paths: string[];
 	meltyRoot: string;
@@ -26,10 +30,16 @@ export interface AssistantInfo {
 	description: string;
 }
 
+export type AllowedMimeTypes = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
 export type UserAttachedImage = {
-	blobUrl: string;
-	mimeType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+	mimeType: AllowedMimeTypes;
 	base64: string;
+};
+
+export type JouleImage = {
+	readonly path: string;
+	mimeType: AllowedMimeTypes;
 };
 
 export type Joule = {
@@ -37,9 +47,13 @@ export type Joule = {
 	readonly author: "human" | "bot";
 	readonly state: "complete" | "partial" | "error";
 	readonly message: string;
-	readonly images?: UserAttachedImage[];
+	readonly images?: JouleImage[];
 	readonly commit: string | null;
 	readonly diffInfo: DiffInfo | null;
+};
+
+export type DehydratedJoule = Omit<Joule, 'images'> & {
+	readonly images?: UserAttachedImage[];
 };
 
 export type JouleHuman = Joule & {
@@ -93,6 +107,10 @@ export type ClaudeConversation = {
 
 export type Conversation = {
 	readonly joules: ReadonlyArray<Joule>;
+};
+
+export type DehydratedConversation = {
+	readonly joules: ReadonlyArray<DehydratedJoule>;
 };
 
 export type MeltyFile = {

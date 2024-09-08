@@ -149,6 +149,7 @@
     "axios": "^1.7.3",
     "diff": "^6.0.0-beta",
     "dotenv": "^16.4.5",
+    "lru-cache": "^11.0.1",
     "node-tree-sitter": "^0.0.1",
     "posthog-js": "^1.157.2",
     "python-ast": "^0.1.0",
