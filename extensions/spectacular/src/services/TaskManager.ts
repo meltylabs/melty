@@ -56,12 +56,12 @@ export class TaskManager {
 	/**
 	 * Load tasks from disk. This should only be called once, when the extension is first loaded.
 	 */
-	public loadTasks(): boolean {
+	public async loadTasks(): Promise<boolean> {
 		if (this.inactiveTasks.size > 0) {
 			console.error("Can't load tasks when tasks already exist");
 			return false;
 		}
-		this.inactiveTasks = datastores.loadTasksFromDisk();
+		this.inactiveTasks = await datastores.loadTasksFromDisk();
 		return true;
 	}
 
