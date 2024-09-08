@@ -18,7 +18,7 @@ import { EventManager } from '@/eventManager';
 import { DehydratedTask, UserAttachedImage } from "types";
 import { useNavigate } from "react-router-dom";
 import { imagePasteHandler, showNotification } from '@/lib/utils';
-import { MAX_IMAGES } from '@/lib/constants';
+import { MAX_IMAGES } from '@/constants';
 import { CustomError } from '@/lib/errors';
 import { PreviewImage } from '@/components/PreviewImage';
 

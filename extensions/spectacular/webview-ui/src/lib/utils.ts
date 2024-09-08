@@ -3,7 +3,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { CustomError } from "./errors";
 import { vscode } from '@/utilities/vscode';
-import { ALLOWED_IMAGE_MIME_TYPES, MAX_IMAGE_SIZE } from '@/lib/constants';
+import { ALLOWED_IMAGE_MIME_TYPES, MAX_IMAGE_SIZE } from '@/constants';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));

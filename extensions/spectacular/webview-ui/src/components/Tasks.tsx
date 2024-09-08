@@ -35,7 +35,7 @@ import { EventManager } from "@/eventManager";
 import { imagePasteHandler, showNotification } from '@/lib/utils';
 import { PreviewImage } from './PreviewImage';
 import { CustomError } from '@/lib/errors';
-import { MAX_IMAGES } from '@/lib/constants';
+import { MAX_IMAGES } from '@/constants';
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -159,7 +159,6 @@ export function Tasks({
 			name: taskName.trim(),
 			taskMode: taskMode,
 			files: meltyMindFilePaths,
-			images,
 		})) as string;
 		console.log(`[Tasks.tsx] created new task ${newTaskId}`);
 		return newTaskId;
