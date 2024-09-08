@@ -29,6 +29,7 @@ export async function streamClaude(
 	let baseURL = "https://melty-api.fly.dev/anthropic"
 
 	// If the user provides an API key, go direct to Claude, otherwise proxy to Melty
+	// TODO: abstract this logic away (it's repeated in commitMessageGenerator.ts)
 	if (apiKey) {
 		console.log("API KEY SET — DIRECT TO ANTHROPIC")
 		baseURL = "https://api.anthropic.com"
