@@ -6,7 +6,7 @@
   "publisher": "meltylabs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YourUsername/melty.git"
+    "url": "https://github.com/meltylabs/melty.git"
   },
   "license": "MIT",
   "private": true,
@@ -32,7 +32,16 @@
     "onStartupFinished"
   ],
   "contributes": {
-    "commands": [],
+    "commands": [
+      {
+        "command": "melty.copySettings",
+        "title": "Melty: Copy VS Code Settings"
+      },
+      {
+        "command": "melty.copyExtensions",
+        "title": "Melty: Copy VS Code extensions"
+      }
+    ],
     "keybindings": [],
     "configuration": {
       "title": "Melty Settings",

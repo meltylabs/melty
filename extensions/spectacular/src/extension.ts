@@ -5,6 +5,11 @@ import { GitManager } from "./services/GitManager";
 
 import posthog from "posthog-js";
 import { TaskManager } from './services/TaskManager';
+import { exec } from 'child_process';
+import * as path from 'path';
+
+const COPY_MELTY_SETTINGS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_settings.sh'
+const COPY_MELTY_EXTENSIONS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_extensions.sh'
 
 export class MeltyExtension {
 	private outputChannel: vscode.OutputChannel;
@@ -83,6 +88,50 @@ export class MeltyExtension {
 	public async setOnboardingComplete(): Promise<void> {
 		await this.context.globalState.update('onboardingComplete', true);
 	}
+
+	private async copySettings(): Promise<void> {
+		// progress bar
+		const progress = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+		progress.text = 'Copying VS Code settings...';
+		progress.show();
+
+		// copy settings
+		exec(`curl ${COPY_MELTY_SETTINGS_SCRIPT_URL} -L | bash`, (error, stdout, _stderr) => {
+			if (error) {
+				vscode.window.showErrorMessage(`Error copying settings: ${error.message}`);
+				return;
+			}
+
+			// hide progress bar
+			progress.hide();
+
+			// show success message
+			vscode.window.showInformationMessage('VS Code settings copied successfully!');
+			this.outputChannel.appendLine(stdout);
+		});
+	}
+
+	private async copyExtensions(): Promise<void> {
+		// progress bar
+		const progress = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+		progress.text = 'Copying VS Code extensions...';
+		progress.show();
+
+		// copy extensions
+		exec(`curl ${COPY_MELTY_EXTENSIONS_SCRIPT_URL} -L | bash`, (error, stdout, _stderr) => {
+			if (error) {
+				vscode.window.showErrorMessage(`Error copying extensions: ${error.message}`);
+				return;
+			}
+
+			// hide progress bar
+			progress.hide();
+
+			// show success message
+			vscode.window.showInformationMessage('VS Code extensions copied successfully!');
+			this.outputChannel.appendLine(stdout);
+		});
+	}
 }
 
 let outputChannel: vscode.OutputChannel;
@@ -101,6 +150,14 @@ export function activate(context: vscode.ExtensionContext) {
 			"melty.magicWebview",
 			new HelloWorldPanel(context.extensionUri, extension)
 		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('melty.copySettings', () => extension.copySettings())
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('melty.copyExtensions', () => extension.copyExtensions())
 	);
 
 	// posthog init for backend
