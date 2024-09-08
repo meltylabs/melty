@@ -6,16 +6,21 @@ export async function generateCommitMessage(
 	accompanyingMessage: string = ""
 ): Promise<string> {
 	const config = vscode.workspace.getConfiguration("melty");
-	const apiKey = config.get<string>("anthropicApiKey");
+	let apiKey = config.get<string>("anthropicApiKey");
+	let baseURL = "https://melty-api.fly.dev/anthropic"
 
-	if (!apiKey) {
-		throw new Error(
-			"Anthropic API key is not set. Please configure it in settings."
-		);
+	// If the user provgides an API key, go direct to Claude, otherwise proxy to Melty
+	if (apiKey) {
+		console.log("API KEY SET — DIRECT TO ANTHROPIC")
+		baseURL = "https://api.anthropic.com"
+	} else {
+		console.log("NO API KEY — PROXYING")
+		apiKey = "dummyToken"
 	}
 
 	const anthropic = new Anthropic({
 		apiKey: apiKey,
+		baseURL: baseURL
 	});
 
 	const prompt = `You are an expert software engineer.
