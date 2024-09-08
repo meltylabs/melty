@@ -34,7 +34,7 @@ export class MeltyExtension {
 	async activate() {
 		outputChannel.appendLine("Melty activation started");
 
-		this._taskManager.loadTasks();
+		await this._taskManager.loadTasks();
 
 		// Start the branch check interval
 		// this.branchCheckInterval = setInterval(
