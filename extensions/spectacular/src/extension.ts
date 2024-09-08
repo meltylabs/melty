@@ -5,6 +5,8 @@ import { GitManager } from "./services/GitManager";
 
 import posthog from "posthog-js";
 import { TaskManager } from './services/TaskManager';
+import { exec } from 'child_process';
+import * as path from 'path';
 
 export class MeltyExtension {
 	private outputChannel: vscode.OutputChannel;
@@ -83,6 +85,21 @@ export class MeltyExtension {
 	public async setOnboardingComplete(): Promise<void> {
 		await this.context.globalState.update('onboardingComplete', true);
 	}
+
+	private async copySettings(): Promise<void> {
+		const scriptPath = path.join(this.context.extensionPath, 'scripts', 'copy_settings.sh');
+		exec(`bash ${scriptPath}`, (error, stdout, stderr) => {
+			if (error) {
+				vscode.window.showErrorMessage(`Error copying settings: ${error.message}`);
+				return;
+			}
+			if (stderr) {
+				vscode.window.showWarningMessage(`Warning while copying settings: ${stderr}`);
+			}
+			vscode.window.showInformationMessage('VS Code settings copied successfully!');
+			this.outputChannel.appendLine(stdout);
+		});
+	}
 }
 
 let outputChannel: vscode.OutputChannel;
@@ -101,6 +118,10 @@ export function activate(context: vscode.ExtensionContext) {
 			"melty.magicWebview",
 			new HelloWorldPanel(context.extensionUri, extension)
 		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('melty.copySettings', () => extension.copySettings())
 	);
 
 	// posthog init for backend
