@@ -208,8 +208,8 @@ const Button = (title: string, href: string) => `[${title}](${href})`;
 export const walkthroughs: GettingStartedWalkthroughContent = [
 	{
 		id: 'Setup',
-		title: localize('gettingStarted.setup.title', "Get Started with Melty"),
-		description: localize('gettingStarted.setup.description', "Customize your editor, learn the basics, and start coding"),
+		title: 'Get Started With Melty',
+		description: localize('gettingStarted.setup.description', "Customize your editor, learn the basics, and start melting."),
 		isFeatured: true,
 		icon: setupIcon,
 		when: '!isWeb',
@@ -218,14 +218,12 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 			type: 'steps',
 			steps: [
 				{
-					id: 'pickColorTheme',
-					title: localize('gettingStarted.pickColor.title', "Choose your theme"),
-					description: localize('gettingStarted.pickColor.description.interpolated', "The right theme helps you focus on your code, is easy on your eyes, and is simply more fun to use.\n{0}", Button(localize('titleID', "Browse Color Themes"), 'command:workbench.action.selectTheme')),
-					completionEvents: [
-						'onSettingChanged:workbench.colorTheme',
-						'onCommand:workbench.action.selectTheme'
-					],
-					media: { type: 'markdown', path: 'theme_picker', }
+					id: 'openMeltyOverlay',
+					title: 'Open Melty',
+					description: 'Open the Melty popup by pressing ⌘+m',
+					media: {
+						type: 'svg', altText: 'Language extensions', path: 'languages.svg'
+					},
 				},
 				{
 					id: 'extensionsWeb',
@@ -237,36 +235,26 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 					},
 				},
 				{
-					id: 'findLanguageExtensions',
-					title: localize('gettingStarted.findLanguageExts.title', "Rich support for all your languages"),
-					description: localize('gettingStarted.findLanguageExts.description.interpolated', "Code smarter with syntax highlighting, code completion, linting and debugging. While many languages are built-in, many more can be added as extensions.\n{0}", Button(localize('browseLangExts', "Browse Language Extensions"), 'command:workbench.extensions.action.showLanguageExtensions')),
-					when: 'workspacePlatform != \'webworker\'',
-					media: {
-						type: 'svg', altText: 'Language extensions', path: 'languages.svg'
-					},
-				},
-				{
 					id: 'settings',
-					title: localize('gettingStarted.settings.title', "Tune your settings"),
-					description: localize('gettingStarted.settings.description.interpolated', "Customize every aspect of VS Code and your extensions to your liking. Commonly used settings are listed first to get you started.\n{0}", Button(localize('tweakSettings', "Open Settings"), 'command:toSide:workbench.action.openSettings')),
+					title: 'Import your VS Code settings and keybindings into Melty',
+					description: 'Melty supports VS Code\'s settings and keybindings. Import your settings and keybindings to get started.',
 					media: {
 						type: 'svg', altText: 'VS Code Settings', path: 'settings.svg'
 					},
 				},
 				{
 					id: 'settingsSync',
-					title: localize('gettingStarted.settingsSync.title', "Sync settings across devices"),
+					title: 'Import your VS Code extensions to Melty',
 					description: localize('gettingStarted.settingsSync.description.interpolated', "Keep your essential customizations backed up and updated across all your devices.\n{0}", Button(localize('enableSync', "Backup and Sync Settings"), 'command:workbench.userDataSync.actions.turnOn')),
-					when: 'syncStatus != uninitialized',
 					completionEvents: ['onEvent:sync-enabled'],
 					media: {
 						type: 'svg', altText: 'The "Turn on Sync" entry in the settings gear menu.', path: 'settingsSync.svg'
 					},
 				},
 				{
-					id: 'commandPaletteTask',
-					title: localize('gettingStarted.commandPalette.title', "Unlock productivity with the Command Palette "),
-					description: localize('gettingStarted.commandPalette.description.interpolated', "Run commands without reaching for your mouse to accomplish any task in VS Code.\n{0}", Button(localize('commandPalette', "Open Command Palette"), 'command:workbench.action.showCommands')),
+					id: 'openTerminal',
+					title: 'Open the integrated terminal',
+					description: 'Toggle the integrated terminal by pressing ⌘+t',
 					media: { type: 'svg', altText: 'Command Palette overlay for searching and executing commands.', path: 'commandPalette.svg' },
 				},
 				{
@@ -285,15 +273,6 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 					when: '!isMac && workspaceFolderCount == 0',
 					media: {
 						type: 'svg', altText: 'Explorer view showing buttons for opening folder and cloning repository.', path: 'openFolder.svg'
-					}
-				},
-				{
-					id: 'quickOpen',
-					title: localize('gettingStarted.quickOpen.title', "Quickly navigate between your files"),
-					description: localize('gettingStarted.quickOpen.description.interpolated', "Navigate between files in an instant with one keystroke. Tip: Open multiple files by pressing the right arrow key.\n{0}", Button(localize('quickOpen', "Quick Open a File"), 'command:toSide:workbench.action.quickOpen')),
-					when: 'workspaceFolderCount != 0',
-					media: {
-						type: 'svg', altText: 'Go to file in quick search.', path: 'search.svg'
 					}
 				},
 				{
