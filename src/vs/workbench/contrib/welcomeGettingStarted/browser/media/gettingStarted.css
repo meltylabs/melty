@@ -43,7 +43,7 @@
 	padding: 5px 0 0;
 	margin: 0;
 	border: none;
-	font-weight: normal;
+	font-weight: bold;
 	font-size: 2.7em;
 	white-space: nowrap;
 }
@@ -186,12 +186,12 @@
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories .category-title {
 	margin: 4px 0 4px;
 	font-size: 14px;
-	font-weight: 500;
 	text-align: left;
 	display: inline-block;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	font-weight: bold;
 }
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideCategories .category-progress {
@@ -709,7 +709,7 @@
 
 .monaco-workbench .part.editor > .content .gettingStartedContainer .gettingStartedSlideDetails h2 {
 	font-size: 26px;
-	font-weight: normal;
+	font-weight: bold;
 	margin: 0 0 8px 0;
 }
 

@@ -25,6 +25,7 @@ interface WatermarkEntry {
 	readonly when?: ContextKeyExpression;
 }
 
+const toggleMelty: WatermarkEntry = { text: localize('watermark.toggleMelty', "Toggle Melty"), id: 'workbench.action.toggleMelty' };
 const showCommands: WatermarkEntry = { text: localize('watermark.showCommands', "Show All Commands"), id: 'workbench.action.showCommands' };
 const quickAccess: WatermarkEntry = { text: localize('watermark.quickAccess', "Go to File"), id: 'workbench.action.quickOpen' };
 const openFileNonMacOnly: WatermarkEntry = { text: localize('watermark.openFile', "Open File"), id: 'workbench.action.files.openFile', mac: false };
@@ -33,10 +34,8 @@ const openFileOrFolderMacOnly: WatermarkEntry = { text: localize('watermark.open
 const openRecent: WatermarkEntry = { text: localize('watermark.openRecent', "Open Recent"), id: 'workbench.action.openRecent' };
 const newUntitledFileMacOnly: WatermarkEntry = { text: localize('watermark.newUntitledFile', "New Untitled Text File"), id: 'workbench.action.files.newUntitledFile', mac: true };
 const findInFiles: WatermarkEntry = { text: localize('watermark.findInFiles', "Find in Files"), id: 'workbench.action.findInFiles' };
-const toggleTerminal: WatermarkEntry = { text: localize({ key: 'watermark.toggleTerminal', comment: ['toggle is a verb here'] }, "Toggle Terminal"), id: 'workbench.action.terminal.toggleTerminal', when: ContextKeyExpr.equals('terminalProcessSupported', true) };
+const toggleTerminal: WatermarkEntry = { text: localize({ key: 'watermark.toggleTerminal', comment: ['toggle is a verb here'] }, "Toggle Terminal"), id: 'workbench.action.terminal.toggleTerminal' };
 const startDebugging: WatermarkEntry = { text: localize('watermark.startDebugging', "Start Debugging"), id: 'workbench.action.debug.start', when: ContextKeyExpr.equals('terminalProcessSupported', true) };
-const toggleFullscreen: WatermarkEntry = { text: localize({ key: 'watermark.toggleFullscreen', comment: ['toggle is a verb here'] }, "Toggle Full Screen"), id: 'workbench.action.toggleFullScreen' };
-const showSettings: WatermarkEntry = { text: localize('watermark.showSettings', "Show Settings"), id: 'workbench.action.openSettings' };
 
 const noFolderEntries = [
 	showCommands,
@@ -48,13 +47,12 @@ const noFolderEntries = [
 ];
 
 const folderEntries = [
+	toggleMelty,
 	showCommands,
 	quickAccess,
 	findInFiles,
 	startDebugging,
 	toggleTerminal,
-	toggleFullscreen,
-	showSettings
 ];
 
 export class EditorGroupWatermark extends Disposable {
