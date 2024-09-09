@@ -22,23 +22,23 @@ We're working hard to get the Melty code into a stable state where it's easy to 
 
 ## Local development
 
-To get started with local development, clone the repository and run:
+To get started with local development, clone the repository and open it in Melty or vscode. Then run
 
 ```bash
 # install dependencies
-npm run melty:install
+yarn run melty:install
 
-# start the melty extension and code editor in development mode
-npm run melty:dev
+# auto-rebuild extensions/spectacular source
+yarn run melty:extension-dev
 ```
 
-> **Note:** The `melty:dev` script runs the melty extension in development mode, alongside the code editor. The extension may take time to build and start. If the code editor launches while the extension is building, you will have to reload the code editor by pressing `cmd+R` or `ctrl+R` after the extension has been built and started.
+Then run the default debug configuration.
 
 In the development mode, any changes you make to the `./extensions/spectacular/` directory will be watched and the extension will be built. To see your changes, you must reload the code editor (`cmd+R` or `ctrl+R`).
 
-#### Setup Claude API Key
+#### Set up Claude API key
 
-Melty uses Claude, and you will need to set the `melty.anthropicApiKey` in Melty's settings. You can do that by:
+Melty uses Claude, and you may need to set the `melty.anthropicApiKey` in Melty's settings. You can do that by:
 
 - Waiting for the editor to launch.
 - Opening preferences by pressing `cmd+,` or `ctrl+,`.

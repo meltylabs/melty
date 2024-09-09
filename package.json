@@ -11,8 +11,6 @@
   "scripts": {
     "melty:install": "./scripts/melty_install_deps.sh",
     "melty:extension-dev": "cd extensions/spectacular && npm run watch:all",
-    "melty:code": "./scripts/code.sh",
-    "melty:dev": "npm-run-all -lp melty:extension-dev melty:code",
     "dist": "electron-builder",
     "test": "echo Please run any of the test scripts from the scripts folder.",
     "test-browser": "npx playwright install && node test/unit/browser/index.js",
