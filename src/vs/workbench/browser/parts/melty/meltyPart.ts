@@ -232,4 +232,3 @@ export class MeltyPart extends Part {
 		};
 	}
 }
-
