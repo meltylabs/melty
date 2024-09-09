@@ -161,17 +161,16 @@ export class MeltyPart extends Part {
 		container.style.backgroundColor = 'black';
 		container.style.zIndex = '100';
 		
-		// Add bounce animation
-		container.style.animation = 'meltyBounceIn 0.5s ease-out';
+		// Add faster bounce animation
+		container.style.animation = 'meltyBounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
 		container.style.transformOrigin = 'center';
 		
-		// Define keyframes for bounce animation
+		// Define keyframes for faster bounce animation
 		const style = document.createElement('style');
 		style.textContent = `
 			@keyframes meltyBounceIn {
-				0% { transform: scale(0.8); opacity: 0; }
-				50% { transform: scale(1.05); }
-				70% { transform: scale(0.95); }
+				0% { transform: scale(0.9); opacity: 0; }
+				60% { transform: scale(1.03); opacity: 1; }
 				100% { transform: scale(1); opacity: 1; }
 			}
 		`;
