@@ -152,19 +152,19 @@ export class MeltyPart extends Part {
 	private open() {
 		this.state = 'open';
 		this.fullScreenOverlay!.style.zIndex = '95';
-		
+
 		const container = this.webviewView!.webview.container;
 		container.style.display = 'flex';
 		container.style.boxSizing = 'border-box';
 		container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
 		container.style.borderRadius = '20px';
-		container.style.backgroundColor = 'black';
+		container.style.backgroundColor = 'white';
 		container.style.zIndex = '100';
-		
+
 		// Add faster bounce animation
-		container.style.animation = 'meltyBounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+		container.style.animation = 'meltyBounceIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
 		container.style.transformOrigin = 'center';
-		
+
 		// Define keyframes for faster bounce animation
 		const style = document.createElement('style');
 		style.textContent = `
