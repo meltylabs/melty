@@ -26,16 +26,16 @@ export async function streamClaude(
 
 	const config = vscode.workspace.getConfiguration("melty");
 	let apiKey = config.get<string>("anthropicApiKey");
-	let baseURL = "https://melty-api.fly.dev/anthropic"
+	let baseURL = "https://melty-api.fly.dev/anthropic";
 
 	// If the user provides an API key, go direct to Claude, otherwise proxy to Melty
 	// TODO: abstract this logic away (it's repeated in commitMessageGenerator.ts)
 	if (apiKey) {
-		console.log("API KEY SET — DIRECT TO ANTHROPIC")
-		baseURL = "https://api.anthropic.com"
+		console.log("API KEY SET — DIRECT TO ANTHROPIC");
+		baseURL = "https://api.anthropic.com";
 	} else {
-		console.log("NO API KEY — PROXYING")
-		apiKey = "dummyToken"
+		console.log("NO API KEY — PROXYING");
+		apiKey = "dummyToken";
 	}
 
 	const anthropic = new Anthropic({
