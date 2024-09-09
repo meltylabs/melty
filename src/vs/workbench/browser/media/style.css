@@ -9,7 +9,7 @@
 
 /* Font Families (with CJK support) */
 
-.mac { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+.mac { font-family: 'Inter', BlinkMacSystemFont, sans-serif; }
 .mac:lang(zh-Hans) { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif; }
 .mac:lang(zh-Hant) { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif; }
 .mac:lang(ja) { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic Pro", sans-serif; }

@@ -52,7 +52,6 @@ gettingStartedContentRegistry.registerProvider('vs/workbench/contrib/welcomeGett
 gettingStartedContentRegistry.registerProvider('vs/workbench/contrib/welcomeGettingStarted/common/media/notebookProfile', notebookProfileContent);
 
 const setupIcon = registerIcon('getting-started-setup', Codicon.zap, localize('getting-started-setup-icon', "Icon used for the setup category of welcome page"));
-const beginnerIcon = registerIcon('getting-started-beginner', Codicon.lightbulb, localize('getting-started-beginner-icon', "Icon used for the beginner category of welcome page"));
 
 export type BuiltinGettingStartedStep = {
 	id: string;
@@ -208,8 +207,8 @@ const Button = (title: string, href: string) => `[${title}](${href})`;
 export const walkthroughs: GettingStartedWalkthroughContent = [
 	{
 		id: 'Setup',
-		title: 'Get Started With Melty',
-		description: localize('gettingStarted.setup.description', "Customize your editor, learn the basics, and start melting."),
+		title: 'Start Melting',
+		description: localize('gettingStarted.setup.description', "Customize Melty, learn the basics, and start melting."),
 		isFeatured: true,
 		icon: setupIcon,
 		when: '!isWeb',
