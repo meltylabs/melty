@@ -6,9 +6,10 @@
 .monaco-text-button {
 	box-sizing: border-box;
 	display: flex;
+	font-weight: 600;
 	width: 100%;
-	padding: 4px;
-	border-radius: 4px;
+	padding: 6px 4px;
+	border-radius: 16px;
 	text-align: center;
 	cursor: pointer;
 	justify-content: center;
@@ -33,7 +34,7 @@
 
 .monaco-text-button .codicon {
 	margin: 0 0.2em;
-	color: inherit !important;
+	color: "#FFFFFF"
 }
 
 .monaco-text-button.monaco-text-button-with-short-label {

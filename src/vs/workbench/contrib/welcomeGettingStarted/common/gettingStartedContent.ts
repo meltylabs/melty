@@ -221,7 +221,7 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 					title: 'Say hello to Melty',
 					description: localize('gettingStarted.openMeltyOverlay.description.interpolated', "Open the Melty popup! \n{0}", Button(localize('openMelty', "Open Melty"), 'command:workbench.action.toggleMelty')),
 					media: {
-						type: 'svg', altText: 'Language extensions', path: 'melty.svg'
+						type: 'image', altText: 'Melty logo', path: 'ice.png'
 					},
 				},
 				{

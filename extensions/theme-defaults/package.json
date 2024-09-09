@@ -14,6 +14,12 @@
   "contributes": {
     "themes": [
       {
+        "id": "Melty Light",
+        "label": "%meltyLightThemeLabel%",
+        "uiTheme": "vs",
+        "path": "./themes/melty_light.json"
+      },
+      {
         "id": "Default Dark+",
         "label": "%darkPlusColorThemeLabel%",
         "uiTheme": "vs-dark",
