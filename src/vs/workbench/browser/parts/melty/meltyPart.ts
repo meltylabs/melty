@@ -152,12 +152,30 @@ export class MeltyPart extends Part {
 	private open() {
 		this.state = 'open';
 		this.fullScreenOverlay!.style.zIndex = '95';
-		this.webviewView!.webview.container.style.display = 'flex';
-		this.webviewView!.webview.container.style.boxSizing = 'border-box';
-		this.webviewView!.webview.container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
-		this.webviewView!.webview.container.style.borderRadius = '20px';
-		this.webviewView!.webview.container.style.backgroundColor = 'black';
-		this.webviewView!.webview.container.style.zIndex = '100';
+		
+		const container = this.webviewView!.webview.container;
+		container.style.display = 'flex';
+		container.style.boxSizing = 'border-box';
+		container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
+		container.style.borderRadius = '20px';
+		container.style.backgroundColor = 'black';
+		container.style.zIndex = '100';
+		
+		// Add bounce animation
+		container.style.animation = 'meltyBounceIn 0.5s ease-out';
+		container.style.transformOrigin = 'center';
+		
+		// Define keyframes for bounce animation
+		const style = document.createElement('style');
+		style.textContent = `
+			@keyframes meltyBounceIn {
+				0% { transform: scale(0.8); opacity: 0; }
+				50% { transform: scale(1.05); }
+				70% { transform: scale(0.95); }
+				100% { transform: scale(1); opacity: 1; }
+			}
+		`;
+		document.head.appendChild(style);
 
 		this.fullScreenOverlay?.addEventListener("click", (() => {
 			this.close();
