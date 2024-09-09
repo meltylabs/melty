@@ -169,9 +169,9 @@ export class MeltyPart extends Part {
 		const style = document.createElement('style');
 		style.textContent = `
 			@keyframes meltyBounceIn {
-				0% { transform: scale(0.9); opacity: 0; }
-				60% { transform: scale(1.03); opacity: 1; }
-				100% { transform: scale(1); opacity: 1; }
+				0% { transform: scale(0.95); }
+				70% { transform: scale(1.02); }
+				100% { transform: scale(1); }
 			}
 		`;
 		document.head.appendChild(style);
@@ -232,3 +232,4 @@ export class MeltyPart extends Part {
 		};
 	}
 }
+
