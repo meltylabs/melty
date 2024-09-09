@@ -114,16 +114,14 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		const stylesUri = getUri(webview, this._extensionUri, [
 			"webview-ui",
 			"build",
-			"static",
-			"css",
+			"assets",
 			"main.css",
 		]);
 		// The JS file from the React build output
 		const scriptUri = getUri(webview, this._extensionUri, [
 			"webview-ui",
 			"build",
-			"static",
-			"js",
+			"assets",
 			"main.js",
 		]);
 

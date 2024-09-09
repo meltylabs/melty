@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
 import * as vscode from "vscode";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { RpcClient } from "RpcClient";
+import { RpcClient } from "../RpcClient";
 import { Button } from "./ui/button";
 import {
 	ArrowUp,
@@ -30,9 +31,9 @@ import {
 } from "./ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
-import * as strings from "../utilities/strings";
+import * as strings from "@/utilities/strings";
 import { FastFilePicker } from "./FastFilePicker";
-import { EventManager } from "../eventManager";
+import { EventManager } from "@/eventManager";
 
 // Utility function to format the date
 function formatDate(date: Date): string {

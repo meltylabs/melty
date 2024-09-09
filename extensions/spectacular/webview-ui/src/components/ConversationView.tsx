@@ -8,13 +8,13 @@ import {
 	LoaderCircle,
 } from "lucide-react";
 import posthog from "posthog-js";
-import { FastFilePicker } from "components/FastFilePicker";
-import AutoExpandingTextarea from "components/AutoExpandingTextarea";
-import { Button } from 'components/ui/button'
-import { RpcClient } from "RpcClient";
-import { JouleComponent } from "components/JouleComponent";
-import * as strings from "utilities/strings";
-import { EventManager } from 'eventManager';
+import { FastFilePicker } from "./FastFilePicker";
+import AutoExpandingTextarea from "./AutoExpandingTextarea";
+import { Button } from './ui/button'
+import { RpcClient } from "@/RpcClient";
+import { JouleComponent } from "./JouleComponent";
+import * as strings from "@/utilities/strings";
+import { EventManager } from '@/eventManager';
 import { DehydratedTask } from "types";
 import { useNavigate } from "react-router-dom";
 

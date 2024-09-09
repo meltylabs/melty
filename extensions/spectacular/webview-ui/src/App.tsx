@@ -12,7 +12,7 @@ import { Help } from "./components/Help";
 import { NavBar } from "./components/NavBar";
 import { Onboarding } from "./components/Onboarding";
 import { EventManager } from './eventManager';
-import { RpcClient } from "RpcClient";
+import { RpcClient } from "./RpcClient";
 import "./App.css";
 
 const rpcClient = RpcClient.getInstance();

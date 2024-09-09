@@ -3,9 +3,7 @@
 [Melty](https://melty.sh) is the first AI code editor that's aware of what you're doing from the terminal to GitHub, and collaborates with you to write production-ready code.
 [Download the packaged version ->](https://docs.google.com/forms/d/e/1FAIpQLSc6uBe0ea26q7Iq0Co_q5fjW2nypUl8G_Is5M_6t8n7wZHuPA/viewform)
 
-
 https://github.com/user-attachments/assets/5b27d5cc-55c7-4ff9-ae2e-47baa98b08cd
-
 
 ### [Get Early Access](https://docs.google.com/forms/d/e/1FAIpQLSc6uBe0ea26q7Iq0Co_q5fjW2nypUl8G_Is5M_6t8n7wZHuPA/viewform)
 
@@ -25,7 +23,7 @@ We've used most of the AI coding tools out there, and often ended up copy–past
 
 We've been building Melty for 28 days, and it's already writing about half of its own code. Melty can…
 
-*(all demos real-time)*
+_(all demos real-time)_
 
 ## Refactor
 
@@ -55,3 +53,7 @@ Want to try Melty? Sign up here, and we'll get you early access:
 ### [Get Early Access](https://docs.google.com/forms/d/e/1FAIpQLSc6uBe0ea26q7Iq0Co_q5fjW2nypUl8G_Is5M_6t8n7wZHuPA/viewform)
 
 https://twitter.com/charliebholtz/status/1825647665776046472
+
+### Contributing
+
+Please see our [contributing guidelines](CONTRIBUTING.md) for details on how to set up/contribute to the project.

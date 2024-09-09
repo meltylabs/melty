@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "es2020",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -17,6 +18,7 @@
     "jsx": "react-jsx",
     "strictPropertyInitialization": false,
     "baseUrl": "src",
+    "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["./*"],
       "@/lib/*": ["lib/*"],
