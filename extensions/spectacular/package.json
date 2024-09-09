@@ -49,7 +49,8 @@
         "melty.anthropicApiKey": {
           "type": "string",
           "default": "",
-          "description": "API key for Anthropic Claude"
+          "description": "API key for Anthropic Claude",
+          "pattern": "^[a-zA-Z0-9-_]*$"
         },
         "melty.userPrompt": {
           "type": "string",
@@ -64,7 +65,8 @@
         "melty.githubToken": {
           "type": "string",
           "default": "",
-          "description": "GitHub token for creating pull requests"
+          "description": "GitHub token for creating pull requests",
+          "pattern": "^[a-zA-Z0-9-_]*$"
         },
         "melty.remoteName": {
           "type": "string",
