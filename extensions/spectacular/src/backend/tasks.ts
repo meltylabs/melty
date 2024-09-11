@@ -119,8 +119,7 @@ export class Task {
 		this.conversation = conversations.addJoule(this.conversation, newJoule);
 		this.updateLastModified();
 
-		this._webviewNotifier.updateStatusMessage("Autosaving conversation");
-		await datastores.dumpTaskToDisk(await this.dehydrate());
+		datastores.dumpTaskToDisk(await this.dehydrate());
 
 		this._webviewNotifier.resetStatusMessage();
 		return conversations.lastJoule(this.conversation)!;
@@ -228,8 +227,7 @@ export class Task {
 
 			this.updateLastModified();
 
-			this._webviewNotifier.updateStatusMessage("Autosaving conversation");
-			await datastores.dumpTaskToDisk(await this.dehydrate());
+			datastores.dumpTaskToDisk(await this.dehydrate());
 
 			this._webviewNotifier.sendNotification("updateTask", {
 				task: this.dehydrateForWire(),
