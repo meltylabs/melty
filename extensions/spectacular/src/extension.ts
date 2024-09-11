@@ -6,10 +6,9 @@ import { GitManager } from "./services/GitManager";
 import posthog from "posthog-js";
 import { TaskManager } from './services/TaskManager';
 import { exec } from 'child_process';
-import * as path from 'path';
 
-const COPY_MELTY_SETTINGS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_settings.sh'
-const COPY_MELTY_EXTENSIONS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_extensions.sh'
+const COPY_MELTY_SETTINGS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_settings.sh';
+const COPY_MELTY_EXTENSIONS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_extensions.sh';
 
 export class MeltyExtension {
 	private outputChannel: vscode.OutputChannel;
@@ -89,7 +88,7 @@ export class MeltyExtension {
 		await this.context.globalState.update('onboardingComplete', true);
 	}
 
-	private async copySettings(): Promise<void> {
+	async copySettings(): Promise<void> {
 		// progress bar
 		const progress = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 		progress.text = 'Copying VS Code settings...';
@@ -111,7 +110,7 @@ export class MeltyExtension {
 		});
 	}
 
-	private async copyExtensions(): Promise<void> {
+	async copyExtensions(): Promise<void> {
 		// progress bar
 		const progress = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 		progress.text = 'Copying VS Code extensions...';
