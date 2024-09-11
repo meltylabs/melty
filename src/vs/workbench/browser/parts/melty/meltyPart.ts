@@ -191,15 +191,15 @@ export class MeltyPart extends Part {
 	private close() {
 		this.state = 'closed';
 		const container = this.webviewView!.webview.container;
-		
+
 		// Apply fade-out animation
 		container.style.animation = 'meltyFadeOut 0.2s ease-out';
-		
+
 		// Hide elements after animation completes
 		setTimeout(() => {
 			this.fullScreenOverlay!.style.zIndex = '-10';
 			container.style.display = 'none';
-		}, 200); // 200ms matches the animation duration
+		}, 20); // 20ms matches the animation duration
 	}
 
 	private toggleOpenClose() {
