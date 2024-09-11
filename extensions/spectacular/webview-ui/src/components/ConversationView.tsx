@@ -15,7 +15,7 @@ import { RpcClient } from "@/RpcClient";
 import { JouleComponent } from "./JouleComponent";
 import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
-import { DehydratedTask, nextJouleType } from "../types";
+import { DehydratedTask, nextJouleType, Joule } from "types";
 import { useNavigate } from "react-router-dom";
 
 const MemoizedJouleComponent = memo(JouleComponent);
@@ -29,6 +29,8 @@ export function ConversationView() {
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const isInitialRender = useRef(true);
 	const [task, setTask] = useState<DehydratedTask | null>(null);
+	// store and mutate the joules separately to avoid re-rendering
+	const [joules, setJoules] = useState<Joule[]>([]);
 	const [messageText, setMessageText] = useState("");
 	const conversationRef = useRef<HTMLDivElement>(null);
 	const [latestCommitHash, setLatestCommitHash] = useState<string | null>(null);
@@ -175,6 +177,27 @@ export function ConversationView() {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (!task) {
+			return;
+		}
+
+		// prevents joule re-rendering
+		setJoules(ourJoules => {
+			if (ourJoules.length === 0) {
+				return [...task.conversation.joules]
+			} else if (ourJoules.length !== task.conversation.joules.length) {
+				const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
+				return [...ourJoules, lastJoule];
+			} else {
+				const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
+				const newJoules = ourJoules.slice(0, ourJoules.length - 1);
+				newJoules.push(lastJoule);
+				return newJoules;
+			}
+		});
+	}, [task]);
 
 	const updateTask = useCallback((task: DehydratedTask) => {
 		const lastJoule =
@@ -355,7 +378,7 @@ export function ConversationView() {
 				ref={conversationRef}
 			>
 				<div className="flex flex-col h-full">
-					{task?.conversation.joules.map((joule, index) => (
+					{joules.map((joule, index) => (
 						<MemoizedJouleComponent
 							key={index}
 							joule={joule}
