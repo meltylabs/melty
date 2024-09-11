@@ -43,6 +43,16 @@ Actually, pure event handlers don't need to be wrapped (I think). But anything c
 
 All task updates are sent via updateTask. eventually there will be an endBotTurn notification, but we don't need it yet.
 
+# Joule types
+
+Is there a conversation controller that dispatches a request for the next joule type? (How would that interact with webview?)
+
+Or should the conversation have a nextState property?
+
+Let's just make it a function, for now.
+
+So the contract is like: from last joule, we should be able to derive the next joule type.
+
 # Issues encountered
 
 ## Unable to launch browser

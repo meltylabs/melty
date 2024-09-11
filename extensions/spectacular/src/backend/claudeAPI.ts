@@ -14,8 +14,9 @@ export enum Models {
 export type ClaudeOpts = {
 	model?: Models,
 	cancellationToken?: CancellationToken,
+	stopSequences?: string[],
 	processPartial?: (text: string) => void,
-}
+};
 
 export async function streamClaude(
 	claudeConversation: ClaudeConversation,
@@ -32,7 +33,12 @@ export async function streamClaude(
 export async function streamClaudeRaw(
 	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<Anthropic.Messages.Message> {
-	const { model = Models.Claude35Sonnet, cancellationToken, processPartial } = opts;
+	const {
+		model = Models.Claude35Sonnet,
+		cancellationToken,
+		processPartial,
+		stopSequences = []
+	} = opts;
 
 	if (claudeConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
@@ -66,7 +72,7 @@ export async function streamClaudeRaw(
 					max_tokens: 4096,
 					messages: claudeConversation.messages as any,
 					system: claudeConversation.system,
-					stop_sequences: ["<change_code"]
+					stop_sequences: stopSequences
 				},
 				{
 					headers: {

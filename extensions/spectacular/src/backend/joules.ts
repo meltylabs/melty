@@ -1,78 +1,100 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { Joule, JouleHuman, JouleBot, BotExecInfo, DiffInfo } from "../types";
+import { Joule, BotExecInfo, DiffInfo, CodeInfo, JouleHumanChat, JouleBotChat, JouleBotCode, JouleHumanConfirmCode, ClaudeMessage } from "../types";
 
-export function createJouleError(errorMessage: string): JouleBot {
-	return createJouleBot(errorMessage, {
-		rawOutput: "[error encountered]",
-		contextPaths: {
-			meltyRoot: '',
-			paths: []
+export function author(joule: Joule): "human" | "bot" {
+	switch (joule.jouleType) {
+		case "HumanChat":
+		case "HumanConfirmCode":
+			return "human";
+		case "BotChat":
+		case "BotCode":
+			return "bot";
+		default:
+			throw new Error(`Unknown Joule type ${joule}`);
+	}
+};
+
+// todo JouleBotChat might not always be valid
+export function createJouleError(errorMessage: string): JouleBotChat {
+	return createJouleBotChat(
+		errorMessage,
+		{
+			rawOutput: "[error encountered]",
+			contextPaths: {
+				meltyRoot: '',
+				paths: []
+			},
 		},
-	});
+		"error",
+		null
+	);
 }
 
-export function createJouleHuman(message: string): JouleHuman {
-	return createJouleHumanWithChanges(message, null, null);
-}
-
-export function createJouleHumanWithChanges(
-	message: string,
-	commit: string | null,
-	diffInfo: DiffInfo | null
-): JouleHuman {
-	const id = uuidv4();
+export function createJouleHumanConfirmCode(confirmed: boolean): JouleHumanConfirmCode {
 	return {
-		id,
-		message,
-		author: "human",
+		jouleType: "HumanConfirmCode",
+		id: uuidv4(),
 		jouleState: "complete",
-		commit,
-		diffInfo,
+		confirmed
 	};
 }
 
-export function createJouleBot(
-	message: string,
-	botExecInfo: BotExecInfo,
-	jouleState: "complete" | "partial" = "complete"
-): JouleBot {
-	return createJouleBotWithChanges(message, botExecInfo, null, null, jouleState);
+export function createJouleHumanChat(message: string, codeInfo: CodeInfo | null): JouleHumanChat {
+	return {
+		jouleType: "HumanChat",
+		id: uuidv4(),
+		jouleState: "complete",
+		message,
+		codeInfo
+	};
 }
 
-export function createJouleBotWithChanges(
+export function createJouleBotChat(
 	message: string,
 	botExecInfo: BotExecInfo,
-	commit: string | null,
-	diffInfo: DiffInfo | null,
-	jouleState: "complete" | "partial" = "complete"
-): JouleBot {
-	const id = uuidv4();
+	jouleState: "complete" | "partial" | "error" = "complete",
+	stopReason: "endTurn" | "confirmCode" | null
+): JouleBotChat {
 	return {
-		id,
-		author: "bot",
-		convoState: "BotChat",
-		chatCodeInfo: {
-			message,
-			commit,
-			diffInfo: diffInfo,
-		},
+		jouleType: "BotChat",
+		id: uuidv4(),
+		message,
+		jouleState,
+		botExecInfo: botExecInfo,
+		stopReason: stopReason
+	};
+}
+
+export function createJouleBotCode(
+	message: string,
+	codeInfo: CodeInfo,
+	botExecInfo: BotExecInfo,
+	jouleState: "complete" | "partial" = "complete"
+): JouleBotCode {
+	return {
+		jouleType: "BotCode",
+		id: uuidv4(),
+		message,
+		codeInfo,
 		jouleState,
 		botExecInfo: botExecInfo,
 	};
 }
 
-export function updateMessage(joule: Joule, message: string): Joule {
-	return { ...joule, chatCodeInfo: { ...joule.chatCodeInfo, message } };
-}
-
-export function formatMessageForClaude(joule: Joule): string {
+export function encodeJouleForClaude(joule: Joule): ClaudeMessage {
 	// note that if we show a processed message, we'll need to use `message.length ? message : "..."`
 	// to ensure no Anthropic API errors
-	switch (joule.author) {
-		case "human":
-			return joule.chatCodeInfo.message;
-		case "bot":
-			return (joule as JouleBot).botExecInfo.rawOutput ?? "";
+	switch (joule.jouleType) {
+		case "HumanChat":
+			return { role: "user", content: joule.message };
+		case "HumanConfirmCode":
+			return { role: "user", content: joule.confirmed ? "[user confirmed okay to proceed]" : "[user declined to proceed]" };
+		case "BotChat":
+			return { role: "assistant", content: joule.botExecInfo.rawOutput };
+		case "BotCode":
+			return { role: "assistant", content: joule.botExecInfo.rawOutput };
+		default:
+			throw new Error(`Unknown Joule type ${joule}`);
 	}
 }

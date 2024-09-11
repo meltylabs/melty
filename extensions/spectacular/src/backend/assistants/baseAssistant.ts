@@ -1,19 +1,21 @@
-import { Conversation, ClaudeMessage, Joule, ContextPaths } from "../../types";
+import { Conversation, ClaudeMessage, Joule, JouleType, ContextPaths } from "../../types";
 import * as joules from "../joules";
 import fs from "fs";
 import path from "path";
 import { getUserPrompt } from "../../util/config";
+import * as vscode from "vscode";
 
 export abstract class BaseAssistant {
 	static get description(): string {
 		throw new Error("Description must be implemented in subclass");
 	}
 
-	abstract respond(
+	abstract responders: Map<JouleType, (
 		conversation: Conversation,
 		contextPaths: ContextPaths,
-		processPartial: (partialConversation: Conversation) => void
-	): Promise<Conversation>;
+		sendPartialJoule: (partialJoule: Joule) => void,
+		cancellationToken?: vscode.CancellationToken
+	) => Promise<Joule>>;
 
 	protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
 		const userPrompt = getUserPrompt();
@@ -31,15 +33,8 @@ export abstract class BaseAssistant {
 			});
 		}
 
-		function authorToRole(author: "human" | "bot"): "user" | "assistant" {
-			return author === "human" ? "user" : "assistant";
-		}
-
 		messages.push(
-			...conversation.joules.map((joule: Joule) => ({
-				role: authorToRole(joule.author),
-				content: joules.formatMessageForClaude(joule),
-			}))
+			...conversation.joules.map(joules.encodeJouleForClaude)
 		);
 
 		return messages;

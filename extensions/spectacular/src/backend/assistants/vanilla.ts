@@ -1,20 +1,29 @@
-import { Conversation, ContextPaths, ClaudeConversation } from "../../types";
+import { Conversation, ContextPaths, ClaudeConversation, Joule } from "../../types";
 import * as joules from "../joules";
 import * as prompts from "../prompts";
 import * as claudeAPI from "../claudeAPI";
-import * as conversations from "../conversations";
 import { BaseAssistant } from "./baseAssistant";
+import * as vscode from "vscode";
 
 export class Vanilla extends BaseAssistant {
 	static get description() {
 		return "Vanilla sends your message to Claude without messing with the prompt. It can't see your codebase.";
 	}
 
-	async respond(
+	responders = new Map();
+
+	constructor() {
+		super();
+		this.responders.set("BotChat", this.chat);
+	}
+
+
+	private async chat(
 		conversation: Conversation,
 		contextPaths: ContextPaths,
-		processPartial: (partialConversation: Conversation) => void
-	) {
+		sendPartialJoule: (partialJoule: Joule) => void,
+		cancellationToken?: vscode.CancellationToken
+	): Promise<Joule> {
 		const systemPrompt = prompts.vanillaModeSystemPrompt();
 
 		const claudeConversation: ClaudeConversation = {
@@ -25,44 +34,30 @@ export class Vanilla extends BaseAssistant {
 			],
 		};
 
-		let partialResponse = "";
+		let partialMessage = "";
 		const finalResponse = await claudeAPI.streamClaude(
 			claudeConversation, {
-			processPartial: (responseFragment: string) => {
-				partialResponse += responseFragment;
-				const partialConversation = this.claudeOutputToConversation(
-					conversation,
-					partialResponse,
-					true,
-					contextPaths
+			processPartial: async (responseFragment: string) => {
+				partialMessage += responseFragment;
+				const newJoule = joules.createJouleBotChat(
+					partialMessage,
+					{ rawOutput: partialMessage, contextPaths: contextPaths },
+					"partial",
+					null // no stop reason
 				);
-				processPartial(partialConversation);
+				sendPartialJoule(newJoule);
 			}
 		});
 		console.log(finalResponse);
 
-		return this.claudeOutputToConversation(
-			conversation,
+		return joules.createJouleBotChat(
 			finalResponse,
-			false,
-			contextPaths
-		);
-	}
-
-	private claudeOutputToConversation(
-		conversation: Conversation,
-		response: string,
-		partialMode: boolean,
-		contextPaths: ContextPaths
-	): Conversation {
-		const newJoule = joules.createJouleBot(
-			response,
 			{
-				rawOutput: response,
+				rawOutput: finalResponse,
 				contextPaths: contextPaths,
 			},
-			partialMode ? "partial" : "complete"
+			"complete",
+			"endTurn"
 		);
-		return conversations.addJoule(conversation, newJoule);
 	}
 }

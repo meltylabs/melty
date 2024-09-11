@@ -175,10 +175,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
 						});
 					})
 					.catch((error) => {
-						if (config.DEV_MODE) {
-							throw error;
-						}
-
 						console.log(
 							`[RPC Server] sending RPCresponse for ${message.id} with error ${error.message}`
 						);
@@ -188,6 +184,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 							id: message.id,
 							error: error.message,
 						});
+						vscode.window.showErrorMessage(error); // for dev; remove this in prod
 					});
 			}
 		});
@@ -232,8 +229,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
 						params.taskId
 					);
 					return undefined;
-				case "humanChat":
-					return this.rpcHumanChat(params.taskId, params.text);
+				case "createJouleHumanChat":
+					return this.rpcJouleHumanChat(params.taskId, params.text);
+				case "createJouleHumanConfirmCode":
+					return this.rpcJouleHumanConfirmCode(params.taskId, params.confirmed);
 				case "createTask":
 					return await this.rpcCreateTask(
 						params.name,
@@ -467,7 +466,15 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'light';
 	}
 
-	private async rpcHumanChat(taskId: string, text: string): Promise<void> {
+	private async rpcJouleHumanConfirmCode(taskId: string, confirmed: boolean): Promise<void> {
+		const task = this._taskManager.getActiveTask(taskId)!;
+		if (!task) {
+			throw new Error(`Tried to interact with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
+		}
+		await task.humanConfirmCode(confirmed);
+	}
+
+	private async rpcJouleHumanChat(taskId: string, text: string): Promise<void> {
 		const task = this._taskManager.getActiveTask(taskId)!;
 		if (!task) {
 			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
@@ -478,7 +485,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	private rpcStartBotTurn(taskId: string) {
 		const task = this._taskManager.getActiveTask(taskId)!;
 		if (!task) {
-			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
+			throw new Error(`Tried to interact with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
 		}
 		task.startBotTurn();
 	}

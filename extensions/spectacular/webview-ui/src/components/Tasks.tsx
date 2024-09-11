@@ -143,7 +143,7 @@ export function Tasks({
 	);
 
 	const handleSendMessage = useCallback(async (text: string, taskId: string) => {
-		await rpcClient.run("humanChat", { text, taskId });
+		await rpcClient.run("createJouleHumanChat", { text, taskId });
 		rpcClient.run("startBotTurn", { taskId });
 	}, []);
 

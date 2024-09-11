@@ -48,7 +48,11 @@ export async function dumpTaskToDisk(task: DehydratedTask): Promise<void> {
 	}
 
 	const taskPath = path.join(meltyDir, `${task.id}.json`);
-	fs.writeFileSync(taskPath, JSON.stringify(task, null, 2));
+	fs.writeFile(taskPath, JSON.stringify(task, null, 2), (err) => {
+		if (err) {
+			console.error(`Error writing task to disk: ${err}`);
+		}
+	});
 }
 
 export async function deleteTaskFromDisk(task: DehydratedTask): Promise<void> {

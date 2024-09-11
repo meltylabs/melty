@@ -35,10 +35,6 @@ export function getExcludesGlob(): string {
 	return `{${allExcludes.join(",")}}`;
 }
 
-export const STRICT_GIT = false;
-
-export const DEV_MODE = true;
-
 export function getIsAutocommitMode(): boolean {
 	const config = vscode.workspace.getConfiguration("melty");
 	return config.get<boolean>("autocommit", true);

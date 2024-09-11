@@ -6,6 +6,10 @@ import {
 	ChangeSet,
 	BotExecInfo,
 	Joule,
+	JouleBotChat,
+	JouleBotCode,
+	nextJouleType,
+	JouleType
 } from "../../types";
 import * as joules from "..//joules";
 import * as prompts from "..//prompts";
@@ -25,33 +29,136 @@ import { FileManager } from 'services/FileManager';
 import { GitManager } from 'services/GitManager';
 import { ErrorOperationCancelled } from 'util/utils';
 
-const webviewNotifier = WebviewNotifier.getInstance();
-
 export class Coder extends BaseAssistant {
 	static get description() {
 		return "Coder can view your codebase structure, suggest edits, and write code.";
 	}
 
+	responders = new Map();
+
 	constructor(
 		private readonly _fileManager: FileManager = FileManager.getInstance(),
-		private readonly _gitManager: GitManager = GitManager.getInstance()
+		private readonly _gitManager: GitManager = GitManager.getInstance(),
+		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance()
 	) {
 		super();
+		this.responders.set("BotChat", this.chat.bind(this));
+		this.responders.set("BotCode", this.code.bind(this));
 	}
 
-	async respond(
+	private async chat(
 		conversation: Conversation,
 		contextPaths: ContextPaths,
-		processPartial: (partialConversation: Conversation) => void,
+		sendPartialJoule: (partialJoule: Joule) => void,
 		cancellationToken?: vscode.CancellationToken
-	) {
-		webviewNotifier.updateStatusMessage("Preparing context");
-		if (
-			!conversation.joules ||
-			conversation.joules[conversation.joules.length - 1].author !== "human"
-		) {
-			throw new Error("Cannot respond to non-human message");
+	): Promise<JouleBotChat> {
+		const claudeConversation = await this.prepareContext(contextPaths, conversation);
+
+		this._webviewNotifier.updateStatusMessage("Thinking");
+		let partialMessage = "";
+		const finalResponse = await claudeAPI.streamClaudeRaw(
+			claudeConversation,
+			{
+				cancellationToken,
+				stopSequences: ["<change_code"],
+				processPartial: async (responseFragment: string) => {
+					if (cancellationToken?.isCancellationRequested) {
+						throw new ErrorOperationCancelled();
+					}
+					partialMessage += responseFragment;
+					const newJoule = joules.createJouleBotChat(
+						partialMessage,
+						{ rawOutput: partialMessage, contextPaths: contextPaths },
+						"partial",
+						null // no stop reason
+					);
+					sendPartialJoule(newJoule);
+				}
+			}
+		);
+
+		const text = finalResponse.content.find((block) => "text" in block)?.text?.trim() || ""; // todo better error handling
+		console.log(finalResponse);
+
+		const stopReason = finalResponse.stop_reason === "stop_sequence" && finalResponse.stop_sequence === "<change_code" ? "confirmCode" : "endTurn";
+
+		const botExecInfo = {
+			rawOutput: text,
+			contextPaths: contextPaths,
+		};
+		return joules.createJouleBotChat(
+			text,
+			botExecInfo,
+			"complete",
+			stopReason
+		);
+	}
+
+	private async code(
+		conversation: Conversation,
+		contextPaths: ContextPaths,
+		sendPartialJoule: (partialJoule: Joule) => void,
+		cancellationToken?: vscode.CancellationToken
+	): Promise<JouleBotCode> {
+		this.prepForChanges();
+
+		const claudeConversation = await this.prepareContext(contextPaths, conversation);
+
+		this._webviewNotifier.updateStatusMessage("Thinking");
+		let partialMessage = "";
+		const finalResponse = await claudeAPI.streamClaudeRaw(
+			claudeConversation,
+			{
+				cancellationToken,
+				processPartial: async (responseFragment: string) => {
+					if (cancellationToken?.isCancellationRequested) {
+						throw new ErrorOperationCancelled();
+					}
+					partialMessage += responseFragment;
+					const newJoule =
+						await this.codeMessageToJoule(
+							partialMessage, true, contextPaths
+						);
+					sendPartialJoule(newJoule);
+				}
+			}
+		);
+
+		const text = finalResponse.content.find((block) => "text" in block)?.text?.trim() || ""; // todo better error handling
+		console.log(finalResponse);
+
+		// do the committing
+		const newJoule = await this.codeMessageToJoule(
+			text, false, contextPaths
+		);
+
+		this.cleanUpAfterChanges(newJoule);
+		return newJoule;
+	}
+
+	private async prepForChanges(): Promise<void> {
+		this._webviewNotifier.updateStatusMessage("Checking repo status");
+		// eventually, we'll want to ensure working directory clean and on correct branch
+		this._webviewNotifier.resetStatusMessage();
+	}
+
+
+	private async cleanUpAfterChanges(jouleBotCode: JouleBotCode) {
+		this._webviewNotifier.updateStatusMessage(
+			"Adding edited files to Melty's Mind"
+		);
+		if (jouleBotCode.codeInfo.diffInfo?.filePathsChanged) {
+			// add any edited files to melty's mind
+			jouleBotCode.codeInfo.diffInfo.filePathsChanged.forEach((editedFile) => {
+				this._fileManager.addMeltyMindFile(editedFile, true);
+			});
 		}
+
+		this._webviewNotifier.updateStatusMessage("Autosaving conversation");
+	}
+
+	private async prepareContext(contextPaths: ContextPaths, conversation: Conversation): Promise<ClaudeConversation> {
+		this._webviewNotifier.updateStatusMessage("Preparing context");
 		const repoMap = new RepoMapSpec();
 		const workspaceFilePaths = await this._fileManager.getWorkspaceFilesRelative(); // await utils.getWorkspaceFilePaths(gitRepo);
 		const repoMapString = await repoMap.getRepoMap(workspaceFilePaths);
@@ -73,10 +180,6 @@ export class Coder extends BaseAssistant {
 		//   newContextSuggestions?.join(",")
 		// );
 
-		// TODO 100: Add a loop here to try to correct the response if it's not good yet
-		// TODO 300: (abstraction over 100 and 200): Constructing a unit of work might require multiple LLM steps: find context, make diff, make corrections.
-		// We can try each step multiple times. All attempts should be represented by a tree. We pick one leaf to respond with.
-
 		const systemPrompt = prompts.codeModeSystemPrompt();
 
 		const claudeConversation: ClaudeConversation = {
@@ -90,69 +193,24 @@ export class Coder extends BaseAssistant {
 
 		console.log("CLAUDE CONVERSATION: ", claudeConversation);
 
-		// TODO 200: get five responses, pick the best one with pickResponse
-		// TODO 400: write a claudePlus
-
-		webviewNotifier.updateStatusMessage("Thinking");
-		let partialMessage = "";
-		const finalResponse = await claudeAPI.streamClaudeRaw(
-			claudeConversation,
-			{
-				cancellationToken,
-				processPartial: async (responseFragment: string) => {
-					if (cancellationToken?.isCancellationRequested) {
-						throw new ErrorOperationCancelled();
-					}
-					partialMessage += responseFragment;
-					const newConversation = await this.claudeOutputToConversation(
-						conversation,
-						partialMessage,
-						true,
-						contextPaths,
-						true // ignore changes
-					);
-					processPartial(newConversation);
-				}
-			}
-		);
-
-		const text = finalResponse.content.find((block) => "text" in block)?.text?.trim() || ""; // todo better error handling
-		console.log(finalResponse);
-
-		if (finalResponse.stop_reason === "stop_sequence") {
-			switch (finalResponse.stop_sequence) {
-				case "<change_code":
-					vscode.window.showInformationMessage("stopped for input");
-					break;
-				default:
-					throw new Error(`Unrecognized stop sequence ${finalResponse.stop_sequence}`);
-			}
-		}
-
-		webviewNotifier.updateStatusMessage("Applying changes");
-		return await this.claudeOutputToConversation(
-			conversation,
-			text,
-			false,
-			contextPaths,
-			false, // apply changes
-			cancellationToken
-		);
+		return claudeConversation;
 	}
 
-	private async claudeOutputToConversation(
-		prevConversation: Conversation,
+	/**
+	 * Takes a message from Claude containing code, parses the code, commits it,
+	 * returns a Joule with the resulting code.
+	 */
+	private async codeMessageToJoule(
 		response: string,
 		partialMode: boolean,
 		contextPaths: ContextPaths,
-		ignoreChanges: boolean,
 		cancellationToken?: vscode.CancellationToken
-	): Promise<Conversation> {
+	): Promise<JouleBotCode> {
 		const { messageChunksList, searchReplaceList } = parser.splitResponse(
 			response,
 			partialMode
 		);
-		const changeSet = ignoreChanges
+		const changeSet = partialMode
 			? changeSets.createEmpty()
 			: await diffApplicatorXml.searchReplaceToChangeSet(
 				searchReplaceList,
@@ -163,7 +221,7 @@ export class Coder extends BaseAssistant {
 			throw new ErrorOperationCancelled();
 		}
 
-		const nextJoule = await this.applyChangesToGetNextJoule(
+		return await this.applyChangesToGetNextJoule(
 			changeSet,
 			messageChunksList.join("\n"),
 			{
@@ -172,8 +230,6 @@ export class Coder extends BaseAssistant {
 			},
 			partialMode
 		);
-
-		return conversations.addJoule(prevConversation, nextJoule);
 	}
 
 	private async applyChangesToGetNextJoule(
@@ -181,10 +237,14 @@ export class Coder extends BaseAssistant {
 		message: string,
 		botExecInfo: BotExecInfo,
 		partialMode: boolean
-	): Promise<Joule> {
+	): Promise<JouleBotCode> {
 		if (changeSets.isEmpty(changeSet)) {
-			return joules.createJouleBot(
+			return joules.createJouleBotCode(
 				message,
+				{
+					commit: null,
+					diffInfo: null,
+				},
 				botExecInfo,
 				partialMode ? "partial" : "complete"
 			);
@@ -195,14 +255,14 @@ export class Coder extends BaseAssistant {
 
 			let commit: string | null;
 			if (config.getIsAutocommitMode()) {
-				webviewNotifier.updateStatusMessage("Writing a commit message");
+				this._webviewNotifier.updateStatusMessage("Writing a commit message");
 				const commitMessage = await generateCommitMessage(udiff, message);
-				webviewNotifier.updateStatusMessage("Committing changes");
+				this._webviewNotifier.updateStatusMessage("Committing changes");
 				commit = await this._gitManager.commitChangeSet(
 					changeSet,
 					commitMessage
 				);
-				webviewNotifier.resetStatusMessage();
+				this._webviewNotifier.resetStatusMessage();
 			} else {
 				changeSets.applyChangeSet(changeSet, this._gitManager.getMeltyRoot());
 				commit = null;
@@ -211,11 +271,10 @@ export class Coder extends BaseAssistant {
 				diffPreview: udiff,
 				filePathsChanged: Array.from(Object.keys(changeSet.filesChanged)),
 			};
-			return joules.createJouleBotWithChanges(
+			return joules.createJouleBotCode(
 				message,
+				{ commit, diffInfo },
 				botExecInfo,
-				commit,
-				diffInfo,
 				partialMode ? "partial" : "complete"
 			);
 		}

@@ -8,14 +8,14 @@ import {
 	LoaderCircle,
 } from "lucide-react";
 import posthog from "posthog-js";
-import { FastFilePicker } from "./FastFilePicker";
-import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { Button } from './ui/button'
-import { RpcClient } from "@/RpcClient";
-import { JouleComponent } from "./JouleComponent";
-import * as strings from "@/utilities/strings";
-import { EventManager } from '@/eventManager';
-import { DehydratedTask } from "types";
+import { FastFilePicker } from "components/FastFilePicker";
+import AutoExpandingTextarea from "components/AutoExpandingTextarea";
+import { Button } from 'components/ui/button'
+import { RpcClient } from "RpcClient";
+import { JouleComponent } from "components/JouleComponent";
+import * as strings from "utilities/strings";
+import { EventManager } from 'eventManager';
+import { DehydratedTask, jouleAuthor, nextJouleType } from "../types";
 import { useNavigate } from "react-router-dom";
 
 const MemoizedJouleComponent = memo(JouleComponent);
@@ -35,7 +35,7 @@ export function ConversationView() {
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	const navigate = useNavigate();
 
-	const [nonInitialHumanMessageInFlight, setNonInitialHumanMessageInFlight] =
+	const [nonInitialHumanJouleInFlight, setNonInitialHumanJouleInFlight] =
 		useState(false);
 	const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -53,12 +53,17 @@ export function ConversationView() {
 		return (
 			!task ||
 			task.conversation.joules.length === 0 ||
-			nonInitialHumanMessageInFlight ||
-			task?.conversation.joules[task?.conversation.joules.length - 1].author ===
+			nonInitialHumanJouleInFlight ||
+			jouleAuthor(task?.conversation.joules[task?.conversation.joules.length - 1]) ===
 			"human" ||
 			task?.conversation.joules[task?.conversation.joules.length - 1].jouleState ===
 			"partial"
 		);
+	}
+
+	function conversationState() {
+		const lastJoule = task?.conversation.joules[task?.conversation.joules.length - 1];
+		return lastJoule ? nextJouleType(lastJoule) : null;
 	}
 
 	async function handleAddFile(file: string) {
@@ -98,15 +103,23 @@ export function ConversationView() {
 		setWorkspaceFiles(workspaceFiles);
 	}, [setMeltyFiles, setWorkspaceFiles]);
 
-	function handleSendMessage(text: string, taskId: string) {
-		setNonInitialHumanMessageInFlight(true);
+	function addJouleHumanChat(text: string, taskId: string) {
+		setNonInitialHumanJouleInFlight(true);
 		const result = posthog.capture("chatmessage_sent", {
 			message: text,
 			task_id: taskId,
 		});
 		console.log("posthog event captured!", result);
 		(async () => {
-			await rpcClient.run("humanChat", { text, taskId });
+			await rpcClient.run("createJouleHumanChat", { text, taskId });
+			rpcClient.run("startBotTurn", { taskId });
+		})();
+	}
+
+	function addJouleHumanConfirmCode(confirmed: boolean, taskId: string) {
+		setNonInitialHumanJouleInFlight(true);
+		(async () => {
+			await rpcClient.run("createJouleHumanConfirmCode", { confirmed, taskId });
 			rpcClient.run("startBotTurn", { taskId });
 		})();
 	}
@@ -169,8 +182,8 @@ export function ConversationView() {
 				task.conversation.joules[
 				task.conversation.joules.length - 1
 				] : undefined;
-		if (lastJoule?.author === "human") {
-			setNonInitialHumanMessageInFlight(false);
+		if (lastJoule && jouleAuthor(lastJoule) === "human") {
+			setNonInitialHumanJouleInFlight(false);
 		}
 		setTask(task);
 	}, []);
@@ -221,7 +234,7 @@ export function ConversationView() {
 	const lastJouleCommit = useMemo(() => {
 		if (!task?.conversation.joules.length) return null;
 		const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
-		return lastJoule.chatCodeInfo.commit;
+		return lastJoule.jouleType === "HumanChat" || lastJoule.jouleType === "BotCode" ? lastJoule.codeInfo?.commit : null;
 	}, [task?.conversation.joules]);
 
 	useEffect(() => {
@@ -235,7 +248,16 @@ export function ConversationView() {
 		event.preventDefault();
 		const form = event.target as HTMLFormElement;
 		const message = form.message.value;
-		handleSendMessage(message, taskId!);
+		addJouleHumanChat(message, taskId!);
+		setMessageText("");
+		form.reset();
+	};
+
+	const handleConfirmCode = (event: React.FormEvent) => {
+		event.preventDefault();
+		const form = event.target as HTMLFormElement;
+		const confirmed: boolean = form.confirmCode.value === "yes";
+		addJouleHumanConfirmCode(confirmed, taskId!);
 		setMessageText("");
 		form.reset();
 	};
@@ -246,7 +268,7 @@ export function ConversationView() {
 			if (event.currentTarget && event.currentTarget.value !== undefined) {
 				const form = event.currentTarget.form;
 				if (form) {
-					handleSendMessage(event.currentTarget.value, taskId!);
+					addJouleHumanChat(event.currentTarget.value, taskId!);
 					setMessageText("");
 					event.currentTarget.value = "";
 				}
@@ -325,7 +347,9 @@ export function ConversationView() {
 							joule={joule}
 							isLatestCommit={
 								// isLatestCommit checks that we are actually on a commit and that commit actually matches the joule's commit
-								latestCommitHash !== undefined && joule.chatCodeInfo.diffInfo !== undefined && latestCommitHash === joule.chatCodeInfo.commit
+								latestCommitHash !== undefined && (
+									joule.jouleType === "HumanChat" || joule.jouleType === "BotCode"
+								) && latestCommitHash === joule.codeInfo?.commit
 							}
 							isPartial={joule.jouleState === "partial"}
 							showDiff={index !== 0} // Hide diff view for the first message
@@ -353,6 +377,15 @@ export function ConversationView() {
 				</div>
 			</div>
 			<div className="mb-1.5">
+				{conversationState() === "HumanConfirmCode" &&
+					<form onSubmit={handleConfirmCode}>
+						<select name="confirmCode" defaultValue="yes">
+							<option value="yes">Yes</option>
+							<option value="no">No</option>
+						</select>
+						<input type="submit" value="Confirm code" />
+					</form>
+				}
 				<form onSubmit={handleSubmit}>
 					<div className="mt-4 relative">
 						<AutoExpandingTextarea

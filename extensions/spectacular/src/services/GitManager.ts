@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 // TODOREFACTOR get these imports out of here
 import { generateCommitMessage } from '../backend/commitMessageGenerator';
-import { ChangeSet, DiffInfo } from 'types';
+import { ChangeSet, CodeInfo } from 'types';
 import * as changesets from 'backend/changeSets';
 import * as files from 'backend/meltyFiles';
 
@@ -118,9 +118,7 @@ export class GitManager {
 	 * Commits any local changes (or empty commit if none).
 	 * @returns info if changes were committed, or null otherwise
 	 */
-	public async commitLocalChanges(): Promise<{
-		commit: string, diffInfo: DiffInfo
-	} | null> {
+	public async commitLocalChanges(): Promise<CodeInfo | null> {
 		try {
 			this.checkInit();
 			await this.repo!.sitory.status();

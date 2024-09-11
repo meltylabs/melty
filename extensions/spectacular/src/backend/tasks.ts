@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Joule, Conversation, TaskMode, DehydratedTask, ConvoState } from "../types";
+import { Joule, Conversation, TaskMode, DehydratedTask, JouleBotCode, nextJouleType } from "../types";
 import * as conversations from "./conversations";
 import * as joules from "./joules";
 import * as utils from "../util/utils";
@@ -11,6 +11,7 @@ import * as datastores from "./datastores";
 import { WebviewNotifier } from "../services/WebviewNotifier";
 import { GitManager } from "../services/GitManager";
 import { v4 as uuidv4 } from "uuid";
+import { BaseAssistant } from 'backend/assistants/baseAssistant';
 
 const webviewNotifier = WebviewNotifier.getInstance();
 
@@ -39,6 +40,7 @@ export class Task {
 	updatedAt: Date;
 	taskMode: TaskMode;
 	savedMeltyMindFiles: string[] = [];
+	assistant: BaseAssistant;
 
 	botTurnCancellationTokenSource: vscode.CancellationTokenSource | null = null;
 
@@ -58,6 +60,16 @@ export class Task {
 		this.createdAt = dehydratedTask.createdAt;
 		this.updatedAt = dehydratedTask.updatedAt;
 		this.taskMode = dehydratedTask.taskMode;
+		switch (this.taskMode) {
+			case "coder":
+				this.assistant = new Coder();
+				break;
+			case "vanilla":
+				this.assistant = new Vanilla();
+				break;
+			default:
+				throw new Error(`Unknown assistant type: ${this.taskMode}`);
+		}
 	}
 
 	updateLastModified() {
@@ -84,87 +96,6 @@ export class Task {
 	}
 
 	/**
-	 * Adds a bot message (and changes) to the conversation.
-	 *
-	 * @param contextPaths - the paths to the files in the context of which to respond (melty's mind)
-	 * @param mode - the mode of the assistant to use
-	 * @param processPartial - a function to process the partial joule
-	 */
-	private async respondBot(
-		processPartial: (partialConversation: Conversation) => void,
-		cancellationToken?: vscode.CancellationToken,
-	): Promise<void> {
-		try {
-			webviewNotifier.updateStatusMessage("Checking repo status");
-
-			// TODOREFACTOR ensure working directory clean
-
-			webviewNotifier.resetStatusMessage();
-
-			let assistant;
-			switch (this.taskMode) {
-				case "coder":
-					assistant = new Coder();
-					break;
-				case "vanilla":
-					assistant = new Vanilla();
-					break;
-				default:
-					throw new Error(`Unknown assistant type: ${this.taskMode}`);
-			}
-
-			const meltyMindFiles =
-				await this._fileManager.getMeltyMindFilesRelative();
-
-			// just in case something's gone terribly wrong
-			this.conversation = conversations.forceReadyForResponseFrom(
-				this.conversation,
-				"bot"
-			);
-			this.conversation = await assistant.respond(
-				this.conversation,
-				{ // TODOREFACTOR use ContextPaths object up the chain
-					paths: meltyMindFiles,
-					meltyRoot: this._gitManager.getMeltyRoot()
-				},
-				processPartial,
-				cancellationToken
-			);
-
-			webviewNotifier.updateStatusMessage(
-				"Adding edited files to Melty's Mind"
-			);
-			const lastJoule = conversations.lastJoule(this.conversation)!;
-			if (lastJoule.chatCodeInfo.diffInfo?.filePathsChanged) {
-				// add any edited files to melty's mind
-				lastJoule.chatCodeInfo.diffInfo.filePathsChanged.forEach((editedFile) => {
-					this._fileManager.addMeltyMindFile(editedFile, true);
-				});
-			}
-
-			webviewNotifier.updateStatusMessage("Autosaving conversation");
-			this.updateLastModified();
-			await datastores.dumpTaskToDisk(await this.dehydrate());
-		} catch (e) {
-			if (config.DEV_MODE) {
-				throw e;
-			} else {
-				vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
-				const message = "[  Error :(  ]";
-				const joule = joules.createJouleBot(
-					message,
-					{
-						rawOutput: message,
-						contextPaths: { paths: [], meltyRoot: '' },
-					},
-					"complete"
-				);
-				this.conversation = conversations.addJoule(this.conversation, joule);
-			}
-		}
-	}
-
-	/**
 	 * Adds a human message (and changes) to the conversation.
 	 */
 	private async respondHuman(message: string): Promise<Joule> {
@@ -176,17 +107,15 @@ export class Task {
 		let newJoule: Joule;
 
 		if (config.getIsAutocommitMode() && this.taskMode !== "vanilla") {
-			webviewNotifier.updateStatusMessage("Checking repo status");
+			// webviewNotifier.updateStatusMessage("Checking repo status");
 
 			webviewNotifier.updateStatusMessage("Committing user's changes");
-			const commitResult = await this._gitManager.commitLocalChanges();
+			const codeInfo = await this._gitManager.commitLocalChanges();
 			webviewNotifier.resetStatusMessage();
 
-			newJoule = commitResult !== null
-				? joules.createJouleHumanWithChanges(message, commitResult.commit, commitResult.diffInfo)
-				: joules.createJouleHuman(message);
+			newJoule = joules.createJouleHumanChat(message, codeInfo);
 		} else {
-			newJoule = joules.createJouleHuman(message);
+			newJoule = joules.createJouleHumanChat(message, null);
 		}
 
 		this.conversation = conversations.addJoule(this.conversation, newJoule);
@@ -230,38 +159,15 @@ export class Task {
 	// 	}
 	// }
 
-	/**
-	 * all bot behaviors
-	 */
-	private edges = new Map<ConvoState, () => void>([
-		["HumanChat", () => {
-			// goes to: BotChat state
-			this.startCancelableOperation(async (cancellationToken) => {
-				const processPartial = (partialConversation: Conversation) => {
-					const dehydratedTask = this.dehydrateForWire();
-					dehydratedTask.conversation = partialConversation;
-					webviewNotifier.sendNotification("updateTask", {
-						task: dehydratedTask,
-					});
-				};
-				await this.respondBot(
-					processPartial,
-					cancellationToken
-				);
-
-				webviewNotifier.sendNotification("updateTask", {
-					task: this.dehydrateForWire(),
-				});
-				webviewNotifier.resetStatusMessage();
-
-				// end running operation
-				this.botTurnCancellationTokenSource = null;
-			});
-		}],
-		// ["HumanConfirm", () => {
-
-		// }]
-	]);
+	public async humanConfirmCode(confirmed: boolean) {
+		this.conversation = conversations.addJoule(
+			this.conversation,
+			joules.createJouleHumanConfirmCode(confirmed)
+		);
+		await webviewNotifier.sendNotification("updateTask", {
+			task: this.dehydrateForWire(),
+		});
+	}
 
 	/**
 	 * Executes humanChat synchronously.
@@ -276,6 +182,9 @@ export class Task {
 
 	public startBotTurn(): void {
 		const lastJoule = conversations.lastJoule(this.conversation);
+		if (!lastJoule) {
+			throw new Error("no last joule");
+		}
 		const jouleState = lastJoule?.jouleState;
 		if (jouleState !== "complete") {
 			throw new Error("can't progress incomplete joule");
@@ -283,12 +192,55 @@ export class Task {
 
 		// todo if multiple bot operations can happen back-to-back,
 		// we'll need to add a loop somewhere
-		const convoState = lastJoule?.convoState;
-		const startOp = convoState ? this.edges.get(convoState) : undefined;
-		if (!startOp) {
-			throw new Error(`no operation for ${convoState}`);
-		}
-		startOp();
+		this.startCancelableOperation(async (cancellationToken) => {
+			this.conversation = conversations.forceReadyForResponseFrom(
+				this.conversation,
+				"bot"
+			);
+
+			const sendPartialJoule = (partialJoule: Joule) => {
+				const dehydratedTask = this.dehydrateForWire();
+				dehydratedTask.conversation = conversations.addJoule(this.conversation, partialJoule);
+				webviewNotifier.sendNotification("updateTask", {
+					task: dehydratedTask,
+				});
+			};
+
+			try {
+				const responder = this.assistant.responders.get(nextJouleType(lastJoule));
+				if (!responder) {
+					throw new Error(`No responder for ${nextJouleType(lastJoule)}`);
+				}
+				const newJoule = await responder(
+					this.conversation,
+					{
+						// TODOREFACTOR use ContextPaths object up the chain
+						paths: await this._fileManager.getMeltyMindFilesRelative(),
+						meltyRoot: this._gitManager.getMeltyRoot()
+					},
+					sendPartialJoule,
+					cancellationToken
+				);
+				this.conversation = conversations.addJoule(this.conversation, newJoule);
+			} catch (e) {
+				vscode.window.showErrorMessage(`Error talking to the bot: ${e}`);
+				const joule = joules.createJouleError("Error talking to the bot");
+				this.conversation = conversations.addJoule(this.conversation, joule);
+			}
+
+			this.updateLastModified();
+
+			webviewNotifier.updateStatusMessage("Autosaving conversation");
+			await datastores.dumpTaskToDisk(await this.dehydrate());
+
+			webviewNotifier.sendNotification("updateTask", {
+				task: this.dehydrateForWire(),
+			});
+			webviewNotifier.resetStatusMessage();
+
+			// end running operation
+			this.botTurnCancellationTokenSource = null;
+		});
 	}
 
 	/**
@@ -325,18 +277,26 @@ export class Task {
 	 */
 	public dehydrateForWire(): DehydratedTask {
 		return {
-			...this,
-			_fileManager: undefined,
-			_gitManager: undefined,
-			files: null
+			id: this.id,
+			name: this.name,
+			branch: this.branch,
+			conversation: this.conversation,
+			createdAt: this.createdAt,
+			updatedAt: this.updatedAt,
+			taskMode: this.taskMode,
+			meltyMindFiles: [] // omit for wire
 		};
 	}
 
 	public async dehydrate(): Promise<DehydratedTask> {
 		return {
-			...this,
-			_fileManager: undefined,
-			_gitManager: undefined,
+			id: this.id,
+			name: this.name,
+			branch: this.branch,
+			conversation: this.conversation,
+			createdAt: this.createdAt,
+			updatedAt: this.updatedAt,
+			taskMode: this.taskMode,
 			meltyMindFiles: await this._fileManager.getMeltyMindFilesRelative()
 		};
 	}

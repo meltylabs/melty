@@ -1,60 +1,87 @@
-export type ConvoStateHuman =
+export type JouleTypeHuman =
 	| "HumanChat"
 	| "HumanConfirmCode";
 //   | "HumanAddFile"
 
-export type ConvoStateBot =
+export type JouleTypeBot =
 	| "BotChat"
 	| "BotCode";
 
-export type ConvoState = ConvoStateHuman | ConvoStateBot;
+export type JouleType = JouleTypeHuman | JouleTypeBot;
 
-export type ConvoEdges = {
-	[FromState in ConvoState]?: ConvoState[]
+export function jouleAuthor(joule: Joule): "human" | "bot" {
+	switch (joule.jouleType) {
+		case "HumanChat":
+		case "HumanConfirmCode":
+			return "human";
+		case "BotChat":
+		case "BotCode":
+			return "bot";
+		default:
+			throw new Error(`Unknown Joule type ${joule}`);
+	}
 };
 
-// Note that if you want to model the human/AI decision making process
-// (and the information we show in the prompt/UI) then it's not a state
-// machine, because the transitions depend on entire converstaion trace!
-// but if you squint and ignore that part, it's a state machine
-const stateMachineEdges: ConvoEdges = {
-	"HumanChat": ["BotChat"],
-	"HumanConfirmCode": ["BotCode"],
-	"BotChat": ["HumanChat"],
-	"BotCode": ["HumanChat"],
-};
+// defines edges of the state graph
+export function nextJouleType(joule: Joule): JouleType {
+	switch (joule.jouleType) {
+		case "HumanChat":
+			return "BotChat";
+		case "BotCode":
+			return "HumanChat";
+		case "BotChat":
+			switch (joule.stopReason) {
+				case "confirmCode":
+					return "HumanConfirmCode";
+				case "endTurn":
+					return "HumanChat";
+				case null:
+					return "HumanChat"; // todo get rid of this
+			}
+		case "HumanConfirmCode":
+			return "BotCode";
+	}
+}
 
-export type Joule = {
+export type JouleBase = {
+	readonly jouleType: JouleType;
 	readonly id: string;
-	readonly author: "human" | "bot"; // todo deprecate
-	readonly convoState: ConvoState;
 	readonly jouleState: "complete" | "partial" | "error";
-	readonly chatCodeInfo: ChatCodeInfo;
 };
 
-export type JouleHuman = Joule & {
-	readonly author: "human";
-	readonly convoState: ConvoStateHuman;
+export type CodeInfo = {
+	readonly commit: string | null;
+	readonly diffInfo: DiffInfo | null;
 };
 
-export type JouleBot = Joule & {
-	readonly author: "bot";
-	readonly convoState: ConvoStateBot;
+/* ======================= Joules ========================== */
+
+export type JouleHumanChat = JouleBase & {
+	readonly jouleType: "HumanChat";
+	readonly message: string;
+	readonly codeInfo: CodeInfo | null;
+};
+
+export type JouleHumanConfirmCode = JouleBase & {
+	readonly jouleType: "HumanConfirmCode";
+	readonly confirmed: boolean;
+};
+
+export type JouleBotChat = JouleBase & {
+	readonly jouleType: "BotChat";
+	readonly message: string;
+	readonly botExecInfo: BotExecInfo;
+	readonly stopReason: "endTurn" | "confirmCode" | null;
+};
+
+export type JouleBotCode = JouleBase & {
+	readonly jouleType: "BotCode";
+	readonly message: string;
+	readonly codeInfo: CodeInfo;
 	readonly botExecInfo: BotExecInfo;
 };
 
-export type ChatCodeInfo = {
-	readonly message: string;
-	readonly commit: string | null;
-	readonly diffInfo: DiffInfo | null;
-}
-
-// export type JouleHumanChat = JouleHuman & ChatCodeInfo;
-// export type JouleHumanConfirmCode = JouleHuman & {
-// 	readonly confirmed: boolean;
-// };
-// export type JouleBotCode = JouleBot & ChatCodeInfo;
-// export type JouleBotChat = JouleBot & ChatCodeInfo;
+export type Joule = JouleHumanChat | JouleHumanConfirmCode | JouleBotCode | JouleBotChat;
 
 /* ================================================= */
 
@@ -162,6 +189,7 @@ export type RpcMethod =
 	| "checkOnboardingComplete"
 	| "setOnboardingComplete"
 	// human conversation actions
-	| "humanChat"
+	| "createJouleHumanChat"
+	| "createJouleHumanConfirmCode"
 	// bot conversation action
 	| "startBotTurn";
