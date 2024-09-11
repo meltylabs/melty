@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { RpcClient } from "../RpcClient";
-import { Joule, JouleHumanChat, JouleBotChat, JouleBotCode, jouleAuthor } from "../types";
+import { Joule, JouleHumanChat, JouleBotChat, JouleBotCode } from "../types";
 import CopyButton from "./CopyButton";
 import DiffContent from "./DiffContent";
 

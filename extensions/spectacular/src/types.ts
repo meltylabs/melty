@@ -9,19 +9,6 @@ export type JouleTypeBot =
 
 export type JouleType = JouleTypeHuman | JouleTypeBot;
 
-export function jouleAuthor(joule: Joule): "human" | "bot" {
-	switch (joule.jouleType) {
-		case "HumanChat":
-		case "HumanConfirmCode":
-			return "human";
-		case "BotChat":
-		case "BotCode":
-			return "bot";
-		default:
-			throw new Error(`Unknown Joule type ${joule}`);
-	}
-};
-
 // defines edges of the state graph
 export function nextJouleType(joule: Joule): JouleType {
 	switch (joule.jouleType) {
@@ -36,7 +23,7 @@ export function nextJouleType(joule: Joule): JouleType {
 				case "endTurn":
 					return "HumanChat";
 				case null:
-					return "HumanChat"; // todo get rid of this
+					return "HumanChat"; // needed for error joules. todo get rid of this.
 			}
 		case "HumanConfirmCode":
 			return joule.confirmed ? "BotCode" : "BotChat";

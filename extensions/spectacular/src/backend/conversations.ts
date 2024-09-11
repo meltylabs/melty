@@ -1,4 +1,4 @@
-import { Joule, Conversation, jouleAuthor } from "../types";
+import { Joule, Conversation } from "../types";
 import * as vscode from "vscode";
 import * as joules from "./joules";
 export function create(): Conversation {
@@ -35,7 +35,7 @@ export function replaceLastJoule(
 // function combineDoubleJoules(conversation: Conversation): Conversation {
 // 	return {
 // 		joules: conversation.joules.reduce((acc, joule, index, array) => {
-// 			if (index === 0 || jouleAuthor(joule) !== jouleAuthor(array[index - 1])) {
+// 			if (index === 0 || joules.author(joule) !== joules.author(array[index - 1])) {
 // 				return [...acc, joule];
 // 			} else {
 // 				console.error("Combining double joules: ", joule, array[index - 1]);
@@ -64,7 +64,7 @@ function removeLeadingErrorJoules(conversation: Conversation): Conversation {
 }
 
 function removeLeadingBotJoules(conversation: Conversation): Conversation {
-	while (conversation.joules.length > 0 && jouleAuthor(conversation.joules[0]) === "bot") {
+	while (conversation.joules.length > 0 && joules.author(conversation.joules[0]) === "bot") {
 		console.error("Unexpected: removing initial bot joule");
 		conversation = {
 			joules: conversation.joules.slice(1),
@@ -105,13 +105,13 @@ function removeFinalJoulesFrom(
 	const oppositeAuthor = author === "human" ? "bot" : "human";
 
 	const indexOfLastNonMatchingJoule = conversation.joules.some(
-		(joule) => jouleAuthor(joule) === oppositeAuthor
+		(joule) => joules.author(joule) === oppositeAuthor
 	)
 		? conversation.joules.length -
 		1 -
 		Array.from(conversation.joules)
 			.reverse()
-			.findIndex((joule) => jouleAuthor(joule) === oppositeAuthor)
+			.findIndex((joule) => joules.author(joule) === oppositeAuthor)
 		: -1; // no matching joules
 
 	if (indexOfLastNonMatchingJoule === conversation.joules.length - 1) {

@@ -8,14 +8,14 @@ import {
 	LoaderCircle,
 } from "lucide-react";
 import posthog from "posthog-js";
-import { FastFilePicker } from "components/FastFilePicker";
-import AutoExpandingTextarea from "components/AutoExpandingTextarea";
-import { Button } from 'components/ui/button'
-import { RpcClient } from "RpcClient";
-import { JouleComponent } from "components/JouleComponent";
-import * as strings from "utilities/strings";
-import { EventManager } from 'eventManager';
-import { DehydratedTask, jouleAuthor, nextJouleType } from "../types";
+import { FastFilePicker } from "./FastFilePicker";
+import AutoExpandingTextarea from "./AutoExpandingTextarea";
+import { Button } from './ui/button'
+import { RpcClient } from "@/RpcClient";
+import { JouleComponent } from "./JouleComponent";
+import * as strings from "@/utilities/strings";
+import { EventManager } from '@/eventManager';
+import { DehydratedTask, nextJouleType } from "../types";
 import { useNavigate } from "react-router-dom";
 
 const MemoizedJouleComponent = memo(JouleComponent);
@@ -54,10 +54,8 @@ export function ConversationView() {
 			!task ||
 			task.conversation.joules.length === 0 ||
 			nonInitialHumanJouleInFlight ||
-			jouleAuthor(task?.conversation.joules[task?.conversation.joules.length - 1]) ===
-			"human" ||
-			task?.conversation.joules[task?.conversation.joules.length - 1].jouleState ===
-			"partial"
+			task?.conversation.joules[task?.conversation.joules.length - 1].jouleType === "HumanChat" ||
+			task?.conversation.joules[task?.conversation.joules.length - 1].jouleState === "partial"
 		);
 	}
 
@@ -182,7 +180,7 @@ export function ConversationView() {
 				task.conversation.joules[
 				task.conversation.joules.length - 1
 				] : undefined;
-		if (lastJoule && jouleAuthor(lastJoule) === "human") {
+		if (lastJoule && lastJoule.jouleType === "HumanChat") {
 			setNonInitialHumanJouleInFlight(false);
 		}
 		setTask(task);
