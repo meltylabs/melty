@@ -13,8 +13,6 @@ import { GitManager } from "../services/GitManager";
 import { v4 as uuidv4 } from "uuid";
 import { BaseAssistant } from 'backend/assistants/baseAssistant';
 
-const webviewNotifier = WebviewNotifier.getInstance();
-
 export function createNewDehydratedTask(name: string, taskMode: TaskMode, files: string[]): DehydratedTask {
 	return {
 		id: uuidv4(),
@@ -109,9 +107,9 @@ export class Task {
 		if (config.getIsAutocommitMode() && this.taskMode !== "vanilla") {
 			// webviewNotifier.updateStatusMessage("Checking repo status");
 
-			webviewNotifier.updateStatusMessage("Committing user's changes");
+			this._webviewNotifier.updateStatusMessage("Committing user's changes");
 			const codeInfo = await this._gitManager.commitLocalChanges();
-			webviewNotifier.resetStatusMessage();
+			this._webviewNotifier.resetStatusMessage();
 
 			newJoule = joules.createJouleHumanChat(message, codeInfo);
 		} else {
@@ -121,10 +119,10 @@ export class Task {
 		this.conversation = conversations.addJoule(this.conversation, newJoule);
 		this.updateLastModified();
 
-		webviewNotifier.updateStatusMessage("Autosaving conversation");
+		this._webviewNotifier.updateStatusMessage("Autosaving conversation");
 		await datastores.dumpTaskToDisk(await this.dehydrate());
 
-		webviewNotifier.resetStatusMessage();
+		this._webviewNotifier.resetStatusMessage();
 		return conversations.lastJoule(this.conversation)!;
 	}
 
@@ -164,7 +162,7 @@ export class Task {
 			this.conversation,
 			joules.createJouleHumanConfirmCode(confirmed)
 		);
-		await webviewNotifier.sendNotification("updateTask", {
+		await this._webviewNotifier.sendNotification("updateTask", {
 			task: this.dehydrateForWire(),
 		});
 	}
@@ -175,7 +173,7 @@ export class Task {
 	 */
 	public async humanChat(text: string) {
 		await this.respondHuman(text);
-		await webviewNotifier.sendNotification("updateTask", {
+		await this._webviewNotifier.sendNotification("updateTask", {
 			task: this.dehydrateForWire(),
 		});
 	}
@@ -201,7 +199,7 @@ export class Task {
 			const sendPartialJoule = (partialJoule: Joule) => {
 				const dehydratedTask = this.dehydrateForWire();
 				dehydratedTask.conversation = conversations.addJoule(this.conversation, partialJoule);
-				webviewNotifier.sendNotification("updateTask", {
+				this._webviewNotifier.sendNotification("updateTask", {
 					task: dehydratedTask,
 				});
 			};
@@ -230,13 +228,13 @@ export class Task {
 
 			this.updateLastModified();
 
-			webviewNotifier.updateStatusMessage("Autosaving conversation");
+			this._webviewNotifier.updateStatusMessage("Autosaving conversation");
 			await datastores.dumpTaskToDisk(await this.dehydrate());
 
-			webviewNotifier.sendNotification("updateTask", {
+			this._webviewNotifier.sendNotification("updateTask", {
 				task: this.dehydrateForWire(),
 			});
-			webviewNotifier.resetStatusMessage();
+			this._webviewNotifier.resetStatusMessage();
 
 			// end running operation
 			this.botTurnCancellationTokenSource = null;

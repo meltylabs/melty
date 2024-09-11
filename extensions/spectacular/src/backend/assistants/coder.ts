@@ -29,6 +29,8 @@ import { FileManager } from 'services/FileManager';
 import { GitManager } from 'services/GitManager';
 import { ErrorOperationCancelled } from 'util/utils';
 
+const PREFILL_TEXT = "<change_code";
+
 export class Coder extends BaseAssistant {
 	static get description() {
 		return "Coder can view your codebase structure, suggest edits, and write code.";
@@ -103,9 +105,13 @@ export class Coder extends BaseAssistant {
 		this.prepForChanges();
 
 		const claudeConversation = await this.prepareContext(contextPaths, conversation);
+		claudeConversation.messages.push({
+			role: "assistant",
+			content: PREFILL_TEXT
+		});
 
 		this._webviewNotifier.updateStatusMessage("Thinking");
-		let partialMessage = "";
+		let partialMessage = PREFILL_TEXT;
 		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
 			{
@@ -124,7 +130,7 @@ export class Coder extends BaseAssistant {
 			}
 		);
 
-		const text = finalResponse.content.find((block) => "text" in block)?.text?.trim() || ""; // todo better error handling
+		const text = PREFILL_TEXT + finalResponse.content.find((block) => "text" in block)?.text?.trim() || ""; // todo better error handling
 		console.log(finalResponse);
 
 		// do the committing
@@ -153,8 +159,6 @@ export class Coder extends BaseAssistant {
 				this._fileManager.addMeltyMindFile(editedFile, true);
 			});
 		}
-
-		this._webviewNotifier.updateStatusMessage("Autosaving conversation");
 	}
 
 	private async prepareContext(contextPaths: ContextPaths, conversation: Conversation): Promise<ClaudeConversation> {

@@ -180,7 +180,7 @@ export function ConversationView() {
 				task.conversation.joules[
 				task.conversation.joules.length - 1
 				] : undefined;
-		if (lastJoule && lastJoule.jouleType === "HumanChat") {
+		if (lastJoule && (lastJoule.jouleType === "HumanChat" || lastJoule.jouleType === "HumanConfirmCode")) {
 			setNonInitialHumanJouleInFlight(false);
 		}
 		setTask(task);
