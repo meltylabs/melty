@@ -3,6 +3,9 @@
 		"serviceUrl": "https://open-vsx.org/vscode/gallery",
 		"itemUrl": "https://open-vsx.org/vscode/item"
 	},
+	"linkProtectionTrustedDomains": [
+		"https://open-vsx.org"
+	],
 	"updateUrl": "https://vscodium.now.sh",
 	"nameShort": "Melty",
 	"nameLong": "Melty",
