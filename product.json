@@ -6,7 +6,6 @@
 	"linkProtectionTrustedDomains": [
 		"https://open-vsx.org"
 	],
-	"updateUrl": "https://vscodium.now.sh",
 	"nameShort": "Melty",
 	"nameLong": "Melty",
 	"applicationName": "meltycode",
