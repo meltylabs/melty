@@ -7,20 +7,19 @@ import {
 } from "vscode";
 import * as vscode from "vscode";
 import { getUri, getNonce } from "./util/utils";
-import { Conversation, TaskMode } from "./types";
+import { TaskMode } from "./types";
 import { MeltyExtension } from "./extension";
 import { createNewDehydratedTask } from "./backend/tasks";
 import * as config from "./util/config";
 import { WebviewNotifier } from "./services/WebviewNotifier";
 import { FileManager } from "./services/FileManager";
-import { DehydratedTask, RpcMethod } from "./types";
+import { DehydratedTask, RpcMethod, UserAttachedImage } from "./types";
 import { Coder } from "./backend/assistants/coder";
 import { Vanilla } from "./backend/assistants/vanilla";
 import { GitManager } from "./services/GitManager";
 import { GitHubManager } from './services/GitHubManager';
 import { TaskManager } from './services/TaskManager';
 import posthog from "posthog-js";
-import { create } from 'domain';
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -135,7 +134,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
           <meta name="theme-color" content="#000000">
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https://*.posthog.com; style-src ${webview.cspSource}; script-src 'nonce-${nonce}' 'unsafe-inline' https://*.posthog.com; connect-src https://*.posthog.com;">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https://*.posthog.com blob: data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline' https://*.posthog.com; connect-src https://*.posthog.com blob:;">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Melty</title>
         </head>
@@ -200,7 +199,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		}
 		task.addErrorJoule(message);
 		await WebviewNotifier.getInstance().sendNotification("updateTask", {
-			task: task.dehydrateForWire(),
+			task: await task.dehydrateForWire(),
 		});
 	}
 
@@ -229,7 +228,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return this.rpcGetLatestCommit();
 				case "chatMessage":
 					return await this.rpcStartResponse(
-						params.text, params.taskId
+						params.text, params.taskId, params.images
 					);
 				case "createTask":
 					return await this.rpcCreateTask(
@@ -257,6 +256,13 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return this.rpcCheckOnboardingComplete();
 				case "setOnboardingComplete":
 					return this.rpcSetOnboardingComplete();
+				case "showNotification":
+					if (params.notificationType === 'error') {
+						vscode.window.showErrorMessage(params.message);
+					} else {
+						vscode.window.showInformationMessage(params.message);
+					}
+					return true;
 				default:
 					throw new Error(`Unknown RPC method: ${method}`);
 			}
@@ -336,7 +342,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 			// 	{ uri: newFolderUri }
 			// );
 
-			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false)
+			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false);
 			return openResult === undefined;
 		} else {
 			return false;
@@ -368,12 +374,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		}
 	}
 
-	private async rpcGetActiveTask(taskId: string): Promise<DehydratedTask | undefined> {
+	private async rpcGetActiveTask(taskId: string) {
 		const task = this._taskManager.getActiveTask(taskId);
 		if (!task) {
 			vscode.window.showErrorMessage(`Failed to get active task ${taskId}`);
 		}
-		return task!.dehydrate();
+		return task!.dehydrateForWire();
 	}
 
 	private async rpcListMeltyFiles(): Promise<string[]> {
@@ -463,12 +469,12 @@ export class HelloWorldPanel implements WebviewViewProvider {
 		return vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ? 'dark' : 'light';
 	}
 
-	private async rpcStartResponse(text: string, taskId: string): Promise<boolean> {
+	private async rpcStartResponse(text: string, taskId: string, images?: UserAttachedImage[]): Promise<boolean> {
 		const task = this._taskManager.getActiveTask(taskId)!;
 		if (!task) {
 			throw new Error(`Tried to chat with an inactive task ${taskId} (active task is ${this._taskManager.getActiveTaskId()})`);
 		}
-		return task.startResponse(text);
+		return task.startResponse(text, images);
 	}
 
 	private async rpcStopResponse(taskId: string): Promise<void> {

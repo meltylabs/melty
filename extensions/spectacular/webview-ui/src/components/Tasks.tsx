@@ -1,6 +1,4 @@
-import * as vscode from "vscode";
-
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { RpcClient } from "../RpcClient";
 import { Button } from "./ui/button";
@@ -19,9 +17,9 @@ import { MouseEvent, KeyboardEvent } from "react";
 import Ascii from "./Ascii";
 import OnboardingSection from './OnboardingSection';
 import "diff2html/bundles/css/diff2html.min.css";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { DehydratedTask, TaskMode, AssistantInfo } from "../types";
+import { DehydratedTask, TaskMode, AssistantInfo, UserAttachedImage } from "../types";
 import {
 	Select,
 	SelectContent,
@@ -34,6 +32,10 @@ import { AddFileButton } from "./AddFileButton";
 import * as strings from "@/utilities/strings";
 import { FastFilePicker } from "./FastFilePicker";
 import { EventManager } from "@/eventManager";
+import { imagePasteHandler, showNotification } from '@/lib/utils';
+import { PreviewImage } from './PreviewImage';
+import { CustomError } from '@/lib/errors';
+import { MAX_IMAGES } from '@/constants';
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -69,6 +71,7 @@ export function Tasks({
 	const [gitConfigError, setGitConfigError] = useState<string | null>(null);
 	const navigate = useNavigate();
 	const [workspaceFilePaths, setWorkspaceFilePaths] = useState<string[]>([]);
+	const [images, setImages] = useState<UserAttachedImage[]>([]);
 	const [meltyMindFilePaths, setMeltyMindFilePaths] = useState<string[]>(
 		initialMeltyMindFiles || []
 	);
@@ -80,7 +83,6 @@ export function Tasks({
 		description: "",
 	});
 	const [suggestions, setSuggestions] = useState<string[]>([]);
-
 
 	useEffect(() => {
 		if (shouldFocus) {
@@ -144,8 +146,8 @@ export function Tasks({
 		[fetchTasks]
 	);
 
-	const handleSendMessage = useCallback((text: string, taskId: string) => {
-		rpcClient.run("chatMessage", { text, taskId });
+	const handleSendMessage = useCallback((text: string, taskId: string, images?: UserAttachedImage[]) => {
+		rpcClient.run("chatMessage", { text, taskId, images });
 	}, []);
 
 	/* =====================================================
@@ -174,7 +176,7 @@ export function Tasks({
 
 		const didActivate = await rpcClient.run("activateTask", { taskId });
 		if (didActivate) {
-			handleSendMessage(message, taskId);
+			handleSendMessage(message, taskId, images);
 			navigate(`/task/${taskId}`);
 		}
 	}
@@ -227,6 +229,11 @@ export function Tasks({
 		setPickerOpen(false);
 		setShouldFocus(true);
 	}, []);
+
+	const handleDropImage = useCallback((idx: number) => {
+		const updatedImages = images.filter((_, i) => i !== idx);
+		setImages(updatedImages);
+	}, [images]);
 
 	async function activateAndNavigateToTask(taskId: string) {
 		const didActivate = await rpcClient.run("activateTask", { taskId });
@@ -301,6 +308,25 @@ export function Tasks({
 	}, [fetchTasks, fetchFilePaths, checkGitConfig, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
 
 
+	const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+		try {
+			await imagePasteHandler(event, (imgs) => {
+				const totalImages = images.length + imgs.length;
+				if (totalImages > MAX_IMAGES) {
+					throw new CustomError(`You can only attach up to ${MAX_IMAGES} images.`);
+				}
+
+				setImages(i => [...i, ...imgs]);
+			})
+		} catch (error) {
+			console.error(error)
+			let errorMessage = "Failed to paste image. Please try again.";
+			if (error instanceof CustomError) {
+				errorMessage = error.getDisplayMessage();
+			}
+			showNotification(errorMessage, 'error');
+		}
+	}
 
 	return (
 		<div>
@@ -330,13 +356,16 @@ export function Tasks({
 							</div>
 						</div>
 						:
-						<div className="bg-background text-foreground p-4">
-							<div className="text-center">
-								<h2 className="text-lg font-bold">Git config error</h2>
-								<p>Oops! Try restarting Melty?</p>
-								<p>{gitConfigError}</p>
+						(
+							gitConfigError &&
+							<div className="bg-background text-foreground p-4">
+								<div className="text-center">
+									<h2 className="text-lg font-bold">Git config error</h2>
+									<p>Oops! Try restarting Melty?</p>
+									<p>{gitConfigError}</p>
+								</div>
 							</div>
-						</div>
+						)
 			) : (
 				<>
 					<FastFilePicker
@@ -353,6 +382,7 @@ export function Tasks({
 								placeholder="What are you trying to do?"
 								value={messageText}
 								onChange={(e) => setMessageText(e.target.value)}
+								onPaste={handlePaste}
 								onKeyDown={handleKeyDown}
 								className="flex-grow p-3 pr-12 pb-12"
 								ref={textareaRef}
@@ -422,7 +452,7 @@ export function Tasks({
 												<p>
 													Melty can see your codebase structure but not the full
 													content of your files. Too much context confuses language
-													models.
+													models. Melty can also see any images you attach/paste.
 													<b>
 														{" "}
 														Only add files that are helpful to the current task.
@@ -458,6 +488,17 @@ export function Tasks({
 									<XIcon className="h-3 w-3 mr-2" />
 									{file}
 								</button>
+							))}
+						</div>
+						<div className="flex overflow-x-auto pt-2">
+							{images.map((image, i) => (
+								<div key={`image-${i}`} className="relative mr-2 mb-2">
+									<PreviewImage
+										src={image.blobUrl}
+										handleRemoveImage={() => handleDropImage(i)}
+										stopEscapePropagation
+									/>
+								</div>
 							))}
 						</div>
 					</div>

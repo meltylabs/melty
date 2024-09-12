@@ -2,6 +2,8 @@ import { Uri, Webview } from "vscode";
 import { ChangeSet } from "../types";
 import * as os from "os";
 import * as diff from "diff";
+import path from 'path';
+import fs from 'fs/promises';
 
 /**
  * Log an arbitrary error object verbosely
@@ -111,4 +113,41 @@ export function highlightNonAsciiChars(input: string): string {
 			return char;
 		})
 		.join('');
+}
+
+export async function pathExists(path: string): Promise<boolean> {
+	try {
+		await fs.access(path);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+export async function isDirectory(path: string): Promise<boolean> {
+	try {
+		const stats = await fs.stat(path);
+		return stats.isDirectory();
+	} catch {
+		return false;
+	}
+}
+
+export async function isFile(path: string): Promise<boolean> {
+	try {
+		const stats = await fs.stat(path);
+		return stats.isFile();
+	} catch {
+		return false;
+	}
+}
+
+// return true if path1 is inside path2
+export function isPathInside(path1: string, path2: string) {
+	const absolutePath1 = path.resolve(path1);
+	const absolutePath2 = path.resolve(path2);
+
+	const relative = path.relative(absolutePath2, absolutePath1);
+
+	return !relative.startsWith('..') && !path.isAbsolute(relative);
 }

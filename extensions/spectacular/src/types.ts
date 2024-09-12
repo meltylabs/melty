@@ -1,3 +1,5 @@
+import Anthropic from '@anthropic-ai/sdk';
+
 // implemented by the Task class. this is the UI-facing one
 // note that datastores.ts has an independent list of properties
 // that will get loaded from disk
@@ -12,6 +14,10 @@ export type DehydratedTask = {
 	meltyMindFiles: string[];
 };
 
+export type DehydratedTaskWithDehydratedConversation = Omit<DehydratedTask, 'conversation'> & {
+	conversation: DehydratedConversation;
+};
+
 export type ContextPaths = {
 	readonly paths: string[];
 	meltyRoot: string;
@@ -24,13 +30,30 @@ export interface AssistantInfo {
 	description: string;
 }
 
+export type AllowedMimeTypes = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+export type UserAttachedImage = {
+	mimeType: AllowedMimeTypes;
+	base64: string;
+};
+
+export type JouleImage = {
+	readonly path: string;
+	mimeType: AllowedMimeTypes;
+};
+
 export type Joule = {
 	readonly id: string;
 	readonly author: "human" | "bot";
 	readonly state: "complete" | "partial" | "error";
 	readonly message: string;
+	readonly images?: JouleImage[];
 	readonly commit: string | null;
 	readonly diffInfo: DiffInfo | null;
+};
+
+export type DehydratedJoule = Omit<Joule, 'images'> & {
+	readonly images?: UserAttachedImage[];
 };
 
 export type JouleHuman = Joule & {
@@ -74,7 +97,7 @@ export interface Message {
 
 export type ClaudeMessage = {
 	readonly role: "user" | "assistant";
-	readonly content: string;
+	readonly content: Anthropic.Messages.MessageParam['content'];
 };
 
 export type ClaudeConversation = {
@@ -84,6 +107,10 @@ export type ClaudeConversation = {
 
 export type Conversation = {
 	readonly joules: ReadonlyArray<Joule>;
+};
+
+export type DehydratedConversation = {
+	readonly joules: ReadonlyArray<DehydratedJoule>;
 };
 
 export type MeltyFile = {
@@ -119,4 +146,5 @@ export type RpcMethod =
 	| "createGitRepository"
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
-	| "setOnboardingComplete";
+	| "setOnboardingComplete"
+	| "showNotification";

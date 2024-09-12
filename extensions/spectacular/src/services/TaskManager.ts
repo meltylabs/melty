@@ -56,12 +56,12 @@ export class TaskManager {
 	/**
 	 * Load tasks from disk. This should only be called once, when the extension is first loaded.
 	 */
-	public loadTasks(): boolean {
+	public async loadTasks(): Promise<boolean> {
 		if (this.inactiveTasks.size > 0) {
 			console.error("Can't load tasks when tasks already exist");
 			return false;
 		}
-		this.inactiveTasks = datastores.loadTasksFromDisk();
+		this.inactiveTasks = await datastores.loadTasksFromDisk();
 		return true;
 	}
 
@@ -69,10 +69,15 @@ export class TaskManager {
 	 * Optimization to try to make Tasks page faster
 	 */
 	public listInactiveTasks(): DehydratedTask[] {
-		const tasks = Array.from(this.inactiveTasks.values());
-		// for (const task of tasks) {
-		// 	task.conversation = { joules: [] };
-		// }
+		const inactiveTasks = Array.from(this.inactiveTasks.values());
+		const tasks: DehydratedTask[] = [];
+		// remove conversation data as it is not needed in the list view
+		for (const task of inactiveTasks) {
+			tasks.push({
+				...task,
+				conversation: { joules: [] }
+			});
+		}
 		return tasks;
 	}
 

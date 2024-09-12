@@ -1,4 +1,4 @@
-import { Joule, Conversation } from "../types";
+import { Joule, Conversation, JouleBot, DehydratedConversation } from "../types";
 import * as vscode from "vscode";
 import * as joules from "./joules";
 export function create(): Conversation {
@@ -74,11 +74,16 @@ function removeLeadingBotJoules(conversation: Conversation): Conversation {
 }
 
 function removeEmptyJoules(conversation: Conversation): Conversation {
-	return {
-		joules: conversation.joules.filter((joule) =>
-			joules.formatMessageForClaude(joule).length > 0
-		),
-	};
+	const newJoules: Joule[] = [];
+	for (const joule of conversation.joules) {
+		if (joule.author === 'human' && (joule.message.trim().length > 0 || (joule.images && joule.images.length > 0))) {
+			newJoules.push(joule);
+		}
+		if (joule.author === 'bot' && (joule as JouleBot)?.botExecInfo?.rawOutput?.trim()?.length > 0) {
+			newJoules.push(joule);
+		}
+	}
+	return { joules: newJoules };
 }
 
 /**
@@ -125,4 +130,11 @@ function removeFinalJoulesFrom(
 			joules: conversation.joules.slice(0, indexOfLastNonMatchingJoule + 1),
 		};
 	}
+}
+
+export async function dehydrate(conversation: Conversation): Promise<DehydratedConversation> {
+	return {
+		...conversation,
+		joules: await Promise.all(conversation.joules.map(j => joules.dehydrate(j))),
+	};
 }

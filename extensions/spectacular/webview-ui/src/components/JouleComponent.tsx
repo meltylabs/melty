@@ -39,51 +39,72 @@ export function JouleComponent({
 		);
 	}
 
-	const MessageContent = () => (
-		<div className="text-xs prose dark:prose-invert">
-			<ReactMarkdown
-				components={{
-					code({ node, className, children, ...props }) {
-						const match = /language-(\w+)/.exec(className || "");
-						if (match && match[1] === "codechange") {
+	const MessageContent = () => {
+		let md = '';
+		if (joule.images && joule.images.length > 0) {
+			for (const img of joule.images) {
+				md += `![image](${img.base64})\n`;
+			}
+		}
+		md += joule.message;
+		return (
+			<div className="text-xs prose dark:prose-invert">
+				<ReactMarkdown
+					urlTransform={v => v}
+					components={{
+						img({ node, ...props }) {
 							return (
-								<details>
-									<summary className='py-2'>Writing code...</summary>
-									<pre
-										{...(props as React.DetailedHTMLProps<
-											React.HTMLAttributes<HTMLPreElement>,
-											HTMLPreElement
-										>)}
-									>
-										<code className={className}>{children}</code>
-									</pre>
-								</details>
-							);
-						}
-						return match ? (
-							<div className="relative p-0 max-h-[300px] overflow-y-auto no-scrollbar">
-								{!isPartial && (
-									<CopyButton code={String(children).replace(/\n$/, "")} />
-								)}
-								<SyntaxHighlighter
-									language={match[1]}
-									style={vscDarkPlus}
-									PreTag="div"
-									children={String(children).replace(/\n$/, "")}
+								<img
+									{...(props as React.DetailedHTMLProps<
+										React.ImgHTMLAttributes<HTMLImageElement>,
+										HTMLImageElement
+									>)}
+									className="max-w-full"
 								/>
-							</div>
-						) : (
-							<code className={className} {...props}>
-								{children}
-							</code>
-						);
-					},
-				}}
-			>
-				{joule.message}
-			</ReactMarkdown>
-		</div>
-	);
+							);
+						},
+						code({ node, className, children, ...props }) {
+							const match = /language-(\w+)/.exec(className || "");
+							if (match && match[1] === "codechange") {
+								return (
+									<details>
+										<summary className='py-2'>Writing code...</summary>
+										<pre
+											{...(props as React.DetailedHTMLProps<
+												React.HTMLAttributes<HTMLPreElement>,
+												HTMLPreElement
+											>)}
+										>
+											<code className={className}>{children}</code>
+										</pre>
+									</details>
+								);
+							}
+							return match ? (
+								<div className="relative p-0 max-h-[300px] overflow-y-auto no-scrollbar">
+									{!isPartial && (
+										<CopyButton code={String(children).replace(/\n$/, "")} />
+									)}
+									<SyntaxHighlighter
+										language={match[1]}
+										style={vscDarkPlus}
+										PreTag="div"
+										children={String(children).replace(/\n$/, "")}
+									/>
+								</div>
+							) : (
+								<code className={className} {...props}>
+									{children}
+								</code>
+							);
+						},
+					}}
+				>
+					{md}
+				</ReactMarkdown>
+			</div>
+		);
+	}
 
 	return (
 		<div className="mb-2">
