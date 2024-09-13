@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { RpcClient } from "../RpcClient";
-import { Joule, JouleHumanChat, JouleBotChat, JouleBotCode } from "../types";
+import { Joule, JouleHumanChat, JouleBotChat, JouleBotCode, MeltyConfig } from "../types";
 import CopyButton from "./CopyButton";
 import DiffContent from "./DiffContent";
 
@@ -22,6 +22,16 @@ export function JouleComponent({
 	const rpcClient = RpcClient.getInstance();
 
 	const [undoClicked, setUndoClicked] = useState(false);
+
+	const [meltyConfig, setMeltyConfig] = useState<MeltyConfig>({
+		debugMode: false,
+	});
+
+	const initializeMeltyConfig = useCallback(async () => {
+		setMeltyConfig(await rpcClient.run("getMeltyConfig"));
+	}, []);
+
+	initializeMeltyConfig();
 
 	const handleUndo = async () => {
 		const jouleBotCode = joule as JouleBotCode;
@@ -156,16 +166,19 @@ ${joule.botExecInfo.rawOutput}
 						<div className="flex">
 							<div className="w-[40%] pr-4 overflow-auto h-full">
 								{renderMessageContent(joule)}
+								{meltyConfig.debugMode ? "hi" : "bye"}
+								{meltyConfig.debugMode &&
+									<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>}
 							</div>
 							<div className="w-[60%] overflow-auto h-full">
 								{renderDiffContent(joule as JouleBotCode)}
 							</div>
-							<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>
 						</div>
 					) : (
 						<div className="w-full pr-4 overflow-auto h-full">
 							{renderMessageContent(joule)}
-							<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>
+							{meltyConfig.debugMode &&
+								<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>}
 						</div>
 					)}
 				</div>

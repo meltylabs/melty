@@ -164,6 +164,10 @@ export type ChangeSet = {
 	};
 };
 
+export type MeltyConfig = {
+	debugMode: boolean;
+};
+
 export type RpcMethod =
 	| "listMeltyFiles"
 	| "listWorkspaceFiles"
@@ -186,6 +190,7 @@ export type RpcMethod =
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
 	| "setOnboardingComplete"
+	| "getMeltyConfig"
 	// human conversation actions
 	| "createJouleHumanChat"
 	| "createJouleHumanConfirmCode"
