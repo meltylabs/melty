@@ -251,13 +251,14 @@ export function ConversationView() {
 		form.reset();
 	};
 
-	const handleConfirmCode = (event: React.FormEvent) => {
+	const handleConfirmCodeYes = (event: React.MouseEvent) => {
 		event.preventDefault();
-		const form = event.target as HTMLFormElement;
-		const confirmed: boolean = form.confirmCode.value === "yes";
-		addJouleHumanConfirmCode(confirmed, taskId!);
-		setMessageText("");
-		form.reset();
+		addJouleHumanConfirmCode(true, taskId!);
+	};
+
+	const handleConfirmCodeNo = (event: React.MouseEvent) => {
+		event.preventDefault();
+		addJouleHumanConfirmCode(false, taskId!);
 	};
 
 	const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -379,10 +380,10 @@ export function ConversationView() {
 					<div className="mb-4">
 						<p className="text-sm font-medium mb-2">Melty would like to write some code</p>
 						<div className="flex space-x-2">
-							<Button onClick={() => addJouleHumanConfirmCode(true, taskId!)}>
+							<Button onClick={handleConfirmCodeYes}>
 								Confirm
 							</Button>
-							<Button variant="outline" onClick={() => addJouleHumanConfirmCode(false, taskId!)}>
+							<Button variant="outline" onClick={handleConfirmCodeNo}>
 								Cancel
 							</Button>
 						</div>
