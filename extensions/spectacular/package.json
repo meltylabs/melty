@@ -52,6 +52,12 @@
           "description": "API key for Anthropic Claude",
           "pattern": "^[a-zA-Z0-9-_]*$"
         },
+        "melty.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for OpenAI",
+          "pattern": "^[a-zA-Z0-9-_]*$"
+        },
         "melty.userPrompt": {
           "type": "string",
           "default": "",
