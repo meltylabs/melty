@@ -185,9 +185,9 @@ export function ConversationView() {
 
 		// prevents joule re-rendering
 		setJoules(ourJoules => {
-			if (ourJoules.length === 0) {
+			if (ourJoules.length === 0 || ourJoules.length > task.conversation.joules.length) {
 				return [...task.conversation.joules]
-			} else if (ourJoules.length !== task.conversation.joules.length) {
+			} else if (ourJoules.length < task.conversation.joules.length) {
 				const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
 				return [...ourJoules, lastJoule];
 			} else {
