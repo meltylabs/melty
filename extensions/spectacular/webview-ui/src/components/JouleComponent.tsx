@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -104,9 +104,7 @@ export function JouleComponent({
 		/>
 	};
 
-	const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
-
-	const copyExecInfo = useCallback((joule: JouleBotChat | JouleBotCode) => {
+	function copyExecInfo(joule: JouleBotChat | JouleBotCode) {
 		const execInfoFormat = `
 rawInput
 ======
@@ -118,13 +116,8 @@ rawOutput
 ======
 ${joule.botExecInfo.rawOutput}
 ======`;
-		navigator.clipboard.writeText(execInfoFormat).then(() => {
-			setCopiedStates(prev => ({ ...prev, [joule.id]: true }));
-			setTimeout(() => {
-				setCopiedStates(prev => ({ ...prev, [joule.id]: false }));
-			}, 2000);
-		});
-	}, []);
+		navigator.clipboard.writeText(execInfoFormat)
+	}
 
 	switch (joule.jouleType) {
 		case 'HumanChat':
@@ -167,18 +160,7 @@ ${joule.botExecInfo.rawOutput}
 							<div className="w-[60%] overflow-auto h-full">
 								{renderDiffContent(joule as JouleBotCode)}
 							</div>
-							<button
-								onClick={() => copyExecInfo(joule)}
-								className={`ml-2 px-3 py-1 text-white rounded transition-colors duration-200 flex items-center ${
-									copiedStates[joule.id] ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
-								}`}
-								title="Copy execution information"
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-								</svg>
-								{copiedStates[joule.id] ? 'Copied!' : 'Copy exec info'}
-							</button>
+							<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>
 						</div>
 					) : (
 						<div className="w-full pr-4 overflow-auto h-full">
