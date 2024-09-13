@@ -107,18 +107,18 @@ export function JouleComponent({
 	switch (joule.jouleType) {
 		case 'HumanChat':
 			return (
-				<div className="mb-2">
+				<div className="mb-2 flex">
 					{shouldShowDiff(joule) ? (
 						<div className="flex flex-col">
-							<div className="w-full mb-2">
+							{<div className="w-full mb-2">
 								{renderDiffContent(joule)}
-							</div>
+							</div>}
 							<div className="w-full p-2 bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 rounded-md">
 								{renderMessageContent(joule)}
 							</div>
 						</div>
 					) : (
-						<div className="p-2 bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 rounded-md">
+						<div className="w-full p-2 bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 rounded-md">
 							{renderMessageContent(joule)}
 						</div>
 					)}
@@ -137,14 +137,28 @@ export function JouleComponent({
 		case 'BotCode':
 			return (
 				<div className="mb-2">
-					<div className={(shouldShowDiff(joule) ? "w-[40%]" : "w-full") + " pr-4 overflow-auto h-full"}>
+					{shouldShowDiff(joule) ? (
+						<div className="flex">
+							<div className="w-[40%] pr-4 overflow-auto h-full">
+								{renderMessageContent(joule)}
+							</div>
+							<div className="w-[60%] overflow-auto h-full">
+								{renderDiffContent(joule as JouleBotCode)}
+							</div>
+						</div>
+					) : (
+						<div className="w-full pr-4 overflow-auto h-full">
+							{renderMessageContent(joule)}
+						</div>
+					)}
+					{/* <div className={(shouldShowDiff(joule) ? "w-[40%]" : "w-full") + " pr-4 overflow-auto h-full"}>
 						{renderMessageContent(joule)}
 					</div>
 					{shouldShowDiff(joule) && (
 						<div className="w-[60%] overflow-auto h-full">
 							{renderDiffContent(joule as JouleBotCode)}
 						</div>
-					)}
+					)} */}
 				</div>
 			);
 
