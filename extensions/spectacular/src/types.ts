@@ -72,6 +72,16 @@ export interface Message {
 	diff?: string;
 }
 
+export type ClaudeMessage = {
+	readonly role: "user" | "assistant";
+	readonly content: string;
+};
+
+export type ClaudeConversation = {
+	readonly messages: ClaudeMessage[];
+	readonly system: string;
+};
+
 export type OpenAIMessage = {
 	role: "system" | "user" | "assistant";
 	content: string;
@@ -120,3 +130,4 @@ export type RpcMethod =
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
 	| "setOnboardingComplete";
+
