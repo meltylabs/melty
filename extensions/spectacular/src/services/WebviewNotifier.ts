@@ -27,7 +27,7 @@ export class WebviewNotifier {
 
 	public async resetStatusMessage(): Promise<boolean> {
 		return await this.sendNotification("updateStatusMessage", {
-			statusMessage: "Working on it",
+			statusMessage: "Spinning the wheels",
 		});
 	}
 
