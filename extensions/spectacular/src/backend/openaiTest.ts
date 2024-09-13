@@ -14,7 +14,7 @@ export async function testOpenAI(): Promise<string> {
 
     try {
         const response = await streamOpenAI(conversation, {
-            model: Models.GPT35Turbo,
+            model: Models.O1,
             processPartial: (partial) => {
                 console.log("Partial response:", partial);
             }
