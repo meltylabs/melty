@@ -3,14 +3,8 @@ import * as vscode from "vscode";
 import { CancellationToken } from "vscode";
 import * as utils from "util/utils";
 
+import { OpenAIMessage, OpenAIConversation } from "../types";
 import { ErrorOperationCancelled } from 'util/utils';
-
-type OpenAIMessage = OpenAI.Chat.ChatCompletionMessage;
-
-export type OpenAIConversation = {
-    system: string;
-    messages: OpenAIMessage[];
-};
 
 export enum Models {
 	GPT4 = "gpt-4",
