@@ -1,90 +1,76 @@
-import { Anthropic } from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import * as vscode from "vscode";
 import { CancellationToken } from "vscode";
 import * as utils from "util/utils";
 
-import { ClaudeConversation } from "../types";
+import { OpenAIConversation } from "../types";
 import { ErrorOperationCancelled } from 'util/utils';
 
 export enum Models {
-	Claude35Sonnet = "claude-3-5-sonnet-20240620",
-	Claude3Haiku = "claude-3-haiku-20240307",
+	GPT4 = "gpt-4",
+	GPT35Turbo = "gpt-3.5-turbo",
 }
 
-export async function streamClaude(
-	claudeConversation: ClaudeConversation,
+export async function streamOpenAI(
+	openAIConversation: OpenAIConversation,
 	opts: {
 		model?: Models,
 		cancellationToken?: CancellationToken,
 		processPartial?: (text: string) => void,
 	} = {}): Promise<string> {
-	const { model = Models.Claude35Sonnet, cancellationToken, processPartial } = opts;
+	const { model = Models.GPT4, cancellationToken, processPartial } = opts;
 
-	if (claudeConversation.messages.length === 0) {
+	if (openAIConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
 	}
 
 	const config = vscode.workspace.getConfiguration("melty");
-	let apiKey = config.get<string>("anthropicApiKey");
-	let baseURL = "https://melty-api.fly.dev/anthropic";
+	let apiKey = config.get<string>("openaiApiKey");
+	let baseURL = "https://melty-api.fly.dev/openai";
 
-	// If the user provides an API key, go direct to Claude, otherwise proxy to Melty
-	// TODO: abstract this logic away (it's repeated in commitMessageGenerator.ts)
+	// If the user provides an API key, go direct to OpenAI, otherwise proxy to Melty
 	if (apiKey) {
-		console.log("API KEY SET — DIRECT TO ANTHROPIC");
-		baseURL = "https://api.anthropic.com";
+		console.log("API KEY SET — DIRECT TO OPENAI");
+		baseURL = "https://api.openai.com/v1";
 	} else {
-		console.log("NO API KEY — PROXYING");
+		console.log("NO API KEY — PROXYING");
 		apiKey = "dummyToken";
 	}
 
-	const anthropic = new Anthropic({
+	const openai = new OpenAI({
 		apiKey: apiKey,
 		baseURL: baseURL
 	});
 
 	try {
-		console.log("waiting for claude...");
-		const stream = anthropic.messages
-			.stream(
-				{
-					model: model,
-					max_tokens: 4096,
-					messages: claudeConversation.messages as any,
-					system: claudeConversation.system,
-					stream: true,
-				},
-				{
-					headers: {
-						"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15",
-					},
-				}
-			)
-			.on("text", (textDelta: string, _textSnapshot: string) => {
-				if (cancellationToken?.isCancellationRequested) {
-					stream.controller.abort();
-					return;
-				}
-				if (processPartial) {
-					processPartial(textDelta);
-				}
-			})
-			.on('error', (error) => {
-				utils.logErrorVerbose("Claude error (streaming)", error);
-			});
+		console.log("waiting for OpenAI...");
+		const stream = await openai.chat.completions.create({
+			model: model,
+			messages: [
+				{ role: "system", content: openAIConversation.system },
+				...openAIConversation.messages
+			],
+			stream: true,
+		});
 
-		if (cancellationToken?.isCancellationRequested) {
-			throw new ErrorOperationCancelled();
+		let fullResponse = "";
+
+		for await (const chunk of stream) {
+			if (cancellationToken?.isCancellationRequested) {
+				stream.controller.abort();
+				throw new ErrorOperationCancelled();
+			}
+
+			const content = chunk.choices[0]?.delta?.content || "";
+			if (processPartial) {
+				processPartial(content);
+			}
+			fullResponse += content;
 		}
-		const final = await stream.finalMessage();
-		const textContent = final.content.find((block) => "text" in block);
-		if (textContent && "text" in textContent) {
-			return textContent.text.trim();
-		} else {
-			throw new Error("No text content found in the response");
-		}
+
+		return fullResponse.trim();
 	} catch (error) {
-		utils.logErrorVerbose("Claude error (final)", error);
+		utils.logErrorVerbose("OpenAI error", error);
 		throw error;
 	}
 }
