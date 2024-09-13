@@ -54,55 +54,7 @@ export const applyWithReindent: DiffApplicationStrategy = async (
 	return null;
 };
 
-const applyByClaude: DiffApplicationStrategy = async (
-	originalContents,
-	searchReplace
-) => {
-	const formatDiff = (sr: SearchReplace) => `${parser.DIFF_OPEN}
-${sr.search}
-${parser.DIFF_DIVIDER}
-${sr.replace}
-${parser.DIFF_CLOSE}`;
-
-	console.error("Falling back to applyByClaude following an issue:");
-	// Add longest prefix match logging
-	const { match, nonMatch } = utils.findLongestPrefixMatch(
-		originalContents,
-		searchReplace.search,
-		10
-	);
-	console.error("Longest prefix match:", match);
-	console.error("Non-matching characters:", nonMatch);
-	console.error(originalContents);
-	console.error(searchReplace);
-
-	const claudeConversation: ClaudeConversation = {
-		system: "",
-		messages: [
-			{
-				role: "user",
-				content: `${prompts.diffApplicationSystemPrompt(
-					originalContents,
-					formatDiff(searchReplace)
-				)}`,
-			},
-			{
-				role: "assistant",
-				content: `<Updated>`,
-			},
-		],
-	};
-
-	const response = await claudeAPI.streamClaude(
-		claudeConversation
-	);
-
-	// remove the closing
-	return response.split("</Updated>")[0];
-};
-
 export const diffApplicationStrategies = [
 	applyByExactMatch,
 	applyWithReindent,
-	applyByClaude,
 ];
