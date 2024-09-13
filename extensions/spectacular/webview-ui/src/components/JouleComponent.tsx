@@ -151,14 +151,12 @@ export function JouleComponent({
 							{renderMessageContent(joule)}
 						</div>
 					)}
-					{/* <div className={(shouldShowDiff(joule) ? "w-[40%]" : "w-full") + " pr-4 overflow-auto h-full"}>
-						{renderMessageContent(joule)}
+					<div>
+						<h3>BotExecInfo</h3>
+						<pre>
+							{JSON.stringify(joule.botExecInfo)}
+						</pre>
 					</div>
-					{shouldShowDiff(joule) && (
-						<div className="w-[60%] overflow-auto h-full">
-							{renderDiffContent(joule as JouleBotCode)}
-						</div>
-					)} */}
 				</div>
 			);
 
