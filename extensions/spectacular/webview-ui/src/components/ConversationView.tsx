@@ -357,7 +357,7 @@ export function ConversationView() {
 						<AutoExpandingTextarea
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12 focus-visible:ring-1"
+							className="p-3 pr-12 pb-12 focus-visible:ring-1 max-h-[30vh] overflow-y-auto"
 							ref={inputRef}
 							required
 							value={messageText}
