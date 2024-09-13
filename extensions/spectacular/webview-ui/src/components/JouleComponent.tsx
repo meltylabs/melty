@@ -104,6 +104,19 @@ export function JouleComponent({
 		/>
 	};
 
+	function copyExecInfo(joule: JouleBotChat | JouleBotCode) {
+		const execInfoFormat = `
+rawInput
+======
+${joule.botExecInfo.rawInput}
+======
+rawOutput
+======
+${joule.botExecInfo.rawOutput}
+======`;
+		navigator.clipboard.writeText(execInfoFormat)
+	}
+
 	switch (joule.jouleType) {
 		case 'HumanChat':
 			return (
@@ -145,18 +158,14 @@ export function JouleComponent({
 							<div className="w-[60%] overflow-auto h-full">
 								{renderDiffContent(joule as JouleBotCode)}
 							</div>
+							<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>
 						</div>
 					) : (
 						<div className="w-full pr-4 overflow-auto h-full">
 							{renderMessageContent(joule)}
+							<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>
 						</div>
 					)}
-					<div>
-						<h3>BotExecInfo</h3>
-						<pre>
-							{JSON.stringify(joule.botExecInfo)}
-						</pre>
-					</div>
 				</div>
 			);
 
