@@ -71,7 +71,7 @@ ${codebaseSummary}
 ${fileContents}
 </codebase_view>`,
 			},
-			{ role: "assistant", content: "Thanks, I'll review this carefully." },
+			// { role: "assistant", content: "Thanks, I'll review this carefully." },
 		];
 	}
 }
