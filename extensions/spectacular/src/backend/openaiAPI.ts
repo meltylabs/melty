@@ -46,12 +46,16 @@ export async function streamOpenAI(
 
 	try {
 		console.log("waiting for OpenAI...");
+		// const messages = model !== Models.O1
+		// 	? [
+		// 		{ role: "system", content: openAIConversation.system },
+		// 		...openAIConversation.messages
+		// 	]
+		// 	: openAIConversation.messages;
+
 		const stream = await openai.chat.completions.create({
 			model: model,
-			messages: [
-				{ role: "system", content: openAIConversation.system },
-				...openAIConversation.messages
-			],
+			messages: openAIConversation.messages,
 			stream: true,
 		});
 
