@@ -1,7 +1,7 @@
-import { OpenAIConversation, OpenAIMessage } from "../types";
-import { streamOpenAI, Models } from "./openaiAPI";
+const { OpenAIConversation, OpenAIMessage } = require("../types");
+const { streamOpenAI, Models } = require("./openaiAPI");
 
-export async function testOpenAI(): Promise<string> {
+async function testOpenAI() {
     const conversation: OpenAIConversation = {
         system: "You are a helpful assistant.",
         messages: [
@@ -27,4 +27,6 @@ export async function testOpenAI(): Promise<string> {
         throw error;
     }
 }
+
+module.exports = { testOpenAI };
 
