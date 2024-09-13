@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import * as meltyFiles from "backend/meltyFiles";
 import { diffApplicationStrategies } from "./diffApplicationStrategies";
+import * as utils from "util/utils";
 
 export async function searchReplaceToChangeSet(
 	searchReplaceBlocks: SearchReplace[],
@@ -47,9 +48,35 @@ export async function searchReplaceToChangeSet(
 						}
 					}
 					if (!applied) {
-						console.error(`Failed to apply change to ${filePath}`);
-						vscode.window.showWarningMessage(
-							`Failed to apply a change to ${filePath}`
+						console.warn(`Failed to apply change to ${filePath}`);
+						// Add longest prefix match logging
+						const { match, nonMatch } = utils.findLongestPrefixMatch(
+							newContent,
+							searchReplace.search,
+							10
+						);
+						console.warn(`Longest prefix match:
+==========
+${match}
+==========
+
+Non-matching characters:
+==========
+${nonMatch}
+==========
+
+New content:
+==========
+${newContent}
+==========
+
+Search replace:
+==========
+${searchReplace}
+==========
+`);
+						vscode.window.showErrorMessage(
+							`Failed to apply change to ${filePath}`
 						);
 					}
 				}
