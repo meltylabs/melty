@@ -375,15 +375,19 @@ export function ConversationView() {
 				</div>
 			</div>
 			<div className="mb-1.5">
-				{conversationState() === "HumanConfirmCode" &&
-					<form onSubmit={handleConfirmCode}>
-						<select name="confirmCode" defaultValue="yes">
-							<option value="yes">Yes</option>
-							<option value="no">No</option>
-						</select>
-						<input type="submit" value="Confirm code" />
-					</form>
-				}
+				{conversationState() === "HumanConfirmCode" && (
+					<div className="mb-4">
+						<p className="text-sm font-medium mb-2">Melty would like to write some code</p>
+						<div className="flex space-x-2">
+							<Button onClick={() => addJouleHumanConfirmCode(true, taskId!)}>
+								Confirm
+							</Button>
+							<Button variant="outline" onClick={() => addJouleHumanConfirmCode(false, taskId!)}>
+								Cancel
+							</Button>
+						</div>
+					</div>
+				)}
 				<form onSubmit={handleSubmit}>
 					<div className="mt-4 relative">
 						<AutoExpandingTextarea
