@@ -5,6 +5,7 @@ import path from "path";
 import * as meltyFiles from "backend/meltyFiles";
 import { diffApplicationStrategies } from "./diffApplicationStrategies";
 import * as utils from "util/utils";
+import posthog from "posthog-js";
 
 export async function searchReplaceToChangeSet(
 	searchReplaceBlocks: SearchReplace[],
@@ -55,7 +56,7 @@ export async function searchReplaceToChangeSet(
 							searchReplace.search,
 							10
 						);
-						console.warn(`Longest prefix match:
+						const details = `Longest prefix match:
 ==========
 ${match}
 ==========
@@ -73,11 +74,17 @@ ${newContent}
 Search replace:
 ==========
 ${searchReplace}
-==========
-`);
+==========`;
+						console.warn(details);
 						vscode.window.showErrorMessage(
 							`Failed to apply change to ${filePath}`
 						);
+
+						posthog.capture("melty_errored", {
+							type: "diff_app_error",
+							errorMessage: `Failed to apply change to ${filePath}`,
+							context: details
+						});
 					}
 				}
 
