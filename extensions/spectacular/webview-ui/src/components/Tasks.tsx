@@ -303,8 +303,12 @@ export function Tasks({
 
 	return (
 		<div>
-
-			{gitConfigError !== "" ? (
+			{gitConfigError === null ? (
+				<>
+					<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
+					<span>Checking Git configuration...</span>
+				</>
+			) : gitConfigError !== "" ? (
 				gitConfigError?.includes("Open a workspace folder") ?
 					<div className="bg-background text-foreground p-4">
 						<div className="text-center">
@@ -522,22 +526,8 @@ export function Tasks({
 						</>
 					}
 					<div className="mt-4 flex items-center">
-						{gitConfigError === null ? (
-							<>
-								<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
-								<span>Checking Git configuration...</span>
-							</>
-						) : gitConfigError === "" ? (
-							<>
-								<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
-								<span>Git configured</span>
-							</>
-						) : (
-							<>
-								<XCircle className="text-red-500 mr-2 h-4 w-4" />
-								<span>Git configuration error: {gitConfigError}</span>
-							</>
-						)}
+						<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
+						<span>Git configured</span>
 					</div>
 				</>
 			)}
