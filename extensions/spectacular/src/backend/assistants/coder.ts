@@ -10,6 +10,7 @@ import {
 import * as joules from "..//joules";
 import * as prompts from "..//prompts";
 import * as claudeAPI from "..//claudeAPI";
+import * as openaiAPI from "..//openaiAPI"
 import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
 import { RepoMapSpec } from "..//repoMapSpec";
 import * as utils from "../../util/utils";

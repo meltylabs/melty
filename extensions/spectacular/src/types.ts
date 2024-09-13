@@ -82,6 +82,16 @@ export type ClaudeConversation = {
 	readonly system: string;
 };
 
+export type OpenAIMessage = {
+	role: "system" | "user" | "assistant";
+	content: string;
+};
+
+export type OpenAIConversation = {
+	system: string;
+	messages: OpenAIMessage[];
+};
+
 export type Conversation = {
 	readonly joules: ReadonlyArray<Joule>;
 };
@@ -120,3 +130,4 @@ export type RpcMethod =
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
 	| "setOnboardingComplete";
+
