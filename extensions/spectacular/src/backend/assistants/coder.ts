@@ -186,13 +186,14 @@ export class Coder extends BaseAssistant {
 
 		const systemPrompt = prompts.codeModeSystemPrompt();
 
+		const messages = claudeAPI.coalesceForClaude([
+			...this.encodeMessages(conversation),
+			...this.codebaseView(contextPaths, repoMapString),
+		]);
+
 		const claudeConversation: ClaudeConversation = {
 			system: systemPrompt,
-			messages: [
-				// TODOV2 user system info
-				...this.codebaseView(contextPaths, repoMapString),
-				...this.encodeMessages(conversation),
-			],
+			messages: messages,
 		};
 
 		console.log("CLAUDE CONVERSATION: ", claudeConversation);
