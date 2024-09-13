@@ -20,23 +20,26 @@ export function loadTasksFromDisk(): Map<string, DehydratedTask> {
 	const taskFiles = fs.readdirSync(meltyDir);
 	const taskMap = new Map<string, DehydratedTask>();
 	for (const file of taskFiles) {
-		const rawTask = JSON.parse(
-			fs.readFileSync(path.join(meltyDir, file), "utf8")
-		);
-
-		const task = Object.fromEntries(
-			Object.entries(rawTask).filter(([key]) => [
-				"id",
-				"name",
-				"branch",
-				"conversation",
-				"createdAt",
-				"updatedAt",
-				"taskMode",
-				"meltyMindFiles"
-			].includes(key))
-		) as DehydratedTask;
-		taskMap.set(task.id, task);
+		try {
+			const rawTask = JSON.parse(
+				fs.readFileSync(path.join(meltyDir, file), "utf8")
+			);
+			const task = Object.fromEntries(
+				Object.entries(rawTask).filter(([key]) => [
+					"id",
+					"name",
+					"branch",
+					"conversation",
+					"createdAt",
+					"updatedAt",
+					"taskMode",
+					"meltyMindFiles"
+				].includes(key))
+			) as DehydratedTask;
+			taskMap.set(task.id, task);
+		} catch (e) {
+			console.warn(`Error parsing task ${file}: ${e}`);
+		}
 	}
 	return taskMap;
 }
@@ -48,7 +51,7 @@ export async function dumpTaskToDisk(task: DehydratedTask): Promise<void> {
 	}
 
 	const taskPath = path.join(meltyDir, `${task.id}.json`);
-	fs.writeFileSync(taskPath, JSON.stringify(task, null, 2));
+	fs.writeFileSync(taskPath, JSON.stringify(task, null, 2))
 }
 
 export async function deleteTaskFromDisk(task: DehydratedTask): Promise<void> {

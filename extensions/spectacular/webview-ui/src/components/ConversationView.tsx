@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, memo, useLayoutEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
 	XIcon,
 	ArrowUp,
@@ -15,10 +15,8 @@ import { RpcClient } from "@/RpcClient";
 import { JouleComponent } from "./JouleComponent";
 import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
-import { DehydratedTask } from "types";
+import { DehydratedTask, nextJouleType } from "../types";
 import { useNavigate } from "react-router-dom";
-
-import * as vscode from "vscode";
 
 const MemoizedJouleComponent = memo(JouleComponent);
 const rpcClient = RpcClient.getInstance();
@@ -37,7 +35,7 @@ export function ConversationView() {
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	const navigate = useNavigate();
 
-	const [nonInitialHumanMessageInFlight, setNonInitialHumanMessageInFlight] =
+	const [nonInitialHumanJouleInFlight, setNonInitialHumanJouleInFlight] =
 		useState(false);
 	const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -55,12 +53,15 @@ export function ConversationView() {
 		return (
 			!task ||
 			task.conversation.joules.length === 0 ||
-			nonInitialHumanMessageInFlight ||
-			task?.conversation.joules[task?.conversation.joules.length - 1].author ===
-			"human" ||
-			task?.conversation.joules[task?.conversation.joules.length - 1].state ===
-			"partial"
+			nonInitialHumanJouleInFlight ||
+			task?.conversation.joules[task?.conversation.joules.length - 1].jouleType === "HumanChat" ||
+			task?.conversation.joules[task?.conversation.joules.length - 1].jouleState === "partial"
 		);
+	}
+
+	function conversationState() {
+		const lastJoule = task?.conversation.joules[task?.conversation.joules.length - 1];
+		return lastJoule ? nextJouleType(lastJoule) : null;
 	}
 
 	async function handleAddFile(file: string) {
@@ -100,14 +101,25 @@ export function ConversationView() {
 		setWorkspaceFiles(workspaceFiles);
 	}, [setMeltyFiles, setWorkspaceFiles]);
 
-	function handleSendMessage(text: string, taskId: string) {
-		setNonInitialHumanMessageInFlight(true);
+	function addJouleHumanChat(text: string, taskId: string) {
+		setNonInitialHumanJouleInFlight(true);
 		const result = posthog.capture("chatmessage_sent", {
 			message: text,
 			task_id: taskId,
 		});
 		console.log("posthog event captured!", result);
-		rpcClient.run("chatMessage", { text, taskId });
+		(async () => {
+			await rpcClient.run("createJouleHumanChat", { text, taskId });
+			rpcClient.run("startBotTurn", { taskId });
+		})();
+	}
+
+	function addJouleHumanConfirmCode(confirmed: boolean, taskId: string) {
+		setNonInitialHumanJouleInFlight(true);
+		(async () => {
+			await rpcClient.run("createJouleHumanConfirmCode", { confirmed, taskId });
+			rpcClient.run("startBotTurn", { taskId });
+		})();
 	}
 
 	async function handleCreatePR() {
@@ -168,8 +180,8 @@ export function ConversationView() {
 				task.conversation.joules[
 				task.conversation.joules.length - 1
 				] : undefined;
-		if (lastJoule?.author === "human") {
-			setNonInitialHumanMessageInFlight(false);
+		if (lastJoule && (lastJoule.jouleType === "HumanChat" || lastJoule.jouleType === "HumanConfirmCode")) {
+			setNonInitialHumanJouleInFlight(false);
 		}
 		setTask(task);
 	}, []);
@@ -220,7 +232,7 @@ export function ConversationView() {
 	const lastJouleCommit = useMemo(() => {
 		if (!task?.conversation.joules.length) return null;
 		const lastJoule = task.conversation.joules[task.conversation.joules.length - 1];
-		return lastJoule.commit;
+		return lastJoule.jouleType === "HumanChat" || lastJoule.jouleType === "BotCode" ? lastJoule.codeInfo?.commit : null;
 	}, [task?.conversation.joules]);
 
 	useEffect(() => {
@@ -234,9 +246,19 @@ export function ConversationView() {
 		event.preventDefault();
 		const form = event.target as HTMLFormElement;
 		const message = form.message.value;
-		handleSendMessage(message, taskId!);
+		addJouleHumanChat(message, taskId!);
 		setMessageText("");
 		form.reset();
+	};
+
+	const handleConfirmCodeYes = (event: React.MouseEvent) => {
+		event.preventDefault();
+		addJouleHumanConfirmCode(true, taskId!);
+	};
+
+	const handleConfirmCodeNo = (event: React.MouseEvent) => {
+		event.preventDefault();
+		addJouleHumanConfirmCode(false, taskId!);
 	};
 
 	const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -245,7 +267,7 @@ export function ConversationView() {
 			if (event.currentTarget && event.currentTarget.value !== undefined) {
 				const form = event.currentTarget.form;
 				if (form) {
-					handleSendMessage(event.currentTarget.value, taskId!);
+					addJouleHumanChat(event.currentTarget.value, taskId!);
 					setMessageText("");
 					event.currentTarget.value = "";
 				}
@@ -324,9 +346,11 @@ export function ConversationView() {
 							joule={joule}
 							isLatestCommit={
 								// isLatestCommit checks that we are actually on a commit and that commit actually matches the joule's commit
-								latestCommitHash !== undefined && joule.commit !== undefined && latestCommitHash === joule.commit
+								latestCommitHash !== undefined && (
+									joule.jouleType === "HumanChat" || joule.jouleType === "BotCode"
+								) && latestCommitHash === joule.codeInfo?.commit
 							}
-							isPartial={joule.state === "partial"}
+							isPartial={joule.jouleState === "partial"}
 							showDiff={index !== 0} // Hide diff view for the first message
 						/>
 					))}
@@ -352,6 +376,19 @@ export function ConversationView() {
 				</div>
 			</div>
 			<div className="mb-1.5">
+				{conversationState() === "HumanConfirmCode" && (
+					<div className="mb-4">
+						<p className="text-sm font-medium mb-2">Melty would like to write some code</p>
+						<div className="flex space-x-2">
+							<Button onClick={handleConfirmCodeYes}>
+								Confirm
+							</Button>
+							<Button variant="outline" onClick={handleConfirmCodeNo}>
+								Cancel
+							</Button>
+						</div>
+					</div>
+				)}
 				<form onSubmit={handleSubmit}>
 					<div className="mt-4 relative">
 						<AutoExpandingTextarea

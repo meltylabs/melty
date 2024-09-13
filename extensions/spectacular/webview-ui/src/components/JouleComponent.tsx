@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { RpcClient } from "../RpcClient";
-import { Joule } from "../types";
+import { Joule, JouleHumanChat, JouleBotChat, JouleBotCode } from "../types";
 import CopyButton from "./CopyButton";
 import DiffContent from "./DiffContent";
 
@@ -23,23 +23,21 @@ export function JouleComponent({
 
 	const [undoClicked, setUndoClicked] = useState(false);
 
-	const diffHtml =
-		showDiff && joule.diffInfo?.diffPreview ? joule.diffInfo.diffPreview : null;
-
 	const handleUndo = async () => {
+		const jouleBotCode = joule as JouleBotCode;
 		setUndoClicked(true);
 		await rpcClient.run("undoLatestCommit", {
-			commitId: joule.commit,
+			commitId: jouleBotCode.codeInfo.commit,
 		});
 	};
 
-	if (joule.state === "error") {
+	if (joule.jouleState === "error") {
 		return (
 			<div className="text-red-800">Oops, something went wrong. Try again?</div>
 		);
 	}
 
-	const MessageContent = () => (
+	const renderMessageContent = (joule: JouleHumanChat | JouleBotChat | JouleBotCode) => (
 		<div className="text-xs prose dark:prose-invert">
 			<ReactMarkdown
 				components={{
@@ -85,51 +83,87 @@ export function JouleComponent({
 		</div>
 	);
 
-	return (
-		<div className="mb-2">
-			{joule.author === "human" && diffHtml ? (
-				<div className="flex flex-col">
-					<div className="w-full mb-2">
-						<DiffContent
-							isHuman={true}
-							diffHtml={diffHtml}
-							jouleCommit={joule.commit}
-							isPartial={isPartial}
-							isLatestCommit={isLatestCommit}
-							undoClicked={undoClicked}
-							handleUndo={handleUndo}
-						/>
-					</div>
-					<div className="w-full p-2 bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 rounded-md">
-						<MessageContent />
-					</div>
-				</div>
-			) : (
-				<div
-					className={`flex p-2 rounded-md ${joule.author === "human" ? "bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200" : ""
-						}`}
-				>
-					<div
-						className={`${diffHtml ? "w-[40%]" : "w-full"
-							} pr-4 overflow-auto h-full`}
-					>
-						<MessageContent />
-					</div>
-					{showDiff && diffHtml && (
-						<div className="w-[60%] overflow-auto h-full">
-							<DiffContent
-								isHuman={false}
-								diffHtml={diffHtml}
-								jouleCommit={joule.commit}
-								isPartial={isPartial}
-								isLatestCommit={isLatestCommit}
-								undoClicked={undoClicked}
-								handleUndo={handleUndo}
-							/>
+	function shouldShowDiff(joule: Joule) {
+		if (joule.jouleType !== 'HumanChat' && joule.jouleType !== 'BotCode') {
+			return false;
+		}
+		return showDiff && joule.codeInfo?.diffInfo?.diffPreview;
+	}
+
+	const renderDiffContent = (joule: JouleHumanChat | JouleBotCode) => {
+		const diffHtml = joule.codeInfo!.diffInfo!.diffPreview;
+
+		return <DiffContent
+			isHuman={joule.jouleType === 'HumanChat'}
+			diffHtml={diffHtml}
+			jouleCommit={joule.codeInfo!.commit}
+			isPartial={isPartial}
+			isLatestCommit={isLatestCommit}
+			undoClicked={undoClicked}
+			handleUndo={handleUndo}
+		/>
+	};
+
+	switch (joule.jouleType) {
+		case 'HumanChat':
+			return (
+				<div className="mb-2 flex">
+					{shouldShowDiff(joule) ? (
+						<div className="flex flex-col">
+							{<div className="w-full mb-2">
+								{renderDiffContent(joule)}
+							</div>}
+							<div className="w-full p-2 bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 rounded-md">
+								{renderMessageContent(joule)}
+							</div>
+						</div>
+					) : (
+						<div className="w-full p-2 bg-gray-50 dark:bg-gray-800 dark:text-white border border-gray-200 rounded-md">
+							{renderMessageContent(joule)}
 						</div>
 					)}
 				</div>
-			)}
-		</div>
-	);
+			);
+
+		case 'HumanConfirmCode':
+			// Render content for HumanConfirmCode
+			return (
+				<div className="mb-2">
+					{/* Add appropriate content for HumanConfirmCode */}
+				</div>
+			);
+
+		case 'BotChat':
+		case 'BotCode':
+			return (
+				<div className="mb-2">
+					{shouldShowDiff(joule) ? (
+						<div className="flex">
+							<div className="w-[40%] pr-4 overflow-auto h-full">
+								{renderMessageContent(joule)}
+							</div>
+							<div className="w-[60%] overflow-auto h-full">
+								{renderDiffContent(joule as JouleBotCode)}
+							</div>
+						</div>
+					) : (
+						<div className="w-full pr-4 overflow-auto h-full">
+							{renderMessageContent(joule)}
+						</div>
+					)}
+					{/* <div className={(shouldShowDiff(joule) ? "w-[40%]" : "w-full") + " pr-4 overflow-auto h-full"}>
+						{renderMessageContent(joule)}
+					</div>
+					{shouldShowDiff(joule) && (
+						<div className="w-[60%] overflow-auto h-full">
+							{renderDiffContent(joule as JouleBotCode)}
+						</div>
+					)} */}
+				</div>
+			);
+
+		default:
+			return null;
+	}
+
 }

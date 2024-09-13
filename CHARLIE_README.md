@@ -35,6 +35,14 @@ Do not put rpcClient into any dependency arrays (just in case).
 
 Actually, pure event handlers don't need to be wrapped (I think). But anything called from inside a useCallback does need to be wrapped.
 
+# Webview contract
+
+1. Call humanXYZ() when user does XYZ. This sends updateTask and then returns to indicate complete.
+2. Immediately after, call startBotTurn() (returns immediately), which takes care of figuring out what to do to get back to human control.
+3. Call stopBotTurn() if needed.
+
+All task updates are sent via updateTask. eventually there will be an endBotTurn notification, but we don't need it yet.
+
 # Issues encountered
 
 ## Unable to launch browser
