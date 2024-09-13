@@ -46,13 +46,10 @@ export async function streamOpenAI(
 
 	try {
 		console.log("waiting for OpenAI...");
-		// const messages = model !== Models.O1
-		// 	? [
-		// 		{ role: "system", content: openAIConversation.system },
-		// 		...openAIConversation.messages
-		// 	]
-		// 	: openAIConversation.messages;
 
+		/**
+		 * Right now, O1 doesn't support streaming or system prompts.
+		 */
 		const response = await openai.chat.completions.create({
 			model: model,
 			messages: openAIConversation.messages,
@@ -66,21 +63,6 @@ export async function streamOpenAI(
 		} else {
 			return "OpenAI failed :("
 		}
-
-		// for await (const chunk of stream) {
-		// 	if (cancellationToken?.isCancellationRequested) {
-		// 		stream.controller.abort();
-		// 		throw new ErrorOperationCancelled();
-		// 	}
-
-		// 	const content = chunk.choices[0]?.delta?.content || "";
-		// 	if (processPartial) {
-		// 		processPartial(content);
-		// 	}
-		// 	fullResponse += content;
-		// }
-
-		// return fullResponse.trim();
 	} catch (error) {
 		utils.logErrorVerbose("OpenAI error", error);
 		throw error;
