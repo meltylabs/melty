@@ -216,14 +216,7 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 		content: {
 			type: 'steps',
 			steps: [
-				{
-					id: 'openMeltyOverlay',
-					title: 'Say hello to Melty',
-					description: localize('gettingStarted.openMeltyOverlay.description.interpolated', "Open the Melty popup! \n{0}", Button(localize('openMelty', "Open Melty"), 'command:workbench.action.toggleMelty')),
-					media: {
-						type: 'image', altText: 'Melty logo', path: 'ice.png'
-					},
-				},
+
 				{
 					id: 'extensionsWeb',
 					title: localize('gettingStarted.extensions.title', "Code with extensions"),
@@ -254,6 +247,14 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 					title: 'Open the integrated terminal',
 					description: localize('gettingStarted.terminal.description.interpolated', "Quickly run shell commands and monitor build output, right next to your code.\n{0}", Button(localize('openTerminal', "Open Terminal"), 'command:workbench.action.terminal.toggleTerminal')),
 					media: { type: 'svg', altText: 'Command Palette overlay for searching and executing commands.', path: 'terminal.svg' },
+				},
+				{
+					id: 'openMeltyOverlay',
+					title: 'Say hello to Melty',
+					description: localize('gettingStarted.openMeltyOverlay.description.interpolated', "Open the Melty popup! \n{0}", Button(localize('openMelty', "Open Melty"), 'command:workbench.action.toggleMelty')),
+					media: {
+						type: 'image', altText: 'Melty logo', path: 'ice.png'
+					},
 				},
 				{
 					id: 'pickAFolderTask-Mac',
