@@ -95,8 +95,7 @@ export class Coder extends BaseAssistant {
 
 		webviewNotifier.updateStatusMessage("Thinking");
 		let partialMessage = "";
-		// const finalResponse = await claudeAPI.streamClaude(
-		const finalResponse = await openaiAPI.streamOpenAI(
+		const finalResponse = await claudeAPI.streamClaude(
 			claudeConversation,
 			{
 				cancellationToken,

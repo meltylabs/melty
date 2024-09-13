@@ -28,7 +28,7 @@ export async function streamOpenAI(
 
 	const config = vscode.workspace.getConfiguration("melty");
 	let apiKey = config.get<string>("openaiApiKey");
-	let baseURL = "http://localhost:4000/openai";
+	let baseURL = "https://melty-api.fly.dev/openai";
 
 	// If the user provides an API key, go direct to OpenAI, otherwise proxy to Melty
 	if (apiKey) {
