@@ -108,7 +108,9 @@ export function JouleComponent({
 		const execInfoFormat = `
 rawInput
 ======
-${joule.botExecInfo.rawInput}
+SYSTEM: ${joule.botExecInfo.rawInput.system}
+
+${joule.botExecInfo.rawInput.messages.map(m => `${m.role}: ${m.content}`).join("\n\n")}
 ======
 rawOutput
 ======
