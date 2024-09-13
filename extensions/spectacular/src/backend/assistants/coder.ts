@@ -70,7 +70,7 @@ export class Coder extends BaseAssistant {
 					partialMessage += responseFragment;
 					const newJoule = joules.createJouleBotChat(
 						partialMessage,
-						{ rawOutput: partialMessage, contextPaths: contextPaths },
+						{ rawInput: claudeConversation, rawOutput: partialMessage, contextPaths: contextPaths },
 						"partial",
 						null // no stop reason
 					);
@@ -84,13 +84,9 @@ export class Coder extends BaseAssistant {
 
 		const stopReason = finalResponse.stop_reason === "stop_sequence" && finalResponse.stop_sequence === "<change_code" ? "confirmCode" : "endTurn";
 
-		const botExecInfo = {
-			rawOutput: text,
-			contextPaths: contextPaths,
-		};
 		return joules.createJouleBotChat(
 			text,
-			botExecInfo,
+			{ rawInput: claudeConversation, rawOutput: text, contextPaths: contextPaths },
 			"complete",
 			stopReason
 		);
@@ -123,7 +119,11 @@ export class Coder extends BaseAssistant {
 					partialMessage += responseFragment;
 					const newJoule =
 						await this.codeMessageToJoule(
-							partialMessage, true, contextPaths
+							partialMessage, true, {
+							rawInput: claudeConversation,
+							rawOutput: partialMessage,
+							contextPaths
+						}
 						);
 					sendPartialJoule(newJoule);
 				}
@@ -135,7 +135,11 @@ export class Coder extends BaseAssistant {
 
 		// do the committing
 		const newJoule = await this.codeMessageToJoule(
-			text, false, contextPaths
+			text, false, {
+			rawInput: claudeConversation,
+			rawOutput: text,
+			contextPaths
+		}
 		);
 
 		this.cleanUpAfterChanges(newJoule);
@@ -186,10 +190,10 @@ export class Coder extends BaseAssistant {
 
 		const systemPrompt = prompts.codeModeSystemPrompt();
 
-		const messages = claudeAPI.coalesceForClaude([
+		const messages = [
 			...this.encodeMessages(conversation),
 			...this.codebaseView(contextPaths, repoMapString),
-		]);
+		];
 
 		const claudeConversation: ClaudeConversation = {
 			system: systemPrompt,
@@ -208,7 +212,7 @@ export class Coder extends BaseAssistant {
 	private async codeMessageToJoule(
 		response: string,
 		partialMode: boolean,
-		contextPaths: ContextPaths,
+		botExecInfo: BotExecInfo,
 		cancellationToken?: vscode.CancellationToken
 	): Promise<JouleBotCode> {
 		const { messageChunksList, searchReplaceList } = parser.splitResponse(
@@ -219,7 +223,7 @@ export class Coder extends BaseAssistant {
 			? changeSets.createEmpty()
 			: await diffApplicatorXml.searchReplaceToChangeSet(
 				searchReplaceList,
-				contextPaths.meltyRoot
+				botExecInfo.contextPaths.meltyRoot
 			);
 
 		if (cancellationToken?.isCancellationRequested) {
@@ -229,10 +233,7 @@ export class Coder extends BaseAssistant {
 		return await this.applyChangesToGetNextJoule(
 			changeSet,
 			messageChunksList.join("\n"),
-			{
-				rawOutput: response,
-				contextPaths: contextPaths,
-			},
+			botExecInfo,
 			partialMode
 		);
 	}

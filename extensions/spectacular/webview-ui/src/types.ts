@@ -104,6 +104,7 @@ export type DiffInfo = {
 };
 
 export type BotExecInfo = {
+	readonly rawInput: ClaudeConversation;
 	readonly rawOutput: string;
 	readonly contextPaths: ContextPaths;
 };
@@ -136,6 +137,16 @@ export type ClaudeMessage = {
 export type ClaudeConversation = {
 	readonly messages: ClaudeMessage[];
 	readonly system: string;
+};
+
+export type OpenAIMessage = {
+	role: "system" | "user" | "assistant";
+	content: string;
+};
+
+export type OpenAIConversation = {
+	system: string;
+	messages: OpenAIMessage[];
 };
 
 export type Conversation = {

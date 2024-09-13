@@ -104,6 +104,7 @@ export type DiffInfo = {
 };
 
 export type BotExecInfo = {
+	readonly rawInput: ClaudeConversation;
 	readonly rawOutput: string;
 	readonly contextPaths: ContextPaths;
 };

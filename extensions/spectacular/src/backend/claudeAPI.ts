@@ -31,7 +31,7 @@ export async function streamClaude(
 }
 
 export async function streamClaudeRaw(
-	claudeConversation: ClaudeConversation,
+	claudeConversationUncoalesced: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<Anthropic.Messages.Message> {
 	const {
 		model = Models.Claude35Sonnet,
@@ -39,6 +39,11 @@ export async function streamClaudeRaw(
 		processPartial,
 		stopSequences = []
 	} = opts;
+
+	const claudeConversation = {
+		system: claudeConversationUncoalesced.system,
+		messages: coalesceForClaude(claudeConversationUncoalesced.messages)
+	};
 
 	if (claudeConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
@@ -112,7 +117,7 @@ export async function streamClaudeRaw(
  * @param messages possibly malformed array of messages
  * @returns well-formed array of messages
  */
-export function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
+function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
 	// reduce over messagesOrNulls to remove nulls and combine adjacent messages with same role
 	return messages.reduce((acc: ClaudeMessage[], message) => {
 		if (message === null) {
