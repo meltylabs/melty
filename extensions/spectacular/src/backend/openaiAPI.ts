@@ -53,28 +53,34 @@ export async function streamOpenAI(
 		// 	]
 		// 	: openAIConversation.messages;
 
-		const stream = await openai.chat.completions.create({
+		const response = await openai.chat.completions.create({
 			model: model,
 			messages: openAIConversation.messages,
-			stream: true,
+			stream: false,
 		});
 
-		let fullResponse = "";
+		let fullResponse = response.choices[0].message.content;
 
-		for await (const chunk of stream) {
-			if (cancellationToken?.isCancellationRequested) {
-				stream.controller.abort();
-				throw new ErrorOperationCancelled();
-			}
-
-			const content = chunk.choices[0]?.delta?.content || "";
-			if (processPartial) {
-				processPartial(content);
-			}
-			fullResponse += content;
+		if (fullResponse !== null) {
+			return fullResponse
+		} else {
+			return "OpenAI failed :("
 		}
 
-		return fullResponse.trim();
+		// for await (const chunk of stream) {
+		// 	if (cancellationToken?.isCancellationRequested) {
+		// 		stream.controller.abort();
+		// 		throw new ErrorOperationCancelled();
+		// 	}
+
+		// 	const content = chunk.choices[0]?.delta?.content || "";
+		// 	if (processPartial) {
+		// 		processPartial(content);
+		// 	}
+		// 	fullResponse += content;
+		// }
+
+		// return fullResponse.trim();
 	} catch (error) {
 		utils.logErrorVerbose("OpenAI error", error);
 		throw error;
