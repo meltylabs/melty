@@ -304,10 +304,7 @@ export function Tasks({
 	return (
 		<div>
 			{gitConfigError === null ? (
-				<>
-					<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
-					<span>Checking Git configuration...</span>
-				</>
+				<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
 			) : gitConfigError !== "" ? (
 				gitConfigError?.includes("Open a workspace folder") ?
 					<div className="bg-background text-foreground p-4">
