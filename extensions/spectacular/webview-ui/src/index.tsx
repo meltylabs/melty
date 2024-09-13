@@ -4,7 +4,7 @@ import App from "./App";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
-if (typeof window !== "undefined") {
+// if (typeof window !== "undefined") {
 	// posthog init for frontend
 	posthog.init("phc_tvdsIv2ZDXVeJfYm0GTEBFwaPtdmWRa2cNVGCg18Qt6", {
 		api_host:
@@ -13,14 +13,14 @@ if (typeof window !== "undefined") {
 			if (import.meta.env.NODE_ENV === "development") posthog.debug();
 		},
 	});
-}
+// }
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
 root.render(
 	<React.StrictMode>
-		<PostHogProvider client={posthog}>
+		{/* <PostHogProvider client={posthog}> */}
 			<App />
-		</PostHogProvider>
+		{/* </PostHogProvider> */}
 	</React.StrictMode>
 );

@@ -23,7 +23,7 @@ export const NavBar: React.FC = () => {
 				<li>
 					<Link to="/">
 						<h1 className="text-3xl font-extrabold tracking-tighter text-center">
-							melty
+						<img src='../public/logo.webp' alt='logo' />
 						</h1>
 					</Link>
 				</li>
