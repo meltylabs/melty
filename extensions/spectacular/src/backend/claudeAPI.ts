@@ -17,7 +17,6 @@ export type ClaudeOpts = {
 	stopSequences?: string[],
 	processPartial?: (text: string) => void,
 };
-
 export async function streamClaude(
 	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<string> {
