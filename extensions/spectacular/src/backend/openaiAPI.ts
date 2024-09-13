@@ -7,8 +7,10 @@ import { OpenAIMessage, OpenAIConversation } from "../types";
 import { ErrorOperationCancelled } from 'util/utils';
 
 export enum Models {
-	GPT4 = "gpt-4",
-	GPT35Turbo = "gpt-3.5-turbo",
+	GPT4o = "gpt-4o",
+	GPT4oMini = "gpt-4o",
+	O1 = "o1-preview",
+	O1Mini = "o1-mini"
 }
 
 export async function streamOpenAI(
@@ -18,7 +20,7 @@ export async function streamOpenAI(
 		cancellationToken?: CancellationToken,
 		processPartial?: (text: string) => void,
 	} = {}): Promise<string> {
-	const { model = Models.GPT4, cancellationToken, processPartial } = opts;
+	const { model = Models.O1, cancellationToken, processPartial } = opts;
 
 	if (openAIConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
