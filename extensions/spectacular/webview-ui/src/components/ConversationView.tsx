@@ -118,7 +118,6 @@ export function ConversationView() {
 		setNonInitialHumanJouleInFlight(true);
 		(async () => {
 			await rpcClient.run("createJouleHumanConfirmCode", { confirmed, taskId });
-			rpcClient.run("startBotTurn", { taskId });
 		})();
 	}
 
