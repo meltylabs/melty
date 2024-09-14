@@ -261,7 +261,7 @@ export function ConversationView() {
 		addJouleHumanConfirmCode(false, taskId!);
 	}, [taskId]);
 
-	const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+	const handleTextareaKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			if (event.currentTarget && event.currentTarget.value !== undefined) {
@@ -409,7 +409,7 @@ export function ConversationView() {
 							required
 							value={messageText}
 							onChange={(e) => setMessageText(e.target.value)}
-							onKeyDown={handleKeyDown}
+							onKeyDown={handleTextareaKeyDown}
 							autoFocus={true}
 						/>
 
