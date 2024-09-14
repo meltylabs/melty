@@ -287,15 +287,15 @@ export function ConversationView() {
 				event.stopPropagation();
 				handleBack();
 			} else if ((event.metaKey || event.ctrlKey) && event.key === 'y') {
-				event.preventDefault();
-				event.stopPropagation();
 				if (conversationState() === "HumanConfirmCode") {
+					event.preventDefault();
+					event.stopPropagation();
 					handleConfirmCodeYes();
 				}
 			} else if ((event.metaKey || event.ctrlKey) && event.key === 'n') {
-				event.preventDefault();
-				event.stopPropagation();
 				if (conversationState() === "HumanConfirmCode") {
+					event.preventDefault();
+					event.stopPropagation();
 					handleConfirmCodeNo();
 				}
 			}
