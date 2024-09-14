@@ -87,10 +87,15 @@ export function encodeJouleForClaude(joule: Joule): ClaudeMessage | null {
 	// to ensure no Anthropic API errors
 	switch (joule.jouleType) {
 		case "HumanChat":
-			const diffPreview = joule.codeInfo?.diffInfo?.diffPreview;
+			const diffPreviewUntruncated = joule.codeInfo?.diffInfo?.diffPreview || null;
+			const diffPreview = diffPreviewUntruncated !== null && diffPreviewUntruncated.length > 10000
+				? "[Changes too long to summarize, diff unavailable.]"
+				: diffPreviewUntruncated;
 			return {
 				role: "user",
-				content: `${diffPreview ? `<user_updated_code>${diffPreview}</user_updated_code>` : ""} ${joule.message}`,
+				content: `${diffPreview
+					? `<user_updated_code>${diffPreview}</user_updated_code>`
+					: ""} ${joule.message}`,
 			};
 		case "HumanConfirmCode":
 			return joule.confirmed ? null : { role: "user", content: "[user declined to proceed]" };
