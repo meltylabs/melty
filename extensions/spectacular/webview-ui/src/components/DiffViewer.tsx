@@ -19,7 +19,7 @@ interface Diff2HtmlProps {
 // const renderDiff2HTML = (diff: string) => {
 //   const lines = diff.split("\n");
 //   const fileNameLine = lines.find((line) => line.startsWith("diff --git"));
-//   let fileName = "";
+//   let fileName = ""; 
 //   if (fileNameLine) {
 //     const match = fileNameLine.match(/diff --git a\/(.*) b\/(.*)/);
 //     if (match) {
