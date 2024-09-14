@@ -387,16 +387,20 @@ export function ConversationView() {
 			</div>
 			<div className="mb-1.5">
 				{conversationState() === "HumanConfirmCode" && (
-					<div className="mb-4">
-						<p className="text-sm font-medium mb-2">Melty would like to write some code</p>
-						<div className="flex space-x-2">
-							<Button onClick={handleConfirmCodeYes}>
-								Confirm
-							</Button>
-							<Button variant="outline" onClick={handleConfirmCodeNo}>
-								Cancel
-							</Button>
-						</div>
+					<div className="mb-4 flex items-center">
+						<p className="text-sm font-medium mr-4">Melty wants to make changes</p>
+						<Button onClick={handleConfirmCodeYes} className="mr-2 flex items-center">
+							Confirm
+							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+								⌘Y
+							</kbd>
+						</Button>
+						<Button variant="outline" onClick={handleConfirmCodeNo} className="flex items-center">
+							Cancel
+							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+								⌘N
+							</kbd>
+						</Button>
 					</div>
 				)}
 				<form onSubmit={handleSubmit}>
