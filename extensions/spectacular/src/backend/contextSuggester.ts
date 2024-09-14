@@ -16,7 +16,7 @@ export async function suggestContext(
 			...prompts.fileSuggestionsIntroAndExamples(),
 			{
 				role: "user",
-				content: `<CodebaseSummary>
+				content: `<codebase_summary>
 ${repoMap}
 </CodebaseSummary>
 <Message>

@@ -15,7 +15,7 @@ export class RepoMapSpec {
 			console.log(
 				`Repo is too large to summarize (${relativeFilePaths.length} files). Disabling summary.`
 			);
-			return "<CodebaseSummary>[Repo is too large to summarize]</CodebaseSummary>";
+			return "[Repo is too large to summarize]";
 		}
 
 		console.log("building repomap");

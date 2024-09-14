@@ -56,7 +56,7 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 		repoMapString: string
 	): ClaudeMessage[] {
 		const codebaseSummary = `<codebase_summary>
-${repoMapString ? repoMapString : "[No summary provided.]"}
+${repoMapString ? repoMapString : "[No file summaries available.]"}
 </codebase_summary>`;
 
 		const fileContents = contextPaths.paths
