@@ -32,7 +32,6 @@ import { AddFileButton } from "./AddFileButton";
 import * as strings from "@/utilities/strings";
 import { FastFilePicker } from "./FastFilePicker";
 import { EventManager } from "@/eventManager";
-import { RandomJoke } from "./RandomJoke";
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -487,8 +486,6 @@ export function Tasks({
 							</div>
 						</div>
 					)}
-
-					<RandomJoke />
 
 					{tasks.length > 0 &&
 						<>
