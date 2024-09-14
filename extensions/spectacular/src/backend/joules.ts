@@ -20,6 +20,7 @@ export function createJouleError(errorMessage: string): JouleBotChat {
 	return createJouleBotChat(
 		errorMessage,
 		{
+			rawInput: { system: "", messages: [] },
 			rawOutput: "[error encountered]",
 			contextPaths: {
 				meltyRoot: '',
