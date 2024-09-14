@@ -284,14 +284,17 @@ export function ConversationView() {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if ((event.metaKey || event.ctrlKey) && event.key === '[') {
 				event.preventDefault();
+				event.stopPropagation();
 				handleBack();
 			} else if ((event.metaKey || event.ctrlKey) && event.key === 'y') {
 				event.preventDefault();
+				event.stopPropagation();
 				if (conversationState() === "HumanConfirmCode") {
 					handleConfirmCodeYes();
 				}
 			} else if ((event.metaKey || event.ctrlKey) && event.key === 'n') {
 				event.preventDefault();
+				event.stopPropagation();
 				if (conversationState() === "HumanConfirmCode") {
 					handleConfirmCodeNo();
 				}
