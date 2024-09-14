@@ -76,10 +76,6 @@ export class Task {
 
 	public addErrorJoule(message: string): void {
 		// first, remove any bot joules
-		this.conversation = conversations.forceReadyForResponseFrom(
-			this.conversation,
-			"bot"
-		);
 		const errorJoule = joules.createJouleError(
 			`Melty encountered an error: ${message}. Try again?`
 		);
@@ -97,11 +93,6 @@ export class Task {
 	 * Adds a human message (and changes) to the conversation.
 	 */
 	private async respondHuman(message: string): Promise<Joule> {
-		this.conversation = conversations.forceReadyForResponseFrom(
-			this.conversation,
-			"human"
-		);
-
 		let newJoule: Joule;
 
 		if (config.getIsAutocommitMode() && this.taskMode !== "vanilla") {
@@ -190,11 +181,6 @@ export class Task {
 		// todo if multiple bot operations can happen back-to-back,
 		// we'll need to add a loop somewhere
 		this.startCancelableOperation(async (cancellationToken) => {
-			this.conversation = conversations.forceReadyForResponseFrom(
-				this.conversation,
-				"bot"
-			);
-
 			const sendPartialJoule = (partialJoule: Joule) => {
 				const dehydratedTask = this.dehydrateForWire();
 				dehydratedTask.conversation = conversations.addJoule(this.conversation, partialJoule);

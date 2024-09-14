@@ -118,6 +118,9 @@ export function ConversationView() {
 		setNonInitialHumanJouleInFlight(true);
 		(async () => {
 			await rpcClient.run("createJouleHumanConfirmCode", { confirmed, taskId });
+			if (confirmed) { // todo this logic should be centralized in nextJouleType
+				rpcClient.run("startBotTurn", { taskId });
+			}
 		})();
 	}
 
