@@ -99,7 +99,7 @@ export function encodeJouleForClaude(joule: Joule): ClaudeMessage | null {
 					: ""} ${joule.message}`,
 			};
 		case "HumanConfirmCode":
-			return joule.confirmed ? null : { role: "user", content: "[user declined to proceed]" };
+			return null;
 		case "BotChat":
 			return { role: "assistant", content: joule.botExecInfo.rawOutput };
 		case "BotCode":

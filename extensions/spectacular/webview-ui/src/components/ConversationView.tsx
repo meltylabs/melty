@@ -118,7 +118,9 @@ export function ConversationView() {
 		setNonInitialHumanJouleInFlight(true);
 		(async () => {
 			await rpcClient.run("createJouleHumanConfirmCode", { confirmed, taskId });
-			rpcClient.run("startBotTurn", { taskId });
+			if (confirmed) { // todo this logic should be centralized in nextJouleType
+				rpcClient.run("startBotTurn", { taskId });
+			}
 		})();
 	}
 
@@ -251,17 +253,17 @@ export function ConversationView() {
 		form.reset();
 	};
 
-	const handleConfirmCodeYes = (event: React.MouseEvent) => {
-		event.preventDefault();
+	const handleConfirmCodeYes = useCallback((event?: React.MouseEvent) => {
+		event?.preventDefault();
 		addJouleHumanConfirmCode(true, taskId!);
-	};
+	}, [taskId]);
 
-	const handleConfirmCodeNo = (event: React.MouseEvent) => {
-		event.preventDefault();
+	const handleConfirmCodeNo = useCallback((event?: React.MouseEvent) => {
+		event?.preventDefault();
 		addJouleHumanConfirmCode(false, taskId!);
-	};
+	}, [taskId]);
 
-	const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+	const handleTextareaKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			if (event.currentTarget && event.currentTarget.value !== undefined) {
@@ -273,7 +275,7 @@ export function ConversationView() {
 				}
 			}
 		}
-	};
+	}, [taskId]);
 
 	const handleBack = useCallback(async () => {
 		await rpcClient.run("deactivateTask", { taskId });
@@ -284,7 +286,20 @@ export function ConversationView() {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if ((event.metaKey || event.ctrlKey) && event.key === '[') {
 				event.preventDefault();
+				event.stopPropagation();
 				handleBack();
+			} else if ((event.metaKey || event.ctrlKey) && event.key === 'y') {
+				if (conversationState() === "HumanConfirmCode") {
+					event.preventDefault();
+					event.stopPropagation();
+					handleConfirmCodeYes();
+				}
+			} else if ((event.metaKey || event.ctrlKey) && event.key === 'd') {
+				if (conversationState() === "HumanConfirmCode") {
+					event.preventDefault();
+					event.stopPropagation();
+					handleConfirmCodeNo();
+				}
 			}
 		};
 
@@ -293,7 +308,7 @@ export function ConversationView() {
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
 		};
-	}, [handleBack]);
+	}, [handleBack, handleConfirmCodeYes, handleConfirmCodeNo, conversationState]);
 
 	return (
 		<div className="flex flex-col h-[calc(100vh-1rem)] overflow-hidden">
@@ -377,16 +392,20 @@ export function ConversationView() {
 			</div>
 			<div className="mb-1.5">
 				{conversationState() === "HumanConfirmCode" && (
-					<div className="mb-4">
-						<p className="text-sm font-medium mb-2">Melty would like to write some code</p>
-						<div className="flex space-x-2">
-							<Button onClick={handleConfirmCodeYes}>
-								Confirm
-							</Button>
-							<Button variant="outline" onClick={handleConfirmCodeNo}>
-								Cancel
-							</Button>
-						</div>
+					<div className="mb-4 flex items-center">
+						<p className="text-sm font-medium mr-4">Melty wants to make changes</p>
+						<Button onClick={handleConfirmCodeYes} className="mr-2 flex items-center">
+							Confirm
+							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+								⌘Y
+							</kbd>
+						</Button>
+						<Button variant="outline" onClick={handleConfirmCodeNo} className="flex items-center">
+							Cancel
+							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+								⌘D
+							</kbd>
+						</Button>
 					</div>
 				)}
 				<form onSubmit={handleSubmit}>
@@ -399,7 +418,7 @@ export function ConversationView() {
 							required
 							value={messageText}
 							onChange={(e) => setMessageText(e.target.value)}
-							onKeyDown={handleKeyDown}
+							onKeyDown={handleTextareaKeyDown}
 							autoFocus={true}
 						/>
 
