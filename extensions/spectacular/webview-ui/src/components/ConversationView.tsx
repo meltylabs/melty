@@ -292,7 +292,7 @@ export function ConversationView() {
 					event.stopPropagation();
 					handleConfirmCodeYes();
 				}
-			} else if ((event.metaKey || event.ctrlKey) && event.key === 'n') {
+			} else if ((event.metaKey || event.ctrlKey) && event.key === 'd') {
 				if (conversationState() === "HumanConfirmCode") {
 					event.preventDefault();
 					event.stopPropagation();
@@ -401,7 +401,7 @@ export function ConversationView() {
 						<Button variant="outline" onClick={handleConfirmCodeNo} className="flex items-center">
 							Cancel
 							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-								⌘N
+								⌘D
 							</kbd>
 						</Button>
 					</div>
