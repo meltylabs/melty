@@ -251,17 +251,17 @@ export function ConversationView() {
 		form.reset();
 	};
 
-	const handleConfirmCodeYes = (event: React.MouseEvent) => {
-		event.preventDefault();
+	const handleConfirmCodeYes = useCallback((event?: React.MouseEvent) => {
+		event?.preventDefault();
 		addJouleHumanConfirmCode(true, taskId!);
-	};
+	}, [taskId]);
 
-	const handleConfirmCodeNo = (event: React.MouseEvent) => {
-		event.preventDefault();
+	const handleConfirmCodeNo = useCallback((event?: React.MouseEvent) => {
+		event?.preventDefault();
 		addJouleHumanConfirmCode(false, taskId!);
-	};
+	}, [taskId]);
 
-	const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+	const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			if (event.currentTarget && event.currentTarget.value !== undefined) {
@@ -273,7 +273,7 @@ export function ConversationView() {
 				}
 			}
 		}
-	};
+	}, [taskId]);
 
 	const handleBack = useCallback(async () => {
 		await rpcClient.run("deactivateTask", { taskId });
@@ -285,6 +285,16 @@ export function ConversationView() {
 			if ((event.metaKey || event.ctrlKey) && event.key === '[') {
 				event.preventDefault();
 				handleBack();
+			} else if ((event.metaKey || event.ctrlKey) && event.key === 'y') {
+				event.preventDefault();
+				if (conversationState() === "HumanConfirmCode") {
+					handleConfirmCodeYes();
+				}
+			} else if ((event.metaKey || event.ctrlKey) && event.key === 'n') {
+				event.preventDefault();
+				if (conversationState() === "HumanConfirmCode") {
+					handleConfirmCodeNo();
+				}
 			}
 		};
 
@@ -293,7 +303,7 @@ export function ConversationView() {
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
 		};
-	}, [handleBack]);
+	}, [handleBack, handleConfirmCodeYes, handleConfirmCodeNo, conversationState]);
 
 	return (
 		<div className="flex flex-col h-[calc(100vh-1rem)] overflow-hidden">
