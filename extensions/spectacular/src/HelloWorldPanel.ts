@@ -7,7 +7,7 @@ import {
 } from "vscode";
 import * as vscode from "vscode";
 import { getUri, getNonce } from "./util/utils";
-import { Conversation, TaskMode } from "./types";
+import { TaskMode, MeltyConfig } from "./types";
 import { MeltyExtension } from "./extension";
 import { createNewDehydratedTask } from "./backend/tasks";
 import * as config from "./util/config";
@@ -20,7 +20,6 @@ import { GitManager } from "./services/GitManager";
 import { GitHubManager } from './services/GitHubManager';
 import { TaskManager } from './services/TaskManager';
 import posthog from "posthog-js";
-import { create } from 'domain';
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -259,6 +258,8 @@ export class HelloWorldPanel implements WebviewViewProvider {
 					return this.rpcCheckOnboardingComplete();
 				case "setOnboardingComplete":
 					return this.rpcSetOnboardingComplete();
+				case "getMeltyConfig":
+					return this.rpcGetMeltyConfig();
 				default:
 					throw new Error(`Unknown RPC method: ${method}`);
 			}
@@ -496,5 +497,11 @@ export class HelloWorldPanel implements WebviewViewProvider {
 			throw new Error(`Tried to stop operation with an inactive task ${taskId}`);
 		}
 		task.stopBotTurn();
+	}
+
+	private async rpcGetMeltyConfig(): Promise<MeltyConfig> {
+		return {
+			debugMode: config.getDebugMode(),
+		};
 	}
 }

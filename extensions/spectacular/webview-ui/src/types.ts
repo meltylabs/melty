@@ -104,6 +104,7 @@ export type DiffInfo = {
 };
 
 export type BotExecInfo = {
+	readonly rawInput: ClaudeConversation;
 	readonly rawOutput: string;
 	readonly contextPaths: ContextPaths;
 };
@@ -138,6 +139,16 @@ export type ClaudeConversation = {
 	readonly system: string;
 };
 
+export type OpenAIMessage = {
+	role: "system" | "user" | "assistant";
+	content: string;
+};
+
+export type OpenAIConversation = {
+	system: string;
+	messages: OpenAIMessage[];
+};
+
 export type Conversation = {
 	readonly joules: ReadonlyArray<Joule>;
 };
@@ -151,6 +162,10 @@ export type ChangeSet = {
 	readonly filesChanged: {
 		[relPath: string]: { original: MeltyFile; updated: MeltyFile };
 	};
+};
+
+export type MeltyConfig = {
+	debugMode: boolean;
 };
 
 export type RpcMethod =
@@ -175,6 +190,7 @@ export type RpcMethod =
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
 	| "setOnboardingComplete"
+	| "getMeltyConfig"
 	// human conversation actions
 	| "createJouleHumanChat"
 	| "createJouleHumanConfirmCode"

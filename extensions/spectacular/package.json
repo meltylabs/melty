@@ -103,6 +103,11 @@
           "type": "string",
           "default": "~/.melty",
           "description": "The directory where Melty will store its data. Use '~' for the home directory. Default is '~/.melty'."
+        },
+        "melty.debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug mode"
         }
       }
     }

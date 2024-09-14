@@ -5,6 +5,11 @@ export function getUserPrompt(): string {
 	return config.get<string>("userPrompt", "");
 }
 
+export function getDebugMode(): boolean {
+	const config = vscode.workspace.getConfiguration("melty");
+	return config.get<boolean>("debugMode", false);
+}
+
 const EXCLUDES = [
 	"**/node_modules/**",
 	"**/.melty/**",

@@ -75,9 +75,9 @@ function removeLeadingBotJoules(conversation: Conversation): Conversation {
 
 function removeEmptyJoules(conversation: Conversation): Conversation {
 	return {
-		joules: conversation.joules.filter((joule) =>
+		joules: conversation.joules /*.filter((joule) =>
 			joules.encodeJouleForClaude(joule).content.length > 0
-		),
+		), */ // TODO
 	};
 }
 

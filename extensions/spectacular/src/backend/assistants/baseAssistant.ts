@@ -17,27 +17,22 @@ export abstract class BaseAssistant {
 		cancellationToken?: vscode.CancellationToken
 	) => Promise<Joule>>;
 
-	protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
+	protected encodeUserPrompt(): ClaudeMessage[] {
 		const userPrompt = getUserPrompt();
-		const messages: ClaudeMessage[] = [];
-
-		if (userPrompt) {
-			messages.push({
-				role: "user",
-				content: userPrompt,
-			});
-			messages.push({
-				role: "assistant",
-				content:
-					"Understood. I'll keep that in mind throughout our conversation.",
-			});
+		return [{
+			role: "user",
+			content: userPrompt,
+		}, {
+			role: "assistant",
+			content: "Understood. I'll keep that in mind throughout our conversation.",
 		}
+		];
+	}
 
-		messages.push(
+	protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
+		return [
 			...conversation.joules.map(joules.encodeJouleForClaude)
-		);
-
-		return messages;
+		].filter(m => m !== null);
 	}
 
 	/**
@@ -61,7 +56,7 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 		repoMapString: string
 	): ClaudeMessage[] {
 		const codebaseSummary = `<codebase_summary>
-${repoMapString ? repoMapString : "[No summary provided.]"}
+${repoMapString ? repoMapString : "[No file summaries available.]"}
 </codebase_summary>`;
 
 		const fileContents = contextPaths.paths
@@ -76,7 +71,7 @@ ${codebaseSummary}
 ${fileContents}
 </codebase_view>`,
 			},
-			{ role: "assistant", content: "Thanks, I'll review this carefully." },
+			// { role: "assistant", content: "Thanks, I'll review this carefully." },
 		];
 	}
 }

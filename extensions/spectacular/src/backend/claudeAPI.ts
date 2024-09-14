@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { CancellationToken } from "vscode";
 import * as utils from "util/utils";
 
-import { ClaudeConversation } from "../types";
+import { ClaudeMessage, ClaudeConversation } from "../types";
 import { ErrorOperationCancelled } from 'util/utils';
 
 export enum Models {
@@ -17,7 +17,6 @@ export type ClaudeOpts = {
 	stopSequences?: string[],
 	processPartial?: (text: string) => void,
 };
-
 export async function streamClaude(
 	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<string> {
@@ -31,7 +30,7 @@ export async function streamClaude(
 }
 
 export async function streamClaudeRaw(
-	claudeConversation: ClaudeConversation,
+	claudeConversationUncoalesced: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<Anthropic.Messages.Message> {
 	const {
 		model = Models.Claude35Sonnet,
@@ -39,6 +38,11 @@ export async function streamClaudeRaw(
 		processPartial,
 		stopSequences = []
 	} = opts;
+
+	const claudeConversation = {
+		system: claudeConversationUncoalesced.system,
+		messages: coalesceForClaude(claudeConversationUncoalesced.messages)
+	};
 
 	if (claudeConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
@@ -102,4 +106,39 @@ export async function streamClaudeRaw(
 		utils.logErrorVerbose("Claude error (final)", error);
 		throw error;
 	}
+}
+
+
+/**
+ * Guarantees properties required for Claude:
+ * - alternating roles in the resulting array
+ * - human message first
+ * @param messages possibly malformed array of messages
+ * @returns well-formed array of messages
+ */
+function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
+	// reduce over messagesOrNulls to remove nulls and combine adjacent messages with same role
+	return messages.reduce((acc: ClaudeMessage[], message) => {
+		if (message === null) {
+			return acc;
+		} else {
+			const lastMessage = acc[acc.length - 1];
+			if (!lastMessage && message.role === "assistant") {
+				vscode.window.showWarningMessage("Removing leading assistant message to recover from an issue");
+				console.warn(`Dropping leading assistant message ${message.content}`);
+				return acc;
+			} else if (lastMessage && lastMessage.role === message.role) {
+				// coalesce adjacent messages with same role
+				return [
+					...acc.slice(0, -1),
+					{
+						...lastMessage,
+						content: `${lastMessage.content}\n\n${message.content}`,
+					},
+				];
+			} else {
+				return [...acc, message];
+			}
+		}
+	}, []);
 }

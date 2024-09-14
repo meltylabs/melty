@@ -104,6 +104,7 @@ export type DiffInfo = {
 };
 
 export type BotExecInfo = {
+	readonly rawInput: ClaudeConversation;
 	readonly rawOutput: string;
 	readonly contextPaths: ContextPaths;
 };
@@ -163,6 +164,10 @@ export type ChangeSet = {
 	};
 };
 
+export type MeltyConfig = {
+	debugMode: boolean;
+};
+
 export type RpcMethod =
 	| "listMeltyFiles"
 	| "listWorkspaceFiles"
@@ -185,6 +190,7 @@ export type RpcMethod =
 	| "createAndOpenWorkspace"
 	| "checkOnboardingComplete"
 	| "setOnboardingComplete"
+	| "getMeltyConfig"
 	// human conversation actions
 	| "createJouleHumanChat"
 	| "createJouleHumanConfirmCode"

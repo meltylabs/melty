@@ -70,13 +70,13 @@ export function fileSuggestionsIntroAndExamples(): ClaudeMessage[] {
 	return [
 		{
 			role: "user",
-			content: `<CodebaseSummary> will contain a summary of some of the files in the user's codebase.
+			content: `<codebase_summary> will contain a summary of some of the files in the user's codebase.
   <Message> will contain a message from the user containing a question or instruction about editing their code.
 
 Please respond with <FileSuggestions>, a list of *existing* files whose contents it would be necessary to see in
 order to accurately respond to the user. If a file might be helpful but not necessary, don't include it.
 
-<CodebaseSummary>
+<codebase_summary>
 ${fs.readFileSync(
 				path.join(__dirname, "..", "static", "repo_map_example.txt"),
 				"utf8"
@@ -94,7 +94,7 @@ Can you add a sheep class?
 		},
 		{
 			role: "user",
-			content: `<CodebaseSummary>
+			content: `<codebase_summary>
 ${fs.readFileSync(
 				path.join(__dirname, "..", "static", "repo_map_example.txt"),
 				"utf8"

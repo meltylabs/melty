@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -6,6 +6,7 @@ import { RpcClient } from "../RpcClient";
 import { Joule, JouleHumanChat, JouleBotChat, JouleBotCode } from "../types";
 import CopyButton from "./CopyButton";
 import DiffContent from "./DiffContent";
+import { MeltyConfigContext } from '@/MeltyConfig';
 
 export function JouleComponent({
 	joule,
@@ -19,6 +20,8 @@ export function JouleComponent({
 	showUndo?: boolean;
 	showDiff?: boolean;
 }) {
+	const meltyConfig = useContext(MeltyConfigContext);
+
 	const rpcClient = RpcClient.getInstance();
 
 	const [undoClicked, setUndoClicked] = useState(false);
@@ -104,6 +107,21 @@ export function JouleComponent({
 		/>
 	};
 
+	function copyExecInfo(joule: JouleBotChat | JouleBotCode) {
+		const execInfoFormat = `
+rawInput
+======
+SYSTEM: ${joule.botExecInfo.rawInput.system}
+
+${joule.botExecInfo.rawInput.messages.map(m => `${m.role}: ${m.content}`).join("\n\n")}
+======
+rawOutput
+======
+${joule.botExecInfo.rawOutput}
+======`;
+		navigator.clipboard.writeText(execInfoFormat)
+	}
+
 	switch (joule.jouleType) {
 		case 'HumanChat':
 			return (
@@ -141,6 +159,8 @@ export function JouleComponent({
 						<div className="flex">
 							<div className="w-[40%] pr-4 overflow-auto h-full">
 								{renderMessageContent(joule)}
+								{meltyConfig.debugMode &&
+									<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>}
 							</div>
 							<div className="w-[60%] overflow-auto h-full">
 								{renderDiffContent(joule as JouleBotCode)}
@@ -149,16 +169,10 @@ export function JouleComponent({
 					) : (
 						<div className="w-full pr-4 overflow-auto h-full">
 							{renderMessageContent(joule)}
+							{meltyConfig.debugMode &&
+								<button onClick={() => copyExecInfo(joule)}>Copy exec info</button>}
 						</div>
 					)}
-					{/* <div className={(shouldShowDiff(joule) ? "w-[40%]" : "w-full") + " pr-4 overflow-auto h-full"}>
-						{renderMessageContent(joule)}
-					</div>
-					{shouldShowDiff(joule) && (
-						<div className="w-[60%] overflow-auto h-full">
-							{renderDiffContent(joule as JouleBotCode)}
-						</div>
-					)} */}
 				</div>
 			);
 

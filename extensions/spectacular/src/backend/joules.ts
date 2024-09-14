@@ -82,14 +82,23 @@ export function createJouleBotCode(
 	};
 }
 
-export function encodeJouleForClaude(joule: Joule): ClaudeMessage {
+export function encodeJouleForClaude(joule: Joule): ClaudeMessage | null {
 	// note that if we show a processed message, we'll need to use `message.length ? message : "..."`
 	// to ensure no Anthropic API errors
 	switch (joule.jouleType) {
 		case "HumanChat":
-			return { role: "user", content: joule.message };
+			const diffPreviewUntruncated = joule.codeInfo?.diffInfo?.diffPreview || null;
+			const diffPreview = diffPreviewUntruncated !== null && diffPreviewUntruncated.length > 10000
+				? "[Changes too long to summarize, diff unavailable.]"
+				: diffPreviewUntruncated;
+			return {
+				role: "user",
+				content: `${diffPreview
+					? `<user_updated_code>${diffPreview}</user_updated_code>`
+					: ""} ${joule.message}`,
+			};
 		case "HumanConfirmCode":
-			return { role: "user", content: joule.confirmed ? "[user confirmed okay to proceed]" : "[user declined to proceed]" };
+			return joule.confirmed ? null : { role: "user", content: "[user declined to proceed]" };
 		case "BotChat":
 			return { role: "assistant", content: joule.botExecInfo.rawOutput };
 		case "BotCode":
