@@ -7,7 +7,6 @@ const jokes = [
   "Why do Java developers wear glasses? Because they don't C#!",
   "What's a programmer's favorite hangout spot? The Foo Bar!",
   "Why was the JavaScript developer sad? Because he didn't Node how to Express himself!",
-  "Why am I such a cool programmer? Because I use Melty!"
 ];
 
 export function RandomJoke() {
