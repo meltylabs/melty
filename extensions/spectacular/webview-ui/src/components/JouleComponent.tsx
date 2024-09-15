@@ -21,10 +21,6 @@ export function JouleComponent({
 	isLatestCommit,
 	showDiff = true,
 }: IJouleComponentProps) {
-	console.log("rendering some joule");
-	if (joule.jouleType === "HumanChat" || joule.jouleType === "BotCode" || joule.jouleType === "BotChat") {
-		console.log("rendering joule", joule.message);
-	}
 	const meltyConfig = useContext(MeltyConfigContext);
 
 	const rpcClient = RpcClient.getInstance();
