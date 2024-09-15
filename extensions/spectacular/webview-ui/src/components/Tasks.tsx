@@ -346,6 +346,7 @@ export function Tasks({
 						meltyMindFilePaths={meltyMindFilePaths}
 						onFileSelect={handleAddFile}
 						onFileDrop={handleDropFile}
+						stopEscapePropagation
 					/>
 					<form onSubmit={handleSubmit}>
 						<div className="mt-4 relative">

@@ -348,6 +348,7 @@ export function ConversationView() {
 					workspaceFilePaths={workspaceFiles}
 					onFileSelect={handleAddFile}
 					onFileDrop={handleDropFile}
+					stopEscapePropagation
 				/>
 			</div>
 			<div
