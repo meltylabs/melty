@@ -12,6 +12,7 @@ interface PopoverSearchProps {
 	onFileDrop: (file: string) => void;
 	isOpen: boolean;
 	setIsOpen: (open: boolean) => void;
+	stopEscapePropagation?: boolean;
 }
 
 // Helper function to extract file name from path
@@ -27,6 +28,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 	onFileDrop,
 	isOpen,
 	setIsOpen,
+	stopEscapePropagation
 }) => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredFiles, setFilteredFiles] = useState<FuseResult<string>[]>(
@@ -135,7 +137,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
           Search Files
         </Button>
       </DialogTrigger> */}
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-[425px]" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
 				<div className="p-0">
 					<Input
 						ref={inputRef}
