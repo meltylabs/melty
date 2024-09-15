@@ -1,6 +1,7 @@
 {
   "name": "melty-dev",
   "version": "1.94.0",
+  "updateUrl": "https://melty-update-api.vercel.app",
   "distro": "c0357b8e2d9b4097c8f05b64762247bbbd57ad77",
   "author": {
     "name": "Melty, Inc"
