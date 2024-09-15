@@ -67,7 +67,7 @@ const Diff2HtmlComponent: React.FC<Diff2HtmlProps> = ({ diff }) => {
 				synchronisedScroll: true,
 				highlight: true,
 				renderNothingWhenEmpty: false,
-				colorScheme: "light"
+				colorScheme: "auto"
 
 			};
 
