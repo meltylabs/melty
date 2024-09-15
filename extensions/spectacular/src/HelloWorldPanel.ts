@@ -340,7 +340,7 @@ export class HelloWorldPanel implements WebviewViewProvider {
 			// 	{ uri: newFolderUri }
 			// );
 
-			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false)
+			const openResult: any = await vscode.commands.executeCommand('vscode.openFolder', newFolderUri, false);
 			return openResult === undefined;
 		} else {
 			return false;
