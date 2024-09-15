@@ -1,4 +1,5 @@
 {
+	"updateUrl": "https://melty-update-api.vercel.app",
 	"extensionsGallery": {
 		"serviceUrl": "https://open-vsx.org/vscode/gallery",
 		"itemUrl": "https://open-vsx.org/vscode/item"
