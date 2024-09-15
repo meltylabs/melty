@@ -15,7 +15,7 @@ import { RpcClient } from "@/RpcClient";
 import { JouleComponent, IJouleComponentProps } from "./JouleComponent";
 import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
-import { DehydratedTask, nextJouleType, Joule } from "types";
+import { DehydratedTask, nextJouleType, Joule } from "@/types";
 import { useNavigate } from "react-router-dom";
 
 /**
