@@ -8,18 +8,19 @@ import CopyButton from "./CopyButton";
 import DiffContent from "./DiffContent";
 import { MeltyConfigContext } from '@/MeltyConfig';
 
+export interface IJouleComponentProps {
+	joule: Joule;
+	isPartial?: boolean;
+	isLatestCommit: boolean;
+	showDiff?: boolean;
+}
+
 export function JouleComponent({
 	joule,
 	isPartial = false,
 	isLatestCommit,
 	showDiff = true,
-}: {
-	joule: Joule;
-	isPartial?: boolean;
-	isLatestCommit: boolean;
-	showUndo?: boolean;
-	showDiff?: boolean;
-}) {
+}: IJouleComponentProps) {
 	const meltyConfig = useContext(MeltyConfigContext);
 
 	const rpcClient = RpcClient.getInstance();

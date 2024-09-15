@@ -12,13 +12,37 @@ import { FastFilePicker } from "./FastFilePicker";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { Button } from './ui/button'
 import { RpcClient } from "@/RpcClient";
-import { JouleComponent } from "./JouleComponent";
+import { JouleComponent, IJouleComponentProps } from "./JouleComponent";
 import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
-import { DehydratedTask, nextJouleType } from "../types";
+import { DehydratedTask, nextJouleType, Joule } from "@/types";
 import { useNavigate } from "react-router-dom";
 
-const MemoizedJouleComponent = memo(JouleComponent);
+/**
+ * If Joules are not deeply equal, returns false
+ * If they are deeply equal, usually returns true (but not guaranteed)
+ */
+function joulesEq(joule1: Joule, joule2: Joule) {
+	if (Object.is(joule1, joule2)) {
+		return true;
+	} else if (joule1.jouleState !== "partial" && joule2.jouleState !== "partial") {
+		return joule1.id == joule2.id;
+	} else {
+		// they might still be the same
+		return false;
+	}
+}
+
+const MemoizedJouleComponent = memo(JouleComponent,
+	(props1: IJouleComponentProps, props2: IJouleComponentProps) => {
+		// note coupling to IJouleComponentProps definition
+		// using this custom comparator so that we can compare joules by id
+		return props1.isLatestCommit == props2.isLatestCommit
+			&& props1.isPartial == props2.isPartial
+			&& props1.showDiff == props2.showDiff
+			&& joulesEq(props1.joule, props2.joule);
+	}
+);
 const rpcClient = RpcClient.getInstance();
 
 export function ConversationView() {
