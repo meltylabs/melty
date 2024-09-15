@@ -288,7 +288,7 @@ export function ConversationView() {
 				event.preventDefault();
 				event.stopPropagation();
 				handleBack();
-			} else if ((event.metaKey || event.ctrlKey) && event.key === 'y') {
+			} else if (event.key === 'Tab') {
 				if (conversationState() === "HumanConfirmCode") {
 					event.preventDefault();
 					event.stopPropagation();
@@ -397,7 +397,7 @@ export function ConversationView() {
 						<Button onClick={handleConfirmCodeYes} className="mr-2 flex items-center">
 							Confirm
 							<kbd className="ml-1.5 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-								⌘Y
+								tab
 							</kbd>
 						</Button>
 						<Button variant="outline" onClick={handleConfirmCodeNo} className="flex items-center">
