@@ -1,4 +1,6 @@
-# Melty, an open source AI code editor for 10x engineers
+# Melty is an AI code editor where every chat message is a git commit
+
+Revert, branch, reset, and squash your chats. Melty stays in sync with you like a pair programmer so you never have to explain what you’re doing.
 
 [Melty](https://melty.sh) is the first AI code editor that's aware of what you're doing from the terminal to GitHub, and collaborates with you to write production-ready code.
 [Download the packaged version ->](https://docs.google.com/forms/d/e/1FAIpQLSc6uBe0ea26q7Iq0Co_q5fjW2nypUl8G_Is5M_6t8n7wZHuPA/viewform)
