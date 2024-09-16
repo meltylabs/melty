@@ -57,4 +57,4 @@ Solution: run yarn watch
 
 ## Doesn't open, then says "check launch.json" or something like that
 
-Solution ???
+Solution: restart everything?
