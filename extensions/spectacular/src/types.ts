@@ -87,7 +87,7 @@ export type DehydratedTask = {
 };
 
 export type ContextPaths = {
-	readonly paths: string[];
+	readonly relativePaths: string[];
 	meltyRoot: string;
 };
 
