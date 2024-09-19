@@ -196,11 +196,7 @@ export class Task {
 				}
 				const newJoule = await responder(
 					this.conversation,
-					{
-						// TODOREFACTOR use ContextPaths object up the chain
-						paths: await this._fileManager.getMeltyMindFilesRelative(),
-						meltyRoot: this._gitManager.getMeltyRoot()
-					},
+					await this._fileManager.getContextPaths(),
 					sendPartialJoule,
 					cancellationToken
 				);

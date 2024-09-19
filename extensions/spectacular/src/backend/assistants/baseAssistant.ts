@@ -59,7 +59,7 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 ${repoMapString ? repoMapString : "[No file summaries available.]"}
 </codebase_summary>`;
 
-		const fileContents = contextPaths.paths
+		const fileContents = contextPaths.relativePaths
 			.map((path) => this.encodeFile(path, contextPaths.meltyRoot))
 			.join("\n");
 

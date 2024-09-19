@@ -3,8 +3,8 @@ import * as config from "../util/config";
 import * as path from "path";
 import * as fs from "fs/promises";
 import { WebviewNotifier } from "./WebviewNotifier";
-import { MeltyExtension } from 'extension';
 import { GitManager } from 'services/GitManager';
+import { ContextPaths } from 'types';
 
 const webviewNotifier = WebviewNotifier.getInstance();
 
@@ -140,12 +140,13 @@ export class FileManager {
 		);
 	}
 
-	/**
-	 * WARNING - does not update the file list.
-	 */
-	public async getMeltyMindFilesRelativeFast(): Promise<string[]> {
+	public async getContextPaths(): Promise<ContextPaths> {
 		await this.ensureInitialized();
-		return Array.from(this.meltyMindFiles);
+		await this.pruneFiles();
+		return {
+			relativePaths: Array.from(this.meltyMindFiles),
+			meltyRoot: this._gitManager.getMeltyRoot(),
+		};
 	}
 
 	public async getMeltyMindFilesRelative(): Promise<string[]> {
@@ -171,7 +172,7 @@ export class FileManager {
 		this.meltyMindFiles.add(relPath);
 		if (notify) {
 			webviewNotifier.sendNotification("updateMeltyMindFiles", {
-				files: await this.getMeltyMindFilesRelative(),
+				files: await this.getContextPaths().relativePaths,
 			});
 		}
 	}

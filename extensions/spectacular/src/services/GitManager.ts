@@ -255,9 +255,6 @@ export class GitManager {
 		}
 	}
 
-	/**
-	 * TODOREFACTOR can we replace with this? this.repo!.sitory.state.HEAD!.commit;
-	 */
 	public getLatestCommitHash(): string | undefined {
 		try {
 			this.checkInit();

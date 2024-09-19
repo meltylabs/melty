@@ -24,7 +24,7 @@ export function createJouleError(errorMessage: string): JouleBotChat {
 			rawOutput: "[error encountered]",
 			contextPaths: {
 				meltyRoot: '',
-				paths: []
+				relativePaths: []
 			},
 		},
 		"error",
