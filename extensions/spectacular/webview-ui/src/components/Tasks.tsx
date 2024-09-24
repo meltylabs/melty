@@ -356,7 +356,7 @@ export function Tasks({
 								value={messageText}
 								onChange={(e) => setMessageText(e.target.value)}
 								onKeyDown={handleKeyDown}
-								className="flex-grow p-3 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
+								className="flex-grow p-3 focus-visible:ring-0 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
 								ref={textareaRef}
 								autoFocus={true}
 								required

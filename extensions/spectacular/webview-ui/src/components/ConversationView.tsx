@@ -8,12 +8,10 @@ import {
 	LoaderCircle,
 } from "lucide-react";
 import posthog from "posthog-js";
-import { FastFilePicker } from "./FastFilePicker";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { Button } from './ui/button'
 import { RpcClient } from "@/RpcClient";
 import { JouleComponent, IJouleComponentProps } from "./JouleComponent";
-import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
 import { DehydratedTask, nextJouleType, Joule } from "@/types";
 import { useNavigate } from "react-router-dom";
@@ -158,23 +156,39 @@ export function ConversationView() {
 	const checkScrollPosition = () => {
 		if (conversationRef.current) {
 			const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
-			const isNearBottom = scrollHeight - scrollTop - clientHeight < 25;
+			const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
 			setIsAtBottom(isNearBottom);
 		}
 	};
 
 	const scrollToBottom = useCallback(() => {
-		if (conversationRef.current) {
-			conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+		if (conversationRef.current && isAtBottom) {
+			const { scrollHeight, clientHeight } = conversationRef.current;
+			const newScrollTop = scrollHeight - clientHeight;
+			conversationRef.current.scrollTo({
+				top: newScrollTop,
+				behavior: 'smooth'
+			});
+			console.log('Scrolling to bottom:', { scrollHeight, clientHeight, newScrollTop });
+
+			// Check scroll position after a short delay to ensure scrolling has completed
+			setTimeout(() => {
+				console.log('Scroll position after scrolling:', {
+					actualScrollTop: conversationRef.current?.scrollTop,
+					scrollHeight: conversationRef.current?.scrollHeight,
+					clientHeight: conversationRef.current?.clientHeight
+				});
+				checkScrollPosition();
+			}, 100);
 		}
-		checkScrollPosition();
-	}, []);
+	}, [isAtBottom]);
 
 	useEffect(() => {
+		console.log('Task or conversation updated, checking if scroll to bottom is needed');
 		if (isAtBottom) {
 			scrollToBottom();
 		}
-	}, [isAtBottom, scrollToBottom]);
+	}, [task, scrollToBottom, isAtBottom]);
 
 	useEffect(() => {
 		const conversationElement = conversationRef.current;
@@ -436,7 +450,7 @@ export function ConversationView() {
 							handleDropFile={handleDropFile}
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12 relative focus-visible:ring-1 max-h-[30vh] overflow-y-auto"
+							className="p-3 pr-12 pb-12 relative focus-visible:ring-0 max-h-[30vh] overflow-y-auto"
 							ref={inputRef}
 							required
 							value={messageText}
@@ -457,12 +471,6 @@ export function ConversationView() {
 								>
 									<ArrowUp className="h-3 w-3" />
 								</button>
-							</div>
-						)}
-
-						{task && (
-							<div className="absolute left-2 bottom-2 border-gray-300 px-2 py-1 rounded">
-								{strings.getTaskModeName(task.taskMode)}
 							</div>
 						)}
 
