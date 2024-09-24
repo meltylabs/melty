@@ -8,12 +8,10 @@ import {
 	LoaderCircle,
 } from "lucide-react";
 import posthog from "posthog-js";
-import { FastFilePicker } from "./FastFilePicker";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { Button } from './ui/button'
 import { RpcClient } from "@/RpcClient";
 import { JouleComponent, IJouleComponentProps } from "./JouleComponent";
-import * as strings from "@/utilities/strings";
 import { EventManager } from '@/eventManager';
 import { DehydratedTask, nextJouleType, Joule } from "@/types";
 import { useNavigate } from "react-router-dom";
@@ -210,6 +208,22 @@ export function ConversationView() {
 			setNonInitialHumanJouleInFlight(false);
 		}
 		setTask(task);
+	}, []);
+
+	// If the user presses escape, focus the input
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				event.preventDefault();
+				inputRef.current?.focus();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			window.removeEventListener('keydown', handleKeyDown);
+		};
 	}, []);
 
 	// Initialization. Everything in here must be wrapped in useCallback.
@@ -457,12 +471,6 @@ export function ConversationView() {
 								>
 									<ArrowUp className="h-3 w-3" />
 								</button>
-							</div>
-						)}
-
-						{task && (
-							<div className="absolute left-2 bottom-2 border-gray-300 px-2 py-1 rounded">
-								{strings.getTaskModeName(task.taskMode)}
 							</div>
 						)}
 
