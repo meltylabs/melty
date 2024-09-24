@@ -41,4 +41,3 @@ const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTexta
 );
 
 export default AutoExpandingTextarea;
-

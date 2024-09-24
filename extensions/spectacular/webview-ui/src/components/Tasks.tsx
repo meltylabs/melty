@@ -343,17 +343,18 @@ export function Tasks({
 						</div>
 			) : (
 				<>
-					<FastFilePicker
-						isOpen={pickerOpen}
-						setIsOpen={setPickerOpen}
-						workspaceFilePaths={workspaceFilePaths}
-						meltyMindFilePaths={meltyMindFilePaths}
-						onFileSelect={handleAddFile}
-						onFileDrop={handleDropFile}
-						stopEscapePropagation
-					/>
+
 					<form onSubmit={handleSubmit}>
 						<div className="mt-4 relative">
+							<FastFilePicker
+								isOpen={pickerOpen}
+								setIsOpen={setPickerOpen}
+								workspaceFilePaths={workspaceFilePaths}
+								meltyMindFilePaths={meltyMindFilePaths}
+								onFileSelect={handleAddFile}
+								onFileDrop={handleDropFile}
+								stopEscapePropagation
+							/>
 							<AutoExpandingTextarea
 								placeholder="What are you trying to do?"
 								value={messageText}

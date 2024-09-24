@@ -365,15 +365,7 @@ export function ConversationView() {
 					</div>
 				)}
 
-				<FastFilePicker
-					isOpen={pickerOpen}
-					setIsOpen={setPickerOpen}
-					meltyMindFilePaths={meltyFiles}
-					workspaceFilePaths={workspaceFiles}
-					onFileSelect={handleAddFile}
-					onFileDrop={handleDropFile}
-					stopEscapePropagation
-				/>
+
 			</div>
 			<div
 				className="flex-1 mb-4 rounded overflow-y-auto"
@@ -445,6 +437,16 @@ export function ConversationView() {
 							onChange={(e) => setMessageText(e.target.value)}
 							onKeyDown={handleTextareaKeyDown}
 							autoFocus={true}
+						/>
+
+						<FastFilePicker
+							isOpen={pickerOpen}
+							setIsOpen={setPickerOpen}
+							meltyMindFilePaths={meltyFiles}
+							workspaceFilePaths={workspaceFiles}
+							onFileSelect={handleAddFile}
+							onFileDrop={handleDropFile}
+							stopEscapePropagation
 						/>
 
 						{messageText.trim() !== "" && (

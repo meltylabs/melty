@@ -132,7 +132,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 
 	return (
 		<FileDialog open={isOpen} onOpenChange={setIsOpen}>
-			<FileDialogContent className="sm:max-w-[425px]" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
+			<FileDialogContent onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
 				<div className="p-0">
 					<Input
 						ref={inputRef}
