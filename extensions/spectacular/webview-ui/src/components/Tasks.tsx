@@ -30,7 +30,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
 import * as strings from "@/utilities/strings";
-import { FastFilePicker } from "./FastFilePicker";
 import { EventManager } from "@/eventManager";
 
 // Utility function to format the date
@@ -346,16 +345,13 @@ export function Tasks({
 
 					<form onSubmit={handleSubmit}>
 						<div className="mt-4 relative">
-							<FastFilePicker
-								isOpen={pickerOpen}
-								setIsOpen={setPickerOpen}
+							<AutoExpandingTextarea
+								pickerOpen={pickerOpen}
+								setPickerOpen={setPickerOpen}
 								workspaceFilePaths={workspaceFilePaths}
 								meltyMindFilePaths={meltyMindFilePaths}
-								onFileSelect={handleAddFile}
-								onFileDrop={handleDropFile}
-								stopEscapePropagation
-							/>
-							<AutoExpandingTextarea
+								handleAddFile={handleAddFile}
+								handleDropFile={handleDropFile}
 								placeholder="What are you trying to do?"
 								value={messageText}
 								onChange={(e) => setMessageText(e.target.value)}
