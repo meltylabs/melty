@@ -2,30 +2,7 @@
 
 Hi there! Welcome to the project. We're glad you're here.
 
-# To initialize
-
-> yarn
-> git submodule init
-
-# To run
-
-> yarn && yarn watch (takes a minute or so)
-> Build with cmd+shift+b (or go to command palette and run build task)
-> ./scripts/code.sh
-
-# To install latest spectacular
-
-> ./scripts/build-spectacular.sh
-
-# To package
-
-> yarn gulp vscode-darwin-arm64
-
-# VSCode contribution instructions
-
-https://github.com/microsoft/vscode/wiki/How-to-Contribute
-
-# How to do React
+# amateur's guide to react
 
 1. Wrap rpc calls in useCallback. This one should not have empty dependency array (but don't omit it entirely, or it will run on every render!)
 2. The useCallback result is a function. Assign it to a constant
