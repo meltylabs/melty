@@ -54,7 +54,3 @@ Solution: restart vscode
 ## A javascript error occurred in the main process
 
 Solution: run yarn watch
-
-## Doesn't open, then says "check launch.json" or something like that
-
-Solution ???
