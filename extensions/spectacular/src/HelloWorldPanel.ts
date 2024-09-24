@@ -422,7 +422,10 @@ export class HelloWorldPanel implements WebviewViewProvider {
 	}
 
 	private async rpcDeleteTask(taskId: string): Promise<void> {
-		await this._taskManager.delete(taskId);
+		const err = await this._taskManager.delete(taskId);
+		if (err) {
+			vscode.window.showErrorMessage("Error deleting task: " + err);
+		}
 	}
 
 	private async rpcGetGitConfigErrors(): Promise<string> {
