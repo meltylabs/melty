@@ -205,7 +205,8 @@ export class GitManager {
 
 
 	public getMeltyRoot(): string {
-		return this.workspaceRoot!;
+		const customRoot = vscode.workspace.getConfiguration().get('melty.root');
+		return customRoot || this.workspaceRoot!;
 	}
 
 	public getMeltyRemote(): { fetchUrl: string, pushUrl: string } | null {

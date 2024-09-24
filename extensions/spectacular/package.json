@@ -104,7 +104,11 @@
           "items": {
             "type": "string"
           },
-          "description": ""
+          "description": "Glob patterns to include in Melty's file watching and processing. These patterns take precedence over excludes."
+        },
+        "melty.root": {
+          "type": "string",
+          "description": "Specify a custom root directory for Melty to work with. If not set, the workspace root will be used."
         },
         "melty.storageDirectory": {
           "type": "string",
