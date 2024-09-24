@@ -19,7 +19,7 @@ const FileDialogOverlay = React.forwardRef<
 	<DialogPrimitive.Overlay
 		ref={ref}
 		className={cn(
-			"absolute top-2 left-2",
+			"",
 			className
 		)}
 		{...props}
@@ -32,11 +32,11 @@ const FileDialogContent = React.forwardRef<
 	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
 	<FileDialogPortal>
-		{/* <FileDialogOverlay /> */}
+		<FileDialogOverlay />
 		<DialogPrimitive.Content
 			ref={ref}
 			className={cn(
-				"absolute top-2 rounded-md z-50 grid w-full max-w-lg gap-4 border bg-background p-2 shadow-lg",
+				"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md z-50 grid w-full max-w-lg gap-4 border bg-background p-2 shadow-lg",
 				className
 			)}
 			{...props}

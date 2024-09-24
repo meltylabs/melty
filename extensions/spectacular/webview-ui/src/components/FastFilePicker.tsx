@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { FileDialog, FileDialogContent, FileDialogTrigger } from "./ui/fileDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { FixedSizeList as List } from "react-window";
@@ -131,9 +131,14 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 	}, [isOpen, setIsOpen]);
 
 	return (
-		<FileDialog open={isOpen} onOpenChange={setIsOpen}>
-			<FileDialogContent onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
-				<div className="p-0">
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
+			<PopoverTrigger asChild>
+				<div className="w-0 h-0 overflow-hidden">
+					<Button variant="outline">Select File...</Button>
+				</div>
+			</PopoverTrigger>
+			<PopoverContent className="w-[400px] ml-2 p-0" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
+				<div className="p-2">
 					<Input
 						ref={inputRef}
 						placeholder="Type a filename..."
@@ -155,7 +160,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 				) : (
 					<div className="p-4 text-center text-gray-500">No files found</div>
 				)}
-			</FileDialogContent>
-		</FileDialog>
+			</PopoverContent>
+		</Popover>
 	);
 };

@@ -445,16 +445,6 @@ export function ConversationView() {
 							autoFocus={true}
 						/>
 
-						<FastFilePicker
-							isOpen={pickerOpen}
-							setIsOpen={setPickerOpen}
-							meltyMindFilePaths={meltyFiles}
-							workspaceFilePaths={workspaceFiles}
-							onFileSelect={handleAddFile}
-							onFileDrop={handleDropFile}
-							stopEscapePropagation
-						/>
-
 						{messageText.trim() !== "" && (
 							<div
 								className={`absolute right-2 top-2 transition-opacity duration-300 ${messageText.trim() !== "" ? "opacity-100" : "opacity-0"
