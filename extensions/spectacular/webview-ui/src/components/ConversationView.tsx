@@ -157,7 +157,7 @@ export function ConversationView() {
 		if (conversationRef.current) {
 			const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
 			// Set an absurdly large threshold for testing
-			const isNearBottom = scrollHeight - scrollTop - clientHeight < 10000;
+			const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
 			setIsAtBottom(isNearBottom);
 			console.log('Scroll check:', { scrollTop, scrollHeight, clientHeight, isNearBottom });
 		}
@@ -172,10 +172,10 @@ export function ConversationView() {
 				behavior: 'smooth'
 			});
 			console.log('Scrolling to bottom:', { scrollHeight, clientHeight, newScrollTop });
-			
+
 			// Check scroll position after a short delay to ensure scrolling has completed
 			setTimeout(() => {
-				console.log('Scroll position after scrolling:', { 
+				console.log('Scroll position after scrolling:', {
 					actualScrollTop: conversationRef.current?.scrollTop,
 					scrollHeight: conversationRef.current?.scrollHeight,
 					clientHeight: conversationRef.current?.clientHeight
