@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { HelloWorldPanel } from "./HelloWorldPanel";
 import { generateTodoFromCurrentPR } from "./todoGenerator";
 import { GitManager } from "./services/GitManager";
+import { MeltycatService } from './services/meltycat';
 
 import posthog from "posthog-js";
 import { TaskManager } from './services/TaskManager';
@@ -21,7 +22,8 @@ export class MeltyExtension {
 		private context: vscode.ExtensionContext,
 		outputChannel: vscode.OutputChannel,
 		private readonly _gitManager: GitManager = GitManager.getInstance(),
-		private readonly _taskManager: TaskManager = TaskManager.getInstance()
+		private readonly _taskManager: TaskManager = TaskManager.getInstance(),
+		private readonly _meltycatService: MeltycatService = MeltycatService.getInstance()
 	) {
 		this.outputChannel = outputChannel;
 	}
@@ -34,6 +36,8 @@ export class MeltyExtension {
 		outputChannel.appendLine("Melty activation started");
 
 		this._taskManager.loadTasks();
+
+		// this._meltycatService.start();
 
 		// Start the branch check interval
 		// this.branchCheckInterval = setInterval(
