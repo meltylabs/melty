@@ -349,7 +349,7 @@ export function ConversationView() {
 	}, [handleBack, handleConfirmCodeYes, handleConfirmCodeNo, conversationState]);
 
 	return (
-		<div className="flex flex-col h-[calc(100vh-1rem)] overflow-hidden">
+		<div className="flex -mt-2 flex-col h-[calc(100vh-1rem)] overflow-hidden">
 			<div className="mt-2 flex flex-col">
 				{!isAtBottom && (
 					<button

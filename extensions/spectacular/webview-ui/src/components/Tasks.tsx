@@ -17,7 +17,7 @@ import { MouseEvent, KeyboardEvent } from "react";
 import Ascii from "./Ascii";
 import OnboardingSection from './OnboardingSection';
 import "diff2html/bundles/css/diff2html.min.css";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { DehydratedTask, TaskMode, AssistantInfo } from "../types";
 import {
@@ -342,6 +342,11 @@ export function Tasks({
 						</div>
 			) : (
 				<>
+					<Link to="/">
+						<h1 className="text-3xl font-extrabold tracking-tighter text-center">
+							melty
+						</h1>
+					</Link>
 
 					<form onSubmit={handleSubmit}>
 						<div className="mt-4 relative">

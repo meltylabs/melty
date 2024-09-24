@@ -56,7 +56,7 @@ function AppContent() {
 	return (
 		<MeltyConfigProvider>
 			<main className={theme === 'dark' ? 'dark' : ''}>
-				{!showOnboarding && !isTaskRoute && <NavBar />}
+				<NavBar />
 				<div className="bg-background text-foreground px-4">
 					<Routes>
 						<Route
