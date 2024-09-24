@@ -165,7 +165,9 @@ export function ConversationView() {
 
 	const scrollToBottom = useCallback(() => {
 		if (conversationRef.current) {
-			conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+			const { scrollHeight, clientHeight } = conversationRef.current;
+			conversationRef.current.scrollTop = scrollHeight - clientHeight;
+			console.log('Scrolling to bottom:', { scrollHeight, clientHeight, newScrollTop: scrollHeight - clientHeight });
 		}
 		checkScrollPosition();
 	}, []);
