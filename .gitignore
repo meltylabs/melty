@@ -23,4 +23,5 @@ product.overrides.json
 .vscode-test
 .aider*
 /dist
-./melty
+melty
+**/.meltycat
