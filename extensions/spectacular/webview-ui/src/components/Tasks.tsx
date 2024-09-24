@@ -132,6 +132,10 @@ export function Tasks({
 			e.preventDefault(); // Prevent link navigation
 			e.stopPropagation(); // Prevent event bubbling
 			try {
+				// make the ui change immediately
+				setTasks(prevTasks => prevTasks.filter((task) => task.id !== taskId));
+
+				// try to delete on the backend. if this isn't successful, task will reappear
 				await rpcClient.run("deleteTask", { taskId });
 				await fetchTasks();
 				console.log("Task deleted successfully");
