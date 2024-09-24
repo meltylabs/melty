@@ -164,7 +164,7 @@ export function ConversationView() {
 	};
 
 	const scrollToBottom = useCallback(() => {
-		if (conversationRef.current) {
+		if (conversationRef.current && isAtBottom) {
 			const { scrollHeight, clientHeight } = conversationRef.current;
 			const newScrollTop = scrollHeight - clientHeight;
 			conversationRef.current.scrollTo({
@@ -183,19 +183,14 @@ export function ConversationView() {
 				checkScrollPosition();
 			}, 100);
 		}
-	}, []);
+	}, [isAtBottom]);
 
 	useEffect(() => {
-		console.log('isAtBottom changed:', isAtBottom);
+		console.log('Task or conversation updated, checking if scroll to bottom is needed');
 		if (isAtBottom) {
 			scrollToBottom();
 		}
-	}, [isAtBottom, scrollToBottom]);
-
-	useEffect(() => {
-		console.log('Task or conversation updated, scrolling to bottom');
-		scrollToBottom();
-	}, [task, scrollToBottom]);
+	}, [task, scrollToBottom, isAtBottom]);
 
 	useEffect(() => {
 		const conversationElement = conversationRef.current;
