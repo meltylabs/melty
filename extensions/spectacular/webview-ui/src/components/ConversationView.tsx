@@ -156,7 +156,8 @@ export function ConversationView() {
 	const checkScrollPosition = () => {
 		if (conversationRef.current) {
 			const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
-			const isNearBottom = scrollHeight - scrollTop - clientHeight < 25;
+			// Increased threshold to 100px, considering the large autoexpanding textarea
+			const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
 			setIsAtBottom(isNearBottom);
 		}
 	};
