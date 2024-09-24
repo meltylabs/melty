@@ -137,7 +137,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 					<Button variant="outline">Select File...</Button>
 				</div>
 			</PopoverTrigger>
-			<PopoverContent className="w-[400px] ml-2 p-0" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
+			<PopoverContent className="w-[600px] text-[12px] ml-2 p-0" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
 				<div className="p-2">
 					<Input
 						ref={inputRef}
