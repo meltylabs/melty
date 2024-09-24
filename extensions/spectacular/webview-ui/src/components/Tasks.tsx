@@ -377,28 +377,6 @@ export function Tasks({
 								)}
 							</div>
 
-							<div className="absolute left-2 bottom-2">
-								<Select
-									name="taskMode"
-									defaultValue="coder"
-									onValueChange={(value: TaskMode) =>
-										fetchAssistantDescription(value)
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select an assistant" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="coder">
-											{strings.getTaskModeName("coder")}
-										</SelectItem>
-										<SelectItem value="vanilla">
-											{strings.getTaskModeName("vanilla")}
-										</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-
 							<div className="absolute right-2 bottom-2">
 								<AddFileButton keyboardShortcut="@" />
 							</div>
