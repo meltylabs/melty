@@ -159,7 +159,7 @@ export class MeltyPart extends Part {
 		container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
 		// container.style.borderRadius = '20px';
 		container.style.backgroundColor = 'white';
-		container.style.zIndex = '100';
+		container.style.zIndex = '1000';
 
 		// Add faster bounce animation
 		container.style.animation = 'meltyBounceIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
