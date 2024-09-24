@@ -365,15 +365,7 @@ export function ConversationView() {
 					</div>
 				)}
 
-				<FastFilePicker
-					isOpen={pickerOpen}
-					setIsOpen={setPickerOpen}
-					meltyMindFilePaths={meltyFiles}
-					workspaceFilePaths={workspaceFiles}
-					onFileSelect={handleAddFile}
-					onFileDrop={handleDropFile}
-					stopEscapePropagation
-				/>
+
 			</div>
 			<div
 				className="flex-1 mb-4 rounded overflow-y-auto"
@@ -436,9 +428,15 @@ export function ConversationView() {
 				<form onSubmit={handleSubmit}>
 					<div className="mt-4 relative">
 						<AutoExpandingTextarea
+							pickerOpen={pickerOpen}
+							setPickerOpen={setPickerOpen}
+							workspaceFilePaths={workspaceFiles}
+							meltyMindFilePaths={meltyFiles}
+							handleAddFile={handleAddFile}
+							handleDropFile={handleDropFile}
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12 focus-visible:ring-1 max-h-[30vh] overflow-y-auto"
+							className="p-3 pr-12 pb-12 relative focus-visible:ring-1 max-h-[30vh] overflow-y-auto"
 							ref={inputRef}
 							required
 							value={messageText}

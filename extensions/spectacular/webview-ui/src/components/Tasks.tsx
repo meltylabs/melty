@@ -30,7 +30,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
 import * as strings from "@/utilities/strings";
-import { FastFilePicker } from "./FastFilePicker";
 import { EventManager } from "@/eventManager";
 
 // Utility function to format the date
@@ -343,18 +342,16 @@ export function Tasks({
 						</div>
 			) : (
 				<>
-					<FastFilePicker
-						isOpen={pickerOpen}
-						setIsOpen={setPickerOpen}
-						workspaceFilePaths={workspaceFilePaths}
-						meltyMindFilePaths={meltyMindFilePaths}
-						onFileSelect={handleAddFile}
-						onFileDrop={handleDropFile}
-						stopEscapePropagation
-					/>
+
 					<form onSubmit={handleSubmit}>
 						<div className="mt-4 relative">
 							<AutoExpandingTextarea
+								pickerOpen={pickerOpen}
+								setPickerOpen={setPickerOpen}
+								workspaceFilePaths={workspaceFilePaths}
+								meltyMindFilePaths={meltyMindFilePaths}
+								handleAddFile={handleAddFile}
+								handleDropFile={handleDropFile}
 								placeholder="What are you trying to do?"
 								value={messageText}
 								onChange={(e) => setMessageText(e.target.value)}
@@ -392,41 +389,36 @@ export function Tasks({
 										className="text-muted-foreground"
 									>
 										<CircleHelp className="h-3 w-3 mr-1" />
-										What can Melty see?
 									</Button>
 								</PopoverTrigger>
 								<PopoverContent>
 									<div className="space-y-2 text-muted-foreground">
-										<p>
-											Melty is in {currentMode.type} mode. {currentMode.description}
-										</p>
-										{currentMode.type === "coder" && (
-											<>
+
+										<>
+											<p>
+												Melty can see your codebase structure but not the full
+												content of your files. Too much context confuses language
+												models.
+												<b>
+													{" "}
+													Only add files that are helpful to the current task.
+												</b>
+											</p>
+											{meltyMindFilePaths.length === 0 ? (
 												<p>
-													Melty can see your codebase structure but not the full
-													content of your files. Too much context confuses language
-													models.
-													<b>
-														{" "}
-														Only add files that are helpful to the current task.
-													</b>
+													<AddFileButton keyboardShortcut="@" />
 												</p>
-												{meltyMindFilePaths.length === 0 ? (
-													<p>
-														<AddFileButton keyboardShortcut="@" />
-													</p>
-												) : (
-													<div>
-														<p>Melty can see the full content of these files: </p>
-														<ul>
-															{meltyMindFilePaths.map((file, i) => (
-																<li key={`file-${i}`}>{file}</li>
-															))}
-														</ul>
-													</div>
-												)}
-											</>
-										)}
+											) : (
+												<div>
+													<p>Melty can see the full content of these files: </p>
+													<ul>
+														{meltyMindFilePaths.map((file, i) => (
+															<li key={`file-${i}`}>{file}</li>
+														))}
+													</ul>
+												</div>
+											)}
+										</>
 									</div>
 								</PopoverContent>
 							</Popover>

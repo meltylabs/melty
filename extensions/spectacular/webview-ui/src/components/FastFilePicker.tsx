@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { FixedSizeList as List } from "react-window";
@@ -131,14 +131,14 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 	}, [isOpen, setIsOpen]);
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			{/* <DialogTrigger asChild>
-        <Button variant="outline" onClick={() => setIsOpen(true)}>
-          Search Files
-        </Button>
-      </DialogTrigger> */}
-			<DialogContent className="sm:max-w-[425px]" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
-				<div className="p-0">
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
+			<PopoverTrigger asChild>
+				<div className="w-0 h-0 overflow-hidden">
+					<Button variant="outline">Select File...</Button>
+				</div>
+			</PopoverTrigger>
+			<PopoverContent className="w-[600px] text-[12px] ml-2 p-0" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
+				<div className="p-2">
 					<Input
 						ref={inputRef}
 						placeholder="Type a filename..."
@@ -160,7 +160,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 				) : (
 					<div className="p-4 text-center text-gray-500">No files found</div>
 				)}
-			</DialogContent>
-		</Dialog>
+			</PopoverContent>
+		</Popover>
 	);
 };
