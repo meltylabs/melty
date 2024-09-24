@@ -156,10 +156,8 @@ export function ConversationView() {
 	const checkScrollPosition = () => {
 		if (conversationRef.current) {
 			const { scrollTop, scrollHeight, clientHeight } = conversationRef.current;
-			// Set an absurdly large threshold for testing
 			const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
 			setIsAtBottom(isNearBottom);
-			console.log('Scroll check:', { scrollTop, scrollHeight, clientHeight, isNearBottom });
 		}
 	};
 
@@ -226,22 +224,6 @@ export function ConversationView() {
 			setNonInitialHumanJouleInFlight(false);
 		}
 		setTask(task);
-	}, []);
-
-	// If the user presses escape, focus the input
-	useEffect(() => {
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') {
-				event.preventDefault();
-				inputRef.current?.focus();
-			}
-		};
-
-		window.addEventListener('keydown', handleKeyDown);
-
-		return () => {
-			window.removeEventListener('keydown', handleKeyDown);
-		};
 	}, []);
 
 	// Initialization. Everything in here must be wrapped in useCallback.

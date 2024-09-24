@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, KeyboardEvent } from "react";
+import React, { forwardRef, useCallback } from "react";
 import { Textarea } from "./ui/textarea";
 import { FastFilePicker } from "./FastFilePicker";
 import { cn } from "../lib/utils";
@@ -23,20 +23,6 @@ const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTexta
 				element.style.height = `${element.scrollHeight}px`;
 			}
 		}, []);
-
-		const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-			if (e.key === 'Escape') {
-				if (pickerOpen) {
-					setPickerOpen(false);
-					e.preventDefault(); // Prevent the event from bubbling up
-				}
-				// If picker is not open, let the event propagate
-			}
-			// Call the original onKeyDown prop if it exists
-			if (props.onKeyDown) {
-				props.onKeyDown(e);
-			}
-		};
 
 		return (
 			<div className="relative">
