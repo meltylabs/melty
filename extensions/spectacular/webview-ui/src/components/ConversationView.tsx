@@ -166,17 +166,24 @@ export function ConversationView() {
 	const scrollToBottom = useCallback(() => {
 		if (conversationRef.current) {
 			const { scrollHeight, clientHeight } = conversationRef.current;
-			conversationRef.current.scrollTop = scrollHeight - clientHeight;
-			console.log('Scrolling to bottom:', { scrollHeight, clientHeight, newScrollTop: scrollHeight - clientHeight });
+			const newScrollTop = scrollHeight - clientHeight;
+			conversationRef.current.scrollTop = newScrollTop;
+			console.log('Scrolling to bottom:', { scrollHeight, clientHeight, newScrollTop, actualScrollTop: conversationRef.current.scrollTop });
 		}
 		checkScrollPosition();
 	}, []);
 
 	useEffect(() => {
+		console.log('isAtBottom changed:', isAtBottom);
 		if (isAtBottom) {
 			scrollToBottom();
 		}
 	}, [isAtBottom, scrollToBottom]);
+
+	useEffect(() => {
+		console.log('Task or conversation updated, scrolling to bottom');
+		scrollToBottom();
+	}, [task, scrollToBottom]);
 
 	useEffect(() => {
 		const conversationElement = conversationRef.current;
