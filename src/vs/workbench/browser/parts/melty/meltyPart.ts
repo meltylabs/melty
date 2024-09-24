@@ -118,7 +118,7 @@ export class MeltyPart extends Part {
 		// create the popup area overlay. this is just a target for webview to layout over
 		this.popupAreaOverlay = $('div.melty-popup-area-overlay');
 		this.popupAreaOverlay.style.position = 'absolute'; // couldn't get it to work with relative for some reason
-		this.popupAreaOverlay.style.margin = '32px';
+		this.popupAreaOverlay.style.margin = '0px';
 		this.popupAreaOverlay.style.top = '0';
 		this.popupAreaOverlay.style.left = '0';
 		this.popupAreaOverlay.style.right = '0';
@@ -157,9 +157,9 @@ export class MeltyPart extends Part {
 		container.style.display = 'flex';
 		container.style.boxSizing = 'border-box';
 		container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
-		container.style.borderRadius = '12px';
+		// container.style.borderRadius = '12px';
 		container.style.backgroundColor = 'white';
-		container.style.zIndex = '100';
+		container.style.zIndex = '1000';
 
 		// Add faster bounce animation
 		container.style.animation = 'meltyBounceIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';

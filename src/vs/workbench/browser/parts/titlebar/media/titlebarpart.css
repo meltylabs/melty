@@ -93,6 +93,7 @@
 	width: 20%;
 	min-width: min-content;
 	flex-grow: 2;
+	z-index: 0;
 	justify-content: flex-end;
 }
 
