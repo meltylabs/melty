@@ -450,7 +450,7 @@ export function ConversationView() {
 							handleDropFile={handleDropFile}
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12 relative focus-visible:ring-1 max-h-[30vh] overflow-y-auto"
+							className="p-3 pr-12 pb-12 relative focus-visible:ring-0 max-h-[30vh] overflow-y-auto"
 							ref={inputRef}
 							required
 							value={messageText}
