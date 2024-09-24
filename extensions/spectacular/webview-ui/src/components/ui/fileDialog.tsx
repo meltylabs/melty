@@ -4,15 +4,15 @@ import { X } from "lucide-react";
 
 import { cn } from "../../lib/utils";
 
-const Dialog = DialogPrimitive.Root;
+const FileDialog = DialogPrimitive.Root;
 
-const DialogTrigger = DialogPrimitive.Trigger;
+const FileDialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = DialogPrimitive.Portal;
+const FileDialogPortal = DialogPrimitive.Portal;
 
-const DialogClose = DialogPrimitive.Close;
+const FileDialogClose = DialogPrimitive.Close;
 
-const DialogOverlay = React.forwardRef<
+const FileDialogOverlay = React.forwardRef<
 	React.ElementRef<typeof DialogPrimitive.Overlay>,
 	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
@@ -25,14 +25,14 @@ const DialogOverlay = React.forwardRef<
 		{...props}
 	/>
 ));
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+FileDialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-const DialogContent = React.forwardRef<
+const FileDialogContent = React.forwardRef<
 	React.ElementRef<typeof DialogPrimitive.Content>,
 	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-	<DialogPortal>
-		<DialogOverlay />
+	<FileDialogPortal>
+		<FileDialogOverlay />
 		<DialogPrimitive.Content
 			ref={ref}
 			className={cn(
@@ -47,11 +47,11 @@ const DialogContent = React.forwardRef<
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close> */}
 		</DialogPrimitive.Content>
-	</DialogPortal>
+	</FileDialogPortal>
 ));
-DialogContent.displayName = DialogPrimitive.Content.displayName;
+FileDialogContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader = ({
+const FileDialogHeader = ({
 	className,
 	...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -63,9 +63,9 @@ const DialogHeader = ({
 		{...props}
 	/>
 );
-DialogHeader.displayName = "DialogHeader";
+FileDialogHeader.displayName = "FileDialogHeader";
 
-const DialogFooter = ({
+const FileDialogFooter = ({
 	className,
 	...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -77,9 +77,9 @@ const DialogFooter = ({
 		{...props}
 	/>
 );
-DialogFooter.displayName = "DialogFooter";
+FileDialogFooter.displayName = "FileDialogFooter";
 
-const DialogTitle = React.forwardRef<
+const FileDialogTitle = React.forwardRef<
 	React.ElementRef<typeof DialogPrimitive.Title>,
 	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
@@ -92,9 +92,9 @@ const DialogTitle = React.forwardRef<
 		{...props}
 	/>
 ));
-DialogTitle.displayName = DialogPrimitive.Title.displayName;
+FileDialogTitle.displayName = DialogPrimitive.Title.displayName;
 
-const DialogDescription = React.forwardRef<
+const FileDialogDescription = React.forwardRef<
 	React.ElementRef<typeof DialogPrimitive.Description>,
 	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
@@ -104,17 +104,17 @@ const DialogDescription = React.forwardRef<
 		{...props}
 	/>
 ));
-DialogDescription.displayName = DialogPrimitive.Description.displayName;
+FileDialogDescription.displayName = DialogPrimitive.Description.displayName;
 
 export {
-	Dialog,
-	DialogPortal,
-	DialogOverlay,
-	DialogClose,
-	DialogTrigger,
-	DialogContent,
-	DialogHeader,
-	DialogFooter,
-	DialogTitle,
-	DialogDescription,
+	FileDialog,
+	FileDialogPortal,
+	FileDialogOverlay,
+	FileDialogClose,
+	FileDialogTrigger,
+	FileDialogContent,
+	FileDialogHeader,
+	FileDialogFooter,
+	FileDialogTitle,
+	FileDialogDescription,
 };
