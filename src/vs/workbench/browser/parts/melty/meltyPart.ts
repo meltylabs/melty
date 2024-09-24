@@ -157,7 +157,7 @@ export class MeltyPart extends Part {
 		container.style.display = 'flex';
 		container.style.boxSizing = 'border-box';
 		container.style.boxShadow = '0 0 20px 0 rgba(0, 0, 0, 0.5)';
-		// container.style.borderRadius = '20px';
+		// container.style.borderRadius = '12px';
 		container.style.backgroundColor = 'white';
 		container.style.zIndex = '1000';
 
