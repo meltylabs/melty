@@ -167,10 +167,22 @@ export function ConversationView() {
 		if (conversationRef.current) {
 			const { scrollHeight, clientHeight } = conversationRef.current;
 			const newScrollTop = scrollHeight - clientHeight;
-			conversationRef.current.scrollTop = newScrollTop;
-			console.log('Scrolling to bottom:', { scrollHeight, clientHeight, newScrollTop, actualScrollTop: conversationRef.current.scrollTop });
+			conversationRef.current.scrollTo({
+				top: newScrollTop,
+				behavior: 'smooth'
+			});
+			console.log('Scrolling to bottom:', { scrollHeight, clientHeight, newScrollTop });
+			
+			// Check scroll position after a short delay to ensure scrolling has completed
+			setTimeout(() => {
+				console.log('Scroll position after scrolling:', { 
+					actualScrollTop: conversationRef.current?.scrollTop,
+					scrollHeight: conversationRef.current?.scrollHeight,
+					clientHeight: conversationRef.current?.clientHeight
+				});
+				checkScrollPosition();
+			}, 100);
 		}
-		checkScrollPosition();
 	}, []);
 
 	useEffect(() => {
