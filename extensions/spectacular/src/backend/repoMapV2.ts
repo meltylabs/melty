@@ -23,40 +23,41 @@ export class RepoMapV2 {
 		const maxSize = 400000; // ~400k characters, about half of Claude's context window
 		const maxFileSize = 100 * 1024; // 100kb
 
-		const filePaths = await this._fileManager.getWorkspaceFiles();
+		const fileUris = await this._fileManager.getWorkspaceFiles();
 
-		for (const filePath of filePaths) {
-			const absPath = path.join(rootDir, filePath);
+		for (const fileUri of fileUris) {
+			const absPath = fileUri.fsPath;
+			const relPath = path.relative(rootDir, absPath);
 
 			if (!fs.existsSync(absPath)) {
-				skippedFiles.push(filePath);
+				console.warn("Skipping file that doesn't exist", absPath);
 				continue;
 			}
 
 			const stat = fs.statSync(absPath);
 
 			if (stat.size > maxFileSize) {
-				skippedFiles.push(filePath);
+				skippedFiles.push(relPath);
 				continue;
 			}
 
 			const content = fs.readFileSync(absPath, 'utf-8');
 
 			if (this.isBinary(content)) {
-				skippedFiles.push(filePath);
+				skippedFiles.push(relPath);
 				continue;
 			}
 
-			const fileContent = `<file_contents file="${filePath}">\n${content}\n</file_contents>\n`;
+			const fileContent = `<file_contents file="${fileUri}">\n${content}\n</file_contents>\n`;
 
 			if (view.length + fileContent.length > maxSize) {
-				skippedFiles.push(filePath);
+				skippedFiles.push(relPath);
 				isComplete = false;
 				continue;
 			}
 
 			view += fileContent;
-			includedFiles.push(filePath);
+			includedFiles.push(relPath);
 		}
 
 		return {

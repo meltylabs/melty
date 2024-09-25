@@ -24,21 +24,6 @@ export function codeModeSystemPrompt(): string {
 	);
 }
 
-export function initialCodebaseViewPrompt(codebaseView: string): ClaudeMessage[] {
-	return [
-		{
-			role: "user",
-			content: `<codebase_view>
-${codebaseView}
-</codebase_view>`,
-		},
-		{
-			role: "assistant",
-			content: `Thanks, I'll review this carefully.`
-		}
-	];
-}
-
 // ================================================================
 // ISOLATED AGENTS
 // ================================================================
