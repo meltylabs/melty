@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import posthog from "posthog-js";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { FastFilePicker } from "./FastFilePicker";
+import FastFilePicker from "./FastFilePicker";
 import { Button } from './ui/button'
 import { RpcClient } from "@/RpcClient";
 import { JouleComponent, IJouleComponentProps } from "./JouleComponent";
