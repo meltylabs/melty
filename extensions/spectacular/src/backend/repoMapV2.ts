@@ -19,8 +19,7 @@ export class RepoMapV2 {
 		let view = "";
 		const includedFiles: string[] = [];
 		const skippedFiles: string[] = [];
-		let isComplete = true;
-		let allContentIncluded = true;
+		let allContentsIncluded = true;
 		const maxSize = 400000; // ~400k characters, about half of Claude's context window
 		const maxFileSize = 100 * 1024; // 100kb
 
@@ -80,15 +79,15 @@ export class RepoMapV2 {
 					view += skippedFileTag;
 					skippedFiles.push(fileInfo.relPath);
 					remainingSize -= skippedFileTag.length;
-					allContentIncluded = false;
+					allContentsIncluded = false;
 				} else {
 					allFileNamesIncluded = false;
-					allContentIncluded = false;
+					allContentsIncluded = false;
 					break;
 				}
 			} else {
 				allFileNamesIncluded = false;
-				allContentIncluded = false;
+				allContentsIncluded = false;
 				break;
 			}
 		}
@@ -106,7 +105,7 @@ export class RepoMapV2 {
 
 		return {
 			view,
-			isComplete: allContentIncluded,
+			allContentsIncluded,
 			includedFiles,
 			skippedFiles,
 		};

@@ -52,7 +52,7 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 		return [
 			{
 				role: "user",
-				content: `<codebase_view isComplete=${codebaseView.isComplete}>
+				content: `<codebase_view>
 ${codebaseView.view}
 </codebase_view>`
 			},

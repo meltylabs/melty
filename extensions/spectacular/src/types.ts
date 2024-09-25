@@ -167,7 +167,7 @@ export type OpenAIConversation = {
 
 export type CodebaseView = {
 	readonly view: string;
-	readonly isComplete: boolean;
+	readonly allContentsIncluded: boolean;
 	readonly includedFiles: string[];
 	readonly skippedFiles: string[];
 	readonly commit?: string;
