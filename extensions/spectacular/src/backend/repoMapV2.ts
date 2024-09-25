@@ -74,7 +74,7 @@ export class RepoMapV2 {
 				includedFiles.push(fileInfo.relPath);
 				remainingSize -= fileContent.length;
 			} else if (remainingSize > 0) {
-				const skippedFileTag = `<skipped_file reason="Not enough space to include full contents">${fileInfo.relPath}</skipped_file>\n`;
+				const skippedFileTag = `<skipped_file file="${fileInfo.relPath}" reason="Not enough space to include full contents" />\n`;
 				if (view.length + skippedFileTag.length <= maxSize) {
 					view += skippedFileTag;
 					skippedFiles.push(fileInfo.relPath);
