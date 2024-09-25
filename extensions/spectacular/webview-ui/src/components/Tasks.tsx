@@ -394,11 +394,11 @@ export function Tasks({
 						{tasks.map((task) => (
 							<div key={task.id} className="relative">
 								<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
-									<Card className="h-20 flex flex-col justify-between">
-										<CardHeader className="p-2">
+									<Card className="h-20 flex flex-col justify-between pr-8">
+										<CardHeader className="p-2 pb-0">
 											<CardTitle className="text-xs line-clamp-2">{task.name}</CardTitle>
 										</CardHeader>
-										<CardContent className="p-2 pt-0 flex justify-between items-center">
+										<CardContent className="p-2 pt-0">
 											<p className="text-[10px] text-gray-500">
 												{formatDate(new Date(task.updatedAt))}
 											</p>
@@ -408,10 +408,10 @@ export function Tasks({
 								<Button
 									variant="ghost"
 									size="sm"
-									className="absolute top-2 right-2 p-1"
+									className="absolute top-1 right-1 p-1 h-auto"
 									onClick={(e) => deleteTask(task.id, e)}
 								>
-									<X className="text-muted-foreground h-4 w-4" />
+									<X className="text-muted-foreground h-3 w-3" />
 								</Button>
 							</div>
 						))}
