@@ -2,6 +2,7 @@ import { ChangeSet } from "../types";
 import fs from "fs";
 import path from "path";
 import * as files from "./meltyFiles";
+import { ContextProvider } from 'services/ContextProvider';
 
 export function createEmpty(): ChangeSet {
 	return {
@@ -18,14 +19,16 @@ export function isEmpty(changeSet: ChangeSet) {
  * @param changeSet The change set to apply
  * @param gitRepo The git repo to apply the change set to
  */
-export function applyChangeSet(changeSet: ChangeSet, meltyRoot: string): void {
+export function applyChangeSet(changeSet: ChangeSet): void {
+	const meltyRootAbsolute = ContextProvider.getInstance().meltyRootAbsolute;
+
 	Object.entries(changeSet.filesChanged).forEach(
 		([_path, { original, updated }]) => {
-			fs.mkdirSync(path.dirname(files.absolutePath(updated, meltyRoot)), {
+			fs.mkdirSync(path.dirname(files.absolutePath(updated, meltyRootAbsolute)), {
 				recursive: true,
 			});
 			fs.writeFileSync(
-				files.absolutePath(updated, meltyRoot),
+				files.absolutePath(updated, meltyRootAbsolute),
 				files.contents(updated)
 			);
 		}

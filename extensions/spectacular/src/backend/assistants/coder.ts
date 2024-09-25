@@ -272,7 +272,7 @@ export class Coder extends BaseAssistant {
 				);
 				this._webviewNotifier.resetStatusMessage();
 			} else {
-				changeSets.applyChangeSet(changeSet, this._contextProvider.meltyRoot);
+				changeSets.applyChangeSet(changeSet);
 				commit = null;
 			}
 			const diffInfo = {

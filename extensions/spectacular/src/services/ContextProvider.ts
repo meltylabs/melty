@@ -1,4 +1,5 @@
 import { MeltyContext } from '../types';
+import * as path from 'path';
 
 /**
  * Wrapper to provide a MeltyContext to other services
@@ -24,8 +25,12 @@ export class ContextProvider {
 		return ContextProvider.instance;
 	}
 
-	get meltyRoot(): string {
+	get meltyRootRelative(): string {
 		return this.meltyContext.meltyRoot;
+	}
+
+	get meltyRootAbsolute(): string {
+		return path.join(this.meltyContext.workspaceRoot, this.meltyContext.meltyRoot);
 	}
 
 	get workspaceRoot(): string {

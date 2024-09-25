@@ -14,22 +14,13 @@ import {
 	LightbulbIcon,
 } from "lucide-react";
 import { MouseEvent, KeyboardEvent } from "react";
-import Ascii from "./Ascii";
 import OnboardingSection from './OnboardingSection';
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { DehydratedTask, TaskMode, AssistantInfo, MeltyContext } from "../types";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "./ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
-import * as strings from "@/utilities/strings";
 import { EventManager } from "@/eventManager";
 
 // Utility function to format the date

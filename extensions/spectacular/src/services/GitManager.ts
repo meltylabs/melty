@@ -20,11 +20,14 @@ type Repo = {
 export class GitManager {
 	private static instance: GitManager | null = null;
 
-	private repo: Repo | undefined = undefined;
+	private repo: Repo;
 
 	public constructor(
 		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance()
-	) { }
+	) {
+		// todo: this could create problems if we update the MeltyContext. maybe don't copy repo in here.
+		this.repo = { sitory: _contextProvider.gitRepo };
+	}
 
 	public static getInstance(): GitManager {
 		if (!GitManager.instance) {
@@ -99,11 +102,12 @@ export class GitManager {
 				console.warn("Committing changeset despite unclean repo");
 			}
 
-			changesets.applyChangeSet(changeSet, this._contextProvider.meltyRoot);
+			changesets.applyChangeSet(changeSet);
 
 			await this.repo!.sitory.add(
 				Object.values(changeSet.filesChanged).map(
-					({ original, updated }) => files.absolutePath(updated, this._contextProvider.meltyRoot) // either original or updated works here
+					// either original or updated works here
+					({ original, updated }) => files.absolutePath(updated, this._contextProvider.meltyRootAbsolute)
 				)
 			);
 

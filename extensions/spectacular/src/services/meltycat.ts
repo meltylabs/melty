@@ -36,7 +36,7 @@ export class MeltycatService {
 	constructor(
 		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance()
 	) {
-		this.watchPath = this._contextProvider.meltyRoot;
+		this.watchPath = this._contextProvider.meltyRootAbsolute;
 		this.summaryPath = path.join(this.watchPath, '.meltycat');
 		this.summaries = new Map();
 		this.ignoreFilter = ignore();
