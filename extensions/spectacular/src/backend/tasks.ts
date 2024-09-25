@@ -16,14 +16,13 @@ import { RepoMapV2 } from 'backend/repoMapV2';
 import * as prompts from 'backend/prompts';
 
 export async function createNewDehydratedTask(name: string, taskMode: TaskMode, files: string[]): Promise<DehydratedTask> {
-	const repoMap = await new RepoMapV2().getRepoMap();
-	const conversationBaseCodebaseView = prompts.initialCodebaseViewPrompt(repoMap);
+	const baseCodebaseView = await new RepoMapV2().getCodebaseView();
 
 	return {
 		id: uuidv4(),
 		name: name,
 		branch: utils.meltyBranchNameFromTaskName(name),
-		conversation: conversations.create(conversationBaseCodebaseView),
+		conversation: conversations.create(baseCodebaseView),
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		taskMode: taskMode,

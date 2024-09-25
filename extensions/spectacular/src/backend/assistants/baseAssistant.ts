@@ -1,4 +1,4 @@
-import { Conversation, ClaudeMessage, Joule, JouleType, ContextPaths } from "../../types";
+import { Conversation, ClaudeMessage, Joule, JouleType, ContextPaths, CodebaseView } from "../../types";
 import * as joules from "../joules";
 import fs from "fs";
 import path from "path";
@@ -46,6 +46,21 @@ export abstract class BaseAssistant {
 		return `<file_contents file=${relativeFilePath}>
 ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 </file_contents>`;
+	}
+
+	protected encodeCodebaseView(codebaseView: CodebaseView): ClaudeMessage[] {
+		return [
+			{
+				role: "user",
+				content: `<codebase_view>
+${codebaseView.view}
+</codebase_view>`
+			},
+			{
+				role: "assistant",
+				content: "Thanks, I'll review this carefully.",
+			}
+		];
 	}
 
 	protected finalCodebaseView(

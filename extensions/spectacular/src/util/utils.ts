@@ -1,5 +1,5 @@
 import { Uri, Webview } from "vscode";
-import { ChangeSet } from "../types";
+import { ChangeSet, ClaudeMessage } from "../types";
 import * as os from "os";
 import * as diff from "diff";
 
@@ -111,4 +111,16 @@ export function highlightNonAsciiChars(input: string): string {
 			return char;
 		})
 		.join('');
+}
+
+export function cachePromptThroughHere(messages: ClaudeMessage[]): ClaudeMessage[] {
+	return messages.map((message, index) => {
+		if (index === messages.length - 1) {
+			return {
+				...message,
+				cacheUpToThisBlock: true
+			};
+		}
+		return message;
+	});
 }

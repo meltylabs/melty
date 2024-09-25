@@ -13,7 +13,7 @@ import * as joules from "..//joules";
 import * as prompts from "..//prompts";
 import * as claudeAPI from "..//claudeAPI";
 import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
-import { RepoMapV2 } from "..//repoMapMeltycat";
+import { RepoMapV2 } from "../repoMapV2";
 import * as utils from "../../util/utils";
 import { BaseAssistant } from "./baseAssistant";
 import * as parser from "../diffApplication/parser";
@@ -25,6 +25,7 @@ import { FileManager } from 'services/FileManager';
 import { GitManager } from 'services/GitManager';
 import { ContextProvider } from 'services/ContextProvider';
 import { ErrorOperationCancelled } from 'util/utils';
+import { cache } from 'webpack';
 
 const PREFILL_TEXT = "<change_code";
 
@@ -178,20 +179,13 @@ export class Coder extends BaseAssistant {
 	): Promise<ClaudeConversation> {
 		this._webviewNotifier.updateStatusMessage("Preparing context");
 
-		// enable prompt caching in the right place
-		const initialCodebaseView = conversation.conversationBase.codebaseView;
-		if (initialCodebaseView.length !== 0) {
-			const last = initialCodebaseView[initialCodebaseView.length - 1];
-			initialCodebaseView[initialCodebaseView.length - 1] = {
-				...last,
-				cacheUpToThisBlock: true
-			};
-		}
-
+		// construct final conversation, enabling prompt caching in the right place
 		const claudeConversation: ClaudeConversation = {
 			system: conversation.conversationBase.systemPrompt,
 			messages: [
-				...conversation.conversationBase.codebaseView,
+				...utils.cachePromptThroughHere(
+					this.encodeCodebaseView(conversation.conversationBase.codebaseView)
+				),
 				...this.encodeJoules(conversation.joules),
 				...this.finalCodebaseView(contextPaths),
 			]

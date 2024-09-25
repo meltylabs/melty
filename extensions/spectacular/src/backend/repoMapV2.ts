@@ -1,31 +1,26 @@
 import * as fs from "fs";
 import * as path from "path";
+import { CodebaseView } from "../types";
 import { ContextProvider } from "services/ContextProvider";
 import { WebviewNotifier } from "services/WebviewNotifier";
-
-export type CodebaseView = {
-	readonly view: string;
-	readonly isComplete: boolean;
-	readonly includedFiles: string[];
-	readonly skippedFiles: string[];
-	readonly commit?: string;
-};
+import { FileManager } from "services/FileManager";
 
 export class RepoMapV2 {
 	constructor(
 		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance(),
-		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance()
+		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance(),
+		private readonly _fileManager: FileManager = FileManager.getInstance()
 	) { }
 
-	public async getRepoMap(_: string[] = []): Promise<CodebaseView> {
-		this._webviewNotifier.updateStatusMessage("Loading codebase context");
-		
+	public async getCodebaseView(): Promise<CodebaseView> {
+		this._webviewNotifier.updateStatusMessage("Loading the current state of your codebase");
+
 		const rootDir = this._contextProvider.meltyRootAbsolute;
 		let view = "";
 		const includedFiles: string[] = [];
 		const skippedFiles: string[] = [];
 		let isComplete = true;
-		const maxSize = 400000; // ~400k characters
+		const maxSize = 400000; // ~400k characters, about half of Claude's context window
 
 		const processDirectory = (dir: string) => {
 			const files = fs.readdirSync(dir);
@@ -37,14 +32,14 @@ export class RepoMapV2 {
 					processDirectory(filePath);
 				} else if (stat.isFile()) {
 					const content = fs.readFileSync(filePath, 'utf-8');
-					
+
 					if (this.isBinary(content)) {
 						skippedFiles.push(filePath);
 						continue;
 					}
 
 					const fileContent = `<file_contents file="${filePath}">\n${content}\n</file_contents>\n`;
-					
+
 					if (view.length + fileContent.length > maxSize) {
 						skippedFiles.push(filePath);
 						isComplete = false;
@@ -70,7 +65,9 @@ export class RepoMapV2 {
 	private isBinary(content: string): boolean {
 		const sampleSize = Math.min(1024, content.length);
 		for (let i = 0; i < sampleSize; i++) {
-			if (content.charCodeAt(i) === 0) return true;
+			if (content.charCodeAt(i) === 0) {
+				return true;
+			}
 		}
 		return false;
 	}

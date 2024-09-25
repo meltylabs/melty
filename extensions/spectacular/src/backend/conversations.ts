@@ -1,7 +1,7 @@
-import { Joule, Conversation, ClaudeMessage } from "../types";
+import { Joule, Conversation, CodebaseView } from "../types";
 import * as prompts from "./prompts";
 
-export function create(codebaseView: ClaudeMessage[]): Conversation {
+export function create(codebaseView: CodebaseView): Conversation {
 	return {
 		conversationBase: {
 			systemPrompt: prompts.codeModeSystemPrompt(),
