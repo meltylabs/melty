@@ -35,7 +35,7 @@ const AutoExpandingTextarea = forwardRef<HTMLTextAreaElement, AutoExpandingTexta
 						adjustHeight(e.target);
 					}}
 					autoFocus={autoFocus}
-					className={cn("resize-none overflow-hidden focus:outline-none focus:ring-1 focus:ring-gray-300 focus:shadow-sm", className)}
+					className={cn("resize-none overflow-hidden", className)}
 					{...props}
 				/>
 			</div>

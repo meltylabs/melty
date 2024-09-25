@@ -445,11 +445,11 @@ export function ConversationView() {
 					</div>
 				)}
 				<form onSubmit={handleSubmit}>
-					<div className="mt-4 relative">
+					<div className="mt-4 relative ml-1 mr-2">
 						<AutoExpandingTextarea
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12 relative focus-visible:ring-0 max-h-[30vh] overflow-y-auto"
+							className="p-3 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
 							ref={inputRef}
 							required
 							value={messageText}
