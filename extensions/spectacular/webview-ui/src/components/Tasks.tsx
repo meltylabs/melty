@@ -7,6 +7,7 @@ import {
 	ArrowUp,
 	X,
 	CheckCircle,
+	EllipsisVertical,
 	XCircle,
 	LoaderCircle,
 	XIcon,
@@ -385,14 +386,20 @@ export function Tasks({
 										</CardContent>
 									</Card>
 								</button>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="absolute top-1 right-1 p-1 h-auto"
-									onClick={(e) => deleteTask(task.id, e)}
-								>
-									<X className="text-muted-foreground h-3 w-3" />
-								</Button>
+								<div className="absolute top-1 right-1">
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button variant="ghost" size="sm" className="p-1 h-auto">
+												<EllipsisVertical className="text-muted-foreground h-3 w-3" />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent>
+											<DropdownMenuItem onClick={(e) => deleteTask(task.id, e)}>
+												Delete
+											</DropdownMenuItem>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</div>
 							</div>
 						))}
 					</div>
