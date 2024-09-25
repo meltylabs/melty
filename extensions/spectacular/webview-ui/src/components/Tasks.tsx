@@ -396,9 +396,9 @@ export function Tasks({
 								<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
 									<Card className="h-24 flex flex-col justify-between">
 										<CardHeader className="p-3">
-											<CardTitle className="text-sm truncate">{task.name}</CardTitle>
+											<CardTitle className="text-sm line-clamp-2">{task.name}</CardTitle>
 										</CardHeader>
-										<CardContent className="p-3 pt-0">
+										<CardContent className="p-3 pt-0 flex justify-between items-center">
 											<p className="text-xs text-gray-500">
 												{formatDate(new Date(task.updatedAt))}
 											</p>
