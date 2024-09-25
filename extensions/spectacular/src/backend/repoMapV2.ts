@@ -65,10 +65,10 @@ export class RepoMapV2 {
 
 		// Second pass: build the view
 		for (const fileInfo of fileInfos) {
-			if (fileInfo.content === "") continue; // Skip already processed files
+			if (fileInfo.content === "") { continue; } // Skip already processed files
 
 			const fileContent = `<file_contents file="${fileInfo.uri}">\n${fileInfo.content}\n</file_contents>\n`;
-			
+
 			if (view.length + fileContent.length <= maxSize && remainingSize > 0) {
 				view += fileContent;
 				includedFiles.push(fileInfo.relPath);
@@ -91,11 +91,11 @@ export class RepoMapV2 {
 
 		let summary = "";
 		if (skippedFiles.length === 0) {
-			summary = "[This codebase view contains full contents of all files in the codebase, except for binary files and files over 100kb.]";
+			summary = "This codebase view contains full contents of all files in the codebase, except for binary files and files over 100kb.";
 		} else if (allFileNamesIncluded) {
-			summary = "[This codebase view contains full contents of some files in the codebase. Since there isn't enough space to include full contents of all the files, it lists the names of the remaining files.]";
+			summary = "This codebase view contains full contents of some files in the codebase. Since there isn't enough space to include full contents of all the files, it lists the names of the remaining files.";
 		} else {
-			summary = "[This codebase view contains the names of some of the files in the codebase. There wasn't enough space to include all the file names.]";
+			summary = "This codebase view contains the names of some of the files in the codebase. There wasn't enough space to include all the file names.";
 		}
 
 		view = `<codebase_view_summary>\n${summary}\n</codebase_view_summary>\n\n${view}`;
