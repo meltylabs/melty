@@ -70,10 +70,6 @@ export async function streamClaudeRaw(
 	});
 
 	const { messages, system } = claudeConversationToAnthropicType(claudeConversation);
-	const testMessages: Anthropic.MessageParam[] = [{
-		role: "user",
-		content: "hi melty can you see this? say banana please"
-	}];
 
 	try {
 		console.log("waiting for claude...");
@@ -82,7 +78,7 @@ export async function streamClaudeRaw(
 				{
 					model: model,
 					max_tokens: 8192,
-					messages: testMessages,
+					messages: messages,
 					system,
 					stop_sequences: stopSequences
 				},
@@ -123,7 +119,7 @@ function claudeMessageToAnthropicType(claudeMessage: ClaudeMessage): Anthropic.B
 			{
 				"type": "text",
 				"text": claudeMessage.content,
-				"cache_control": undefined // claudeMessage.cacheUpToThisBlock ? { "type": "ephemeral" } : undefined,
+				"cache_control": claudeMessage.cacheUpToThisBlock ? { "type": "ephemeral" } : undefined,
 			}
 		],
 	};
