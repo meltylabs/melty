@@ -78,7 +78,7 @@ export async function streamClaudeRaw(
 				{
 					model: model,
 					max_tokens: 8192,
-					messages: messages,
+					messages,
 					system,
 					stop_sequences: stopSequences
 				},
