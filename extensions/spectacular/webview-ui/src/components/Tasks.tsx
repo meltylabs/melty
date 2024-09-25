@@ -394,7 +394,7 @@ export function Tasks({
 											</Button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent>
-											<DropdownMenuItem onClick={(e) => deleteTask(task.id, e)}>
+											<DropdownMenuItem onClick={(e: any) => deleteTask(task.id, e)}>
 												Delete
 											</DropdownMenuItem>
 										</DropdownMenuContent>
