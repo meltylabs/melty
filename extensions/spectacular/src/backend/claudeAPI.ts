@@ -80,7 +80,7 @@ export async function streamClaudeRaw(
 				},
 				{
 					headers: {
-						"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15",
+						"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15,prompt-caching-2024-07-31"
 					},
 				}
 			)
