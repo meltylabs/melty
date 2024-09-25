@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { getUserPrompt } from "../../util/config";
 import * as vscode from "vscode";
+import * as claudeAPI from "../claudeAPI";
 
 export abstract class BaseAssistant {
 	static get description(): string {
@@ -19,19 +20,15 @@ export abstract class BaseAssistant {
 
 	protected encodeUserPrompt(): ClaudeMessage[] {
 		const userPrompt = getUserPrompt();
-		return [{
-			role: "user",
-			content: userPrompt,
-		}, {
-			role: "assistant",
-			content: "Understood. I'll keep that in mind throughout our conversation.",
-		}
+		return [
+			claudeAPI.createClaudeMessage("user", userPrompt),
+			claudeAPI.createClaudeMessage("assistant", "Understood. I'll keep that in mind throughout our conversation.")
 		];
 	}
 
-	protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
+	protected encodeJoules(jouleList: readonly Joule[]): ClaudeMessage[] {
 		return [
-			...conversation.joules.map(joules.encodeJouleForClaude)
+			...jouleList.map(joules.encodeJouleForClaude)
 		].filter(m => m !== null);
 	}
 
@@ -51,14 +48,9 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 </file_contents>`;
 	}
 
-	protected codebaseView(
-		contextPaths: ContextPaths,
-		repoMapString: string
+	protected finalCodebaseView(
+		contextPaths: ContextPaths
 	): ClaudeMessage[] {
-		const codebaseSummary = `<codebase_summary>
-${repoMapString ? repoMapString : "[No file summaries available.]"}
-</codebase_summary>`;
-
 		const fileContents = contextPaths.relativePaths
 			.map((path) => this.encodeFile(path, contextPaths.meltyRoot))
 			.join("\n");
@@ -67,7 +59,6 @@ ${repoMapString ? repoMapString : "[No file summaries available.]"}
 			{
 				role: "user",
 				content: `<codebase_view>
-${codebaseSummary}
 ${fileContents}
 </codebase_view>`,
 			},

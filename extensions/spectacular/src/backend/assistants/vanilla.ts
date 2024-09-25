@@ -29,8 +29,8 @@ export class Vanilla extends BaseAssistant {
 		const claudeConversation: ClaudeConversation = {
 			system: systemPrompt,
 			messages: [
-				...this.codebaseView(contextPaths, ""),
-				...this.encodeMessages(conversation),
+				...this.finalCodebaseView(contextPaths, ""),
+				...this.encodeJoules(conversation),
 			],
 		};
 

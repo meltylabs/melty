@@ -7,7 +7,7 @@ export class RepoMapMeltycat {
 		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance()
 	) { }
 
-	public async getRepoMap(_: string[]): Promise<string> {
+	public async getRepoMap(_: string[] = []): Promise<string> {
 		return fs.readFileSync(path.join(this._contextProvider.meltyRootAbsolute, '.meltycat'), 'utf-8');
 	}
 }

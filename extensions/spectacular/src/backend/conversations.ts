@@ -1,15 +1,20 @@
-import { Joule, Conversation } from "../types";
-import * as vscode from "vscode";
-import * as joules from "./joules";
-export function create(): Conversation {
-	return { joules: [] };
+import { Joule, Conversation, ClaudeMessage } from "../types";
+import * as prompts from "./prompts";
+
+export function create(codebaseView: ClaudeMessage[]): Conversation {
+	return {
+		conversationBase: {
+			systemPrompt: prompts.codeModeSystemPrompt(),
+			codebaseView
+		}, joules: []
+	};
 }
 
 export function addJoule(
 	conversation: Conversation,
 	joule: Joule
 ): Conversation {
-	return { joules: [...conversation.joules, joule] };
+	return { ...conversation, joules: [...conversation.joules, joule] };
 }
 
 export function lastJoule(conversation: Conversation): Joule | undefined {
@@ -25,5 +30,5 @@ export function replaceLastJoule(
 	if (conversation.joules.length === 0) {
 		throw new Error("No joules to replace");
 	}
-	return { joules: [...conversation.joules.slice(0, -1), joule] };
+	return { ...conversation, joules: [...conversation.joules.slice(0, -1), joule] };
 }

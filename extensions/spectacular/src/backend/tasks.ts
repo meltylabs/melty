@@ -12,13 +12,18 @@ import { WebviewNotifier } from "../services/WebviewNotifier";
 import { GitManager } from "../services/GitManager";
 import { v4 as uuidv4 } from "uuid";
 import { BaseAssistant } from 'backend/assistants/baseAssistant';
+import { RepoMapMeltycat } from 'backend/repoMapMeltycat';
+import * as prompts from 'backend/prompts';
 
-export function createNewDehydratedTask(name: string, taskMode: TaskMode, files: string[]): DehydratedTask {
+export async function createNewDehydratedTask(name: string, taskMode: TaskMode, files: string[]): Promise<DehydratedTask> {
+	const repoMap = await new RepoMapMeltycat().getRepoMap();
+	const conversationBaseCodebaseView = prompts.initialCodebaseViewPrompt(repoMap);
+
 	return {
 		id: uuidv4(),
 		name: name,
 		branch: utils.meltyBranchNameFromTaskName(name),
-		conversation: conversations.create(),
+		conversation: conversations.create(conversationBaseCodebaseView),
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		taskMode: taskMode,

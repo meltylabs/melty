@@ -165,7 +165,7 @@ export class TasksPage {
 		taskMode: TaskMode,
 		files: string[]
 	): Promise<string> {
-		const task = createNewDehydratedTask(name, taskMode, files);
+		const task = await createNewDehydratedTask(name, taskMode, files);
 		this._taskManager.add(task);
 		return task.id;
 	}

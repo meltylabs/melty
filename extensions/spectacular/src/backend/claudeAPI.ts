@@ -170,7 +170,7 @@ export function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
 export function createClaudeMessage(
 	role: "user" | "assistant",
 	content: string,
-	cacheUpToThisBlock: boolean = false
+	cacheUpToThisBlock?: boolean
 ): ClaudeMessage {
 	return {
 		role,
