@@ -116,9 +116,9 @@ export async function streamClaudeRaw(
  * @param messages possibly malformed array of messages
  * @returns well-formed array of messages
  */
-function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
+function coalesceForClaude(messages: ClaudeMessage[]): Anthropic.Messages.MessageParam[] {
 	// reduce over messagesOrNulls to remove nulls and combine adjacent messages with same role
-	return messages.reduce((acc: ClaudeMessage[], message) => {
+	return messages.reduce((acc: Anthropic.Messages.MessageParam[], message) => {
 		if (message === null) {
 			return acc;
 		} else {
@@ -137,7 +137,7 @@ function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
 					},
 				];
 			} else {
-				return [...acc, message];
+				return [...acc, { role: message.role, content: message.content }];
 			}
 		}
 	}, []);
