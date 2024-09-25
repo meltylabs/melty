@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { RpcClient } from "../RpcClient";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import {
 	ArrowUp,
 	X,
@@ -12,6 +13,7 @@ import {
 	CircleHelp,
 	MessageCircle,
 	LightbulbIcon,
+	Search,
 } from "lucide-react";
 import { MouseEvent, KeyboardEvent } from "react";
 import OnboardingSection from './OnboardingSection';
@@ -68,6 +70,7 @@ export function Tasks({
 		description: "",
 	});
 	const [suggestions, setSuggestions] = useState<string[]>([]);
+	const [searchTerm, setSearchTerm] = useState("");
 
 
 	useEffect(() => {
@@ -230,6 +233,10 @@ export function Tasks({
 		});
 	}, []);
 
+	const filteredTasks = tasks?.filter(task =>
+		task.name.toLowerCase().includes(searchTerm.toLowerCase())
+	);
+
 
 	// initialization
 	useEffect(() => {
@@ -349,9 +356,19 @@ export function Tasks({
 						<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
 						Chats
 					</h2>
+					<div className="relative mb-4">
+						<Input
+							type="text"
+							placeholder="Search chats..."
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							className="pl-10"
+						/>
+						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+					</div>
 					<div className="grid md:grid-cols-3 grid-cols-1 gap-6 mt-4">
-						{tasks.length === 0 && <p>No tasks</p>}
-						{tasks.map((task) => (
+						{filteredTasks?.length === 0 && <p>No tasks found</p>}
+						{filteredTasks?.map((task) => (
 							<div key={task.id} className="relative">
 								<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
 									<Card className="h-20 flex flex-col justify-between pr-8">
