@@ -161,7 +161,6 @@ export class HelloWorldPanel implements WebviewViewProvider {
 				switch (method as PageNavigationRpcMethod) {
 					case "goToTasksPage":
 						if (!this.tasksPage) {
-							console.log("JDC GO TO TASKS PAGE");
 							this.tasksPage = TasksPage.getInstance();
 						}
 						return;

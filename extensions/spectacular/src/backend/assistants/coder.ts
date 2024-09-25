@@ -8,17 +8,13 @@ import {
 	Joule,
 	JouleBotChat,
 	JouleBotCode,
-	nextJouleType,
-	JouleType
 } from "../../types";
 import * as joules from "..//joules";
 import * as prompts from "..//prompts";
 import * as claudeAPI from "..//claudeAPI";
-import * as openaiAPI from "..//openaiAPI";
 import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
-import { RepoMapSpec } from "..//repoMapSpec";
+import { RepoMapMeltycat } from "..//repoMapMeltycat";
 import * as utils from "../../util/utils";
-import * as conversations from "..//conversations";
 import { BaseAssistant } from "./baseAssistant";
 import * as parser from "../diffApplication/parser";
 import * as changeSets from "..//changeSets";
@@ -169,7 +165,7 @@ export class Coder extends BaseAssistant {
 
 	private async prepareContext(contextPaths: ContextPaths, conversation: Conversation): Promise<ClaudeConversation> {
 		this._webviewNotifier.updateStatusMessage("Preparing context");
-		const repoMap = new RepoMapSpec();
+		const repoMap = new RepoMapMeltycat();
 		const workspaceFilePaths = await this._fileManager.getWorkspaceFilesRelative(); // await utils.getWorkspaceFilePaths(gitRepo);
 		const repoMapString = await repoMap.getRepoMap(workspaceFilePaths);
 
