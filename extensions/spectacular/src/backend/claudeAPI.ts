@@ -70,6 +70,10 @@ export async function streamClaudeRaw(
 	});
 
 	const { messages, system } = claudeConversationToAnthropicType(claudeConversation);
+	const testMessages: Anthropic.MessageParam[] = [{
+		role: "user",
+		content: "hi claude can you see this? say banana"
+	}];
 
 	try {
 		console.log("waiting for claude...");
@@ -78,7 +82,7 @@ export async function streamClaudeRaw(
 				{
 					model: model,
 					max_tokens: 8192,
-					messages,
+					messages: testMessages,
 					system,
 					stop_sequences: stopSequences
 				},
