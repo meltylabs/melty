@@ -2,16 +2,19 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { RpcClient } from "../RpcClient";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import {
 	ArrowUp,
 	X,
 	CheckCircle,
+	EllipsisVertical,
 	XCircle,
 	LoaderCircle,
 	XIcon,
 	CircleHelp,
 	MessageCircle,
 	LightbulbIcon,
+	Search,
 } from "lucide-react";
 import { MouseEvent, KeyboardEvent } from "react";
 import OnboardingSection from './OnboardingSection';
@@ -20,8 +23,10 @@ import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { DehydratedTask, TaskMode, AssistantInfo, MeltyContext } from "../types";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { AddFileButton } from "./AddFileButton";
 import { EventManager } from "@/eventManager";
+import { FastFilePicker } from './FastFilePicker';
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -67,6 +72,7 @@ export function Tasks({
 		description: "",
 	});
 	const [suggestions, setSuggestions] = useState<string[]>([]);
+	const [searchTerm, setSearchTerm] = useState("");
 
 
 	useEffect(() => {
@@ -229,6 +235,10 @@ export function Tasks({
 		});
 	}, []);
 
+	const filteredTasks = tasks?.filter(task =>
+		task.name.toLowerCase().includes(searchTerm.toLowerCase())
+	);
+
 
 	// initialization
 	useEffect(() => {
@@ -265,20 +275,22 @@ export function Tasks({
 			<form onSubmit={handleSubmit}>
 				<div className="mt-4 relative">
 					<AutoExpandingTextarea
-						pickerOpen={pickerOpen}
-						setPickerOpen={setPickerOpen}
-						workspaceFilePaths={workspaceFilePaths}
-						meltyMindFilePaths={meltyMindFilePaths}
-						handleAddFile={handleAddFile}
-						handleDropFile={handleDropFile}
 						placeholder="What are you trying to do?"
 						value={messageText}
 						onChange={(e) => setMessageText(e.target.value)}
 						onKeyDown={handleKeyDown}
-						className="flex-grow p-3 focus-visible:ring-0 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
+						className="flex-grow p-3 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
 						ref={textareaRef}
 						autoFocus={true}
 						required
+					/>
+					<FastFilePicker
+						isOpen={pickerOpen}
+						setIsOpen={setPickerOpen}
+						workspaceFilePaths={workspaceFilePaths}
+						meltyMindFilePaths={meltyMindFilePaths}
+						onFileSelect={handleAddFile}
+						onFileDrop={handleDropFile}
 					/>
 
 					<div className="absolute right-2 top-2 flex gap-2">
@@ -299,49 +311,6 @@ export function Tasks({
 				</div>
 			</form>
 			<div className="mt-1">
-				<div className="max-w-sm">
-					<Popover>
-						<PopoverTrigger>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="text-muted-foreground"
-							>
-								<CircleHelp className="h-3 w-3 mr-1" />
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent>
-							<div className="space-y-2 text-muted-foreground">
-
-								<>
-									<p>
-										Melty can see your codebase structure but not the full
-										content of your files. Too much context confuses language
-										models.
-										<b>
-											{" "}
-											Only add files that are helpful to the current task.
-										</b>
-									</p>
-									{meltyMindFilePaths.length === 0 ? (
-										<p>
-											<AddFileButton keyboardShortcut="@" />
-										</p>
-									) : (
-										<div>
-											<p>Melty can see the full content of these files: </p>
-											<ul>
-												{meltyMindFilePaths.map((file, i) => (
-													<li key={`file-${i}`}>{file}</li>
-												))}
-											</ul>
-										</div>
-									)}
-								</>
-							</div>
-						</PopoverContent>
-					</Popover>
-				</div>
 				<div className="flex overflow-x-auto">
 					{meltyMindFilePaths.map((file, i) => (
 						<button
@@ -385,13 +354,25 @@ export function Tasks({
 				<LoaderCircle className="w-4 h-4 animate-spin text-gray-500" />}
 			{tasks && tasks.length > 0 &&
 				<>
-					<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
-						<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
-						Chats
-					</h2>
+					<div className="flex items-center justify-between mt-6 mb-2">
+						<h2 className="text-muted-foreground font-semibold flex items-center">
+							<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
+							Chats
+						</h2>
+						<div className="relative w-32">
+							<Input
+								type="text"
+								placeholder="Search..."
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								className="pl-7 py-0.5 text-xs"
+							/>
+							<Search className="absolute left-1.5 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+						</div>
+					</div>
 					<div className="grid md:grid-cols-3 grid-cols-1 gap-6 mt-4">
-						{tasks.length === 0 && <p>No tasks</p>}
-						{tasks.map((task) => (
+						{filteredTasks?.length === 0 && <p>No tasks found</p>}
+						{filteredTasks?.map((task) => (
 							<div key={task.id} className="relative">
 								<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
 									<Card className="h-20 flex flex-col justify-between pr-8">
@@ -405,14 +386,20 @@ export function Tasks({
 										</CardContent>
 									</Card>
 								</button>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="absolute top-1 right-1 p-1 h-auto"
-									onClick={(e) => deleteTask(task.id, e)}
-								>
-									<X className="text-muted-foreground h-3 w-3" />
-								</Button>
+								<div className="absolute top-1 right-1">
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button variant="ghost" size="sm" className="p-1 h-auto">
+												<EllipsisVertical className="text-muted-foreground h-3 w-3" />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent>
+											<DropdownMenuItem onClick={(e) => deleteTask(task.id, e)}>
+												Delete
+											</DropdownMenuItem>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</div>
 							</div>
 						))}
 					</div>

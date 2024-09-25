@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import posthog from "posthog-js";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
+import { FastFilePicker } from "./FastFilePicker";
 import { Button } from './ui/button'
 import { RpcClient } from "@/RpcClient";
 import { JouleComponent, IJouleComponentProps } from "./JouleComponent";
@@ -444,23 +445,25 @@ export function ConversationView() {
 					</div>
 				)}
 				<form onSubmit={handleSubmit}>
-					<div className="mt-4 relative">
+					<div className="mt-4 relative ml-1 mr-2">
 						<AutoExpandingTextarea
-							pickerOpen={pickerOpen}
-							setPickerOpen={setPickerOpen}
-							workspaceFilePaths={workspaceFiles}
-							meltyMindFilePaths={meltyFiles}
-							handleAddFile={handleAddFile}
-							handleDropFile={handleDropFile}
 							placeholder="Talk to Melty"
 							id="message"
-							className="p-3 pr-12 pb-12 relative focus-visible:ring-0 max-h-[30vh] overflow-y-auto"
+							className="p-3 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
 							ref={inputRef}
 							required
 							value={messageText}
 							onChange={(e) => setMessageText(e.target.value)}
 							onKeyDown={handleTextareaKeyDown}
 							autoFocus={true}
+						/>
+						<FastFilePicker
+							isOpen={pickerOpen}
+							setIsOpen={setPickerOpen}
+							workspaceFilePaths={workspaceFiles}
+							meltyMindFilePaths={meltyFiles}
+							onFileSelect={handleAddFile}
+							onFileDrop={handleDropFile}
 						/>
 
 						{messageText.trim() !== "" && (

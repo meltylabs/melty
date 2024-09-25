@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { FixedSizeList as List } from "react-window";
@@ -82,6 +82,11 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 				}
 				setIsOpen(false);
 			}
+		} else if (e.key === "Escape") {
+			setIsOpen(false);
+			if (stopEscapePropagation) {
+				e.stopPropagation();
+			}
 		}
 	};
 
@@ -131,20 +136,19 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 	}, [isOpen, setIsOpen]);
 
 	return (
-		<Popover open={isOpen} onOpenChange={setIsOpen}>
-			<PopoverTrigger asChild>
+		<Dialog open={isOpen} onOpenChange={setIsOpen} >
+			<DialogTrigger asChild>
 				<div className="w-0 h-0 overflow-hidden">
 					<Button variant="outline">Select File...</Button>
 				</div>
-			</PopoverTrigger>
-			<PopoverContent className="w-[600px] text-[12px] ml-2 p-0" onEscapeKeyDown={e => stopEscapePropagation && e.stopPropagation()}>
+			</DialogTrigger>
+			<DialogContent className="w-[600px] text-[12px] p-0" onKeyDown={handleKeyDown} onEscapeKeyDown={e => e.stopPropagation()}>
 				<div className="p-2">
 					<Input
 						ref={inputRef}
 						placeholder="Type a filename..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
-						onKeyDown={handleKeyDown}
 					/>
 				</div>
 				{filteredFiles.length > 0 ? (
@@ -160,7 +164,7 @@ export const FastFilePicker: React.FC<PopoverSearchProps> = ({
 				) : (
 					<div className="p-4 text-center text-gray-500">No files found</div>
 				)}
-			</PopoverContent>
-		</Popover>
+			</DialogContent>
+		</Dialog>
 	);
 };
