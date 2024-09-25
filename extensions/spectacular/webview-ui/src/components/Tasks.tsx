@@ -357,10 +357,10 @@ export function Tasks({
 							<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
 							Chats
 						</h2>
-						<div className="relative w-40">
+						<div className="relative w-24">
 							<Input
 								type="text"
-								placeholder="Search chats..."
+								placeholder="Search..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								className="pl-7 py-0.5 text-xs"
