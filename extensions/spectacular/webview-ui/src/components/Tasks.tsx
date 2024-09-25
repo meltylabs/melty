@@ -22,6 +22,7 @@ import { DehydratedTask, TaskMode, AssistantInfo, MeltyContext } from "../types"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
 import { EventManager } from "@/eventManager";
+import { FastFilePicker } from './FastFilePicker';
 
 // Utility function to format the date
 function formatDate(date: Date): string {
@@ -265,12 +266,6 @@ export function Tasks({
 			<form onSubmit={handleSubmit}>
 				<div className="mt-4 relative">
 					<AutoExpandingTextarea
-						pickerOpen={pickerOpen}
-						setPickerOpen={setPickerOpen}
-						workspaceFilePaths={workspaceFilePaths}
-						meltyMindFilePaths={meltyMindFilePaths}
-						handleAddFile={handleAddFile}
-						handleDropFile={handleDropFile}
 						placeholder="What are you trying to do?"
 						value={messageText}
 						onChange={(e) => setMessageText(e.target.value)}
@@ -279,6 +274,14 @@ export function Tasks({
 						ref={textareaRef}
 						autoFocus={true}
 						required
+					/>
+					<FastFilePicker
+						isOpen={pickerOpen}
+						setIsOpen={setPickerOpen}
+						workspaceFilePaths={workspaceFilePaths}
+						meltyMindFilePaths={meltyMindFilePaths}
+						onFileSelect={handleAddFile}
+						onFileDrop={handleDropFile}
 					/>
 
 					<div className="absolute right-2 top-2 flex gap-2">
