@@ -20,6 +20,7 @@ export class RepoMapV2 {
 		const includedFiles: string[] = [];
 		const skippedFiles: string[] = [];
 		let isComplete = true;
+		let allContentIncluded = true;
 		const maxSize = 400000; // ~400k characters, about half of Claude's context window
 		const maxFileSize = 100 * 1024; // 100kb
 
@@ -74,17 +75,20 @@ export class RepoMapV2 {
 				includedFiles.push(fileInfo.relPath);
 				remainingSize -= fileContent.length;
 			} else if (remainingSize > 0) {
-				const skippedFileTag = `<skipped_file reason="File too large to include">${fileInfo.relPath}</skipped_file>\n`;
+				const skippedFileTag = `<skipped_file reason="Not enough space to include full contents">${fileInfo.relPath}</skipped_file>\n`;
 				if (view.length + skippedFileTag.length <= maxSize) {
 					view += skippedFileTag;
 					skippedFiles.push(fileInfo.relPath);
 					remainingSize -= skippedFileTag.length;
+					allContentIncluded = false;
 				} else {
 					allFileNamesIncluded = false;
+					allContentIncluded = false;
 					break;
 				}
 			} else {
 				allFileNamesIncluded = false;
+				allContentIncluded = false;
 				break;
 			}
 		}
@@ -102,7 +106,7 @@ export class RepoMapV2 {
 
 		return {
 			view,
-			isComplete: skippedFiles.length === 0,
+			isComplete: allContentIncluded,
 			includedFiles,
 			skippedFiles,
 		};
