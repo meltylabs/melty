@@ -22,6 +22,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
 import { DehydratedTask, TaskMode, AssistantInfo, MeltyContext } from "../types";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { AddFileButton } from "./AddFileButton";
 import { EventManager } from "@/eventManager";
 import { FastFilePicker } from './FastFilePicker';
