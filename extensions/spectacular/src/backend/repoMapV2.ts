@@ -21,38 +21,43 @@ export class RepoMapV2 {
 		const skippedFiles: string[] = [];
 		let isComplete = true;
 		const maxSize = 400000; // ~400k characters, about half of Claude's context window
+		const maxFileSize = 100 * 1024; // 100kb
 
-		const processDirectory = (dir: string) => {
-			const files = fs.readdirSync(dir);
-			for (const file of files) {
-				const filePath = path.join(dir, file);
-				const stat = fs.statSync(filePath);
+		const filePaths = await this._fileManager.getWorkspaceFiles();
 
-				if (stat.isDirectory()) {
-					processDirectory(filePath);
-				} else if (stat.isFile()) {
-					const content = fs.readFileSync(filePath, 'utf-8');
+		for (const filePath of filePaths) {
+			const absPath = path.join(rootDir, filePath);
 
-					if (this.isBinary(content)) {
-						skippedFiles.push(filePath);
-						continue;
-					}
-
-					const fileContent = `<file_contents file="${filePath}">\n${content}\n</file_contents>\n`;
-
-					if (view.length + fileContent.length > maxSize) {
-						skippedFiles.push(filePath);
-						isComplete = false;
-						continue;
-					}
-
-					view += fileContent;
-					includedFiles.push(filePath);
-				}
+			if (!fs.existsSync(absPath)) {
+				skippedFiles.push(filePath);
+				continue;
 			}
-		};
 
-		processDirectory(rootDir);
+			const stat = fs.statSync(absPath);
+
+			if (stat.size > maxFileSize) {
+				skippedFiles.push(filePath);
+				continue;
+			}
+
+			const content = fs.readFileSync(absPath, 'utf-8');
+
+			if (this.isBinary(content)) {
+				skippedFiles.push(filePath);
+				continue;
+			}
+
+			const fileContent = `<file_contents file="${filePath}">\n${content}\n</file_contents>\n`;
+
+			if (view.length + fileContent.length > maxSize) {
+				skippedFiles.push(filePath);
+				isComplete = false;
+				continue;
+			}
+
+			view += fileContent;
+			includedFiles.push(filePath);
+		}
 
 		return {
 			view,
