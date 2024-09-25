@@ -17,10 +17,18 @@ export type ClaudeOpts = {
 	stopSequences?: string[],
 	processPartial?: (text: string) => void,
 };
+
+/**
+ * DEPRECATED - use streamClaudeRaw instead
+ */
 export async function streamClaude(
 	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<string> {
-	const final = await streamClaudeRaw(claudeConversation, opts);
+	const final = await streamClaudeRaw(
+		claudeConversation.system,
+		claudeConversation.messages,
+		opts
+	);
 	const textContent = final.content.find((block) => "text" in block);
 	if (textContent && "text" in textContent) {
 		return textContent.text.trim();
@@ -108,6 +116,26 @@ export async function streamClaudeRaw(
 	}
 }
 
+function claudeMessageToAnthropicType(claudeMessage: ClaudeMessage): Anthropic.Beta.PromptCaching.PromptCachingBetaMessageParam {
+	return {
+		"role": claudeMessage.role,
+		"content": [
+			{
+				"type": "text",
+				"text": claudeMessage.content,
+				"cache_control": { "type": "ephemeral" }
+			}
+		],
+	};
+}
+
+function claudeConversationToAnthropicType(claudeConversation: ClaudeConversation): Pick<Anthropic.MessageCreateParams, 'system' | 'messages'> {
+	return {
+		system: claudeConversation.system,
+		messages: claudeConversation.messages.map(claudeMessageToAnthropicType),
+	};
+}
+
 
 /**
  * Guarantees properties required for Claude:
@@ -116,7 +144,7 @@ export async function streamClaudeRaw(
  * @param messages possibly malformed array of messages
  * @returns well-formed array of messages
  */
-function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
+export function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
 	// reduce over messagesOrNulls to remove nulls and combine adjacent messages with same role
 	return messages.reduce((acc: ClaudeMessage[], message) => {
 		if (message === null) {
