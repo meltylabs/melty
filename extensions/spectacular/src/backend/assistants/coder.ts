@@ -61,7 +61,7 @@ export class Coder extends BaseAssistant {
 			messages: claudeAPI.coalesceForClaude(claudeConversationUncoalesced.messages)
 		};
 
-		this._webviewNotifier.updateStatusMessage("Thinking");
+		this._webviewNotifier.updateStatusMessage("Pondering");
 		let partialMessage = "";
 		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
@@ -69,6 +69,7 @@ export class Coder extends BaseAssistant {
 				cancellationToken,
 				stopSequences: ["<change_code"],
 				processPartial: async (responseFragment: string) => {
+					this._webviewNotifier.updateStatusMessage("Writing");
 					if (cancellationToken?.isCancellationRequested) {
 						throw new ErrorOperationCancelled();
 					}
@@ -114,13 +115,14 @@ export class Coder extends BaseAssistant {
 			messages: claudeAPI.coalesceForClaude(claudeConversationUncoalesced.messages)
 		};
 
-		this._webviewNotifier.updateStatusMessage("Thinking");
+		this._webviewNotifier.updateStatusMessage("Pondering");
 		let partialMessage = PREFILL_TEXT;
 		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
 			{
 				cancellationToken,
 				processPartial: async (responseFragment: string) => {
+					this._webviewNotifier.updateStatusMessage("Writing");
 					if (cancellationToken?.isCancellationRequested) {
 						throw new ErrorOperationCancelled();
 					}
