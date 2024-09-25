@@ -394,12 +394,12 @@ export function Tasks({
 						{tasks.map((task) => (
 							<div key={task.id} className="relative">
 								<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
-									<Card>
-										<CardHeader>
-											<CardTitle>{task.name}</CardTitle>
+									<Card className="h-24 flex flex-col justify-between">
+										<CardHeader className="p-3">
+											<CardTitle className="text-sm truncate">{task.name}</CardTitle>
 										</CardHeader>
-										<CardContent>
-											<p className="text-xs text-gray-500 mt-2">
+										<CardContent className="p-3 pt-0">
+											<p className="text-xs text-gray-500">
 												{formatDate(new Date(task.updatedAt))}
 											</p>
 										</CardContent>
