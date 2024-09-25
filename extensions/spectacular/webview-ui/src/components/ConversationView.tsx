@@ -248,7 +248,11 @@ export function ConversationView() {
 						setWorkspaceFiles(message.files);
 						return;
 					case "updateMeltyMindFiles":
-						setMeltyFiles(message.files);
+						if (Array.isArray(message.files)) {
+							setMeltyFiles(message.files);
+						} else {
+							console.error("updateMeltyMindFiles message.files is not an array");
+						}
 						return;
 					case "updateStatusMessage":
 						setStatusMessage(message.statusMessage);

@@ -172,7 +172,7 @@ export class FileManager {
 		this.meltyMindFiles.add(relPath);
 		if (notify) {
 			webviewNotifier.sendNotification("updateMeltyMindFiles", {
-				files: await this.getContextPaths().relativePaths,
+				files: await this.getMeltyMindFilesRelative(),
 			});
 		}
 	}
