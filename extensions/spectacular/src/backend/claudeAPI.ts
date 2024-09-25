@@ -25,8 +25,7 @@ export async function streamClaude(
 	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<string> {
 	const final = await streamClaudeRaw(
-		claudeConversation.system,
-		claudeConversation.messages,
+		claudeConversation,
 		opts
 	);
 	const textContent = final.content.find((block) => "text" in block);
@@ -38,7 +37,7 @@ export async function streamClaude(
 }
 
 export async function streamClaudeRaw(
-	claudeConversationUncoalesced: ClaudeConversation,
+	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<Anthropic.Messages.Message> {
 	const {
 		model = Models.Claude35Sonnet,
@@ -46,11 +45,6 @@ export async function streamClaudeRaw(
 		processPartial,
 		stopSequences = []
 	} = opts;
-
-	const claudeConversation = {
-		system: claudeConversationUncoalesced.system,
-		messages: coalesceForClaude(claudeConversationUncoalesced.messages)
-	};
 
 	if (claudeConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
@@ -75,6 +69,8 @@ export async function streamClaudeRaw(
 		baseURL: baseURL
 	});
 
+	const { messages, system } = claudeConversationToAnthropicType(claudeConversation);
+
 	try {
 		console.log("waiting for claude...");
 		const stream = anthropic.messages
@@ -82,8 +78,8 @@ export async function streamClaudeRaw(
 				{
 					model: model,
 					max_tokens: 4096,
-					messages: claudeConversation.messages as any,
-					system: claudeConversation.system,
+					messages,
+					system,
 					stop_sequences: stopSequences
 				},
 				{
@@ -123,7 +119,7 @@ function claudeMessageToAnthropicType(claudeMessage: ClaudeMessage): Anthropic.B
 			{
 				"type": "text",
 				"text": claudeMessage.content,
-				"cache_control": { "type": "ephemeral" }
+				"cache_control": claudeMessage.cacheUpToThisBlock ? { "type": "ephemeral" } : undefined,
 			}
 		],
 	};
@@ -169,4 +165,16 @@ export function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
 			}
 		}
 	}, []);
+}
+
+export function createClaudeMessage(
+	role: "user" | "assistant",
+	content: string,
+	cacheUpToThisBlock: boolean = false
+): ClaudeMessage {
+	return {
+		role,
+		content,
+		cacheUpToThisBlock,
+	};
 }

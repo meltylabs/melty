@@ -97,13 +97,14 @@ export function encodeJouleForClaude(joule: Joule): ClaudeMessage | null {
 				content: `${diffPreview
 					? `<user_updated_code>${diffPreview}</user_updated_code>`
 					: ""} ${joule.message}`,
+				cacheUpToThisBlock: false
 			};
 		case "HumanConfirmCode":
 			return null;
 		case "BotChat":
-			return { role: "assistant", content: joule.botExecInfo.rawOutput };
+			return { role: "assistant", content: joule.botExecInfo.rawOutput, cacheUpToThisBlock: false };
 		case "BotCode":
-			return { role: "assistant", content: joule.botExecInfo.rawOutput };
+			return { role: "assistant", content: joule.botExecInfo.rawOutput, cacheUpToThisBlock: false };
 		default:
 			throw new Error(`Unknown Joule type ${joule}`);
 	}

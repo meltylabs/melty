@@ -147,7 +147,7 @@ export interface Message {
 export type ClaudeMessage = {
 	readonly role: "user" | "assistant";
 	readonly content: string;
-	readonly cacheThisBlock: boolean;
+	readonly cacheUpToThisBlock: boolean;
 };
 
 export type ClaudeConversation = {

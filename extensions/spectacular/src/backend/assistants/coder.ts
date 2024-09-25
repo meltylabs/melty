@@ -99,10 +99,7 @@ export class Coder extends BaseAssistant {
 		this.prepForChanges();
 
 		const claudeConversation = await this.prepareContext(contextPaths, conversation);
-		claudeConversation.messages.push({
-			role: "assistant",
-			content: PREFILL_TEXT
-		});
+		claudeConversation.messages.push(claudeAPI.createClaudeMessage("assistant", PREFILL_TEXT));
 
 		this._webviewNotifier.updateStatusMessage("Thinking");
 		let partialMessage = PREFILL_TEXT;

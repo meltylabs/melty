@@ -66,7 +66,7 @@ export class MeltycatService {
 	}
 
 	private async initializeWatcher(): Promise<void> {
-		const watchOptions: chokidar.WatchOptions = {
+		const watchOptions: chokidar.ChokidarOptions = {
 			persistent: true,
 			ignoreInitial: false,
 			depth: this.maxDepth,
