@@ -1,11 +1,6 @@
 import * as vscode from "vscode";
 import { HelloWorldPanel } from "./HelloWorldPanel";
-import { generateTodoFromCurrentPR } from "./todoGenerator";
-import { GitManager } from "./services/GitManager";
-import { MeltycatService } from './services/meltycat';
-
 import posthog from "posthog-js";
-import { TaskManager } from './services/TaskManager';
 import { exec } from 'child_process';
 
 const COPY_MELTY_SETTINGS_SCRIPT_URL = 'https://raw.githubusercontent.com/meltylabs/melty/main/scripts/copy_settings.sh';
@@ -47,11 +42,6 @@ export class MeltyExtension {
 
 		outputChannel.appendLine("Melty extension activated");
 		console.log("Melty extension activated");
-
-		// can't do this here because workspace might not be ready
-		// this._taskManager.loadTasks();
-
-		// this._meltycatService.start();
 	}
 
 	async deactivate(): Promise<void> {
