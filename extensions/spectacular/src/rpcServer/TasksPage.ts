@@ -9,7 +9,6 @@ import { Vanilla } from "../backend/assistants/vanilla";
 import { GitManager } from "../services/GitManager";
 import { GitHubManager } from '../services/GitHubManager';
 import { TaskManager } from '../services/TaskManager';
-import { MeltycatService } from '../services/MeltycatService';
 
 /**
  * Do not create an instance of this class until ContextProvider is initialized.
@@ -23,10 +22,8 @@ export class TasksPage {
 		private readonly _taskManager: TaskManager = TaskManager.getInstance(),
 		private readonly _fileManager: FileManager = FileManager.getInstance(),
 		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance(),
-		private readonly _meltycatService: MeltycatService = MeltycatService.getInstance()
 	) {
 		this._taskManager.loadTasks();
-		this._meltycatService.start();
 	}
 
 	public static getInstance(): TasksPage {

@@ -13,7 +13,7 @@ import * as joules from "..//joules";
 import * as prompts from "..//prompts";
 import * as claudeAPI from "..//claudeAPI";
 import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
-import { RepoMapMeltycat } from "..//repoMapMeltycat";
+import { RepoMapV2 } from "..//repoMapMeltycat";
 import * as utils from "../../util/utils";
 import { BaseAssistant } from "./baseAssistant";
 import * as parser from "../diffApplication/parser";

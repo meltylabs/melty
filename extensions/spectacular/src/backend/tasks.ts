@@ -12,11 +12,11 @@ import { WebviewNotifier } from "../services/WebviewNotifier";
 import { GitManager } from "../services/GitManager";
 import { v4 as uuidv4 } from "uuid";
 import { BaseAssistant } from 'backend/assistants/baseAssistant';
-import { RepoMapMeltycat } from 'backend/repoMapMeltycat';
+import { RepoMapV2 } from 'backend/repoMapV2';
 import * as prompts from 'backend/prompts';
 
 export async function createNewDehydratedTask(name: string, taskMode: TaskMode, files: string[]): Promise<DehydratedTask> {
-	const repoMap = await new RepoMapMeltycat().getRepoMap();
+	const repoMap = await new RepoMapV2().getRepoMap();
 	const conversationBaseCodebaseView = prompts.initialCodebaseViewPrompt(repoMap);
 
 	return {

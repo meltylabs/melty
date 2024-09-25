@@ -165,13 +165,21 @@ export type OpenAIConversation = {
 	messages: OpenAIMessage[];
 };
 
+export type CodebaseView = {
+	readonly view: string;
+	readonly isComplete: boolean;
+	readonly includedFiles: string[];
+	readonly skippedFiles: string[];
+	readonly commit?: string;
+};
+
 export type ConversationBase = {
 	/**
 	 * Stuff that will get encoded at the beginning of the Claude prompt.
 	 * This stuff should generally stay the same throughout the conversation.
 	 */
 	readonly systemPrompt: string;
-	readonly codebaseView: ClaudeMessage[];
+	readonly codebaseView: CodebaseView;
 };
 
 export type Conversation = {
