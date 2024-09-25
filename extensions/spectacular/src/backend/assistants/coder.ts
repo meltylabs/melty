@@ -69,7 +69,7 @@ export class Coder extends BaseAssistant {
 				cancellationToken,
 				stopSequences: ["<change_code"],
 				processPartial: async (responseFragment: string) => {
-					this._webviewNotifier.updateStatusMessage("Writing");
+					this._webviewNotifier.updateStatusMessage("Typing");
 					if (cancellationToken?.isCancellationRequested) {
 						throw new ErrorOperationCancelled();
 					}
@@ -122,7 +122,7 @@ export class Coder extends BaseAssistant {
 			{
 				cancellationToken,
 				processPartial: async (responseFragment: string) => {
-					this._webviewNotifier.updateStatusMessage("Writing");
+					this._webviewNotifier.updateStatusMessage("Typing");
 					if (cancellationToken?.isCancellationRequested) {
 						throw new ErrorOperationCancelled();
 					}

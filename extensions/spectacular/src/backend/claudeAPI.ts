@@ -77,7 +77,7 @@ export async function streamClaudeRaw(
 			.stream(
 				{
 					model: model,
-					max_tokens: 4096,
+					max_tokens: 8192,
 					messages,
 					system,
 					stop_sequences: stopSequences
@@ -119,7 +119,7 @@ function claudeMessageToAnthropicType(claudeMessage: ClaudeMessage): Anthropic.B
 			{
 				"type": "text",
 				"text": claudeMessage.content,
-				"cache_control": claudeMessage.cacheUpToThisBlock ? { "type": "ephemeral" } : undefined,
+				"cache_control": undefined // claudeMessage.cacheUpToThisBlock ? { "type": "ephemeral" } : undefined,
 			}
 		],
 	};
