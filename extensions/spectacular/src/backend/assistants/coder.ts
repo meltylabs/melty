@@ -14,7 +14,7 @@ import {
 import * as joules from "..//joules";
 import * as prompts from "..//prompts";
 import * as claudeAPI from "..//claudeAPI";
-import * as openaiAPI from "..//openaiAPI"
+import * as openaiAPI from "..//openaiAPI";
 import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
 import { RepoMapSpec } from "..//repoMapSpec";
 import * as utils from "../../util/utils";
@@ -27,6 +27,7 @@ import { generateCommitMessage } from "../commitMessageGenerator";
 import { WebviewNotifier } from "services/WebviewNotifier";
 import { FileManager } from 'services/FileManager';
 import { GitManager } from 'services/GitManager';
+import { ContextProvider } from 'services/ContextProvider';
 import { ErrorOperationCancelled } from 'util/utils';
 
 const PREFILL_TEXT = "<change_code";
@@ -41,6 +42,7 @@ export class Coder extends BaseAssistant {
 	constructor(
 		private readonly _fileManager: FileManager = FileManager.getInstance(),
 		private readonly _gitManager: GitManager = GitManager.getInstance(),
+		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance(),
 		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance()
 	) {
 		super();
@@ -270,7 +272,7 @@ export class Coder extends BaseAssistant {
 				);
 				this._webviewNotifier.resetStatusMessage();
 			} else {
-				changeSets.applyChangeSet(changeSet, this._gitManager.getMeltyRoot());
+				changeSets.applyChangeSet(changeSet, this._contextProvider.meltyRoot);
 				commit = null;
 			}
 			const diffInfo = {
