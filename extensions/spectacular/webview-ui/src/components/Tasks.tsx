@@ -357,7 +357,7 @@ export function Tasks({
 							<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
 							Chats
 						</h2>
-						<div className="relative w-24">
+						<div className="relative w-32">
 							<Input
 								type="text"
 								placeholder="Search..."
