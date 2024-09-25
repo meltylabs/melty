@@ -7,6 +7,7 @@ import {
 	useLocation, useMatch,
 } from "react-router-dom";
 import { Tasks } from "./components/Tasks";
+import { InitPage } from "./components/InitPage";
 import { ConversationView } from "./components/ConversationView";
 import { Help } from "./components/Help";
 import { NavBar } from "./components/NavBar";
@@ -71,7 +72,8 @@ function AppContent() {
 							}
 						/>
 						<Route path="/task/:taskId" element={<ConversationView />} />
-						<Route path="/" element={<Tasks />} />
+						<Route path="/" element={<InitPage />} />
+						<Route path="/tasks" element={<Tasks />} />
 						<Route path="/help" element={<Help />} />
 						<Route path="*" element={<Navigate to="/" replace />} />
 					</Routes>

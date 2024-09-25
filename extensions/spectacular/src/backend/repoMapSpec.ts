@@ -2,11 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
 
-import { GitManager } from "services/GitManager";
+import { ContextProvider } from "services/ContextProvider";
 
 export class RepoMapSpec {
 	constructor(
-		private readonly _gitManager: GitManager = GitManager.getInstance()
+		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance()
 	) { }
 
 	public async getRepoMap(relativeFilePaths: string[]): Promise<string> {
@@ -21,7 +21,7 @@ export class RepoMapSpec {
 		console.log("building repomap");
 		// Filter out files that don't exist and files that are >100kb
 		const eligibleFiles = relativeFilePaths.filter((file) => {
-			const absPath = path.join(this._gitManager.getMeltyRoot(), file);
+			const absPath = path.join(this._contextProvider.meltyRootAbsolute, file);
 			return fs.existsSync(absPath) && fs.statSync(absPath).size < 100000;
 		});
 
@@ -39,7 +39,7 @@ export class RepoMapSpec {
 	private mapFile(relativeFilePath: string): string {
 		if (path.basename(relativeFilePath) === "package.json") {
 			const absoluteFilePath = path.join(
-				this._gitManager.getMeltyRoot(),
+				this._contextProvider.meltyRootAbsolute,
 				relativeFilePath
 			);
 			return fs.readFileSync(absoluteFilePath, "utf-8");
@@ -86,7 +86,7 @@ export class RepoMapSpec {
 	}
 
 	private extractSpec(relativeFilePath: string): string {
-		const absoluteFilePath = path.join(this._gitManager.getMeltyRoot(), relativeFilePath);
+		const absoluteFilePath = path.join(this._contextProvider.meltyRootAbsolute, relativeFilePath);
 		const sourceFile = ts.createSourceFile(
 			absoluteFilePath,
 			fs.readFileSync(absoluteFilePath, "utf-8"),

@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 
 // TODOREFACTOR get these imports out of here
 import { generateCommitMessage } from '../backend/commitMessageGenerator';
-import { ChangeSet, CodeInfo } from 'types';
+import { ChangeSet, CodeInfo, MeltyContext } from 'types';
 import * as changesets from 'backend/changeSets';
 import * as files from 'backend/meltyFiles';
+import path from 'path';
+import { ContextProvider } from 'services/ContextProvider';
 
 type Repo = {
 	sitory: any;
@@ -12,33 +14,19 @@ type Repo = {
 
 /**
  * All public methods wrapped in try/catch and return sensible defaults in the error case!
+ * GitManager manages not just git, but also the workspace root. Probably those things should
+ * be separated at some point.
  */
 export class GitManager {
 	private static instance: GitManager | null = null;
 
-	private gitApi: { repositories: any, init: any } | undefined = undefined;
-	private repo: Repo | undefined = undefined;
-	private workspaceRoot: string | undefined;
-	private pollForGitExtensionInterval: NodeJS.Timeout | null = null;
+	private repo: Repo;
 
-	private constructor() {
-		// TODO properly dispose of pollForGitExtensionInterval
-		this.pollForGitExtensionInterval = setInterval(
-			async () => {
-				if (vscode.extensions.getExtension('vscode.git')) {
-					clearInterval(this.pollForGitExtensionInterval!);
-					const err = await this.init();
-					if (err === undefined) {
-						console.log('Git repository initialized');
-					} else {
-						console.error('Error initializing git repository:', err);
-					}
-				} else {
-					console.log('No git extension found. Polling again in 1s');
-				}
-			},
-			1000
-		);
+	public constructor(
+		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance()
+	) {
+		// todo: this could create problems if we update the MeltyContext. maybe don't copy repo in here.
+		this.repo = { sitory: _contextProvider.gitRepo };
 	}
 
 	public static getInstance(): GitManager {
@@ -48,79 +36,12 @@ export class GitManager {
 		return GitManager.instance;
 	}
 
-	private async checkInit() {
-		if (this.repo === undefined && this.workspaceRoot) {
-			throw new Error('Git repository not initialized');
-		}
-	}
-
-	/**
-	 * Initializes this.repo to be the repo at workspace root.
-	 * Returns errors.
-	 */
-	public async init(): Promise<string | undefined> {
-		this.workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-
-		if (!this.workspaceRoot) {
-			// this string is parsed on frontend to decide whether to show the workspace folder dialog
-			return "No workspace folder found. Open a workspace folder.";
-		}
-
-		if (!this.gitApi) {
-			const gitExtension = vscode.extensions.getExtension('vscode.git');
-			if (!gitExtension) {
-				return "Git extension not found. Try reloading the window.";
-			}
-			this.gitApi = gitExtension.exports.getAPI(1);
-			if (!this.gitApi) {
-				return "Git API not found. Try reloading the window.";
-			}
-		}
-
-		const repositories = this.gitApi.repositories;
-		if (!repositories.length) {
-			// this string is parsed on frontend to decide whether to show the create repo button
-			return "No git repositories found. Run `git init` in the root workspace folder.";
-		}
-
-		// Find the repository that matches the workspace root
-		const repo = repositories.find(
-			(r: any) => r.rootUri.fsPath === this.workspaceRoot
-		);
-		if (!repo) {
-			// this string is parsed on frontend to decide whether to show the create repo button
-			return "No git repository found at workspace root. Run `git init` in the root workspace folder.";
-		}
-
-		this.repo = { sitory: repo };
-		await this.repo.sitory.status();
-
-		return undefined;
-	}
-
-	public async createRepository(): Promise<boolean> {
-		try {
-			if (!this.workspaceRoot) {
-				throw new Error('No workspace folder');
-			}
-			const _repo = await this.gitApi?.init(
-				vscode.Uri.parse(this.workspaceRoot)
-			);
-			// for now, we throw out _repo and let a call to init() find it again
-			return true;
-		} catch (error) {
-			console.error('Error creating git repository:', error);
-			return false;
-		}
-	}
-
 	/**
 	 * Commits any local changes (or empty commit if none).
 	 * @returns info if changes were committed, or null otherwise
 	 */
 	public async commitLocalChanges(): Promise<CodeInfo | null> {
 		try {
-			this.checkInit();
 			await this.repo!.sitory.status();
 
 			// Get all changes, including untracked files
@@ -175,18 +96,18 @@ export class GitManager {
 		commitMessage: string
 	): Promise<string | null> {
 		try {
-			this.checkInit();
 			await this.repo!.sitory.status();
 			// check for uncommitted changes
 			if (!this.repoIsClean()) {
 				console.warn("Committing changeset despite unclean repo");
 			}
 
-			changesets.applyChangeSet(changeSet, this.getMeltyRoot());
+			changesets.applyChangeSet(changeSet);
 
 			await this.repo!.sitory.add(
 				Object.values(changeSet.filesChanged).map(
-					({ original, updated }) => files.absolutePath(updated, this.getMeltyRoot()) // either original or updated works here
+					// either original or updated works here
+					({ original, updated }) => files.absolutePath(updated, this._contextProvider.meltyRootAbsolute)
 				)
 			);
 
@@ -203,15 +124,9 @@ export class GitManager {
 		}
 	}
 
-
-	public getMeltyRoot(): string {
-		return this.workspaceRoot!;
-	}
-
 	public getMeltyRemote(): { fetchUrl: string, pushUrl: string } | null {
 		const remoteName = vscode.workspace.getConfiguration().get('melty.remoteName') || 'origin';
 		try {
-			this.checkInit();
 			const remote = this.repo!.sitory.state.remotes.find((r: any) => r.name === remoteName);
 			return {
 				fetchUrl: remote.fetchUrl,
@@ -225,7 +140,6 @@ export class GitManager {
 
 	public getCurrentBranch(): string | null {
 		try {
-			this.checkInit();
 			return this.repo!.sitory.state.HEAD?.name || null;
 		} catch (error) {
 			console.error('Error getting current branch:', error);
@@ -235,7 +149,6 @@ export class GitManager {
 
 	public async createBranch(branchName: string): Promise<boolean> {
 		try {
-			this.checkInit();
 			await this.repo!.sitory.createBranch(branchName, true);
 			return true;
 		} catch (error) {
@@ -246,7 +159,6 @@ export class GitManager {
 
 	public async checkoutBranch(branchName: string): Promise<boolean> {
 		try {
-			this.checkInit();
 			await this.repo!.sitory.checkout(branchName);
 			return true;
 		} catch (error) {
@@ -257,7 +169,6 @@ export class GitManager {
 
 	public getLatestCommitHash(): string | undefined {
 		try {
-			this.checkInit();
 			return this.repo!.sitory.state.HEAD?.commit;
 		} catch (error) {
 			console.error('Error getting latest commit hash:', error);
@@ -272,8 +183,6 @@ export class GitManager {
 	 */
 	public async undoLastCommit(commitId: string): Promise<string | null> {
 		try {
-			this.checkInit();
-
 			const isLatest = (this.getLatestCommitHash()) === commitId;
 			const workingTreeChanges = this.repo!.sitory.state.workingTreeChanges;
 
@@ -304,7 +213,6 @@ export class GitManager {
 
 	public repoIsClean(): boolean {
 		try {
-			this.checkInit();
 			return !this.repo!.sitory.state.workingTreeChanges.length &&
 				!this.repo!.sitory.state.indexChanges.length &&
 				!this.repo!.sitory.state.mergeChanges.length;
@@ -316,7 +224,6 @@ export class GitManager {
 
 	public isOnMainBranch(): boolean {
 		try {
-			this.checkInit();
 			return this.repo!.sitory.state.HEAD?.name === 'main';
 		} catch (error) {
 			console.error('Error checking if on main branch:', error);
@@ -326,7 +233,6 @@ export class GitManager {
 
 	public async getCommit(commitSha: string): Promise<any | null> {
 		try {
-			this.checkInit();
 			return await this.repo!.sitory.getCommit(commitSha);
 		} catch (error) {
 			console.error(`Error getting commit ${commitSha}:`, error);
@@ -336,7 +242,6 @@ export class GitManager {
 
 	public async pushToMeltyRemote(branchName: string): Promise<boolean> {
 		try {
-			this.checkInit();
 			const remote = this.getMeltyRemote();
 			await this.repo!.sitory.push(remote!.pushUrl, branchName, false); // do not force push
 			return true;
@@ -351,7 +256,6 @@ export class GitManager {
 	 */
 	public async getUdiffFromWorking(): Promise<string> {
 		try {
-			this.checkInit();
 			return await this.repo!.sitory.diff("HEAD");
 		} catch (error) {
 			console.error('Error getting latest commit hash:', error);
@@ -366,7 +270,6 @@ export class GitManager {
 		commit: string | undefined
 	): Promise<string> {
 		try {
-			this.checkInit();
 			// Check if there are any commits in the repository
 			const headCommit = await this.repo!.sitory.getCommit('HEAD').catch(() => null);
 

@@ -80,7 +80,7 @@ const copyLibFolder = async () => {
 			console.log("build complete");
 		}
 	} catch (err) {
-		process.stderr.write(err.stderr);
+		process.stderr.write(`${err.stderr}`);
 		process.exit(1);
 	}
 })();

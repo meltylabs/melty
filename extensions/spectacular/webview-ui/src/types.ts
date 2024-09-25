@@ -1,3 +1,18 @@
+// This file manually kept in sync between
+// - src/types.ts
+// - webview-ui/src/types.ts
+
+// Parameters needed to initialize Melty.
+export type MeltyContext = {
+	workspaceRoot: string;
+	meltyRoot: string;
+	gitRepo: any;
+};
+
+export type MeltyConfig = {
+	debugMode: boolean;
+};
+
 export type JouleTypeHuman =
 	| "HumanChat"
 	| "HumanConfirmCode";
@@ -87,7 +102,7 @@ export type DehydratedTask = {
 };
 
 export type ContextPaths = {
-	readonly paths: string[];
+	readonly relativePaths: string[];
 	meltyRoot: string;
 };
 
@@ -164,35 +179,48 @@ export type ChangeSet = {
 	};
 };
 
-export type MeltyConfig = {
-	debugMode: boolean;
-};
+export const ANY_PAGE_RPC_METHODS = [
+	"getVSCodeTheme",
+	"openWorkspaceDialog",
+	"createGitRepository",
+	"createAndOpenWorkspace",
+	"checkOnboardingComplete",
+	"setOnboardingComplete",
+	"getMeltyConfig",
+	"getMeltyContextError"
+] as const;
 
-export type RpcMethod =
-	| "listMeltyFiles"
-	| "listWorkspaceFiles"
-	| "getActiveTask"
-	| "listTaskPreviews"
-	| "createTask"
-	| "activateTask"
-	| "deactivateTask"
-	| "addMeltyFile"
-	| "dropMeltyFile"
-	| "createPullRequest"
-	| "deleteTask"
-	| "undoLatestCommit"
-	| "getLatestCommit"
-	| "getGitConfigErrors"
-	| "getAssistantDescription"
-	| "getVSCodeTheme"
-	| "openWorkspaceDialog"
-	| "createGitRepository"
-	| "createAndOpenWorkspace"
-	| "checkOnboardingComplete"
-	| "setOnboardingComplete"
-	| "getMeltyConfig"
+export type AnyPageRpcMethod = typeof ANY_PAGE_RPC_METHODS[number];
+
+// Assuming you have a similar setup for TasksPageRpcMethod
+export const TASKS_PAGE_RPC_METHODS = [
+	"listMeltyFiles",
+	"listWorkspaceFiles",
+	"getActiveTask",
+	"listTaskPreviews",
+	"createTask",
+	"activateTask",
+	"deactivateTask",
+	"addMeltyFile",
+	"dropMeltyFile",
+	"createPullRequest",
+	"deleteTask",
+	"undoLatestCommit",
+	"getLatestCommit",
+	"getAssistantDescription",
 	// human conversation actions
-	| "createJouleHumanChat"
-	| "createJouleHumanConfirmCode"
+	"createJouleHumanChat",
+	"createJouleHumanConfirmCode",
 	// bot conversation action
-	| "startBotTurn";
+	"startBotTurn",
+] as const;
+
+export type TasksPageRpcMethod = typeof TASKS_PAGE_RPC_METHODS[number];
+
+export const PAGE_NAVIGATION_RPC_METHODS = [
+	"goToTasksPage",
+];
+
+export type PageNavigationRpcMethod = typeof PAGE_NAVIGATION_RPC_METHODS[number];
+
+export type RpcMethod = AnyPageRpcMethod | TasksPageRpcMethod | PageNavigationRpcMethod;

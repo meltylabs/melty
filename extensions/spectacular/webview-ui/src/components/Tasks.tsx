@@ -14,22 +14,13 @@ import {
 	LightbulbIcon,
 } from "lucide-react";
 import { MouseEvent, KeyboardEvent } from "react";
-import Ascii from "./Ascii";
 import OnboardingSection from './OnboardingSection';
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { DehydratedTask, TaskMode, AssistantInfo } from "../types";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "./ui/select";
+import { DehydratedTask, TaskMode, AssistantInfo, MeltyContext } from "../types";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { AddFileButton } from "./AddFileButton";
-import * as strings from "@/utilities/strings";
 import { EventManager } from "@/eventManager";
 
 // Utility function to format the date
@@ -61,9 +52,8 @@ export function Tasks({
 }: {
 	initialMeltyMindFiles?: string[];
 }) {
-	const [tasks, setTasks] = useState<DehydratedTask[]>([]);
+	const [tasks, setTasks] = useState<DehydratedTask[] | null>(null);
 	const [messageText, setMessageText] = useState("");
-	const [gitConfigError, setGitConfigError] = useState<string | null>(null);
 	const navigate = useNavigate();
 	const [workspaceFilePaths, setWorkspaceFilePaths] = useState<string[]>([]);
 	const [meltyMindFilePaths, setMeltyMindFilePaths] = useState<string[]>(
@@ -121,18 +111,13 @@ export function Tasks({
 		setTasks(sortedTasks);
 	}, []);
 
-	const checkGitConfig = useCallback(async () => {
-		const possibleError = await rpcClient.run("getGitConfigErrors");
-		setGitConfigError(possibleError);
-	}, []);
-
 	const deleteTask = useCallback(
 		async (taskId: string, e: MouseEvent) => {
 			e.preventDefault(); // Prevent link navigation
 			e.stopPropagation(); // Prevent event bubbling
 			try {
 				// make the ui change immediately
-				setTasks(prevTasks => prevTasks.filter((task) => task.id !== taskId));
+				setTasks(prevTasks => prevTasks!.filter((task) => task.id !== taskId));
 
 				// try to delete on the backend. if this isn't successful, task will reappear
 				await rpcClient.run("deleteTask", { taskId });
@@ -245,40 +230,10 @@ export function Tasks({
 	}, []);
 
 
-	const handleOpenWorkspaceDialog = useCallback(async () => {
-		const didOpen = await rpcClient.run("openWorkspaceDialog", {});
-		console.log("did open workspace dialog?", didOpen);
-		await checkGitConfig();
-		await fetchTasks();
-	}, [fetchTasks, checkGitConfig]);
-
-
-	const handleCreateGitRepo = useCallback(async () => {
-		const didCreate = await rpcClient.run("createGitRepository", {});
-		console.log("did create git repo?", didCreate);
-		await checkGitConfig();
-	}, [checkGitConfig]);
-
-	const createAndOpenWorkspace = useCallback(async () => {
-		try {
-			const result = await rpcClient.run("createAndOpenWorkspace", {});
-			if (result) {
-				// We don't need to call checkGitConfig and fetchTasks here
-				// because VS Code will reload the window when opening a new folder
-			} else {
-				console.log("User cancelled workspace creation or it failed");
-				// We don't need to show an error message here as the user might have just cancelled
-			}
-		} catch (error) {
-			console.error("Error creating and opening workspace:", error);
-		}
-	}, []);
-
 	// initialization
 	useEffect(() => {
 		console.log("initializing tasks");
 		fetchTasks();
-		checkGitConfig();
 		fetchFilePaths();
 
 		const handleNotification = (event: MessageEvent) => {
@@ -286,9 +241,6 @@ export function Tasks({
 			switch (message.type) {
 				case "updateTodo":
 					addSuggestion(message.todo);
-					break;
-				case "updateGitConfigError":
-					setGitConfigError(message.errors);
 					break;
 				default:
 					break;
@@ -300,215 +252,176 @@ export function Tasks({
 		return () => {
 			EventManager.Instance.removeListener('notification', handleNotification);
 		};
-	}, [fetchTasks, fetchFilePaths, checkGitConfig, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
-
-
+	}, [fetchTasks, fetchFilePaths, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
 
 	return (
 		<div>
-			{gitConfigError === null ? (
-				<LoaderCircle className="animate-spin text-gray-500 mr-2 h-4 w-4" />
-			) : gitConfigError !== "" ? (
-				gitConfigError?.includes("Open a workspace folder") ?
-					<div className="bg-background text-foreground p-4">
-						<div className="text-center">
-							<Ascii />
+			<Link to="/">
+				<h1 className="text-3xl font-extrabold tracking-tighter text-center">
+					melty
+				</h1>
+			</Link>
 
-							<h2 className="mt-12 text-lg font-bold">Where should I work?</h2>
-							<p>Choose a folder for Melty to work in.</p>
+			<form onSubmit={handleSubmit}>
+				<div className="mt-4 relative">
+					<AutoExpandingTextarea
+						pickerOpen={pickerOpen}
+						setPickerOpen={setPickerOpen}
+						workspaceFilePaths={workspaceFilePaths}
+						meltyMindFilePaths={meltyMindFilePaths}
+						handleAddFile={handleAddFile}
+						handleDropFile={handleDropFile}
+						placeholder="What are you trying to do?"
+						value={messageText}
+						onChange={(e) => setMessageText(e.target.value)}
+						onKeyDown={handleKeyDown}
+						className="flex-grow p-3 focus-visible:ring-0 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
+						ref={textareaRef}
+						autoFocus={true}
+						required
+					/>
 
-							<div className="space-x-2 mt-4">
-								<Button onClick={handleOpenWorkspaceDialog} className="mt-4">Choose folder</Button>
-								<Button onClick={createAndOpenWorkspace} variant="secondary" className="mt-4">Create one for me in <span className="font-mono pl-1">~/melty-workspace</span></Button>
-							</div>
-
-						</div>
+					<div className="absolute right-2 top-2 flex gap-2">
+						{messageText.trim() !== "" && (
+							<button
+								className="bg-black p-2 rounded-lg text-white"
+								name="ask"
+								type="submit"
+							>
+								<ArrowUp className="h-3 w-3" />
+							</button>
+						)}
 					</div>
-					: gitConfigError?.includes("git init") ?
-						<div className="bg-background text-foreground p-4">
-							<div className="text-center">
-								<h2 className="text-lg font-bold">Let's start Melting.</h2>
-								<p>Melty needs a git repo in the workspace root folder.</p>
-								<Button onClick={handleCreateGitRepo} className="mt-4">Create git repo</Button>
+
+					<div className="absolute right-2 bottom-2">
+						<AddFileButton keyboardShortcut="@" />
+					</div>
+				</div>
+			</form>
+			<div className="mt-1">
+				<div className="max-w-sm">
+					<Popover>
+						<PopoverTrigger>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="text-muted-foreground"
+							>
+								<CircleHelp className="h-3 w-3 mr-1" />
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent>
+							<div className="space-y-2 text-muted-foreground">
+
+								<>
+									<p>
+										Melty can see your codebase structure but not the full
+										content of your files. Too much context confuses language
+										models.
+										<b>
+											{" "}
+											Only add files that are helpful to the current task.
+										</b>
+									</p>
+									{meltyMindFilePaths.length === 0 ? (
+										<p>
+											<AddFileButton keyboardShortcut="@" />
+										</p>
+									) : (
+										<div>
+											<p>Melty can see the full content of these files: </p>
+											<ul>
+												{meltyMindFilePaths.map((file, i) => (
+													<li key={`file-${i}`}>{file}</li>
+												))}
+											</ul>
+										</div>
+									)}
+								</>
 							</div>
-						</div>
-						:
-						<div className="bg-background text-foreground p-4">
-							<div className="text-center">
-								<h2 className="text-lg font-bold">Git config error</h2>
-								<p>Oops! Try restarting Melty?</p>
-								<p>{gitConfigError}</p>
-							</div>
-						</div>
-			) : (
+						</PopoverContent>
+					</Popover>
+				</div>
+				<div className="flex overflow-x-auto">
+					{meltyMindFilePaths.map((file, i) => (
+						<button
+							onClick={() => handleDropFile(file)}
+							className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-muted px-2 py-1 inline-flex items-center rounded"
+							key={`file-${i}`}
+						>
+							<XIcon className="h-3 w-3 mr-2" />
+							{file}
+						</button>
+					))}
+				</div>
+			</div>
+
+			{tasks && tasks.length === 0 &&
+				<OnboardingSection setMessageText={setMessageText} />
+			}
+
+			{suggestions.length > 0 && (
+				<div className="mb-4 mt-4 rounded-md fade-in">
+					<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
+						<LightbulbIcon className="h-3 w-3 text-muted-foreground mr-1" />
+						Ideas
+					</h2>
+					<div className="gap-2">
+						{suggestions.map((suggestion, i) => (
+							<Button
+								variant="outline"
+								onClick={() => setMessageText(suggestion)}
+								key={`suggestion-${i}`}
+								className="mr-2"
+							>
+								{suggestion}
+							</Button>
+						))}
+					</div>
+				</div>
+			)}
+
+			{tasks === null &&
+				<LoaderCircle className="w-4 h-4 animate-spin text-gray-500" />}
+			{tasks && tasks.length > 0 &&
 				<>
-					<Link to="/">
-						<h1 className="text-3xl font-extrabold tracking-tighter text-center">
-							melty
-						</h1>
-					</Link>
-
-					<form onSubmit={handleSubmit}>
-						<div className="mt-4 relative">
-							<AutoExpandingTextarea
-								pickerOpen={pickerOpen}
-								setPickerOpen={setPickerOpen}
-								workspaceFilePaths={workspaceFilePaths}
-								meltyMindFilePaths={meltyMindFilePaths}
-								handleAddFile={handleAddFile}
-								handleDropFile={handleDropFile}
-								placeholder="What are you trying to do?"
-								value={messageText}
-								onChange={(e) => setMessageText(e.target.value)}
-								onKeyDown={handleKeyDown}
-								className="flex-grow p-3 focus-visible:ring-0 pr-12 pb-12 max-h-[30vh] overflow-y-auto"
-								ref={textareaRef}
-								autoFocus={true}
-								required
-							/>
-
-							<div className="absolute right-2 top-2 flex gap-2">
-								{messageText.trim() !== "" && (
-									<button
-										className="bg-black p-2 rounded-lg text-white"
-										name="ask"
-										type="submit"
-									>
-										<ArrowUp className="h-3 w-3" />
-									</button>
-								)}
-							</div>
-
-							<div className="absolute right-2 bottom-2">
-								<AddFileButton keyboardShortcut="@" />
-							</div>
-						</div>
-					</form>
-					<div className="mt-1">
-						<div className="max-w-sm">
-							<Popover>
-								<PopoverTrigger>
-									<Button
-										variant="ghost"
-										size="sm"
-										className="text-muted-foreground"
-									>
-										<CircleHelp className="h-3 w-3 mr-1" />
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent>
-									<div className="space-y-2 text-muted-foreground">
-
-										<>
-											<p>
-												Melty can see your codebase structure but not the full
-												content of your files. Too much context confuses language
-												models.
-												<b>
-													{" "}
-													Only add files that are helpful to the current task.
-												</b>
+					<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
+						<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
+						Chats
+					</h2>
+					<div className="grid md:grid-cols-3 grid-cols-1 gap-6 mt-4">
+						{tasks.length === 0 && <p>No tasks</p>}
+						{tasks.map((task) => (
+							<div key={task.id} className="relative">
+								<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
+									<Card>
+										<CardHeader>
+											<CardTitle>{task.name}</CardTitle>
+										</CardHeader>
+										<CardContent>
+											<p className="text-xs text-gray-500 mt-2">
+												{formatDate(new Date(task.updatedAt))}
 											</p>
-											{meltyMindFilePaths.length === 0 ? (
-												<p>
-													<AddFileButton keyboardShortcut="@" />
-												</p>
-											) : (
-												<div>
-													<p>Melty can see the full content of these files: </p>
-													<ul>
-														{meltyMindFilePaths.map((file, i) => (
-															<li key={`file-${i}`}>{file}</li>
-														))}
-													</ul>
-												</div>
-											)}
-										</>
-									</div>
-								</PopoverContent>
-							</Popover>
-						</div>
-						<div className="flex overflow-x-auto">
-							{meltyMindFilePaths.map((file, i) => (
-								<button
-									onClick={() => handleDropFile(file)}
-									className="mt-1 text-xs text-muted-foreground mr-2 mb-2 bg-muted px-2 py-1 inline-flex items-center rounded"
-									key={`file-${i}`}
-								>
-									<XIcon className="h-3 w-3 mr-2" />
-									{file}
+										</CardContent>
+									</Card>
 								</button>
-							))}
-						</div>
-					</div>
-
-					{tasks.length === 0 &&
-						<OnboardingSection setMessageText={setMessageText} />
-					}
-
-					{suggestions.length > 0 && (
-						<div className="mb-4 mt-4 rounded-md fade-in">
-							<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
-								<LightbulbIcon className="h-3 w-3 text-muted-foreground mr-1" />
-								Ideas
-							</h2>
-							<div className="gap-2">
-								{suggestions.map((suggestion, i) => (
-									<Button
-										variant="outline"
-										onClick={() => setMessageText(suggestion)}
-										key={`suggestion-${i}`}
-										className="mr-2"
-									>
-										{suggestion}
-									</Button>
-								))}
+								<Button
+									variant="ghost"
+									size="sm"
+									className="absolute top-2 right-2 p-1"
+									onClick={(e) => deleteTask(task.id, e)}
+								>
+									<X className="text-muted-foreground h-4 w-4" />
+								</Button>
 							</div>
-						</div>
-					)}
-
-					{tasks.length > 0 &&
-						<>
-							<h2 className="text-muted-foreground font-semibold mt-6 mb-2 flex items-center">
-								<MessageCircle className="h-3 w-3 text-muted-foreground mr-1" />
-								Chats
-							</h2>
-							<div className="grid md:grid-cols-3 grid-cols-1 gap-6 mt-4">
-								{tasks.length === 0 && <p>No tasks</p>}
-								{tasks.map((task) => (
-									<div key={task.id} className="relative">
-										<button className="text-left w-full" onClick={() => { activateAndNavigateToTask(task.id) }}>
-											<Card>
-												<CardHeader>
-													<CardTitle>{task.name}</CardTitle>
-												</CardHeader>
-												<CardContent>
-													<p className="text-xs text-gray-500 mt-2">
-														{formatDate(new Date(task.updatedAt))}
-													</p>
-												</CardContent>
-											</Card>
-										</button>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="absolute top-2 right-2 p-1"
-											onClick={(e) => deleteTask(task.id, e)}
-										>
-											<X className="text-muted-foreground h-4 w-4" />
-										</Button>
-									</div>
-								))}
-							</div>
-						</>
-					}
-					<div className="mt-4 flex items-center">
-						<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
-						<span>Git configured</span>
+						))}
 					</div>
 				</>
-			)}
+			}
+			<div className="mt-4 flex items-center">
+				<CheckCircle className="text-green-500 mr-2 h-4 w-4" />
+				<span>Melty is configured</span>
+			</div>
 		</div>
-
 	);
 }

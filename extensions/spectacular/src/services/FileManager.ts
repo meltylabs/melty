@@ -4,6 +4,7 @@ import * as path from "path";
 import * as fs from "fs/promises";
 import { WebviewNotifier } from "./WebviewNotifier";
 import { GitManager } from 'services/GitManager';
+import { ContextProvider } from 'services/ContextProvider';
 import { ContextPaths } from 'types';
 
 const webviewNotifier = WebviewNotifier.getInstance();
@@ -25,11 +26,11 @@ export class FileManager {
 	private disposables: vscode.Disposable[] = [];
 	private initializationPromise: Promise<void> | null = null;
 
-	private workspaceFiles: vscode.Uri[] = [];
-	private meltyMindFiles: Set<string> = new Set();
+	private workspaceFiles: vscode.Uri[] = []; // absolute paths
+	private meltyMindFiles: Set<string> = new Set(); // relative to the melty root (not necessarily workspace root)
 
 	constructor(
-		private readonly _gitManager: GitManager = GitManager.getInstance()
+		private readonly _contextProvider: ContextProvider = ContextProvider.getInstance()
 	) {
 		this.initializationPromise = this.initializeFileList();
 		this.registerEventListeners();
@@ -53,11 +54,17 @@ export class FileManager {
 		return Array.from(this.meltyMindFiles);
 	}
 
-	private async initializeFileList(): Promise<void> {
+	public async initializeFileList(): Promise<void> {
+		// const meltyRootRelativeToWorkspaceRoot = path.relative(
+		// 	this._contextProvider.workspaceRoot,
+		// 	this._contextProvider.meltyRoot
+		// );
+		const includesPattern = new vscode.RelativePattern(this._contextProvider.meltyRootAbsolute, '**/*');
 		this.workspaceFiles = await vscode.workspace.findFiles(
-			"**/*",
+			includesPattern,
 			config.getExcludesGlob()
 		);
+		console.log("initialized workspace files", this.workspaceFiles);
 	}
 
 	private registerEventListeners(): void {
@@ -86,7 +93,7 @@ export class FileManager {
 
 		// delete meltymind files
 		event.files.forEach((deletedFile) => {
-			const relPath = path.relative(this._gitManager.getMeltyRoot(), deletedFile.fsPath);
+			const relPath = path.relative(this._contextProvider.meltyRootAbsolute, deletedFile.fsPath);
 			this.meltyMindFiles.delete(relPath);
 		});
 
@@ -111,8 +118,8 @@ export class FileManager {
 
 		// rename meltymind files
 		event.files.forEach(({ oldUri, newUri }) => {
-			const oldRelPath = path.relative(this._gitManager.getMeltyRoot(), oldUri.fsPath);
-			const newRelPath = path.relative(this._gitManager.getMeltyRoot(), newUri.fsPath);
+			const oldRelPath = path.relative(this._contextProvider.meltyRootAbsolute, oldUri.fsPath);
+			const newRelPath = path.relative(this._contextProvider.meltyRootAbsolute, newUri.fsPath);
 			if (this.meltyMindFiles.has(oldRelPath)) {
 				this.meltyMindFiles.delete(oldRelPath);
 				this.meltyMindFiles.add(newRelPath);
@@ -136,7 +143,7 @@ export class FileManager {
 		await this.ensureInitialized();
 		await this.pruneFiles();
 		return this.workspaceFiles.map((file) =>
-			path.relative(this._gitManager.getMeltyRoot(), file.fsPath)
+			path.relative(this._contextProvider.meltyRootAbsolute, file.fsPath)
 		);
 	}
 
@@ -145,7 +152,7 @@ export class FileManager {
 		await this.pruneFiles();
 		return {
 			relativePaths: Array.from(this.meltyMindFiles),
-			meltyRoot: this._gitManager.getMeltyRoot(),
+			meltyRoot: this._contextProvider.meltyRootAbsolute,
 		};
 	}
 
@@ -158,7 +165,7 @@ export class FileManager {
 	public async addMeltyMindFile(relPath: string, notify: boolean = false) {
 		// TODO: we should probably get rid of the synchronous return and always rely on the
 		// notifier?
-		const absPath = path.join(this._gitManager.getMeltyRoot(), relPath);
+		const absPath = path.join(this._contextProvider.meltyRootAbsolute, relPath);
 
 		// first, add to workspace files if needed
 		// (we call this method on file creation)
@@ -182,11 +189,6 @@ export class FileManager {
 		// this.outputChannel.appendLine(`Dropped file: ${relPath}`);
 	}
 
-	public async refreshFiles(): Promise<void> {
-		this.initializationPromise = this.initializeFileList();
-		await this.initializationPromise;
-	}
-
 	private async ensureInitialized(): Promise<void> {
 		if (this.initializationPromise) {
 			await this.initializationPromise;
@@ -206,7 +208,7 @@ export class FileManager {
 				await fs.access(file.fsPath);
 				existingWorkspaceFiles.push(file);
 
-				const relPath = path.relative(this._gitManager.getMeltyRoot(), file.fsPath);
+				const relPath = path.relative(this._contextProvider.meltyRootAbsolute, file.fsPath);
 				if (this.meltyMindFiles.has(relPath)) {
 					existingMeltyMindFiles.add(relPath);
 				}
@@ -220,7 +222,7 @@ export class FileManager {
 
 		webviewNotifier.sendNotification("updateWorkspaceFiles", {
 			files: this.workspaceFiles.map((file) =>
-				path.relative(this._gitManager.getMeltyRoot(), file.fsPath)
+				path.relative(this._contextProvider.meltyRootAbsolute, file.fsPath)
 			),
 		});
 		webviewNotifier.sendNotification("updateMeltyMindFiles", {
