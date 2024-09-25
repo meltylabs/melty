@@ -72,7 +72,7 @@ export async function streamClaudeRaw(
 	const { messages, system } = claudeConversationToAnthropicType(claudeConversation);
 	const testMessages: Anthropic.MessageParam[] = [{
 		role: "user",
-		content: "hi claude can you see this? say banana"
+		content: "hi melty can you see this? say banana please"
 	}];
 
 	try {
