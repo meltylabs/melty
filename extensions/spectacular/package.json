@@ -108,7 +108,7 @@
         },
         "melty.root": {
           "type": "string",
-          "description": "Specify a custom root directory for Melty to work with. If not set, the workspace root will be used."
+          "description": "Specify a path (relative to the workspace root) to a custom root directory for Melty to work with. If not set, the workspace root will be used. Prefer to set this in workspace settings rather than user settings."
         },
         "melty.storageDirectory": {
           "type": "string",
