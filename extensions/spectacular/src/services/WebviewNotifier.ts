@@ -33,7 +33,7 @@ export class WebviewNotifier {
 
 	public async sendNotification(
 		notificationType: string,
-		params: any
+		data: any
 	): Promise<boolean> {
 		if (!this.view) {
 			throw new Error("Illegal state: webview used before initialization");
@@ -44,7 +44,7 @@ export class WebviewNotifier {
 		return await this.view.webview.postMessage({
 			type: "notification",
 			notificationType: notificationType,
-			...params,
+			data
 		});
 	}
 }

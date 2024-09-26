@@ -21,11 +21,11 @@ import OnboardingSection from './OnboardingSection';
 import "diff2html/bundles/css/diff2html.min.css";
 import { Link, useNavigate } from "react-router-dom";
 import AutoExpandingTextarea from "./AutoExpandingTextarea";
-import { DehydratedTask, TaskMode, AssistantInfo, MeltyContext } from "../types";
+import { DehydratedTask, TaskMode, AssistantInfo, MeltyContext, NotificationMessage } from "../types";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { AddFileButton } from "./AddFileButton";
-import { EventManager } from "@/eventManager";
+import { EventManager, EventCallback } from "@/eventManager";
 import { FastFilePicker } from './FastFilePicker';
 
 // Utility function to format the date
@@ -239,28 +239,27 @@ export function Tasks({
 		task.name.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-
 	// initialization
 	useEffect(() => {
 		console.log("initializing tasks");
 		fetchTasks();
 		fetchFilePaths();
 
-		const handleNotification = (event: MessageEvent) => {
-			const message = event.data;
-			switch (message.type) {
-				case "updateTodo":
-					addSuggestion(message.todo);
-					break;
-				default:
-					break;
+		const handleNotification = (
+			(message: NotificationMessage) => {
+				switch (message.notificationType) {
+					default:
+						break;
+				}
 			}
-		};
+		) as EventCallback;
 
 		EventManager.Instance.addListener('notification', handleNotification);
 
 		return () => {
+			console.log("Tasks component unmounting");
 			EventManager.Instance.removeListener('notification', handleNotification);
+			setTasks(null);
 		};
 	}, [fetchTasks, fetchFilePaths, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
 

@@ -13,8 +13,8 @@ import { FastFilePicker } from "./FastFilePicker";
 import { Button } from './ui/button'
 import { RpcClient } from "@/RpcClient";
 import { JouleComponent, IJouleComponentProps } from "./JouleComponent";
-import { EventManager } from '@/eventManager';
-import { DehydratedTask, nextJouleType, Joule } from "@/types";
+import { EventManager, EventCallback } from '@/eventManager';
+import { DehydratedTask, nextJouleType, Joule, NotificationMessage } from "@/types";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -234,33 +234,32 @@ export function ConversationView() {
 			loadTask(taskId);
 		}
 
-		const handleNotification = (event: MessageEvent) => {
-			const message = event.data;
-			if (message.type === "notification") {
+		const handleNotification = (
+			(message: NotificationMessage) => {
 				console.log(
 					"[ConversationView.tsx] Webview received notification message",
 					message
 				);
 				switch (message.notificationType) {
 					case "updateTask":
-						updateTask(message.task);
+						updateTask(message.data.task);
 						return;
 					case "updateWorkspaceFiles":
-						setWorkspaceFiles(message.files);
+						setWorkspaceFiles(message.data.files);
 						return;
 					case "updateMeltyMindFiles":
-						if (Array.isArray(message.files)) {
-							setMeltyFiles(message.files);
+						if (Array.isArray(message.data.files)) {
+							setMeltyFiles(message.data.files);
 						} else {
-							console.error("updateMeltyMindFiles message.files is not an array");
+							console.error(`updateMeltyMindFiles message.data.files ${message.data.files} is not an array`);
 						}
 						return;
 					case "updateStatusMessage":
-						setStatusMessage(message.statusMessage);
+						setStatusMessage(message.data.statusMessage);
 						return;
 				}
 			}
-		};
+		) as EventCallback;
 
 		EventManager.Instance.addListener('notification', handleNotification);
 

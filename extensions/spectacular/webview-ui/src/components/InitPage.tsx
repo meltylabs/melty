@@ -16,8 +16,8 @@ import {
 import Ascii from "./Ascii";
 import "diff2html/bundles/css/diff2html.min.css";
 import { useNavigate } from "react-router-dom";
-import { EventManager } from "@/eventManager";
-import { MeltyContext } from "../types";
+import { EventManager, EventCallback } from "@/eventManager";
+import { MeltyContext, NotificationMessage } from "../types";
 
 const rpcClient = RpcClient.getInstance();
 
@@ -68,24 +68,7 @@ export function InitPage({ }: {}) {
 	// initialization
 	useEffect(() => {
 		getMeltyContextError();
-
-		const handleNotification = (event: MessageEvent) => {
-			const message = event.data;
-			switch (message.type) {
-				case "updateMeltyContextError":
-					setMeltyContextError(message.contextError);
-					break;
-				default:
-					break;
-			}
-		};
-
-		EventManager.Instance.addListener('notification', handleNotification);
-
-		return () => {
-			EventManager.Instance.removeListener('notification', handleNotification);
-		};
-	}, [getMeltyContextError]); // DO NOT add anything to the initialization dependency array that isn't a constant
+	}, [getMeltyContextError]);
 
 	return (
 		<div>
