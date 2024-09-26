@@ -30,7 +30,7 @@ export class EventManager {
 		if (message.type) {
 			console.log(`[EventManager ${this.id}] Dispatching message ${message.type} to ${this.listeners.get(message.type)?.size ?? 0} listeners`);
 			this.listeners.get(message.type)?.forEach(callback => {
-				callback(event)
+				callback(event);
 			});
 		}
 	}
