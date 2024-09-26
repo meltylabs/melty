@@ -1,9 +1,10 @@
-import { Conversation, ClaudeMessage, Joule, JouleType, ContextPaths } from "../../types";
+import { Conversation, ClaudeMessage, Joule, JouleType, ContextPaths, CodebaseView } from "../../types";
 import * as joules from "../joules";
 import fs from "fs";
 import path from "path";
 import { getUserPrompt } from "../../util/config";
 import * as vscode from "vscode";
+import * as claudeAPI from "../claudeAPI";
 
 export abstract class BaseAssistant {
 	static get description(): string {
@@ -19,19 +20,15 @@ export abstract class BaseAssistant {
 
 	protected encodeUserPrompt(): ClaudeMessage[] {
 		const userPrompt = getUserPrompt();
-		return [{
-			role: "user",
-			content: userPrompt,
-		}, {
-			role: "assistant",
-			content: "Understood. I'll keep that in mind throughout our conversation.",
-		}
+		return [
+			claudeAPI.createClaudeMessage("user", userPrompt),
+			claudeAPI.createClaudeMessage("assistant", "Understood. I'll keep that in mind throughout our conversation.")
 		];
 	}
 
-	protected encodeMessages(conversation: Conversation): ClaudeMessage[] {
+	protected encodeJoules(jouleList: readonly Joule[]): ClaudeMessage[] {
 		return [
-			...conversation.joules.map(joules.encodeJouleForClaude)
+			...jouleList.map(joules.encodeJouleForClaude)
 		].filter(m => m !== null);
 	}
 
@@ -51,14 +48,24 @@ ${fileContents.endsWith("\n") ? fileContents : fileContents + "\n"}
 </file_contents>`;
 	}
 
-	protected codebaseView(
-		contextPaths: ContextPaths,
-		repoMapString: string
-	): ClaudeMessage[] {
-		const codebaseSummary = `<codebase_summary>
-${repoMapString ? repoMapString : "[No file summaries available.]"}
-</codebase_summary>`;
+	protected encodeCodebaseView(codebaseView: CodebaseView): ClaudeMessage[] {
+		return [
+			{
+				role: "user",
+				content: `<codebase_view>
+${codebaseView.view}
+</codebase_view>`
+			},
+			{
+				role: "assistant",
+				content: "Thanks, I'll review this carefully.",
+			}
+		];
+	}
 
+	protected finalCodebaseView(
+		contextPaths: ContextPaths
+	): ClaudeMessage[] {
 		const fileContents = contextPaths.relativePaths
 			.map((path) => this.encodeFile(path, contextPaths.meltyRoot))
 			.join("\n");
@@ -66,10 +73,9 @@ ${repoMapString ? repoMapString : "[No file summaries available.]"}
 		return [
 			{
 				role: "user",
-				content: `<codebase_view>
-${codebaseSummary}
+				content: `<select_files_view>
 ${fileContents}
-</codebase_view>`,
+</select_files_view>`,
 			},
 			// { role: "assistant", content: "Thanks, I'll review this carefully." },
 		];

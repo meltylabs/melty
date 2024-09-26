@@ -21,9 +21,8 @@ export class TasksPage {
 		private readonly _gitHubManager: GitHubManager = GitHubManager.getInstance(),
 		private readonly _taskManager: TaskManager = TaskManager.getInstance(),
 		private readonly _fileManager: FileManager = FileManager.getInstance(),
-		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance()
+		private readonly _webviewNotifier: WebviewNotifier = WebviewNotifier.getInstance(),
 	) {
-		console.log("JDC CONSTRUCTING TASKS PAGE");
 		this._taskManager.loadTasks();
 	}
 
@@ -163,7 +162,7 @@ export class TasksPage {
 		taskMode: TaskMode,
 		files: string[]
 	): Promise<string> {
-		const task = createNewDehydratedTask(name, taskMode, files);
+		const task = await createNewDehydratedTask(name, taskMode, files);
 		this._taskManager.add(task);
 		return task.id;
 	}

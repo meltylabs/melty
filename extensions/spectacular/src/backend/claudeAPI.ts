@@ -17,10 +17,17 @@ export type ClaudeOpts = {
 	stopSequences?: string[],
 	processPartial?: (text: string) => void,
 };
+
+/**
+ * DEPRECATED - use streamClaudeRaw instead
+ */
 export async function streamClaude(
 	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<string> {
-	const final = await streamClaudeRaw(claudeConversation, opts);
+	const final = await streamClaudeRaw(
+		claudeConversation,
+		opts
+	);
 	const textContent = final.content.find((block) => "text" in block);
 	if (textContent && "text" in textContent) {
 		return textContent.text.trim();
@@ -30,7 +37,7 @@ export async function streamClaude(
 }
 
 export async function streamClaudeRaw(
-	claudeConversationUncoalesced: ClaudeConversation,
+	claudeConversation: ClaudeConversation,
 	opts: ClaudeOpts = {}): Promise<Anthropic.Messages.Message> {
 	const {
 		model = Models.Claude35Sonnet,
@@ -38,11 +45,6 @@ export async function streamClaudeRaw(
 		processPartial,
 		stopSequences = []
 	} = opts;
-
-	const claudeConversation = {
-		system: claudeConversationUncoalesced.system,
-		messages: coalesceForClaude(claudeConversationUncoalesced.messages)
-	};
 
 	if (claudeConversation.messages.length === 0) {
 		throw new Error("No messages in prompt");
@@ -67,20 +69,22 @@ export async function streamClaudeRaw(
 		baseURL: baseURL
 	});
 
+	const { messages, system } = claudeConversationToAnthropicType(claudeConversation);
+
 	try {
 		console.log("waiting for claude...");
 		const stream = anthropic.messages
 			.stream(
 				{
 					model: model,
-					max_tokens: 4096,
-					messages: claudeConversation.messages as any,
-					system: claudeConversation.system,
+					max_tokens: 8192,
+					messages,
+					system,
 					stop_sequences: stopSequences
 				},
 				{
 					headers: {
-						"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15",
+						"anthropic-beta": "max-tokens-3-5-sonnet-2024-07-15,prompt-caching-2024-07-31"
 					},
 				}
 			)
@@ -108,6 +112,26 @@ export async function streamClaudeRaw(
 	}
 }
 
+function claudeMessageToAnthropicType(claudeMessage: ClaudeMessage): Anthropic.Beta.PromptCaching.PromptCachingBetaMessageParam {
+	return {
+		"role": claudeMessage.role,
+		"content": [
+			{
+				"type": "text",
+				"text": claudeMessage.content,
+				"cache_control": claudeMessage.cacheUpToThisBlock ? { "type": "ephemeral" } : undefined,
+			}
+		],
+	};
+}
+
+function claudeConversationToAnthropicType(claudeConversation: ClaudeConversation): Pick<Anthropic.MessageCreateParams, 'system' | 'messages'> {
+	return {
+		system: claudeConversation.system,
+		messages: claudeConversation.messages.map(claudeMessageToAnthropicType),
+	};
+}
+
 
 /**
  * Guarantees properties required for Claude:
@@ -116,7 +140,7 @@ export async function streamClaudeRaw(
  * @param messages possibly malformed array of messages
  * @returns well-formed array of messages
  */
-function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
+export function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
 	// reduce over messagesOrNulls to remove nulls and combine adjacent messages with same role
 	return messages.reduce((acc: ClaudeMessage[], message) => {
 		if (message === null) {
@@ -141,4 +165,16 @@ function coalesceForClaude(messages: ClaudeMessage[]): ClaudeMessage[] {
 			}
 		}
 	}, []);
+}
+
+export function createClaudeMessage(
+	role: "user" | "assistant",
+	content: string,
+	cacheUpToThisBlock?: boolean
+): ClaudeMessage {
+	return {
+		role,
+		content,
+		cacheUpToThisBlock,
+	};
 }

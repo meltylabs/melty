@@ -8,17 +8,13 @@ import {
 	Joule,
 	JouleBotChat,
 	JouleBotCode,
-	nextJouleType,
-	JouleType
 } from "../../types";
 import * as joules from "..//joules";
 import * as prompts from "..//prompts";
 import * as claudeAPI from "..//claudeAPI";
-import * as openaiAPI from "..//openaiAPI";
 import * as diffApplicatorXml from "../diffApplication/diffApplicatorXml";
-import { RepoMapSpec } from "..//repoMapSpec";
+import { RepoMapV2 } from "../repoMapV2";
 import * as utils from "../../util/utils";
-import * as conversations from "..//conversations";
 import { BaseAssistant } from "./baseAssistant";
 import * as parser from "../diffApplication/parser";
 import * as changeSets from "..//changeSets";
@@ -29,6 +25,7 @@ import { FileManager } from 'services/FileManager';
 import { GitManager } from 'services/GitManager';
 import { ContextProvider } from 'services/ContextProvider';
 import { ErrorOperationCancelled } from 'util/utils';
+import { cache } from 'webpack';
 
 const PREFILL_TEXT = "<change_code";
 
@@ -56,9 +53,15 @@ export class Coder extends BaseAssistant {
 		sendPartialJoule: (partialJoule: Joule) => void,
 		cancellationToken?: vscode.CancellationToken
 	): Promise<JouleBotChat> {
-		const claudeConversation = await this.prepareContext(contextPaths, conversation);
+		const claudeConversationUncoalesced = await this.prepareContext(contextPaths, conversation);
 
-		this._webviewNotifier.updateStatusMessage("Thinking");
+		// Coalesce before sending to claude. This allows us to save the correct rawInput in BotExecInfo.
+		const claudeConversation = {
+			system: claudeConversationUncoalesced.system,
+			messages: claudeAPI.coalesceForClaude(claudeConversationUncoalesced.messages)
+		};
+
+		this._webviewNotifier.updateStatusMessage("Pondering");
 		let partialMessage = "";
 		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
@@ -66,6 +69,7 @@ export class Coder extends BaseAssistant {
 				cancellationToken,
 				stopSequences: ["<change_code"],
 				processPartial: async (responseFragment: string) => {
+					this._webviewNotifier.updateStatusMessage("Typing");
 					if (cancellationToken?.isCancellationRequested) {
 						throw new ErrorOperationCancelled();
 					}
@@ -102,19 +106,23 @@ export class Coder extends BaseAssistant {
 	): Promise<JouleBotCode> {
 		this.prepForChanges();
 
-		const claudeConversation = await this.prepareContext(contextPaths, conversation);
-		claudeConversation.messages.push({
-			role: "assistant",
-			content: PREFILL_TEXT
-		});
+		const claudeConversationUncoalesced = await this.prepareContext(contextPaths, conversation);
+		claudeConversationUncoalesced.messages.push(claudeAPI.createClaudeMessage("assistant", PREFILL_TEXT));
 
-		this._webviewNotifier.updateStatusMessage("Thinking");
+		// Coalesce before sending to claude. This allows us to save the correct rawInput in BotExecInfo.
+		const claudeConversation = {
+			system: claudeConversationUncoalesced.system,
+			messages: claudeAPI.coalesceForClaude(claudeConversationUncoalesced.messages)
+		};
+
+		this._webviewNotifier.updateStatusMessage("Pondering");
 		let partialMessage = PREFILL_TEXT;
 		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
 			{
 				cancellationToken,
 				processPartial: async (responseFragment: string) => {
+					this._webviewNotifier.updateStatusMessage("Typing");
 					if (cancellationToken?.isCancellationRequested) {
 						throw new ErrorOperationCancelled();
 					}
@@ -167,42 +175,23 @@ export class Coder extends BaseAssistant {
 		}
 	}
 
-	private async prepareContext(contextPaths: ContextPaths, conversation: Conversation): Promise<ClaudeConversation> {
+	private async prepareContext(
+		contextPaths: ContextPaths,
+		conversation: Conversation
+	): Promise<ClaudeConversation> {
 		this._webviewNotifier.updateStatusMessage("Preparing context");
-		const repoMap = new RepoMapSpec();
-		const workspaceFilePaths = await this._fileManager.getWorkspaceFilesRelative(); // await utils.getWorkspaceFilePaths(gitRepo);
-		const repoMapString = await repoMap.getRepoMap(workspaceFilePaths);
 
-		// const contextSuggestions = await contextSuggester.suggestContext(
-		//   conversations.lastJoule(conversation)!.message,
-		//   repoMap
-		// );
-
-		// // remove stuff that's already in contextUris
-		// const newContextSuggestions = contextSuggestions?.filter(
-		//   (suggestion) => !contextPaths.includes(suggestion)
-		// );
-
-		// console.log(
-		//   "SUGGESTED CONTEXT: ",
-		//   contextSuggestions?.join(","),
-		//   " ... ",
-		//   newContextSuggestions?.join(",")
-		// );
-
-		const systemPrompt = prompts.codeModeSystemPrompt();
-
-		const messages = [
-			...this.encodeMessages(conversation),
-			...this.codebaseView(contextPaths, repoMapString),
-		];
-
+		// construct final conversation, enabling prompt caching in the right place
 		const claudeConversation: ClaudeConversation = {
-			system: systemPrompt,
-			messages: messages,
+			system: conversation.conversationBase.systemPrompt,
+			messages: [
+				...utils.cachePromptThroughHere(
+					this.encodeCodebaseView(conversation.conversationBase.codebaseView)
+				),
+				...this.encodeJoules(conversation.joules),
+				...this.finalCodebaseView(contextPaths),
+			]
 		};
-
-		console.log("CLAUDE CONVERSATION: ", claudeConversation);
 
 		return claudeConversation;
 	}
