@@ -147,26 +147,6 @@ export class RepoMapV2 {
 		}));
 	}
 
-	private createFileTag(fileInfo: FileInfo, remainingSize: number): string {
-		if (fileInfo.skipReason) {
-			return `<skipped_file file="${fileInfo.relPath}" reason="${fileInfo.skipReason}" />\n`;
-		} else if (fileInfo.content.length > remainingSize) {
-			return `<skipped_file file="${fileInfo.relPath}" reason="Not enough space to include full contents" />\n`;
-		} else {
-			return `<file_contents file="${fileInfo.uri}">\n${fileInfo.content}\n</file_contents>\n`;
-		}
-	}
-
-	private generateSummary(skippedFilesCount: number, allFileNamesIncluded: boolean): string {
-		if (skippedFilesCount === 0) {
-			return "This codebase view contains full contents of all files in the codebase, except for binary files and files over 100kb.";
-		} else if (allFileNamesIncluded) {
-			return "This codebase view contains full contents of some files in the codebase. Since there isn't enough space to include full contents of all the files, it lists the names of the remaining files.";
-		} else {
-			return "This codebase view contains the names of some of the files in the codebase. There wasn't enough space to include all the file names.";
-		}
-	}
-
 	private isBinary(content: string): boolean {
 		const sampleSize = Math.min(1024, content.length);
 		for (let i = 0; i < sampleSize; i++) {
