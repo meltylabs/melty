@@ -257,7 +257,9 @@ export function Tasks({
 		EventManager.Instance.addListener('notification', handleNotification);
 
 		return () => {
+			console.log("Tasks component unmounting");
 			EventManager.Instance.removeListener('notification', handleNotification);
+			setTasks(null);
 		};
 	}, [fetchTasks, fetchFilePaths, addSuggestion]); // DO NOT add anything to the initialization dependency array that isn't a constant
 
