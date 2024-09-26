@@ -24,26 +24,20 @@ export class RpcClient {
 	protected constructor() {
 		this.handleMessage = (
 			(message: RpcResponseMessage) => {
-				if (message.type === "rpcResponse") {
-					console.log("[RpcClient] Webview received rpcResponse message", message);
-					const pending = this.pendingMessages.get(message.id);
-					if (pending) {
-						this.pendingMessages.delete(message.id);
-						if (message.error) {
-							console.log(
-								`[RpcClient] rejecting message ${message.id} (${message.type}) with error`, message.error
-							);
-							pending.reject(message.error);
-						} else {
-							// console.log(
-							// 	`[RpcClient] resolving message ${message.id} (${message.type}) with result`, message.result
-							// );
-							pending.resolve(message.result);
-						}
-					} else {
-						console.warn(
-							`[RpcClient] received response for unknown message ${message.id} (${message.type})`
+				console.log(`[RpcClient] Webview received rpcResponse message ${message.id} (${message.type})`);
+				const pending = this.pendingMessages.get(message.id);
+				if (pending) {
+					this.pendingMessages.delete(message.id);
+					if (message.error) {
+						console.log(
+							`[RpcClient] rejecting message ${message.id} (${message.type}) with error`, message.error
 						);
+						pending.reject(message.error);
+					} else {
+						// console.log(
+						// 	`[RpcClient] resolving message ${message.id} (${message.type}) with result`, message.result
+						// );
+						pending.resolve(message.result);
 					}
 				};
 			}
