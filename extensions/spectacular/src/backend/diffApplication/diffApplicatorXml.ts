@@ -71,9 +71,14 @@ New content:
 ${newContent}
 ==========
 
-Search replace:
+Search
 ==========
-${searchReplace}
+${searchReplace.search}
+==========
+
+Replace
+==========
+${searchReplace.replace}
 ==========`;
 						console.warn(details);
 						vscode.window.showErrorMessage(
