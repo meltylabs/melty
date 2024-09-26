@@ -48,6 +48,9 @@ const DiffContent: React.FC<DiffContentProps> = React.memo(({
 		return (
 			<>
 				<DiffViewer diff={diffHtml} />
+				<span className="font-mono text-muted-foreground text-xs">
+					{jouleCommit?.substring(0, 7)}
+				</span>
 				{!isPartial && isLatestCommit && !undoClicked && (
 					<div className="mt-2">
 						<Button variant="outline" size="sm" onClick={handleUndo}>
