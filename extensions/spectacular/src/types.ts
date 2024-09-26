@@ -230,8 +230,9 @@ export const TASKS_PAGE_RPC_METHODS = [
 	// human conversation actions
 	"createJouleHumanChat",
 	"createJouleHumanConfirmCode",
-	// bot conversation action
+	// bot conversation actions
 	"startBotTurn",
+	"stopBotTurn",
 ] as const;
 
 export type TasksPageRpcMethod = typeof TASKS_PAGE_RPC_METHODS[number];

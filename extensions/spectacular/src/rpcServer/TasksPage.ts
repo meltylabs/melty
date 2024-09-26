@@ -63,6 +63,8 @@ export class TasksPage {
 						params.taskId
 					);
 					return undefined;
+				case "stopBotTurn":
+					return await this.rpcStopBotTurn(params.taskId);
 				case "createJouleHumanChat":
 					return this.rpcJouleHumanChat(params.taskId, params.text);
 				case "createJouleHumanConfirmCode":
@@ -239,11 +241,14 @@ export class TasksPage {
 		task.startBotTurn();
 	}
 
-	private async rpcStopResponse(taskId: string): Promise<void> {
-		const task = this._taskManager.getActiveTask(taskId)!;
+	private async rpcStopBotTurn(taskId: string): Promise<void> {
+		const task = this._taskManager.getActiveTask(taskId);
 		if (!task) {
 			throw new Error(`Tried to stop operation with an inactive task ${taskId}`);
 		}
-		task.stopBotTurn();
+		await task.stopBotTurn();
+		this._webviewNotifier.sendNotification("updateTask", {
+			task: await task.dehydrate(),
+		});
 	}
 }
