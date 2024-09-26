@@ -61,7 +61,6 @@ export function ConversationView() {
 	const [nonInitialHumanJouleInFlight, setNonInitialHumanJouleInFlight] =
 		useState(false);
 	const [statusMessage, setStatusMessage] = useState<string | null>(null);
-	const [isOperationInProgress, setIsOperationInProgress] = useState(false);
 
 	/**
 	 * Determines whether to show the loading indicator. We show it if
@@ -82,10 +81,6 @@ export function ConversationView() {
 			task?.conversation.joules[task?.conversation.joules.length - 1].jouleState === "partial"
 		);
 	}
-
-	useEffect(() => {
-		setIsOperationInProgress(isLoading());
-	}, [task, nonInitialHumanJouleInFlight]);
 
 	function conversationState() {
 		const lastJoule = task?.conversation.joules[task?.conversation.joules.length - 1];
@@ -309,11 +304,6 @@ export function ConversationView() {
 	const handleConfirmCodeNo = useCallback((event?: React.MouseEvent) => {
 		event?.preventDefault();
 		addJouleHumanConfirmCode(false, taskId!);
-	}, [taskId]);
-
-	const handleStopOperation = useCallback(() => {
-		rpcClient.run("stopBotTurn", { taskId });
-		setIsOperationInProgress(false);
 	}, [taskId]);
 
 	const handleTextareaKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
