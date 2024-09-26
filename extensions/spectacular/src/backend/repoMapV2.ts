@@ -1,9 +1,18 @@
 import * as fs from "fs";
 import * as path from "path";
-import { CodebaseView, FileInfo } from "../types";
+import { CodebaseView } from "../types";
 import { ContextProvider } from "services/ContextProvider";
 import { WebviewNotifier } from "services/WebviewNotifier";
 import { FileManager } from "services/FileManager";
+import * as vscode from "vscode";
+
+export type FileInfo = {
+	uri: vscode.Uri;
+	relPath: string;
+	size: number;
+	content: string;
+	skipReason: string | null;
+};
 
 export class RepoMapV2 {
 	constructor(
@@ -38,7 +47,7 @@ export class RepoMapV2 {
 		// Build the view
 		for (const fileInfo of fileInfos) {
 			const tag = this.createFileTag(fileInfo, remainingSize);
-			
+
 			if (view.length + tag.length <= maxSize && remainingSize > 0) {
 				view += tag;
 				if (fileInfo.content !== "") {
