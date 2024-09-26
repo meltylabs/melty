@@ -61,7 +61,7 @@ export class Coder extends BaseAssistant {
 			messages: claudeAPI.coalesceForClaude(claudeConversationUncoalesced.messages)
 		};
 
-		this._webviewNotifier.updateStatusMessage("Pondering");
+		this._webviewNotifier.updateStatusMessage(utils.wordForThinking());
 		let partialMessage = "";
 		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
@@ -115,7 +115,7 @@ export class Coder extends BaseAssistant {
 			messages: claudeAPI.coalesceForClaude(claudeConversationUncoalesced.messages)
 		};
 
-		this._webviewNotifier.updateStatusMessage("Pondering");
+		this._webviewNotifier.updateStatusMessage(utils.wordForThinking());
 		let partialMessage = PREFILL_TEXT;
 		const finalResponse = await claudeAPI.streamClaudeRaw(
 			claudeConversation,
