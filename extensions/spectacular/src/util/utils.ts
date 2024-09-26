@@ -124,3 +124,15 @@ export function cachePromptThroughHere(messages: ClaudeMessage[]): ClaudeMessage
 		return message;
 	});
 }
+
+export function wordForThinking(): string {
+	const options = [
+		"Pondering",
+		"Cogitating",
+		"Ruminating",
+		"Reflecting",
+		"Contemplating",
+		"Musing"
+	];
+	return options[Math.floor(Math.random() * options.length)];
+}
