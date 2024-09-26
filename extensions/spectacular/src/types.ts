@@ -173,6 +173,22 @@ export type CodebaseView = {
 	readonly commit?: string;
 };
 
+export type RpcResponseMessage = {
+	readonly type: "rpcResponse";
+	readonly method: RpcMethod;
+	readonly id: number;
+	readonly result: any;
+	readonly error: any;
+}
+
+export type NotificationMessage = {
+	readonly type: "notification";
+	readonly notificationType: string;
+	readonly data?: any;
+}
+
+export type MeltyMessage = RpcResponseMessage | NotificationMessage;
+
 export type ConversationBase = {
 	/**
 	 * Stuff that will get encoded at the beginning of the Claude prompt.

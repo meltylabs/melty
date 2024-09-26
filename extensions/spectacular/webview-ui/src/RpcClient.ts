@@ -1,10 +1,12 @@
 import { vscode } from "./utilities/vscode";
-import { RpcMethod } from "./types";
-import { EventManager } from "./eventManager";
+import { RpcMethod, RpcResponseMessage } from "./types";
+import { EventManager, EventCallback } from "./eventManager";
 
 export class RpcClient {
 	private static instance: RpcClient | null = null;
 	private messageId = 0;
+
+	private handleMessage: EventCallback;
 
 	private pendingMessages = new Map<
 		number,
@@ -20,32 +22,37 @@ export class RpcClient {
 	}
 
 	protected constructor() {
-		const handleMessage = (event: MessageEvent) => {
-			const message = event.data;
-			if (message.type === "rpcResponse") {
-				console.log("[RpcClient] Webview received rpcResponse message", message);
-				const pending = this.pendingMessages.get(message.id);
-				if (pending) {
-					this.pendingMessages.delete(message.id);
-					if (message.error) {
-						console.log(
-							`[RpcClient] rejecting message ${message.id} (${message.type}) with error`, message.error
-						);
-						pending.reject(message.error);
+		this.handleMessage = (
+			(message: RpcResponseMessage) => {
+				if (message.type === "rpcResponse") {
+					console.log("[RpcClient] Webview received rpcResponse message", message);
+					const pending = this.pendingMessages.get(message.id);
+					if (pending) {
+						this.pendingMessages.delete(message.id);
+						if (message.error) {
+							console.log(
+								`[RpcClient] rejecting message ${message.id} (${message.type}) with error`, message.error
+							);
+							pending.reject(message.error);
+						} else {
+							// console.log(
+							// 	`[RpcClient] resolving message ${message.id} (${message.type}) with result`, message.result
+							// );
+							pending.resolve(message.result);
+						}
 					} else {
-						// console.log(
-						// 	`[RpcClient] resolving message ${message.id} (${message.type}) with result`, message.result
-						// );
-						pending.resolve(message.result);
+						console.warn(
+							`[RpcClient] received response for unknown message ${message.id} (${message.type})`
+						);
 					}
-				} else {
-					console.warn(
-						`[RpcClient] received response for unknown message ${message.id} (${message.type})`
-					);
-				}
-			};
-		};
-		EventManager.Instance.addListener("rpcResponse", handleMessage); // todo remove on dispose
+				};
+			}
+		) as EventCallback;
+		EventManager.Instance.addListener("rpcResponse", this.handleMessage);
+	}
+
+	public dispose() {
+		EventManager.Instance.removeListener("rpcResponse", this.handleMessage);
 	}
 
 	public run(method: RpcMethod, params: any = {}): Promise<any> {

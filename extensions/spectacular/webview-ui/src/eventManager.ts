@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-type EventCallback = (event: MessageEvent) => void;
+import { MeltyMessage } from './types';
+
+export type EventCallback = (event: MeltyMessage) => void;
 
 export class EventManager {
 	private static _instance: EventManager;
@@ -26,12 +28,19 @@ export class EventManager {
 	}
 
 	handleMessage = (event: MessageEvent) => {
-		const message = event.data;
-		if (message.type) {
-			console.log(`[EventManager ${this.id}] Dispatching message ${message.type} to ${this.listeners.get(message.type)?.size ?? 0} listeners`);
-			this.listeners.get(message.type)?.forEach(callback => {
-				callback(event);
-			});
+		const message = event.data as MeltyMessage;
+		console.log(`[EventManager ${this.id}] Dispatching message ${message.type} to ${this.listeners.get(message.type)?.size ?? 0} listeners`);
+		switch (message.type) {
+			case "notification":
+				this.listeners.get("notification")?.forEach(callback => {
+					callback(message);
+				});
+				break;
+			case "rpcResponse":
+				this.listeners.get("rpcResponse")?.forEach(callback => {
+					callback(message);
+				});
+				break;
 		}
 	}
 

@@ -12,10 +12,11 @@ import { ConversationView } from "./components/ConversationView";
 import { Help } from "./components/Help";
 import { NavBar } from "./components/NavBar";
 import { Onboarding } from "./components/Onboarding";
-import { EventManager } from './eventManager';
+import { EventCallback, EventManager } from './eventManager';
 import { RpcClient } from "./RpcClient";
 import { MeltyConfigProvider } from '@/MeltyConfig';
 import "./App.css";
+import { NotificationMessage } from "./types";
 
 const rpcClient = RpcClient.getInstance();
 
@@ -96,12 +97,13 @@ function App() {
 		initTheme()
 
 		// Listen for theme changes
-		const handleNotification = (event: MessageEvent) => {
-			const message = event.data;
-			if (message.type === "notification" && message.notificationType === "themeChanged") {
-				setTheme(message.theme);
+		const handleNotification = (
+			(message: NotificationMessage) => {
+				if (message.notificationType === "themeChanged") {
+					setTheme(message.data.theme);
+				}
 			}
-		};
+		) as EventCallback;
 
 		EventManager.Instance.addListener('notification', handleNotification);
 
