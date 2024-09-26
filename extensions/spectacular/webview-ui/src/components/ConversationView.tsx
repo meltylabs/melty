@@ -383,14 +383,18 @@ export function ConversationView() {
 						</div>
 					</div>
 				)}
-
-
 			</div>
 			<div
 				className="flex-1 mb-4 rounded overflow-y-auto"
 				ref={conversationRef}
 			>
 				<div className="flex flex-col h-full">
+					<p className="italic mb-2">{task?.conversation.conversationBase.codebaseView.allContentsIncluded
+						? "Melty has read your entire codebase, except binary files and files >100kb."
+						: `Melty has read ${task?.conversation.conversationBase.codebaseView.includedFiles.length} files. \
+Because your codebase is large, Melty skipped over ${task?.conversation.conversationBase.codebaseView.skippedFiles.length} files.
+Melty always skips binary files and files over 100kb.`
+					}</p>
 					{task?.conversation.joules.map((joule, index) => (
 						<MemoizedJouleComponent
 							key={index}
