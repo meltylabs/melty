@@ -34,37 +34,49 @@ export class RepoMapV2 {
 		const fileUris = await this._fileManager.getWorkspaceFiles();
 		const fileInfos = await this.processFiles(fileUris, rootDir, maxFileSize);
 
-		// Calculate total size needed for file names and tags
-		const totalFileNameSize = fileInfos.reduce((sum, fileInfo) => sum + fileInfo.relPath.length + 100, 0);
-
 		// Sort files by size (smallest first) to maximize the number of included files
 		fileInfos.sort((a, b) => a.size - b.size);
 
-		let remainingSize = maxSize - totalFileNameSize;
+		let remainingSize = maxSize;
 		let allFileNamesIncluded = true;
 		let allContentsIncluded = true;
 
-		// Build the view
+		// First pass: Include all file names
 		for (const fileInfo of fileInfos) {
-			const tag = this.createFileTag(fileInfo, remainingSize);
-
-			if (view.length + tag.length <= maxSize && remainingSize > 0) {
-				view += tag;
-				if (fileInfo.content !== "") {
-					includedFiles.push(fileInfo.relPath);
-				} else {
-					skippedFiles.push(fileInfo.relPath);
-					allContentsIncluded = false;
-				}
-				remainingSize -= tag.length;
+			const nameTag = this.createFileNameTag(fileInfo);
+			if (view.length + nameTag.length <= maxSize) {
+				view += nameTag;
+				remainingSize -= nameTag.length;
 			} else {
 				allFileNamesIncluded = false;
-				allContentsIncluded = false;
 				break;
 			}
 		}
 
-		const summary = this.generateSummary(skippedFiles.length, allFileNamesIncluded);
+		// Second pass: Include file contents where possible
+		for (const fileInfo of fileInfos) {
+			if (fileInfo.skipReason) {
+				skippedFiles.push(fileInfo.relPath);
+				continue;
+			}
+
+			const contentTag = this.createFileContentTag(fileInfo);
+			if (view.length + contentTag.length <= maxSize && remainingSize >= contentTag.length) {
+				view += contentTag;
+				includedFiles.push(fileInfo.relPath);
+				remainingSize -= contentTag.length;
+			} else {
+				skippedFiles.push(fileInfo.relPath);
+				allContentsIncluded = false;
+				const skippedTag = `<skipped_file file="${fileInfo.relPath}" reason="Not enough space to include full contents" />\n`;
+				if (view.length + skippedTag.length <= maxSize) {
+					view += skippedTag;
+					remainingSize -= skippedTag.length;
+				}
+			}
+		}
+
+		const summary = this.generateSummary(skippedFiles.length, allFileNamesIncluded, allContentsIncluded);
 		view = `<codebase_view_summary>\n${summary}\n</codebase_view_summary>\n\n${view}`;
 
 		return {
@@ -73,6 +85,31 @@ export class RepoMapV2 {
 			includedFiles,
 			skippedFiles,
 		};
+	}
+
+	private createFileNameTag(fileInfo: FileInfo): string {
+		if (fileInfo.skipReason) {
+			return `<skipped_file file="${fileInfo.relPath}" reason="${fileInfo.skipReason}" />\n`;
+		}
+		return `<file_name file="${fileInfo.relPath}" />\n`;
+	}
+
+	private createFileContentTag(fileInfo: FileInfo): string {
+		return `<file_contents file="${fileInfo.uri}">\n${fileInfo.content}\n</file_contents>\n`;
+	}
+
+	private generateSummary(skippedFilesCount: number, allFileNamesIncluded: boolean, allContentsIncluded: boolean): string {
+		if (skippedFilesCount === 0) {
+			return "This codebase view contains full contents of all files in the codebase, except for binary files and files over 100kb.";
+		} else if (allFileNamesIncluded) {
+			if (allContentsIncluded) {
+				return "This codebase view contains full contents of all files that could be included, and lists the names of files that were skipped due to being binary or too large.";
+			} else {
+				return "This codebase view contains full contents of some files in the codebase. Since there isn't enough space to include full contents of all the files, it lists the names of the remaining files.";
+			}
+		} else {
+			return "This codebase view contains the names of some of the files in the codebase. There wasn't enough space to include all the file names or contents.";
+		}
 	}
 
 	private async processFiles(fileUris: vscode.Uri[], rootDir: string, maxFileSize: number): Promise<FileInfo[]> {
