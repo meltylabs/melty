@@ -102,7 +102,7 @@ export class ContextInitializer {
 
 		return {
 			workspaceRoot,
-			meltyRoot: vscode.workspace.getConfiguration().get('melty.root') || workspaceRoot,
+			meltyRoot: vscode.workspace.getConfiguration().get('melty.root') || '/',
 			gitRepo: repo
 		};
 	}
