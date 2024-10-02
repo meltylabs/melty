@@ -238,7 +238,7 @@ export function ConversationView() {
 			(message: NotificationMessage) => {
 				console.log(
 					"[ConversationView.tsx] Webview received notification message",
-					message
+					message.notificationType
 				);
 				switch (message.notificationType) {
 					case "updateTask":
