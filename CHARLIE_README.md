@@ -2,6 +2,40 @@
 
 Hi there! Welcome to the project. We're glad you're here.
 
+# To initialize
+
+``` bash
+git clone https://github.com/meltylabs/melty
+cd melty
+yarn
+git submodule init
+```
+
+# To run
+
+Takes a minute or so
+
+``` bash
+yarn && yarn watch 
+```
+
+Build with cmd+shift+b (or go to command palette and run build task)
+
+``` bash
+./scripts/code.sh
+```
+
+# To install latest spectacular
+
+``` bash
+./scripts/build-spectacular.sh
+```
+
+# To package
+``` bash
+yarn gulp vscode-darwin-arm64
+```
+
 # amateur's guide to react
 
 1. Wrap rpc calls in useCallback. This one should not have empty dependency array (but don't omit it entirely, or it will run on every render!)
