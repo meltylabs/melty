@@ -2,10 +2,7 @@
 
 Revert, branch, reset, and squash your chats. Melty stays in sync with you like a pair programmer so you never have to explain what you’re doing.
 
-[Melty](https://melty.sh) is the first AI code editor that's aware of what you're doing from the terminal to GitHub, and collaborates with you to write production-ready code.
-[Download the packaged version ->](https://docs.google.com/forms/d/e/1FAIpQLSc6uBe0ea26q7Iq0Co_q5fjW2nypUl8G_Is5M_6t8n7wZHuPA/viewform)
-
-https://github.com/user-attachments/assets/5b27d5cc-55c7-4ff9-ae2e-47baa98b08cd
+[Melty](https://melty.sh) 0.2 is almost ready. We'll start sending it out to people on the waitlist within the next few days and weeks. If we don't we'll eat a hat or something. 
 
 ### [Get Early Access](https://docs.google.com/forms/d/e/1FAIpQLSc6uBe0ea26q7Iq0Co_q5fjW2nypUl8G_Is5M_6t8n7wZHuPA/viewform)
 
